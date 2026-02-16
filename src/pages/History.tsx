@@ -8,20 +8,66 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Trash2, Eye, FileText, Calendar, BarChart3, Target, TrendingUp, Search } from "lucide-react";
+import { Trash2, Eye, FileText, Calendar, BarChart3, Target, TrendingUp, Search, ArrowUpDown, Briefcase, Globe, Mail, Users, UserCheck, MoreHorizontal } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ResultsSection from "@/components/ResultsSection";
 import type { TailorResult } from "@/lib/types";
 
-const STATUS_OPTIONS = ["preparing", "applied", "interview", "offer", "rejected", "archived"];
+const STATUS_OPTIONS = [
+  "preparing", "applied", "recruiter_screen", "phone_interview",
+  "onsite_interview", "offer", "accepted", "rejected", "archived",
+];
+
+const STATUS_LABELS: Record<string, string> = {
+  preparing: "Preparing",
+  applied: "Applied",
+  recruiter_screen: "Recruiter Screen",
+  phone_interview: "Phone Interview",
+  onsite_interview: "Onsite Interview",
+  offer: "Offer",
+  accepted: "Accepted",
+  rejected: "Rejected",
+  archived: "Archived",
+};
+
 const STATUS_COLORS: Record<string, string> = {
   preparing: "bg-muted text-muted-foreground",
   applied: "bg-primary/10 text-primary",
-  interview: "bg-yellow-500/10 text-yellow-600",
-  offer: "bg-success/10 text-success",
+  recruiter_screen: "bg-yellow-500/10 text-yellow-600",
+  phone_interview: "bg-yellow-500/10 text-yellow-600",
+  onsite_interview: "bg-yellow-500/10 text-yellow-600",
+  offer: "bg-amber-500/10 text-amber-600",
+  accepted: "bg-success/10 text-success",
   rejected: "bg-destructive/10 text-destructive",
   archived: "bg-muted text-muted-foreground",
 };
+
+const METHOD_ICONS: Record<string, React.ElementType> = {
+  company_website: Globe,
+  linkedin: Briefcase,
+  email: Mail,
+  referral: Users,
+  recruiter: UserCheck,
+  other: MoreHorizontal,
+};
+
+const METHOD_LABELS: Record<string, string> = {
+  company_website: "Website",
+  linkedin: "LinkedIn",
+  email: "Email",
+  referral: "Referral",
+  recruiter: "Recruiter",
+  other: "Other",
+};
+
+const SORT_OPTIONS = [
+  { value: "date_desc", label: "Newest First" },
+  { value: "date_asc", label: "Oldest First" },
+  { value: "ats_desc", label: "ATS Score (High)" },
+  { value: "ats_asc", label: "ATS Score (Low)" },
+];
+
+const FILTER_STATUSES = ["all", "preparing", "applied", "interview", "offer", "rejected"];
 
 interface AppRow {
   id: string;
@@ -42,6 +88,8 @@ interface AppRow {
   company_brief: string;
   status: string;
   applied_date: string | null;
+  application_method: string | null;
+  follow_up_date: string | null;
   created_at: string;
 }
 
@@ -52,6 +100,7 @@ const History = () => {
   const [selectedApp, setSelectedApp] = useState<AppRow | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState("date_desc");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -61,7 +110,7 @@ const History = () => {
   const fetchApps = async () => {
     const { data, error } = await supabase
       .from("applications")
-      .select("id, job_title, company, tone, key_requirements, cv_suggestions, cover_letter, cover_letter_versions, ats_score, keywords_found, keywords_missing, formatting_issues, quick_wins, interview_questions, questions_to_ask, company_brief, status, applied_date, created_at")
+      .select("id, job_title, company, tone, key_requirements, cv_suggestions, cover_letter, cover_letter_versions, ats_score, keywords_found, keywords_missing, formatting_issues, quick_wins, interview_questions, questions_to_ask, company_brief, status, applied_date, application_method, follow_up_date, created_at")
       .order("created_at", { ascending: false });
 
     if (!error && data) setApps(data as AppRow[]);
@@ -79,7 +128,9 @@ const History = () => {
 
   const updateStatus = async (id: string, status: string) => {
     const updates: any = { status };
-    if (status === "applied") updates.applied_date = new Date().toISOString();
+    if (status === "applied" && !apps.find((a) => a.id === id)?.applied_date) {
+      updates.applied_date = new Date().toISOString();
+    }
     const { error } = await supabase.from("applications").update(updates).eq("id", id);
     if (!error) {
       setApps((prev) => prev.map((a) => (a.id === id ? { ...a, ...updates } : a)));
@@ -127,17 +178,39 @@ const History = () => {
     );
   }
 
-  const filteredApps = apps.filter((app) => {
-    const matchesStatus = statusFilter === "all" || app.status === statusFilter;
-    const matchesSearch =
-      !searchQuery ||
-      app.job_title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      app.company.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesStatus && matchesSearch;
-  });
+  const isInterviewStatus = (s: string) =>
+    ["recruiter_screen", "phone_interview", "onsite_interview", "interview"].includes(s);
+
+  const filteredApps = apps
+    .filter((app) => {
+      const s = app.status || "preparing";
+      if (statusFilter === "all") return true;
+      if (statusFilter === "interview") return isInterviewStatus(s);
+      if (statusFilter === "offer") return s === "offer" || s === "accepted";
+      return s === statusFilter;
+    })
+    .filter(
+      (app) =>
+        !searchQuery ||
+        app.job_title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        app.company.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "date_asc":
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        case "ats_desc":
+          return (b.ats_score || 0) - (a.ats_score || 0);
+        case "ats_asc":
+          return (a.ats_score || 0) - (b.ats_score || 0);
+        default:
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
 
   const appliedCount = apps.filter((a) => a.status !== "preparing" && a.status !== "archived").length;
-  const interviewCount = apps.filter((a) => a.status === "interview" || a.status === "offer").length;
+  const interviewCount = apps.filter((a) => isInterviewStatus(a.status || "")).length;
+  const offerCount = apps.filter((a) => a.status === "offer" || a.status === "accepted").length;
   const avgAts = apps.length > 0 ? Math.round(apps.reduce((sum, a) => sum + (a.ats_score || 0), 0) / apps.length) : 0;
 
   return (
@@ -146,48 +219,27 @@ const History = () => {
       <main className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="space-y-6">
           {/* Dashboard Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-            <Card>
-              <CardContent className="pt-4 pb-4 flex items-center gap-3">
-                <FileText className="h-8 w-8 text-primary" />
-                <div>
-                  <p className="text-2xl font-bold">{apps.length}</p>
-                  <p className="text-xs text-muted-foreground">Total Applications</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-4 pb-4 flex items-center gap-3">
-                <Target className="h-8 w-8 text-primary" />
-                <div>
-                  <p className="text-2xl font-bold">{appliedCount}</p>
-                  <p className="text-xs text-muted-foreground">Applied</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-4 pb-4 flex items-center gap-3">
-                <TrendingUp className="h-8 w-8 text-success" />
-                <div>
-                  <p className="text-2xl font-bold">
-                    {appliedCount > 0 ? Math.round((interviewCount / appliedCount) * 100) : 0}%
-                  </p>
-                  <p className="text-xs text-muted-foreground">Response Rate</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-4 pb-4 flex items-center gap-3">
-                <BarChart3 className="h-8 w-8 text-primary" />
-                <div>
-                  <p className="text-2xl font-bold">{avgAts}</p>
-                  <p className="text-xs text-muted-foreground">Avg ATS Score</p>
-                </div>
-              </CardContent>
-            </Card>
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+            {[
+              { icon: FileText, value: apps.length, label: "Total", color: "text-primary" },
+              { icon: Target, value: appliedCount, label: "Applied", color: "text-primary" },
+              { icon: TrendingUp, value: interviewCount, label: "Interviews", color: "text-yellow-600" },
+              { icon: BarChart3, value: offerCount, label: "Offers", color: "text-success" },
+              { icon: BarChart3, value: avgAts, label: "Avg ATS", color: "text-primary" },
+            ].map((stat, i) => (
+              <Card key={i}>
+                <CardContent className="pt-4 pb-4 flex items-center gap-3">
+                  <stat.icon className={`h-7 w-7 ${stat.color}`} />
+                  <div>
+                    <p className="text-2xl font-bold">{stat.value}</p>
+                    <p className="text-xs text-muted-foreground">{stat.label}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
 
-          {/* Filters */}
+          {/* Filters & Sort */}
           <div className="flex gap-3 flex-wrap">
             <div className="relative flex-1 max-w-xs">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -203,9 +255,21 @@ const History = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                {STATUS_OPTIONS.map((s) => (
-                  <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>
+                {FILTER_STATUSES.map((s) => (
+                  <SelectItem key={s} value={s} className="capitalize">
+                    {s === "all" ? "All Statuses" : s === "interview" ? "Interviews" : s.charAt(0).toUpperCase() + s.slice(1)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-[170px]">
+                <ArrowUpDown className="h-3 w-3 mr-1" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SORT_OPTIONS.map((s) => (
+                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -228,43 +292,59 @@ const History = () => {
             </Card>
           ) : (
             <div className="grid gap-4">
-              {filteredApps.map((app) => (
-                <Card key={app.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="flex items-center justify-between p-5">
-                    <div className="space-y-1 flex-1 min-w-0">
-                      <h3 className="font-semibold truncate">{app.job_title}</h3>
-                      <p className="text-sm text-muted-foreground truncate">{app.company}</p>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
-                        <Calendar className="h-3 w-3" />
-                        {new Date(app.created_at).toLocaleDateString()}
-                        {app.ats_score > 0 && (
-                          <Badge variant="outline" className={`text-xs ${app.ats_score >= 80 ? "text-success border-success/30" : app.ats_score >= 60 ? "text-yellow-600 border-yellow-500/30" : "text-destructive border-destructive/30"}`}>
-                            ATS: {app.ats_score}
-                          </Badge>
-                        )}
+              {filteredApps.map((app) => {
+                const MethodIcon = app.application_method ? METHOD_ICONS[app.application_method] : null;
+                return (
+                  <Card key={app.id} className="hover:shadow-md transition-shadow">
+                    <CardContent className="flex items-center justify-between p-5">
+                      <div className="space-y-1 flex-1 min-w-0">
+                        <h3 className="font-semibold truncate">{app.job_title}</h3>
+                        <p className="text-sm text-muted-foreground truncate">{app.company}</p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                          <Calendar className="h-3 w-3" />
+                          {new Date(app.created_at).toLocaleDateString()}
+                          {app.ats_score > 0 && (
+                            <Badge variant="outline" className={`text-xs ${app.ats_score >= 80 ? "text-success border-success/30" : app.ats_score >= 60 ? "text-yellow-600 border-yellow-500/30" : "text-destructive border-destructive/30"}`}>
+                              ATS: {app.ats_score}
+                            </Badge>
+                          )}
+                          {app.application_method && MethodIcon && (
+                            <Badge variant="outline" className="text-xs gap-1">
+                              <MethodIcon className="h-3 w-3" />
+                              {METHOD_LABELS[app.application_method] || app.application_method}
+                            </Badge>
+                          )}
+                          {app.follow_up_date && (
+                            <Badge variant="outline" className="text-xs text-amber-600 border-amber-500/30">
+                              Follow up: {new Date(app.follow_up_date).toLocaleDateString()}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2 ml-4">
-                      <Select value={app.status} onValueChange={(v) => updateStatus(app.id, v)}>
-                        <SelectTrigger className={`h-8 text-xs w-[120px] ${STATUS_COLORS[app.status] || ""}`}>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {STATUS_OPTIONS.map((s) => (
-                            <SelectItem key={s} value={s} className="capitalize text-xs">{s}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Button size="sm" variant="outline" onClick={() => setSelectedApp(app)}>
-                        <Eye className="h-4 w-4 mr-1" /> View
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => deleteApp(app.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                      <div className="flex items-center gap-2 ml-4">
+                        <Select value={app.status || "preparing"} onValueChange={(v) => updateStatus(app.id, v)}>
+                          <SelectTrigger className={`h-8 text-xs w-[140px] ${STATUS_COLORS[app.status || "preparing"] || ""}`}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {STATUS_OPTIONS.map((s) => (
+                              <SelectItem key={s} value={s} className="text-xs">
+                                {STATUS_LABELS[s]}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button size="sm" variant="outline" onClick={() => setSelectedApp(app)}>
+                          <Eye className="h-4 w-4 mr-1" /> View
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => deleteApp(app.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </div>

@@ -13,6 +13,7 @@ import type { TailorResult, CvSuggestion } from "@/lib/types";
 interface ResultsSectionProps {
   result: TailorResult;
   jobTitle: string;
+  onDownload?: () => void;
 }
 
 const PRIORITY_COLORS: Record<string, string> = {
@@ -21,7 +22,7 @@ const PRIORITY_COLORS: Record<string, string> = {
   low: "bg-success/10 text-success border-success/20",
 };
 
-const ResultsSection = ({ result, jobTitle }: ResultsSectionProps) => {
+const ResultsSection = ({ result, jobTitle, onDownload }: ResultsSectionProps) => {
   const [selectedCoverLetterIndex, setSelectedCoverLetterIndex] = useState(0);
   const [selectedCoverLetter, setSelectedCoverLetter] = useState(
     result.coverLetterVersions?.[0]?.content || result.coverLetter
@@ -43,13 +44,13 @@ const ResultsSection = ({ result, jobTitle }: ResultsSectionProps) => {
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h2 className="text-2xl font-bold">Results</h2>
         <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" size="sm" onClick={() => exportCvSuggestions(result.cvSuggestions, jobTitle)}>
+          <Button variant="outline" size="sm" onClick={() => { exportCvSuggestions(result.cvSuggestions, jobTitle); onDownload?.(); }}>
             <Download className="h-4 w-4 mr-1" /> CV Suggestions
           </Button>
-          <Button variant="outline" size="sm" onClick={() => exportCoverLetter(selectedCoverLetter, jobTitle)}>
+          <Button variant="outline" size="sm" onClick={() => { exportCoverLetter(selectedCoverLetter, jobTitle); onDownload?.(); }}>
             <Download className="h-4 w-4 mr-1" /> Cover Letter
           </Button>
-          <Button variant="outline" size="sm" onClick={() => exportInterviewPrep(result.interviewQuestions, result.questionsToAsk, result.companyBrief, jobTitle)}>
+          <Button variant="outline" size="sm" onClick={() => { exportInterviewPrep(result.interviewQuestions, result.questionsToAsk, result.companyBrief, jobTitle); onDownload?.(); }}>
             <Download className="h-4 w-4 mr-1" /> Interview Prep
           </Button>
         </div>

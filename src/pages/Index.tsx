@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/Header";
 import InputSection from "@/components/InputSection";
 import ResultsSection from "@/components/ResultsSection";
+import ApplicationTrackingModal from "@/components/ApplicationTrackingModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
@@ -25,6 +26,10 @@ const Index = () => {
   const [loadingMessage, setLoadingMessage] = useState("");
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [lastJobTitle, setLastJobTitle] = useState("Untitled Position");
+  const [lastCompany, setLastCompany] = useState("Unknown Company");
+  const [showTrackingModal, setShowTrackingModal] = useState(false);
+  const lastAppIdRef = useRef<string | null>(null);
+  const downloadCountRef = useRef(0);
   const { toast } = useToast();
 
   if (authLoading) {
@@ -37,9 +42,37 @@ const Index = () => {
 
   if (!user) return <Navigate to="/auth" replace />;
 
+  const handleDownload = () => {
+    downloadCountRef.current += 1;
+    if (downloadCountRef.current === 1) {
+      setShowTrackingModal(true);
+    }
+  };
+
+  const handleTrackingSave = async (data: {
+    status: string;
+    applicationMethod?: string;
+    appliedDate?: string;
+    followUpDate?: string | null;
+  }) => {
+    if (!lastAppIdRef.current) return;
+    const updates: Record<string, any> = { status: data.status };
+    if (data.applicationMethod) updates.application_method = data.applicationMethod;
+    if (data.appliedDate) updates.applied_date = data.appliedDate;
+    if (data.followUpDate !== undefined) updates.follow_up_date = data.followUpDate;
+
+    await supabase.from("applications").update(updates).eq("id", lastAppIdRef.current);
+    toast({
+      title: data.status === "applied" ? "Marked as Applied!" : "Saved for Later",
+      description: data.status === "applied" ? "Good luck! We'll track this for you." : "You can apply later from your History page.",
+    });
+  };
+
   const handleSubmit = async (cvContent: string, jobDescription: string, tone: Tone) => {
     setLoading(true);
     setResult(null);
+    downloadCountRef.current = 0;
+    lastAppIdRef.current = null;
 
     let stepIndex = 0;
     setLoadingMessage(LOADING_STEPS[0].message);
@@ -65,8 +98,9 @@ const Index = () => {
       const companyMatch = jobDescription.match(/[—–-]\s*(.+?)$/m);
       const company = companyMatch?.[1]?.trim().slice(0, 100) || "Unknown Company";
       setLastJobTitle(jobTitle);
+      setLastCompany(company);
 
-      await supabase.from("applications").insert({
+      const { data: inserted } = await supabase.from("applications").insert({
         user_id: user.id,
         job_title: jobTitle,
         company: company,
@@ -85,7 +119,9 @@ const Index = () => {
         interview_questions: data.interviewQuestions || [],
         questions_to_ask: data.questionsToAsk || [],
         company_brief: data.companyBrief || "",
-      });
+      }).select("id").single();
+
+      if (inserted) lastAppIdRef.current = inserted.id;
 
       toast({ title: "Analysis complete!", description: "Your tailored results are ready." });
     } catch (error: any) {
@@ -115,8 +151,16 @@ const Index = () => {
             </p>
           </div>
         )}
-        {result && <ResultsSection result={result} jobTitle={lastJobTitle} />}
+        {result && <ResultsSection result={result} jobTitle={lastJobTitle} onDownload={handleDownload} />}
       </main>
+
+      <ApplicationTrackingModal
+        open={showTrackingModal}
+        onClose={() => setShowTrackingModal(false)}
+        onSave={handleTrackingSave}
+        jobTitle={lastJobTitle}
+        company={lastCompany}
+      />
     </div>
   );
 };
