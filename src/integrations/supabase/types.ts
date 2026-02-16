@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       applications: {
         Row: {
+          application_method: string | null
           applied_date: string | null
           ats_score: number | null
           company: string
@@ -41,6 +42,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          application_method?: string | null
           applied_date?: string | null
           ats_score?: number | null
           company?: string
@@ -66,6 +68,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          application_method?: string | null
           applied_date?: string | null
           ats_score?: number | null
           company?: string
