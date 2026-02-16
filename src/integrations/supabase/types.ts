@@ -16,41 +16,77 @@ export type Database = {
     Tables: {
       applications: {
         Row: {
+          applied_date: string | null
+          ats_score: number | null
           company: string
+          company_brief: string | null
           cover_letter: string
+          cover_letter_versions: Json | null
           created_at: string
           cv_content: string
           cv_suggestions: Json
+          follow_up_date: string | null
+          formatting_issues: Json | null
           id: string
+          interview_questions: Json | null
           job_description: string
           job_title: string
           key_requirements: Json
+          keywords_found: Json | null
+          keywords_missing: Json | null
+          questions_to_ask: Json | null
+          quick_wins: Json | null
+          status: string | null
           tone: string
           user_id: string
         }
         Insert: {
+          applied_date?: string | null
+          ats_score?: number | null
           company?: string
+          company_brief?: string | null
           cover_letter?: string
+          cover_letter_versions?: Json | null
           created_at?: string
           cv_content: string
           cv_suggestions?: Json
+          follow_up_date?: string | null
+          formatting_issues?: Json | null
           id?: string
+          interview_questions?: Json | null
           job_description: string
           job_title?: string
           key_requirements?: Json
+          keywords_found?: Json | null
+          keywords_missing?: Json | null
+          questions_to_ask?: Json | null
+          quick_wins?: Json | null
+          status?: string | null
           tone?: string
           user_id: string
         }
         Update: {
+          applied_date?: string | null
+          ats_score?: number | null
           company?: string
+          company_brief?: string | null
           cover_letter?: string
+          cover_letter_versions?: Json | null
           created_at?: string
           cv_content?: string
           cv_suggestions?: Json
+          follow_up_date?: string | null
+          formatting_issues?: Json | null
           id?: string
+          interview_questions?: Json | null
           job_description?: string
           job_title?: string
           key_requirements?: Json
+          keywords_found?: Json | null
+          keywords_missing?: Json | null
+          questions_to_ask?: Json | null
+          quick_wins?: Json | null
+          status?: string | null
           tone?: string
           user_id?: string
         }
