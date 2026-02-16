@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Compass, LogOut, History, Home } from "lucide-react";
+import { Compass, LogOut, History, Home, BarChart3 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -51,7 +51,6 @@ const Header = () => {
             size="sm"
             onClick={() => navigate("/history")}
             className="relative">
-
               <History className="h-4 w-4 mr-1" />
               History
               {reminderCount > 0 &&
@@ -59,6 +58,13 @@ const Header = () => {
                   {reminderCount}
                 </span>
             }
+            </Button>
+            <Button
+            variant={location.pathname === "/insights" ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => navigate("/insights")}>
+              <BarChart3 className="h-4 w-4 mr-1" />
+              Insights
             </Button>
             <Button variant="ghost" size="sm" onClick={signOut}>
               <LogOut className="h-4 w-4 mr-1" />
