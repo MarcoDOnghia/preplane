@@ -3,9 +3,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, FileText, ScrollText, MessageSquare, Clock, DollarSign } from "lucide-react";
+import { Download, FileText, ScrollText, MessageSquare, Clock, DollarSign, Send } from "lucide-react";
 import { exportCoverLetter, exportCvSuggestions, exportInterviewPrep } from "@/lib/exportDoc";
 import ApplicationTimeline from "./ApplicationTimeline";
+import OutreachTab from "./OutreachTab";
 import type { TailorResult } from "@/lib/types";
 
 interface AppRow {
@@ -114,10 +115,13 @@ const ApplicationDetailModal = ({ open, onClose, app, userId }: ApplicationDetai
         </div>
 
         <Tabs defaultValue="timeline" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
             <TabsTrigger value="cv">CV & Cover</TabsTrigger>
             <TabsTrigger value="interview">Interview</TabsTrigger>
+            <TabsTrigger value="outreach">
+              <Send className="h-3 w-3 mr-1" /> Messages
+            </TabsTrigger>
             <TabsTrigger value="details">Details</TabsTrigger>
           </TabsList>
 
@@ -182,6 +186,16 @@ const ApplicationDetailModal = ({ open, onClose, app, userId }: ApplicationDetai
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          <TabsContent value="outreach" className="mt-4">
+            <OutreachTab
+              applicationId={app.id}
+              userId={userId}
+              jobTitle={app.job_title}
+              company={app.company}
+              cvSummary={app.cv_content}
+            />
           </TabsContent>
 
           <TabsContent value="details" className="mt-4 space-y-4">
