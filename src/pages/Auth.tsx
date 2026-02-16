@@ -39,11 +39,7 @@ const Auth = () => {
           },
         });
         if (error) throw error;
-        toast({
-          title: "Account created!",
-          description: "Please check your email to verify your account before signing in.",
-        });
-        setIsLogin(true);
+        navigate("/app");
       }
     } catch (err: any) {
       const msg = err?.message || "Something went wrong. Please try again.";
