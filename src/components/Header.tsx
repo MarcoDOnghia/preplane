@@ -1,6 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { FileText, LogOut, History, Home } from "lucide-react";
+import { Compass, LogOut, History, Home } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 const Header = () => {
@@ -15,16 +15,16 @@ const Header = () => {
           onClick={() => navigate("/")}
           className="flex items-center gap-2 text-primary hover:opacity-80 transition-opacity"
         >
-          <FileText className="h-6 w-6" />
-          <span className="text-xl font-bold tracking-tight">UrTailor</span>
+          <Compass className="h-6 w-6" />
+          <span className="text-xl font-bold tracking-tight">OfferPath</span>
         </button>
 
         {user && (
           <div className="flex items-center gap-2">
             <Button
-              variant={location.pathname === "/" ? "secondary" : "ghost"}
+              variant={location.pathname === "/app" ? "secondary" : "ghost"}
               size="sm"
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/app")}
             >
               <Home className="h-4 w-4 mr-1" />
               New

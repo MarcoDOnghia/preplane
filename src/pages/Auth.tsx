@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, Sparkles } from "lucide-react";
+import { Compass, Sparkles } from "lucide-react";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -26,7 +26,7 @@ const Auth = () => {
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate("/");
+        navigate("/app");
       } else {
         const { error } = await supabase.auth.signUp({
           email,
@@ -59,12 +59,12 @@ const Auth = () => {
       <div className="w-full max-w-md space-y-8">
         <div className="text-center space-y-2">
           <div className="flex items-center justify-center gap-2 text-primary">
-            <FileText className="h-8 w-8" />
-            <h1 className="text-3xl font-bold tracking-tight">UrTailor</h1>
+            <Compass className="h-8 w-8" />
+            <h1 className="text-3xl font-bold tracking-tight">OfferPath</h1>
           </div>
           <p className="text-muted-foreground flex items-center justify-center gap-1">
             <Sparkles className="h-4 w-4" />
-            AI-powered CV & cover letter tailoring
+            Your AI career companion — from CV to offer
           </p>
         </div>
 
