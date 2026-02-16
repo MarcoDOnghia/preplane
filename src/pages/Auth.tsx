@@ -15,12 +15,14 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
     try {
       if (isLogin) {
@@ -43,17 +45,18 @@ const Auth = () => {
         });
         setIsLogin(true);
       }
-    } catch (error: any) {
+    } catch (err: any) {
+      const msg = err?.message || "Something went wrong. Please try again.";
+      setError(msg);
       toast({
         title: "Error",
-        description: error.message,
+        description: msg,
         variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-md space-y-8">
@@ -114,6 +117,11 @@ const Auth = () => {
                   minLength={6}
                 />
               </div>
+              {error && (
+                <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
+                  {error}
+                </div>
+              )}
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Please wait..." : isLogin ? "Sign In" : "Sign Up"}
               </Button>
