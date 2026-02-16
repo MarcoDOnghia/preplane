@@ -14,9 +14,34 @@ serve(async (req) => {
   try {
     const { cvContent, jobDescription, tone } = await req.json();
 
+    const MAX_CV_LENGTH = 50000;
+    const MAX_JOB_DESC_LENGTH = 20000;
+    const VALID_TONES = ["professional", "enthusiastic", "creative"];
+
     if (!cvContent || !jobDescription) {
       return new Response(
         JSON.stringify({ error: "CV content and job description are required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (typeof cvContent !== "string" || cvContent.length > MAX_CV_LENGTH) {
+      return new Response(
+        JSON.stringify({ error: `CV content exceeds maximum length of ${MAX_CV_LENGTH} characters` }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (typeof jobDescription !== "string" || jobDescription.length > MAX_JOB_DESC_LENGTH) {
+      return new Response(
+        JSON.stringify({ error: `Job description exceeds maximum length of ${MAX_JOB_DESC_LENGTH} characters` }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (tone && (typeof tone !== "string" || !VALID_TONES.includes(tone))) {
+      return new Response(
+        JSON.stringify({ error: "Invalid tone. Must be one of: professional, enthusiastic, creative" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
