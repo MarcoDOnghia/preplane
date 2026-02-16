@@ -14,12 +14,12 @@ const Header = () => {
   useEffect(() => {
     if (!user) return;
     const fetchCount = async () => {
-      const { count } = await supabase
-        .from("application_reminders")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .eq("is_done", false)
-        .lte("due_date", new Date().toISOString());
+      const { count } = await supabase.
+      from("application_reminders").
+      select("*", { count: "exact", head: true }).
+      eq("user_id", user.id).
+      eq("is_done", false).
+      lte("due_date", new Date().toISOString());
       setReminderCount(count || 0);
     };
     fetchCount();
@@ -30,45 +30,45 @@ const Header = () => {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <button
           onClick={() => navigate("/")}
-          className="flex items-center gap-2 text-primary hover:opacity-80 transition-opacity"
-        >
+          className="flex items-center gap-2 text-primary hover:opacity-80 transition-opacity">
+
           <Compass className="h-6 w-6" />
-          <span className="text-xl font-bold tracking-tight">OfferPath</span>
+          <span className="text-xl font-bold tracking-tight">PrepLane</span>
         </button>
 
-        {user && (
-          <div className="flex items-center gap-2">
+        {user &&
+        <div className="flex items-center gap-2">
             <Button
-              variant={location.pathname === "/app" ? "secondary" : "ghost"}
-              size="sm"
-              onClick={() => navigate("/app")}
-            >
+            variant={location.pathname === "/app" ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => navigate("/app")}>
+
               <Home className="h-4 w-4 mr-1" />
               New
             </Button>
             <Button
-              variant={location.pathname === "/history" ? "secondary" : "ghost"}
-              size="sm"
-              onClick={() => navigate("/history")}
-              className="relative"
-            >
+            variant={location.pathname === "/history" ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => navigate("/history")}
+            className="relative">
+
               <History className="h-4 w-4 mr-1" />
               History
-              {reminderCount > 0 && (
-                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-destructive text-destructive-foreground text-[10px] flex items-center justify-center font-bold">
+              {reminderCount > 0 &&
+            <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-destructive text-destructive-foreground text-[10px] flex items-center justify-center font-bold">
                   {reminderCount}
                 </span>
-              )}
+            }
             </Button>
             <Button variant="ghost" size="sm" onClick={signOut}>
               <LogOut className="h-4 w-4 mr-1" />
               Sign Out
             </Button>
           </div>
-        )}
+        }
       </div>
-    </header>
-  );
+    </header>);
+
 };
 
 export default Header;
