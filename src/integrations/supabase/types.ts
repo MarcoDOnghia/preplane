@@ -236,6 +236,56 @@ export type Database = {
         }
         Relationships: []
       }
+      outreach_messages: {
+        Row: {
+          application_id: string
+          content: string
+          created_at: string
+          id: string
+          message_type: string
+          recipient_email: string | null
+          recipient_name: string | null
+          sent_at: string | null
+          subject: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          application_id: string
+          content?: string
+          created_at?: string
+          id?: string
+          message_type?: string
+          recipient_email?: string | null
+          recipient_name?: string | null
+          sent_at?: string | null
+          subject?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          application_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          message_type?: string
+          recipient_email?: string | null
+          recipient_name?: string | null
+          sent_at?: string | null
+          subject?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_application"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
