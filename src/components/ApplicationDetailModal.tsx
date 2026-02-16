@@ -7,6 +7,7 @@ import { Download, FileText, ScrollText, MessageSquare, Clock, DollarSign, Send 
 import { exportCoverLetter, exportCvSuggestions, exportInterviewPrep } from "@/lib/exportDoc";
 import ApplicationTimeline from "./ApplicationTimeline";
 import OutreachTab from "./OutreachTab";
+import InterviewFeedback from "./InterviewFeedback";
 import type { TailorResult } from "@/lib/types";
 
 interface AppRow {
@@ -186,6 +187,13 @@ const ApplicationDetailModal = ({ open, onClose, app, userId }: ApplicationDetai
                 </CardContent>
               </Card>
             )}
+
+            {/* Interview Feedback Logger */}
+            <InterviewFeedback
+              applicationId={app.id}
+              userId={userId}
+              predictedQuestions={result.interviewQuestions.map((q) => q.question)}
+            />
           </TabsContent>
 
           <TabsContent value="outreach" className="mt-4">

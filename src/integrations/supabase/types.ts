@@ -236,6 +236,65 @@ export type Database = {
         }
         Relationships: []
       }
+      interview_feedback: {
+        Row: {
+          application_id: string
+          created_at: string
+          id: string
+          improvement_notes: string | null
+          interview_date: string
+          interview_type: string | null
+          interviewer_name: string | null
+          overall_notes: string | null
+          questions_asked: Json
+          self_rating: number
+          unexpected_questions: Json
+          updated_at: string
+          user_id: string
+          went_well: string | null
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          id?: string
+          improvement_notes?: string | null
+          interview_date?: string
+          interview_type?: string | null
+          interviewer_name?: string | null
+          overall_notes?: string | null
+          questions_asked?: Json
+          self_rating?: number
+          unexpected_questions?: Json
+          updated_at?: string
+          user_id: string
+          went_well?: string | null
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          id?: string
+          improvement_notes?: string | null
+          interview_date?: string
+          interview_type?: string | null
+          interviewer_name?: string | null
+          overall_notes?: string | null
+          questions_asked?: Json
+          self_rating?: number
+          unexpected_questions?: Json
+          updated_at?: string
+          user_id?: string
+          went_well?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_application"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       outreach_messages: {
         Row: {
           application_id: string
