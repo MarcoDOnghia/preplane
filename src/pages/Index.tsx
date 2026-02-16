@@ -1,10 +1,10 @@
-import { useState, useRef, lazy, Suspense } from "react";
+import { useState, useRef } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/Header";
 import InputSection from "@/components/InputSection";
 import ResultsSection from "@/components/ResultsSection";
-const ApplicationTrackingModal = lazy(() => import("@/components/ApplicationTrackingModal"));
+import ApplicationTrackingModal from "@/components/ApplicationTrackingModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
@@ -154,15 +154,13 @@ const Index = () => {
         {result && <ResultsSection result={result} jobTitle={lastJobTitle} onDownload={handleDownload} />}
       </main>
 
-      <Suspense fallback={null}>
-        <ApplicationTrackingModal
+      <ApplicationTrackingModal
           open={showTrackingModal}
           onClose={() => setShowTrackingModal(false)}
           onSave={handleTrackingSave}
           jobTitle={lastJobTitle}
           company={lastCompany}
         />
-      </Suspense>
     </div>
   );
 };
