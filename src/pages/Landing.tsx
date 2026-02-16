@@ -79,7 +79,7 @@ const Landing = () => {
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-2 text-primary">
             <Compass className="h-6 w-6" />
-            <span className="text-xl font-bold tracking-tight">OfferPath</span>
+            <span className="text-xl font-bold tracking-tight">PrepLane</span>
           </div>
           <div className="flex gap-2">
             <Button variant="ghost" size="sm" onClick={() => navigate("/auth")}>
@@ -106,7 +106,7 @@ const Landing = () => {
             we've got your back
           </h1>
           <p className="mt-6 text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            OfferPath is the ultimate AI buddy that helps you from your first CV scan
+            PrepLane is the ultimate AI buddy that helps you from your first CV scan
             to your first day at your new job. Tailored CVs, cover letters, interview prep,
             and career tracking — all in one place.
           </p>
@@ -179,7 +179,7 @@ const Landing = () => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
             {[
-              { step: "1", title: "Upload your CV", desc: "Paste or upload your existing CV. OfferPath analyzes your experience and skills." },
+              { step: "1", title: "Upload your CV", desc: "Paste or upload your existing CV. PrepLane analyzes your experience and skills." },
               { step: "2", title: "Add job description", desc: "Paste the job listing. Our AI identifies requirements and matches them to your profile." },
               { step: "3", title: "Get tailored results", desc: "Receive optimized CV suggestions, cover letters, ATS analysis, and interview prep — instantly." },
             ].map((item, i) => (
@@ -220,10 +220,10 @@ const Landing = () => {
         <div className="container mx-auto px-4 py-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-muted-foreground">
             <Compass className="h-4 w-4" />
-            <span className="text-sm font-medium">OfferPath</span>
+            <span className="text-sm font-medium">PrepLane</span>
           </div>
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} OfferPath. Your career journey starts here.
+            © {new Date().getFullYear()} PrepLane. Your career journey starts here.
           </p>
         </div>
       </footer>
