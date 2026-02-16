@@ -260,6 +260,108 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_jobs: {
+        Row: {
+          company: string
+          created_at: string
+          id: string
+          job_description: string
+          job_title: string
+          location: string | null
+          match_reasons: string[] | null
+          match_score: number | null
+          missing_skills: string[] | null
+          notes: string | null
+          salary_range: string | null
+          source_url: string | null
+          status: string | null
+          strengths: string[] | null
+          user_id: string
+        }
+        Insert: {
+          company?: string
+          created_at?: string
+          id?: string
+          job_description?: string
+          job_title: string
+          location?: string | null
+          match_reasons?: string[] | null
+          match_score?: number | null
+          missing_skills?: string[] | null
+          notes?: string | null
+          salary_range?: string | null
+          source_url?: string | null
+          status?: string | null
+          strengths?: string[] | null
+          user_id: string
+        }
+        Update: {
+          company?: string
+          created_at?: string
+          id?: string
+          job_description?: string
+          job_title?: string
+          location?: string | null
+          match_reasons?: string[] | null
+          match_score?: number | null
+          missing_skills?: string[] | null
+          notes?: string | null
+          salary_range?: string | null
+          source_url?: string | null
+          status?: string | null
+          strengths?: string[] | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_job_preferences: {
+        Row: {
+          company_sizes: string[] | null
+          created_at: string
+          experience_level: string | null
+          id: string
+          industries: string[] | null
+          job_titles: string[] | null
+          locations: string[] | null
+          remote_preference: string | null
+          salary_currency: string | null
+          salary_max: number | null
+          salary_min: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_sizes?: string[] | null
+          created_at?: string
+          experience_level?: string | null
+          id?: string
+          industries?: string[] | null
+          job_titles?: string[] | null
+          locations?: string[] | null
+          remote_preference?: string | null
+          salary_currency?: string | null
+          salary_max?: number | null
+          salary_min?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_sizes?: string[] | null
+          created_at?: string
+          experience_level?: string | null
+          id?: string
+          industries?: string[] | null
+          job_titles?: string[] | null
+          locations?: string[] | null
+          remote_preference?: string | null
+          salary_currency?: string | null
+          salary_max?: number | null
+          salary_min?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
