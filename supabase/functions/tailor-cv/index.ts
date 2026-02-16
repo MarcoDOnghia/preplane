@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,6 +13,29 @@ serve(async (req) => {
   }
 
   try {
+    // Authenticate user
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { cvContent, jobDescription, tone } = await req.json();
 
     const MAX_CV_LENGTH = 50000;
@@ -51,14 +75,26 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const systemPrompt = `You are an expert career coach and CV tailoring specialist. Analyze the CV and job description provided, then return structured suggestions.
+    const systemPrompt = `You are an expert career coach, CV tailoring specialist, and interview preparation expert. Analyze the CV and job description provided, then return a comprehensive analysis.
 
 Tone for cover letter: ${tone || "professional"}
 
 Instructions:
 1. Identify 5-7 key requirements from the job description
-2. Suggest specific CV modifications with original text, suggested replacement, and reasoning
-3. Generate a compelling cover letter matching the requested tone
+2. Perform ATS (Applicant Tracking System) analysis:
+   - Calculate an ATS compatibility score (0-100) based on keyword match rate and formatting
+   - List keywords from the job description found in the CV
+   - List keywords from the job description missing from the CV
+   - Identify formatting issues (tables, columns, special characters, images, headers that ATS can't parse)
+   - Provide 3 "quick wins" - easiest improvements for better ATS score
+3. Suggest specific CV modifications with original text, suggested replacement, reasoning, priority (high/medium/low), and impact score (1-10)
+4. Generate 3 cover letter versions:
+   - Version A "Conservative": formal, traditional, safe
+   - Version B "Balanced": professional but personable
+   - Version C "Bold": creative, memorable, shows personality
+5. Generate 10 likely interview questions for this specific role with STAR method guidance and suggested answers based on the CV
+6. Generate 5 intelligent questions the candidate should ask the interviewer
+7. Write a brief 2-3 paragraph company research summary based on what can be inferred from the job description
 
 You MUST call the tailor_application function with your analysis.`;
 
@@ -81,7 +117,7 @@ You MUST call the tailor_application function with your analysis.`;
             type: "function",
             function: {
               name: "tailor_application",
-              description: "Return the tailored CV analysis results",
+              description: "Return the comprehensive tailored CV analysis results",
               parameters: {
                 type: "object",
                 properties: {
@@ -90,26 +126,72 @@ You MUST call the tailor_application function with your analysis.`;
                     items: { type: "string" },
                     description: "5-7 key requirements extracted from the job description",
                   },
+                  atsAnalysis: {
+                    type: "object",
+                    properties: {
+                      score: { type: "number", description: "ATS compatibility score 0-100" },
+                      keywordsFound: { type: "array", items: { type: "string" }, description: "Job keywords found in CV" },
+                      keywordsMissing: { type: "array", items: { type: "string" }, description: "Job keywords missing from CV" },
+                      formattingIssues: { type: "array", items: { type: "string" }, description: "ATS formatting issues detected" },
+                      quickWins: { type: "array", items: { type: "string" }, description: "Top 3 easiest improvements" },
+                    },
+                    required: ["score", "keywordsFound", "keywordsMissing", "formattingIssues", "quickWins"],
+                    additionalProperties: false,
+                  },
                   cvSuggestions: {
                     type: "array",
                     items: {
                       type: "object",
                       properties: {
-                        section: { type: "string", description: "CV section name" },
-                        original: { type: "string", description: "Original text from the CV" },
-                        suggested: { type: "string", description: "Suggested improved text" },
-                        reason: { type: "string", description: "Why this change helps" },
+                        section: { type: "string" },
+                        original: { type: "string" },
+                        suggested: { type: "string" },
+                        reason: { type: "string" },
+                        priority: { type: "string", enum: ["high", "medium", "low"] },
+                        impactScore: { type: "number", description: "Impact score 1-10" },
                       },
-                      required: ["section", "original", "suggested", "reason"],
+                      required: ["section", "original", "suggested", "reason", "priority", "impactScore"],
                       additionalProperties: false,
                     },
                   },
-                  coverLetter: {
+                  coverLetterVersions: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        label: { type: "string", description: "e.g. Version A: Conservative" },
+                        content: { type: "string", description: "Full cover letter text" },
+                      },
+                      required: ["label", "content"],
+                      additionalProperties: false,
+                    },
+                    description: "3 cover letter variations",
+                  },
+                  interviewQuestions: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        question: { type: "string" },
+                        starGuidance: { type: "string", description: "STAR method framework for answering" },
+                        suggestedAnswer: { type: "string", description: "Suggested answer using CV experience" },
+                      },
+                      required: ["question", "starGuidance", "suggestedAnswer"],
+                      additionalProperties: false,
+                    },
+                    description: "10 likely interview questions",
+                  },
+                  questionsToAsk: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "5 questions candidate should ask the interviewer",
+                  },
+                  companyBrief: {
                     type: "string",
-                    description: "Full personalized cover letter",
+                    description: "2-3 paragraph company research summary",
                   },
                 },
-                required: ["keyRequirements", "cvSuggestions", "coverLetter"],
+                required: ["keyRequirements", "atsAnalysis", "cvSuggestions", "coverLetterVersions", "interviewQuestions", "questionsToAsk", "companyBrief"],
                 additionalProperties: false,
               },
             },
@@ -145,6 +227,11 @@ You MUST call the tailor_application function with your analysis.`;
     }
 
     const result = JSON.parse(toolCall.function.arguments);
+
+    // Ensure backward compatibility
+    if (!result.coverLetter && result.coverLetterVersions?.length > 0) {
+      result.coverLetter = result.coverLetterVersions[0].content;
+    }
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
