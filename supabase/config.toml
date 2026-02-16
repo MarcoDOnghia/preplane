@@ -1,0 +1,4 @@
+project_id = "mracpuniwyrymqdkthml"
+
+[functions.tailor-cv]
+verify_jwt = false
