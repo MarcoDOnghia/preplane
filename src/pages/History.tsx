@@ -8,10 +8,18 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Trash2, Eye, FileText, Calendar, BarChart3, Target, TrendingUp, Search, ArrowUpDown, Briefcase, Globe, Mail, Users, UserCheck, MoreHorizontal } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  Trash2, Eye, FileText, Calendar, BarChart3, Target, TrendingUp, Search,
+  ArrowUpDown, Briefcase, Globe, Mail, Users, UserCheck, MoreHorizontal,
+  ChevronDown, ChevronRight, Clock, Percent,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import ResultsSection from "@/components/ResultsSection";
-import type { TailorResult } from "@/lib/types";
+import { formatDistanceStrict } from "date-fns";
+import StatusUpdateDialog from "@/components/StatusUpdateDialog";
+import ApplicationTimeline from "@/components/ApplicationTimeline";
+import ApplicationDetailModal from "@/components/ApplicationDetailModal";
+import RemindersBanner from "@/components/RemindersBanner";
 
 const STATUS_OPTIONS = [
   "preparing", "applied", "recruiter_screen", "phone_interview",
@@ -19,45 +27,27 @@ const STATUS_OPTIONS = [
 ];
 
 const STATUS_LABELS: Record<string, string> = {
-  preparing: "Preparing",
-  applied: "Applied",
-  recruiter_screen: "Recruiter Screen",
-  phone_interview: "Phone Interview",
-  onsite_interview: "Onsite Interview",
-  offer: "Offer",
-  accepted: "Accepted",
-  rejected: "Rejected",
-  archived: "Archived",
+  preparing: "Preparing", applied: "Applied", recruiter_screen: "Recruiter Screen",
+  phone_interview: "Phone Interview", onsite_interview: "Onsite Interview",
+  offer: "Offer", accepted: "Accepted", rejected: "Rejected", archived: "Archived",
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  preparing: "bg-muted text-muted-foreground",
-  applied: "bg-primary/10 text-primary",
-  recruiter_screen: "bg-yellow-500/10 text-yellow-600",
-  phone_interview: "bg-yellow-500/10 text-yellow-600",
-  onsite_interview: "bg-yellow-500/10 text-yellow-600",
-  offer: "bg-amber-500/10 text-amber-600",
-  accepted: "bg-success/10 text-success",
-  rejected: "bg-destructive/10 text-destructive",
+  preparing: "bg-muted text-muted-foreground", applied: "bg-primary/10 text-primary",
+  recruiter_screen: "bg-yellow-500/10 text-yellow-600", phone_interview: "bg-yellow-500/10 text-yellow-600",
+  onsite_interview: "bg-yellow-500/10 text-yellow-600", offer: "bg-amber-500/10 text-amber-600",
+  accepted: "bg-green-500/10 text-green-600", rejected: "bg-destructive/10 text-destructive",
   archived: "bg-muted text-muted-foreground",
 };
 
 const METHOD_ICONS: Record<string, React.ElementType> = {
-  company_website: Globe,
-  linkedin: Briefcase,
-  email: Mail,
-  referral: Users,
-  recruiter: UserCheck,
-  other: MoreHorizontal,
+  company_website: Globe, linkedin: Briefcase, email: Mail,
+  referral: Users, recruiter: UserCheck, other: MoreHorizontal,
 };
 
 const METHOD_LABELS: Record<string, string> = {
-  company_website: "Website",
-  linkedin: "LinkedIn",
-  email: "Email",
-  referral: "Referral",
-  recruiter: "Recruiter",
-  other: "Other",
+  company_website: "Website", linkedin: "LinkedIn", email: "Email",
+  referral: "Referral", recruiter: "Recruiter", other: "Other",
 };
 
 const SORT_OPTIONS = [
@@ -91,16 +81,26 @@ interface AppRow {
   application_method: string | null;
   follow_up_date: string | null;
   created_at: string;
+  salary_offered?: number | null;
+  salary_currency?: string | null;
+  offer_deadline?: string | null;
+  rejection_stage?: string | null;
+  rejection_reason?: string | null;
+  interview_type?: string | null;
+  interviewer_name?: string | null;
+  scheduled_date?: string | null;
 }
 
 const History = () => {
   const { user, loading: authLoading } = useAuth();
   const [apps, setApps] = useState<AppRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedApp, setSelectedApp] = useState<AppRow | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("date_desc");
+  const [expandedTimelines, setExpandedTimelines] = useState<Set<string>>(new Set());
+  const [statusUpdateDialog, setStatusUpdateDialog] = useState<{ appId: string; newStatus: string } | null>(null);
+  const [detailApp, setDetailApp] = useState<AppRow | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -110,7 +110,7 @@ const History = () => {
   const fetchApps = async () => {
     const { data, error } = await supabase
       .from("applications")
-      .select("id, job_title, company, tone, key_requirements, cv_suggestions, cover_letter, cover_letter_versions, ats_score, keywords_found, keywords_missing, formatting_issues, quick_wins, interview_questions, questions_to_ask, company_brief, status, applied_date, application_method, follow_up_date, created_at")
+      .select("*")
       .order("created_at", { ascending: false });
 
     if (!error && data) setApps(data as AppRow[]);
@@ -121,20 +121,57 @@ const History = () => {
     const { error } = await supabase.from("applications").delete().eq("id", id);
     if (!error) {
       setApps((prev) => prev.filter((a) => a.id !== id));
-      if (selectedApp?.id === id) setSelectedApp(null);
-      toast({ title: "Deleted", description: "Application removed from history." });
+      toast({ title: "Deleted", description: "Application removed." });
     }
   };
 
-  const updateStatus = async (id: string, status: string) => {
-    const updates: any = { status };
-    if (status === "applied" && !apps.find((a) => a.id === id)?.applied_date) {
+  const handleStatusChange = (appId: string, newStatus: string) => {
+    const needsDialog = ["recruiter_screen", "phone_interview", "onsite_interview", "offer", "rejected"].includes(newStatus);
+    if (needsDialog) {
+      setStatusUpdateDialog({ appId, newStatus });
+    } else {
+      updateStatus(appId, newStatus, {});
+    }
+  };
+
+  const updateStatus = async (id: string, status: string, extra: Record<string, any>) => {
+    const app = apps.find((a) => a.id === id);
+    const oldStatus = app?.status || "preparing";
+    const updates: any = { status, ...extra };
+    if (status === "applied" && !app?.applied_date) {
       updates.applied_date = new Date().toISOString();
     }
+
     const { error } = await supabase.from("applications").update(updates).eq("id", id);
     if (!error) {
+      // Record timeline event
+      if (user) {
+        await supabase.from("application_timeline").insert({
+          application_id: id,
+          user_id: user.id,
+          event_type: "status_change",
+          from_status: oldStatus,
+          to_status: status,
+          metadata: extra,
+        });
+      }
       setApps((prev) => prev.map((a) => (a.id === id ? { ...a, ...updates } : a)));
     }
+  };
+
+  const handleStatusDialogSave = (extra: Record<string, any>) => {
+    if (!statusUpdateDialog) return;
+    updateStatus(statusUpdateDialog.appId, statusUpdateDialog.newStatus, extra);
+    setStatusUpdateDialog(null);
+  };
+
+  const toggleTimeline = (id: string) => {
+    setExpandedTimelines((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   };
 
   if (authLoading) {
@@ -147,39 +184,8 @@ const History = () => {
 
   if (!user) return <Navigate to="/auth" replace />;
 
-  if (selectedApp) {
-    const result: TailorResult = {
-      keyRequirements: (selectedApp.key_requirements as string[]) || [],
-      cvSuggestions: (selectedApp.cv_suggestions as any[]) || [],
-      coverLetter: selectedApp.cover_letter || "",
-      coverLetterVersions: (selectedApp.cover_letter_versions as any[]) || [],
-      atsAnalysis: {
-        score: selectedApp.ats_score || 0,
-        keywordsFound: (selectedApp.keywords_found as string[]) || [],
-        keywordsMissing: (selectedApp.keywords_missing as string[]) || [],
-        formattingIssues: (selectedApp.formatting_issues as string[]) || [],
-        quickWins: (selectedApp.quick_wins as string[]) || [],
-      },
-      interviewQuestions: (selectedApp.interview_questions as any[]) || [],
-      questionsToAsk: (selectedApp.questions_to_ask as string[]) || [],
-      companyBrief: selectedApp.company_brief || "",
-    };
-
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <main className="container mx-auto px-4 py-8 max-w-6xl space-y-6">
-          <Button variant="ghost" onClick={() => setSelectedApp(null)}>
-            ← Back to History
-          </Button>
-          <ResultsSection result={result} jobTitle={selectedApp.job_title} />
-        </main>
-      </div>
-    );
-  }
-
   const isInterviewStatus = (s: string) =>
-    ["recruiter_screen", "phone_interview", "onsite_interview", "interview"].includes(s);
+    ["recruiter_screen", "phone_interview", "onsite_interview"].includes(s);
 
   const filteredApps = apps
     .filter((app) => {
@@ -197,63 +203,98 @@ const History = () => {
     )
     .sort((a, b) => {
       switch (sortBy) {
-        case "date_asc":
-          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-        case "ats_desc":
-          return (b.ats_score || 0) - (a.ats_score || 0);
-        case "ats_asc":
-          return (a.ats_score || 0) - (b.ats_score || 0);
-        default:
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        case "date_asc": return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        case "ats_desc": return (b.ats_score || 0) - (a.ats_score || 0);
+        case "ats_asc": return (a.ats_score || 0) - (b.ats_score || 0);
+        default: return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       }
     });
 
+  // Stats
   const appliedCount = apps.filter((a) => a.status !== "preparing" && a.status !== "archived").length;
   const interviewCount = apps.filter((a) => isInterviewStatus(a.status || "")).length;
   const offerCount = apps.filter((a) => a.status === "offer" || a.status === "accepted").length;
   const avgAts = apps.length > 0 ? Math.round(apps.reduce((sum, a) => sum + (a.ats_score || 0), 0) / apps.length) : 0;
+  const responseRate = appliedCount > 0 ? Math.round(((interviewCount + offerCount) / appliedCount) * 100) : 0;
+  const interviewRate = appliedCount > 0 ? Math.round((interviewCount / appliedCount) * 100) : 0;
+
+  // Average time to first response
+  const responseTimes = apps
+    .filter((a) => a.applied_date && isInterviewStatus(a.status || ""))
+    .map((a) => {
+      const applied = new Date(a.applied_date!).getTime();
+      const created = new Date(a.created_at).getTime();
+      return Math.round((created - applied) / (1000 * 60 * 60 * 24));
+    })
+    .filter((d) => d > 0);
+  const avgResponseDays = responseTimes.length > 0 ? Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length) : 0;
+
+  // Success rate by method
+  const methodStats = apps.reduce((acc, a) => {
+    if (!a.application_method) return acc;
+    if (!acc[a.application_method]) acc[a.application_method] = { total: 0, responses: 0 };
+    acc[a.application_method].total++;
+    if (a.status && a.status !== "preparing" && a.status !== "applied" && a.status !== "archived") {
+      acc[a.application_method].responses++;
+    }
+    return acc;
+  }, {} as Record<string, { total: number; responses: number }>);
+
+  const statusDialogApp = statusUpdateDialog ? apps.find((a) => a.id === statusUpdateDialog.appId) : null;
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <main className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="space-y-6">
+          {/* Reminders Banner */}
+          <RemindersBanner userId={user.id} apps={apps.map((a) => ({ id: a.id, job_title: a.job_title, company: a.company }))} />
+
           {/* Dashboard Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
             {[
               { icon: FileText, value: apps.length, label: "Total", color: "text-primary" },
               { icon: Target, value: appliedCount, label: "Applied", color: "text-primary" },
               { icon: TrendingUp, value: interviewCount, label: "Interviews", color: "text-yellow-600" },
-              { icon: BarChart3, value: offerCount, label: "Offers", color: "text-success" },
+              { icon: BarChart3, value: offerCount, label: "Offers", color: "text-green-600" },
               { icon: BarChart3, value: avgAts, label: "Avg ATS", color: "text-primary" },
+              { icon: Percent, value: `${responseRate}%`, label: "Response", color: "text-amber-600" },
+              { icon: Clock, value: avgResponseDays > 0 ? `${avgResponseDays}d` : "—", label: "Avg Wait", color: "text-muted-foreground" },
             ].map((stat, i) => (
               <Card key={i}>
-                <CardContent className="pt-4 pb-4 flex items-center gap-3">
-                  <stat.icon className={`h-7 w-7 ${stat.color}`} />
+                <CardContent className="pt-3 pb-3 flex items-center gap-2">
+                  <stat.icon className={`h-5 w-5 ${stat.color} shrink-0`} />
                   <div>
-                    <p className="text-2xl font-bold">{stat.value}</p>
-                    <p className="text-xs text-muted-foreground">{stat.label}</p>
+                    <p className="text-lg font-bold leading-none">{stat.value}</p>
+                    <p className="text-[10px] text-muted-foreground">{stat.label}</p>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
 
+          {/* Method Success Rates */}
+          {Object.keys(methodStats).length > 0 && (
+            <div className="flex gap-2 flex-wrap">
+              {Object.entries(methodStats).map(([method, stats]) => {
+                const rate = stats.total > 0 ? Math.round((stats.responses / stats.total) * 100) : 0;
+                return (
+                  <Badge key={method} variant="outline" className="text-xs gap-1 py-1">
+                    {METHOD_LABELS[method] || method}: {rate}% ({stats.responses}/{stats.total})
+                  </Badge>
+                );
+              })}
+            </div>
+          )}
+
           {/* Filters & Sort */}
           <div className="flex gap-3 flex-wrap">
             <div className="relative flex-1 max-w-xs">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by company or role..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
+              <Input placeholder="Search by company or role..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[160px]">
-                <SelectValue />
-              </SelectTrigger>
+              <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {FILTER_STATUSES.map((s) => (
                   <SelectItem key={s} value={s} className="capitalize">
@@ -264,8 +305,7 @@ const History = () => {
             </Select>
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-[170px]">
-                <ArrowUpDown className="h-3 w-3 mr-1" />
-                <SelectValue />
+                <ArrowUpDown className="h-3 w-3 mr-1" /><SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {SORT_OPTIONS.map((s) => (
@@ -291,64 +331,102 @@ const History = () => {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-4">
+            <div className="grid gap-3">
               {filteredApps.map((app) => {
                 const MethodIcon = app.application_method ? METHOD_ICONS[app.application_method] : null;
+                const isExpanded = expandedTimelines.has(app.id);
+
                 return (
-                  <Card key={app.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="flex items-center justify-between p-5">
-                      <div className="space-y-1 flex-1 min-w-0">
-                        <h3 className="font-semibold truncate">{app.job_title}</h3>
-                        <p className="text-sm text-muted-foreground truncate">{app.company}</p>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
-                          <Calendar className="h-3 w-3" />
-                          {new Date(app.created_at).toLocaleDateString()}
-                          {app.ats_score > 0 && (
-                            <Badge variant="outline" className={`text-xs ${app.ats_score >= 80 ? "text-success border-success/30" : app.ats_score >= 60 ? "text-yellow-600 border-yellow-500/30" : "text-destructive border-destructive/30"}`}>
-                              ATS: {app.ats_score}
-                            </Badge>
-                          )}
-                          {app.application_method && MethodIcon && (
-                            <Badge variant="outline" className="text-xs gap-1">
-                              <MethodIcon className="h-3 w-3" />
-                              {METHOD_LABELS[app.application_method] || app.application_method}
-                            </Badge>
-                          )}
-                          {app.follow_up_date && (
-                            <Badge variant="outline" className="text-xs text-amber-600 border-amber-500/30">
-                              Follow up: {new Date(app.follow_up_date).toLocaleDateString()}
-                            </Badge>
-                          )}
+                  <Collapsible key={app.id} open={isExpanded} onOpenChange={() => toggleTimeline(app.id)}>
+                    <Card className="hover:shadow-md transition-shadow">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="space-y-1 flex-1 min-w-0">
+                            <h3 className="font-semibold truncate">{app.job_title}</h3>
+                            <p className="text-sm text-muted-foreground truncate">{app.company}</p>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                              <Calendar className="h-3 w-3" />
+                              {new Date(app.created_at).toLocaleDateString()}
+                              {app.ats_score > 0 && (
+                                <Badge variant="outline" className={`text-xs ${app.ats_score >= 80 ? "text-green-600 border-green-300" : app.ats_score >= 60 ? "text-yellow-600 border-yellow-300" : "text-destructive border-destructive/30"}`}>
+                                  ATS: {app.ats_score}
+                                </Badge>
+                              )}
+                              {app.application_method && MethodIcon && (
+                                <Badge variant="outline" className="text-xs gap-1">
+                                  <MethodIcon className="h-3 w-3" />
+                                  {METHOD_LABELS[app.application_method] || app.application_method}
+                                </Badge>
+                              )}
+                              {app.scheduled_date && (
+                                <Badge variant="outline" className="text-xs text-primary border-primary/30">
+                                  📅 {new Date(app.scheduled_date).toLocaleDateString()}
+                                </Badge>
+                              )}
+                              {app.salary_offered && (
+                                <Badge variant="outline" className="text-xs text-green-600 border-green-300">
+                                  💰 {app.salary_currency || "USD"} {Number(app.salary_offered).toLocaleString()}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Select value={app.status || "preparing"} onValueChange={(v) => handleStatusChange(app.id, v)}>
+                              <SelectTrigger className={`h-8 text-xs w-[130px] ${STATUS_COLORS[app.status || "preparing"] || ""}`}>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {STATUS_OPTIONS.map((s) => (
+                                  <SelectItem key={s} value={s} className="text-xs">{STATUS_LABELS[s]}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <CollapsibleTrigger asChild>
+                              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                                {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                              </Button>
+                            </CollapsibleTrigger>
+                            <Button size="sm" variant="outline" onClick={() => setDetailApp(app)}>
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => deleteApp(app.id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2 ml-4">
-                        <Select value={app.status || "preparing"} onValueChange={(v) => updateStatus(app.id, v)}>
-                          <SelectTrigger className={`h-8 text-xs w-[140px] ${STATUS_COLORS[app.status || "preparing"] || ""}`}>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {STATUS_OPTIONS.map((s) => (
-                              <SelectItem key={s} value={s} className="text-xs">
-                                {STATUS_LABELS[s]}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Button size="sm" variant="outline" onClick={() => setSelectedApp(app)}>
-                          <Eye className="h-4 w-4 mr-1" /> View
-                        </Button>
-                        <Button size="sm" variant="ghost" onClick={() => deleteApp(app.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
+
+                        <CollapsibleContent className="pt-4 border-t mt-4">
+                          <ApplicationTimeline applicationId={app.id} userId={user.id} />
+                        </CollapsibleContent>
+                      </CardContent>
+                    </Card>
+                  </Collapsible>
                 );
               })}
             </div>
           )}
         </div>
       </main>
+
+      {/* Status Update Dialog */}
+      {statusUpdateDialog && statusDialogApp && (
+        <StatusUpdateDialog
+          open={!!statusUpdateDialog}
+          onClose={() => setStatusUpdateDialog(null)}
+          newStatus={statusUpdateDialog.newStatus}
+          onSave={handleStatusDialogSave}
+          jobTitle={statusDialogApp.job_title}
+          company={statusDialogApp.company}
+        />
+      )}
+
+      {/* Application Detail Modal */}
+      <ApplicationDetailModal
+        open={!!detailApp}
+        onClose={() => setDetailApp(null)}
+        app={detailApp}
+        userId={user.id}
+      />
     </div>
   );
 };

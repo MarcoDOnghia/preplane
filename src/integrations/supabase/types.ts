@@ -14,6 +14,123 @@ export type Database = {
   }
   public: {
     Tables: {
+      application_notes: {
+        Row: {
+          application_id: string
+          content: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          application_id: string
+          content: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          application_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_notes_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      application_reminders: {
+        Row: {
+          application_id: string
+          created_at: string
+          due_date: string
+          id: string
+          is_done: boolean
+          reminder_type: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          due_date: string
+          id?: string
+          is_done?: boolean
+          reminder_type?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          due_date?: string
+          id?: string
+          is_done?: boolean
+          reminder_type?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_reminders_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      application_timeline: {
+        Row: {
+          application_id: string
+          created_at: string
+          event_type: string
+          from_status: string | null
+          id: string
+          metadata: Json | null
+          note: string | null
+          to_status: string | null
+          user_id: string
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          event_type?: string
+          from_status?: string | null
+          id?: string
+          metadata?: Json | null
+          note?: string | null
+          to_status?: string | null
+          user_id: string
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          event_type?: string
+          from_status?: string | null
+          id?: string
+          metadata?: Json | null
+          note?: string | null
+          to_status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_timeline_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       applications: {
         Row: {
           application_method: string | null
@@ -30,13 +147,21 @@ export type Database = {
           formatting_issues: Json | null
           id: string
           interview_questions: Json | null
+          interview_type: string | null
+          interviewer_name: string | null
           job_description: string
           job_title: string
           key_requirements: Json
           keywords_found: Json | null
           keywords_missing: Json | null
+          offer_deadline: string | null
           questions_to_ask: Json | null
           quick_wins: Json | null
+          rejection_reason: string | null
+          rejection_stage: string | null
+          salary_currency: string | null
+          salary_offered: number | null
+          scheduled_date: string | null
           status: string | null
           tone: string
           user_id: string
@@ -56,13 +181,21 @@ export type Database = {
           formatting_issues?: Json | null
           id?: string
           interview_questions?: Json | null
+          interview_type?: string | null
+          interviewer_name?: string | null
           job_description: string
           job_title?: string
           key_requirements?: Json
           keywords_found?: Json | null
           keywords_missing?: Json | null
+          offer_deadline?: string | null
           questions_to_ask?: Json | null
           quick_wins?: Json | null
+          rejection_reason?: string | null
+          rejection_stage?: string | null
+          salary_currency?: string | null
+          salary_offered?: number | null
+          scheduled_date?: string | null
           status?: string | null
           tone?: string
           user_id: string
@@ -82,13 +215,21 @@ export type Database = {
           formatting_issues?: Json | null
           id?: string
           interview_questions?: Json | null
+          interview_type?: string | null
+          interviewer_name?: string | null
           job_description?: string
           job_title?: string
           key_requirements?: Json
           keywords_found?: Json | null
           keywords_missing?: Json | null
+          offer_deadline?: string | null
           questions_to_ask?: Json | null
           quick_wins?: Json | null
+          rejection_reason?: string | null
+          rejection_stage?: string | null
+          salary_currency?: string | null
+          salary_offered?: number | null
+          scheduled_date?: string | null
           status?: string | null
           tone?: string
           user_id?: string
