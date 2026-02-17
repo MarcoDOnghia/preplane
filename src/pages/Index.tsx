@@ -93,10 +93,11 @@ const Index = () => {
 
       setResult(data);
 
-      const titleMatch = jobDescription.match(/^(.+?)(?:\s*[—–-]\s*.+)?$/m);
-      const jobTitle = titleMatch?.[1]?.trim().slice(0, 100) || "Untitled Position";
-      const companyMatch = jobDescription.match(/[—–-]\s*(.+?)$/m);
-      const company = companyMatch?.[1]?.trim().slice(0, 100) || "Unknown Company";
+      // Use em-dash/en-dash as separator (not regular hyphen which appears in "Full-Stack" etc.)
+      const firstLine = jobDescription.split(/\n/)[0]?.trim() || "";
+      const dashMatch = firstLine.match(/^(.+?)\s*[—–]\s*(.+)$/);
+      const jobTitle = (dashMatch?.[1]?.trim() || firstLine).slice(0, 100) || "Untitled Position";
+      const company = dashMatch?.[2]?.trim().slice(0, 100) || "Unknown Company";
       setLastJobTitle(jobTitle);
       setLastCompany(company);
 
@@ -142,7 +143,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="container mx-auto px-4 py-8 max-w-6xl space-y-10">
-        <InputSection onSubmit={handleSubmit} loading={loading} loadingMessage={loadingMessage} />
+        <InputSection onSubmit={handleSubmit} onClear={() => { setResult(null); downloadCountRef.current = 0; }} loading={loading} loadingMessage={loadingMessage} />
         {loading && loadingProgress > 0 && (
           <div className="space-y-2">
             <Progress value={loadingProgress} className="h-2" />
