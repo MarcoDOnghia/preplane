@@ -16,8 +16,28 @@ const Auth = () => {
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [forgotMode, setForgotMode] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`
+      });
+      if (error) throw error;
+      setResetSent(true);
+      toast({ title: "Check your email", description: "We sent you a password reset link." });
+    } catch (err: any) {
+      setError(err?.message || "Failed to send reset email");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,13 +90,58 @@ const Auth = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>{isLogin ? "Welcome back" : "Create account"}</CardTitle>
+            <CardTitle>{forgotMode ? "Reset password" : isLogin ? "Welcome back" : "Create account"}</CardTitle>
             <CardDescription>
-              {isLogin ? "Sign in to access your tailored applications" :
-              "Sign up to start tailoring your CV"}
+              {forgotMode ? "Enter your email and we'll send you a reset link" :
+               isLogin ? "Sign in to access your tailored applications" :
+               "Sign up to start tailoring your CV"}
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {forgotMode ? (
+              resetSent ? (
+                <div className="space-y-4">
+                  <div className="rounded-md bg-primary/10 border border-primary/20 p-3 text-sm text-primary">
+                    Check your email for a password reset link.
+                  </div>
+                  <button
+                    type="button"
+                    className="text-sm text-primary hover:underline font-medium"
+                    onClick={() => { setForgotMode(false); setResetSent(false); setError(null); }}
+                  >
+                    ← Back to sign in
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleForgotPassword} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      required />
+                  </div>
+                  {error && (
+                    <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
+                      {error}
+                    </div>
+                  )}
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? "Sending..." : "Send Reset Link"}
+                  </Button>
+                  <button
+                    type="button"
+                    className="text-sm text-primary hover:underline font-medium w-full text-center"
+                    onClick={() => { setForgotMode(false); setError(null); }}
+                  >
+                    ← Back to sign in
+                  </button>
+                </form>
+              )
+            ) : (
             <form onSubmit={handleAuth} className="space-y-4">
               {!isLogin &&
               <div className="space-y-2">
@@ -87,7 +152,6 @@ const Auth = () => {
                   onChange={(e) => setDisplayName(e.target.value)}
                   placeholder="Your name"
                   required={!isLogin} />
-
                 </div>
               }
               <div className="space-y-2">
@@ -99,10 +163,20 @@ const Auth = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
                   required />
-
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Password</Label>
+                  {isLogin && (
+                    <button
+                      type="button"
+                      className="text-xs text-primary hover:underline"
+                      onClick={() => { setForgotMode(true); setError(null); }}
+                    >
+                      Forgot password?
+                    </button>
+                  )}
+                </div>
                 <Input
                   id="password"
                   type="password"
@@ -111,7 +185,6 @@ const Auth = () => {
                   placeholder="••••••••"
                   required
                   minLength={6} />
-
               </div>
               {error &&
               <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
@@ -122,6 +195,7 @@ const Auth = () => {
                 {loading ? "Please wait..." : isLogin ? "Sign In" : "Sign Up"}
               </Button>
             </form>
+            )}
 
             <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
@@ -183,7 +257,7 @@ const Auth = () => {
               <button
                 type="button"
                 className="text-primary hover:underline font-medium"
-                onClick={() => setIsLogin(!isLogin)}>
+                onClick={() => { setIsLogin(!isLogin); setError(null); setForgotMode(false); }}>
 
                 {isLogin ? "Sign up" : "Sign in"}
               </button>
