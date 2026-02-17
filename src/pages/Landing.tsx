@@ -7,7 +7,17 @@ import {
   Compass, FileText, PenTool, BarChart3, MessageSquare, ClipboardCheck,
   ArrowRight, CheckCircle2, Sparkles, ChevronDown, Mail
 } from "lucide-react";
-import appPreview from "@/assets/app-preview.png";
+import previewAts from "@/assets/preview-ats.png";
+import previewCv from "@/assets/preview-cv.png";
+import previewCover from "@/assets/preview-cover.png";
+import previewInterview from "@/assets/preview-interview.png";
+
+const PREVIEW_TABS = [
+  { label: "ATS Score", image: previewAts, alt: "ATS compatibility score with keyword analysis and quick wins" },
+  { label: "CV Suggestions", image: previewCv, alt: "Side-by-side CV suggestions with impact scoring" },
+  { label: "Cover Letters", image: previewCover, alt: "Three cover letter versions: conservative, balanced, and bold" },
+  { label: "Interview Prep", image: previewInterview, alt: "Predicted interview questions with STAR guidance" },
+];
 
 const FEATURES = [
   {
@@ -83,6 +93,62 @@ const FaqItem = ({ q, a }: { q: string; a: string }) => {
   );
 };
 
+
+const AppPreviewShowcase = () => {
+  const [activeTab, setActiveTab] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveTab((prev) => (prev + 1) % PREVIEW_TABS.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <section className="container mx-auto px-4 pb-16 md:pb-24">
+      <div className="max-w-5xl mx-auto space-y-4">
+        {/* Tab buttons */}
+        <div className="flex justify-center gap-2 flex-wrap">
+          {PREVIEW_TABS.map((tab, i) => (
+            <button
+              key={i}
+              onClick={() => setActiveTab(i)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeTab === i
+                  ? "bg-primary text-primary-foreground shadow-md"
+                  : "bg-secondary text-muted-foreground hover:text-foreground hover:bg-accent"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        {/* Image */}
+        <div className="rounded-xl border border-border/60 shadow-2xl shadow-primary/5 overflow-hidden bg-card">
+          <img
+            src={PREVIEW_TABS[activeTab].image}
+            alt={PREVIEW_TABS[activeTab].alt}
+            className="w-full h-auto transition-opacity duration-300"
+            loading="lazy"
+          />
+        </div>
+        {/* Progress dots */}
+        <div className="flex justify-center gap-2">
+          {PREVIEW_TABS.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setActiveTab(i)}
+              className={`h-1.5 rounded-full transition-all ${
+                activeTab === i ? "w-8 bg-primary" : "w-1.5 bg-border"
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
 const Landing = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
@@ -141,19 +207,8 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* App Preview Screenshot */}
-      <section className="container mx-auto px-4 pb-16 md:pb-24">
-        <div className="max-w-5xl mx-auto">
-          <div className="rounded-xl border border-border/60 shadow-2xl shadow-primary/5 overflow-hidden bg-card">
-            <img
-              src={appPreview}
-              alt="PrepLane app showing CV tailoring results with ATS score analysis"
-              className="w-full h-auto"
-              loading="lazy"
-            />
-          </div>
-        </div>
-      </section>
+      {/* App Preview Showcase */}
+      <AppPreviewShowcase />
 
       {/* Stats */}
       <section className="border-y bg-card/50">
