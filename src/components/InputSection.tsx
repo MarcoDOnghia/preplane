@@ -12,11 +12,12 @@ import type { Tone } from "@/lib/types";
 
 interface InputSectionProps {
   onSubmit: (cvContent: string, jobDescription: string, tone: Tone) => void;
+  onClear?: () => void;
   loading: boolean;
   loadingMessage: string;
 }
 
-const InputSection = ({ onSubmit, loading, loadingMessage }: InputSectionProps) => {
+const InputSection = ({ onSubmit, onClear, loading, loadingMessage }: InputSectionProps) => {
   const [cvText, setCvText] = useState("");
   const [jobDesc, setJobDesc] = useState("");
   const [tone, setTone] = useState<Tone>("professional");
@@ -51,6 +52,7 @@ const InputSection = ({ onSubmit, loading, loadingMessage }: InputSectionProps) 
     setTone("professional");
     setFileName("");
     if (fileInputRef.current) fileInputRef.current.value = "";
+    onClear?.();
   };
 
   const loadSample = () => {
