@@ -107,6 +107,7 @@ const History = () => {
   const [statusUpdateDialog, setStatusUpdateDialog] = useState<{ appId: string; newStatus: string } | null>(null);
   const [detailApp, setDetailApp] = useState<AppRow | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [reminderRefreshKey, setReminderRefreshKey] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -164,14 +165,17 @@ const History = () => {
         });
 
         // Auto-create contextual reminders
+        let createdReminder = false;
         if (status === "applied") {
           await createAutoReminder(id, "follow_up", `Follow up on ${app?.job_title || "application"} at ${app?.company || "company"}`, addDays(new Date(), 14));
+          createdReminder = true;
         }
         if (["recruiter_screen", "phone_interview", "onsite_interview"].includes(status) && extra.scheduled_date) {
           const interviewDay = new Date(extra.scheduled_date);
           const dayBefore = addDays(interviewDay, -1);
           if (dayBefore > new Date()) {
             await createAutoReminder(id, "interview", `Interview tomorrow: ${app?.job_title || "role"} at ${app?.company || "company"}`, dayBefore);
+            createdReminder = true;
           }
         }
         if (status === "offer" && extra.offer_deadline) {
@@ -179,8 +183,10 @@ const History = () => {
           const dayBefore = addDays(deadline, -1);
           if (dayBefore > new Date()) {
             await createAutoReminder(id, "offer_deadline", `Offer deadline tomorrow: ${app?.job_title || "role"} at ${app?.company || "company"}`, dayBefore);
+            createdReminder = true;
           }
         }
+        if (createdReminder) setReminderRefreshKey((k) => k + 1);
       }
       setApps((prev) => prev.map((a) => (a.id === id ? { ...a, ...updates } : a)));
     }
@@ -284,7 +290,7 @@ const History = () => {
       <main className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="space-y-6">
           {/* Reminders Banner */}
-          <RemindersBanner userId={user.id} apps={apps.map((a) => ({ id: a.id, job_title: a.job_title, company: a.company }))} />
+          <RemindersBanner key={reminderRefreshKey} userId={user.id} apps={apps.map((a) => ({ id: a.id, job_title: a.job_title, company: a.company }))} />
 
           {/* Dashboard Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
