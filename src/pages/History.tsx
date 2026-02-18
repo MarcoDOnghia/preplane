@@ -14,6 +14,11 @@ import {
   ArrowUpDown, Briefcase, Globe, Mail, Users, UserCheck, MoreHorizontal,
   ChevronDown, ChevronRight, Clock, Percent,
 } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { addDays } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceStrict } from "date-fns";
 import StatusUpdateDialog from "@/components/StatusUpdateDialog";
@@ -101,6 +106,7 @@ const History = () => {
   const [expandedTimelines, setExpandedTimelines] = useState<Set<string>>(new Set());
   const [statusUpdateDialog, setStatusUpdateDialog] = useState<{ appId: string; newStatus: string } | null>(null);
   const [detailApp, setDetailApp] = useState<AppRow | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -121,17 +127,20 @@ const History = () => {
     const { error } = await supabase.from("applications").delete().eq("id", id);
     if (!error) {
       setApps((prev) => prev.filter((a) => a.id !== id));
+      setDeleteConfirmId(null);
       toast({ title: "Deleted", description: "Application removed." });
     }
   };
 
-  const handleStatusChange = (appId: string, newStatus: string) => {
-    const needsDialog = ["recruiter_screen", "phone_interview", "onsite_interview", "offer", "rejected"].includes(newStatus);
-    if (needsDialog) {
-      setStatusUpdateDialog({ appId, newStatus });
-    } else {
-      updateStatus(appId, newStatus, {});
-    }
+  const createAutoReminder = async (appId: string, type: string, title: string, dueDate: Date) => {
+    if (!user) return;
+    await supabase.from("application_reminders").insert({
+      application_id: appId,
+      user_id: user.id,
+      reminder_type: type,
+      title,
+      due_date: dueDate.toISOString(),
+    });
   };
 
   const updateStatus = async (id: string, status: string, extra: Record<string, any>) => {
@@ -144,7 +153,6 @@ const History = () => {
 
     const { error } = await supabase.from("applications").update(updates).eq("id", id);
     if (!error) {
-      // Record timeline event
       if (user) {
         await supabase.from("application_timeline").insert({
           application_id: id,
@@ -154,8 +162,36 @@ const History = () => {
           to_status: status,
           metadata: extra,
         });
+
+        // Auto-create contextual reminders
+        if (status === "applied") {
+          await createAutoReminder(id, "follow_up", `Follow up on ${app?.job_title || "application"} at ${app?.company || "company"}`, addDays(new Date(), 14));
+        }
+        if (["recruiter_screen", "phone_interview", "onsite_interview"].includes(status) && extra.scheduled_date) {
+          const interviewDay = new Date(extra.scheduled_date);
+          const dayBefore = addDays(interviewDay, -1);
+          if (dayBefore > new Date()) {
+            await createAutoReminder(id, "interview", `Interview tomorrow: ${app?.job_title || "role"} at ${app?.company || "company"}`, dayBefore);
+          }
+        }
+        if (status === "offer" && extra.offer_deadline) {
+          const deadline = new Date(extra.offer_deadline);
+          const dayBefore = addDays(deadline, -1);
+          if (dayBefore > new Date()) {
+            await createAutoReminder(id, "offer_deadline", `Offer deadline tomorrow: ${app?.job_title || "role"} at ${app?.company || "company"}`, dayBefore);
+          }
+        }
       }
       setApps((prev) => prev.map((a) => (a.id === id ? { ...a, ...updates } : a)));
+    }
+  };
+
+  const handleStatusChange = (appId: string, newStatus: string) => {
+    const needsDialog = ["recruiter_screen", "phone_interview", "onsite_interview", "offer", "rejected"].includes(newStatus);
+    if (needsDialog) {
+      setStatusUpdateDialog({ appId, newStatus });
+    } else {
+      updateStatus(appId, newStatus, {});
     }
   };
 
@@ -389,7 +425,7 @@ const History = () => {
                             <Button size="sm" variant="outline" onClick={() => setDetailApp(app)}>
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button size="sm" variant="ghost" onClick={() => deleteApp(app.id)}>
+                            <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => setDeleteConfirmId(app.id)}>
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
@@ -407,6 +443,24 @@ const History = () => {
           )}
         </div>
       </main>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteConfirmId} onOpenChange={(o) => !o && setDeleteConfirmId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Application?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the application and all its timeline events, notes, and reminders. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => deleteConfirmId && deleteApp(deleteConfirmId)}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Status Update Dialog */}
       {statusUpdateDialog && statusDialogApp && (
