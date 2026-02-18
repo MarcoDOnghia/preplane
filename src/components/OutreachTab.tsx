@@ -5,11 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Mail, Copy, Send, Loader2, MessageSquare, Clock, Trash2, Check,
+  Mail, Copy, Send, Loader2, MessageSquare, Clock, Trash2, Check, ChevronDown, X,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -44,11 +46,12 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary }: Ou
   const [messages, setMessages] = useState<OutreachMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null); // null = generator, id = history item
 
   // Generator form state
   const [selectedType, setSelectedType] = useState("hiring_manager");
   const [recipientName, setRecipientName] = useState("");
+  const [recipientEmail, setRecipientEmail] = useState("");
   const [additionalContext, setAdditionalContext] = useState("");
   const [generatedSubject, setGeneratedSubject] = useState("");
   const [generatedContent, setGeneratedContent] = useState("");
@@ -71,6 +74,13 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary }: Ou
     setLoading(false);
   };
 
+  const openGeneratorWith = (type: string) => {
+    setSelectedType(type);
+    setGeneratedContent("");
+    setGeneratedSubject("");
+    setShowGenerator(true);
+  };
+
   const generateMessage = async () => {
     setGenerating(true);
     try {
@@ -89,6 +99,14 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary }: Ou
 
       setGeneratedSubject(data.subject || "");
       setGeneratedContent(data.content || "");
+
+      // Log timeline event on generation
+      await supabase.from("application_timeline").insert({
+        application_id: applicationId,
+        user_id: userId,
+        event_type: "outreach_generated",
+        note: `Generated ${MESSAGE_TYPES.find((t) => t.value === selectedType)?.label || selectedType}${recipientName ? ` for ${recipientName}` : ""}`,
+      });
     } catch (e: any) {
       toast({
         title: "Generation failed",
@@ -110,6 +128,7 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary }: Ou
         application_id: applicationId,
         message_type: selectedType,
         recipient_name: recipientName || null,
+        recipient_email: recipientEmail || null,
         subject: generatedSubject || null,
         content: generatedContent,
       })
@@ -124,22 +143,17 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary }: Ou
     setMessages((prev) => [data as OutreachMessage, ...prev]);
     setGeneratedContent("");
     setGeneratedSubject("");
+    setRecipientName("");
+    setRecipientEmail("");
+    setAdditionalContext("");
     setShowGenerator(false);
-    toast({ title: "Message saved" });
-
-    // Record on timeline
-    await supabase.from("application_timeline").insert({
-      application_id: applicationId,
-      user_id: userId,
-      event_type: "outreach_sent",
-      note: `${MESSAGE_TYPES.find((t) => t.value === selectedType)?.label || selectedType}${recipientName ? ` to ${recipientName}` : ""}`,
-    });
+    toast({ title: "Message saved to history" });
   };
 
-  const copyToClipboard = async (text: string) => {
+  const copyToClipboard = async (text: string, id: string | null = null) => {
     await navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setCopiedId(id ?? "generator");
+    setTimeout(() => setCopiedId(null), 2000);
     toast({ title: "Copied to clipboard" });
   };
 
@@ -173,44 +187,68 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary }: Ou
   const typeIcon = (type: string) =>
     MESSAGE_TYPES.find((t) => t.value === type)?.icon || "✉️";
 
+  const selectedTypeInfo = MESSAGE_TYPES.find((t) => t.value === selectedType);
+
   return (
     <div className="space-y-4">
-      {/* Generate new message */}
+      {/* Generate new message — dropdown trigger */}
       {!showGenerator ? (
-        <Button onClick={() => setShowGenerator(true)} className="w-full">
-          <MessageSquare className="h-4 w-4 mr-2" /> Generate Message
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button className="w-full">
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Generate Message
+              <ChevronDown className="h-4 w-4 ml-2" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-64 bg-popover border shadow-lg z-50">
+            {MESSAGE_TYPES.map((t) => (
+              <DropdownMenuItem
+                key={t.value}
+                onClick={() => openGeneratorWith(t.value)}
+                className="cursor-pointer"
+              >
+                <span className="mr-2">{t.icon}</span>
+                {t.label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       ) : (
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-primary" />
-              Generate Outreach Message
-            </CardTitle>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base flex items-center gap-2">
+                <span>{selectedTypeInfo?.icon}</span>
+                {selectedTypeInfo?.label}
+              </CardTitle>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 w-7 p-0"
+                onClick={() => setShowGenerator(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label>Message Type</Label>
-                <Select value={selectedType} onValueChange={setSelectedType}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MESSAGE_TYPES.map((t) => (
-                      <SelectItem key={t.value} value={t.value}>
-                        {t.icon} {t.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
               <div className="space-y-1.5">
                 <Label>Recipient Name (optional)</Label>
                 <Input
                   placeholder="e.g. Sarah Chen"
                   value={recipientName}
                   onChange={(e) => setRecipientName(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Recipient Email (optional)</Label>
+                <Input
+                  type="email"
+                  placeholder="sarah@company.com"
+                  value={recipientEmail}
+                  onChange={(e) => setRecipientEmail(e.target.value)}
                 />
               </div>
             </div>
@@ -220,9 +258,11 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary }: Ou
               <Textarea
                 placeholder={
                   selectedType === "thank_you"
-                    ? "Key topics discussed, interviewer name, specific things you liked..."
+                    ? "Key topics discussed, specific things you liked..."
                     : selectedType === "offer_negotiation"
                     ? "Current offer details, competing offers, market data..."
+                    : selectedType === "referral_request"
+                    ? "How you know this person, what you're asking for..."
                     : "Any specific details to include..."
                 }
                 value={additionalContext}
@@ -271,22 +311,22 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary }: Ou
                 </div>
                 <div className="flex gap-2 flex-wrap">
                   <Button size="sm" onClick={saveMessage}>
-                    <Check className="h-4 w-4 mr-1" /> Save
+                    <Check className="h-4 w-4 mr-1" /> Save to History
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => copyToClipboard(generatedContent)}
+                    onClick={() => copyToClipboard(generatedContent, null)}
                   >
-                    {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-                    {copied ? "Copied!" : "Copy"}
+                    {copiedId === "generator" ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+                    {copiedId === "generator" ? "Copied!" : "Copy"}
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => openEmailClient(generatedSubject, generatedContent)}
+                    onClick={() => openEmailClient(generatedSubject, generatedContent, recipientEmail)}
                   >
-                    <Mail className="h-4 w-4 mr-1" /> Open Email
+                    <Mail className="h-4 w-4 mr-1" /> Open in Email
                   </Button>
                 </div>
               </div>
@@ -315,10 +355,7 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary }: Ou
           ) : (
             <div className="space-y-3">
               {messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className="border rounded-lg p-3 space-y-2"
-                >
+                <div key={msg.id} className="border rounded-lg p-3 space-y-2">
                   <div className="flex items-center justify-between gap-2 flex-wrap">
                     <div className="flex items-center gap-2">
                       <span>{typeIcon(msg.message_type)}</span>
@@ -330,7 +367,7 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary }: Ou
                     <div className="flex items-center gap-2">
                       {msg.sent_at ? (
                         <Badge variant="outline" className="text-xs text-green-600 border-green-300">
-                          Sent
+                          ✓ Sent
                         </Badge>
                       ) : (
                         <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => markAsSent(msg.id)}>
@@ -352,16 +389,22 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary }: Ou
                       Subject: {msg.subject}
                     </p>
                   )}
+                  {msg.recipient_email && (
+                    <p className="text-xs text-muted-foreground">
+                      To: {msg.recipient_email}
+                    </p>
+                  )}
                   <p className="text-sm whitespace-pre-line line-clamp-4">{msg.content}</p>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
                     <span>{formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}</span>
                     <Button
                       size="sm"
                       variant="ghost"
                       className="h-6 text-xs px-2"
-                      onClick={() => copyToClipboard(msg.content)}
+                      onClick={() => copyToClipboard(msg.content, msg.id)}
                     >
-                      <Copy className="h-3 w-3 mr-1" /> Copy
+                      {copiedId === msg.id ? <Check className="h-3 w-3 mr-1" /> : <Copy className="h-3 w-3 mr-1" />}
+                      {copiedId === msg.id ? "Copied!" : "Copy"}
                     </Button>
                     <Button
                       size="sm"
@@ -369,7 +412,7 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary }: Ou
                       className="h-6 text-xs px-2"
                       onClick={() => openEmailClient(msg.subject || "", msg.content, msg.recipient_email || "")}
                     >
-                      <Mail className="h-3 w-3 mr-1" /> Email
+                      <Mail className="h-3 w-3 mr-1" /> Open in Email
                     </Button>
                   </div>
                 </div>
