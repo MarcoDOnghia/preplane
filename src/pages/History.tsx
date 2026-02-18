@@ -384,8 +384,12 @@ const History = () => {
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between gap-3">
                           <div className="space-y-1 flex-1 min-w-0">
-                            <h3 className="font-semibold truncate">{app.job_title}</h3>
-                            <p className="text-sm text-muted-foreground truncate">{app.company}</p>
+                            <h3 className="font-semibold truncate" title={app.job_title}>
+                              {app.job_title.length > 80 ? app.job_title.slice(0, 80) + "…" : app.job_title}
+                            </h3>
+                            <p className="text-sm text-muted-foreground truncate" title={app.company}>
+                              {app.company.length > 60 ? app.company.slice(0, 60) + "…" : app.company}
+                            </p>
                             <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
                               <Calendar className="h-3 w-3" />
                               {new Date(app.created_at).toLocaleDateString()}
