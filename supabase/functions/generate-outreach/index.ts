@@ -16,7 +16,23 @@ const VALID_TYPES = [
 ];
 
 const TYPE_PROMPTS: Record<string, string> = {
-  hiring_manager: `Generate a concise hiring manager outreach message (3-4 sentences). Show genuine interest in the role, highlight 1-2 most relevant experiences from the CV, and end with a clear call to action (request for a brief chat). Also suggest a subject line.`,
+  hiring_manager: `Write a brief, personalized message to the hiring manager for this role.
+
+Instructions:
+- Keep it to 3-4 sentences maximum (target 100-150 words)
+- Sound genuinely interested, not salesy
+- Reference the specific interest they mentioned if provided
+- Avoid buzzwords: "passionate", "leverage", "synergy", "rockstar", "ninja", "transformational"
+- Use contractions (I'm, I've, you're) to sound conversational
+- Don't over-flatter the company
+- End with a simple, direct ask (15-minute call or coffee chat)
+- Sound confident but humble
+- Write naturally, like you're messaging a professional peer, not applying to royalty
+
+Bad example: "I am passionate about leveraging my synergistic skillset to drive transformational impact..."
+Good example: "I've been following {company}'s work and I'm particularly excited about {interest}. Given my experience in {relevant experience}, I think I could contribute meaningfully. Would you have 15 minutes for a quick call?"
+
+Also suggest a short, specific subject line (avoid generic "Application for..." phrasing).`,
   follow_up: `Generate a professional follow-up email for an application with no response. Reference the application date, reaffirm interest, ask about the timeline, and offer to provide additional information. Keep it brief and respectful. Also suggest a subject line.`,
   thank_you: `Generate a personalized thank-you email after an interview. Thank the interviewer by name if provided, reference specific discussion topics if given, reaffirm fit and interest, and mention next steps. Keep it warm and professional. Also suggest a subject line.`,
   referral_request: `Generate a referral request message. Make it easy for the contact to say yes by being specific about the role, providing context about your fit, and offering to send your resume. Keep it personal and appreciative. Also suggest a subject line.`,
@@ -97,6 +113,7 @@ serve(async (req) => {
     const cvSummary = validateStringField(body.cvSummary, "cvSummary", 5000);
     const recipientName = validateStringField(body.recipientName, "recipientName", 200);
     const additionalContext = validateStringField(body.additionalContext, "additionalContext", 2000);
+    const roleInterest = validateStringField(body.roleInterest, "roleInterest", 100);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -113,6 +130,7 @@ You MUST call the generate_message function with your output.`;
 Job: ${jobTitle} at ${company}
 ${cvSummary ? `\nUser's background summary:\n${cvSummary}` : ""}
 ${recipientName ? `\nRecipient: ${recipientName}` : ""}
+${roleInterest ? `\nWhat specifically interests them about this role: ${roleInterest}` : ""}
 ${additionalContext ? `\nAdditional context: ${additionalContext}` : ""}
 </USER_CONTEXT>`;
 
