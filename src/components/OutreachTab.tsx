@@ -53,6 +53,8 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary }: Ou
   const [recipientName, setRecipientName] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
   const [additionalContext, setAdditionalContext] = useState("");
+  const [roleInterest, setRoleInterest] = useState("");
+  const [showPersonalTouch, setShowPersonalTouch] = useState(false);
   const [generatedSubject, setGeneratedSubject] = useState("");
   const [generatedContent, setGeneratedContent] = useState("");
   const [showGenerator, setShowGenerator] = useState(false);
@@ -78,6 +80,8 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary }: Ou
     setSelectedType(type);
     setGeneratedContent("");
     setGeneratedSubject("");
+    setRoleInterest("");
+    setShowPersonalTouch(false);
     setShowGenerator(true);
   };
 
@@ -92,6 +96,7 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary }: Ou
           cvSummary: cvSummary?.slice(0, 3000),
           recipientName: recipientName || undefined,
           additionalContext: additionalContext || undefined,
+          roleInterest: roleInterest.trim() || undefined,
         },
       });
 
@@ -146,6 +151,8 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary }: Ou
     setRecipientName("");
     setRecipientEmail("");
     setAdditionalContext("");
+    setRoleInterest("");
+    setShowPersonalTouch(false);
     setShowGenerator(false);
     toast({ title: "Message saved to history" });
   };
@@ -253,23 +260,57 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary }: Ou
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <Label>Additional Context (optional)</Label>
-              <Textarea
-                placeholder={
-                  selectedType === "thank_you"
-                    ? "Key topics discussed, specific things you liked..."
-                    : selectedType === "offer_negotiation"
-                    ? "Current offer details, competing offers, market data..."
-                    : selectedType === "referral_request"
-                    ? "How you know this person, what you're asking for..."
-                    : "Any specific details to include..."
-                }
-                value={additionalContext}
-                onChange={(e) => setAdditionalContext(e.target.value)}
-                className="min-h-[80px]"
-              />
-            </div>
+            {/* Personal touch — hiring manager only */}
+            {selectedType === "hiring_manager" && (
+              <div className="space-y-1.5">
+                {!showPersonalTouch ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowPersonalTouch(true)}
+                    className="text-xs text-primary hover:underline flex items-center gap-1"
+                  >
+                    + Add personal touch
+                  </button>
+                ) : (
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs">What specifically interests you about this role?</Label>
+                      <span className={`text-xs ${roleInterest.length > 100 ? "text-destructive" : "text-muted-foreground"}`}>
+                        {roleInterest.length}/100
+                      </span>
+                    </div>
+                    <Input
+                      placeholder="e.g., excited about the product roadmap work, company's approach to AI, etc."
+                      value={roleInterest}
+                      maxLength={100}
+                      onChange={(e) => setRoleInterest(e.target.value)}
+                    />
+                    <p className="text-[10px] text-muted-foreground">Optional · 1 sentence max · makes your message stand out</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Additional context for other types */}
+            {selectedType !== "hiring_manager" && (
+              <div className="space-y-1.5">
+                <Label>Additional Context (optional)</Label>
+                <Textarea
+                  placeholder={
+                    selectedType === "thank_you"
+                      ? "Key topics discussed, specific things you liked..."
+                      : selectedType === "offer_negotiation"
+                      ? "Current offer details, competing offers, market data..."
+                      : selectedType === "referral_request"
+                      ? "How you know this person, what you're asking for..."
+                      : "Any specific details to include..."
+                  }
+                  value={additionalContext}
+                  onChange={(e) => setAdditionalContext(e.target.value)}
+                  className="min-h-[80px]"
+                />
+              </div>
+            )}
 
             <div className="flex gap-2">
               <Button onClick={generateMessage} disabled={generating}>
@@ -299,9 +340,13 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary }: Ou
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <Label>Message</Label>
-                    <span className="text-xs text-muted-foreground">
-                      {generatedContent.length} characters
-                    </span>
+                    {selectedType === "hiring_manager" ? (
+                      <WordCountBadge text={generatedContent} />
+                    ) : (
+                      <span className="text-xs text-muted-foreground">
+                        {generatedContent.length} characters
+                      </span>
+                    )}
                   </div>
                   <Textarea
                     value={generatedContent}
@@ -424,5 +469,22 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary }: Ou
     </div>
   );
 };
+
+// Word count badge with color coding for hiring manager messages
+function WordCountBadge({ text }: { text: string }) {
+  const words = text.trim().split(/\s+/).filter(Boolean).length;
+  const colorClass =
+    words >= 100 && words <= 150
+      ? "text-green-600"
+      : words <= 200
+      ? "text-yellow-600"
+      : "text-destructive";
+  return (
+    <span className={`text-xs flex items-center gap-1 ${colorClass}`} title="Shorter messages get better response rates">
+      {words} words
+      {words > 150 && " · aim for under 150"}
+    </span>
+  );
+}
 
 export default OutreachTab;
