@@ -8,6 +8,9 @@ import { Label } from "@/components/ui/label";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -58,6 +61,8 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appl
   const [showPersonalTouch, setShowPersonalTouch] = useState(false);
   const [strongestFit, setStrongestFit] = useState("");
   const [showStrongestFit, setShowStrongestFit] = useState(false);
+  const [interviewTopics, setInterviewTopics] = useState("");
+  const [interviewType, setInterviewType] = useState("video");
   const [generatedSubject, setGeneratedSubject] = useState("");
   const [generatedContent, setGeneratedContent] = useState("");
   const [showGenerator, setShowGenerator] = useState(false);
@@ -93,6 +98,8 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appl
     setShowPersonalTouch(false);
     setStrongestFit("");
     setShowStrongestFit(false);
+    setInterviewTopics("");
+    setInterviewType("video");
     setToneOverride(undefined);
     setShowGenerator(true);
   };
@@ -113,6 +120,8 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appl
           appliedDate: appliedDate || undefined,
           daysAgo: daysSinceApplied ?? undefined,
           toneHint: toneHint || toneOverride || undefined,
+          interviewTopics: interviewTopics.trim() || undefined,
+          interviewType: selectedType === "thank_you" ? interviewType : undefined,
         },
       });
 
@@ -122,11 +131,15 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appl
       setGeneratedContent(data.content || "");
 
       // Log timeline event on generation
+      const timelineNote = `Generated ${MESSAGE_TYPES.find((t) => t.value === selectedType)?.label || selectedType}${recipientName ? ` for ${recipientName}` : ""}`;
       await supabase.from("application_timeline").insert({
         application_id: applicationId,
         user_id: userId,
         event_type: "outreach_generated",
-        note: `Generated ${MESSAGE_TYPES.find((t) => t.value === selectedType)?.label || selectedType}${recipientName ? ` for ${recipientName}` : ""}`,
+        note: timelineNote,
+        metadata: selectedType === "thank_you" && interviewTopics.trim()
+          ? { interview_topics: interviewTopics.trim(), interview_type: interviewType }
+          : undefined,
       });
     } catch (e: any) {
       toast({
@@ -256,6 +269,8 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appl
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Generic recipient fields — hide for thank_you which has its own */}
+            {selectedType !== "thank_you" && (
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label>Recipient Name (optional)</Label>
@@ -275,6 +290,7 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appl
                 />
               </div>
             </div>
+            )}
 
             {/* Personal touch — hiring manager only */}
             {selectedType === "hiring_manager" && (
@@ -356,15 +372,49 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appl
               </div>
             )}
 
-            {/* Additional context for other types (not hiring_manager, not follow_up) */}
-            {selectedType !== "hiring_manager" && selectedType !== "follow_up" && (
+            {/* Thank you: interviewer name (required), topics, interview type */}
+            {selectedType === "thank_you" && (
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label>Interviewer's Name <span className="text-destructive">*</span></Label>
+                  <Input
+                    placeholder="e.g. Sarah Chen"
+                    value={recipientName}
+                    onChange={(e) => setRecipientName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Interview Type</Label>
+                  <Select value={interviewType} onValueChange={setInterviewType}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="phone">Phone</SelectItem>
+                      <SelectItem value="video">Video</SelectItem>
+                      <SelectItem value="in_person">In-person</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>What were 2-3 key topics you discussed?</Label>
+                  <Textarea
+                    placeholder={"• Their approach to product discovery\n• The team structure\n• Upcoming roadmap priorities"}
+                    value={interviewTopics}
+                    onChange={(e) => setInterviewTopics(e.target.value)}
+                    className="min-h-[80px]"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Additional context for other types (not hiring_manager, not follow_up, not thank_you) */}
+            {selectedType !== "hiring_manager" && selectedType !== "follow_up" && selectedType !== "thank_you" && (
               <div className="space-y-1.5">
                 <Label>Additional Context (optional)</Label>
                 <Textarea
                   placeholder={
-                    selectedType === "thank_you"
-                      ? "Key topics discussed, specific things you liked..."
-                      : selectedType === "offer_negotiation"
+                    selectedType === "offer_negotiation"
                       ? "Current offer details, competing offers, market data..."
                       : selectedType === "referral_request"
                       ? "How you know this person, what you're asking for..."
@@ -378,7 +428,10 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appl
             )}
 
             <div className="flex gap-2">
-              <Button onClick={() => generateMessage()} disabled={generating}>
+              <Button
+                onClick={() => generateMessage()}
+                disabled={generating || (selectedType === "thank_you" && !recipientName.trim())}
+              >
                 {generating ? (
                   <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating...</>
                 ) : (
@@ -405,7 +458,7 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appl
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <Label>Message</Label>
-                    {(selectedType === "hiring_manager" || selectedType === "follow_up") ? (
+                    {(selectedType === "hiring_manager" || selectedType === "follow_up" || selectedType === "thank_you") ? (
                       <WordCountBadge text={generatedContent} target={selectedType === "follow_up" ? [80, 120] : [100, 150]} />
                     ) : (
                       <span className="text-xs text-muted-foreground">
@@ -419,6 +472,14 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appl
                     className="min-h-[200px]"
                   />
                 </div>
+
+                {/* Thank you tip */}
+                {selectedType === "thank_you" && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    Send within 24 hours of your interview for best results
+                  </p>
+                )}
 
                 {/* Tone regeneration buttons for follow_up */}
                 {selectedType === "follow_up" && (
