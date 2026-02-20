@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Compass, FileText, PenTool, BarChart3, MessageSquare, ClipboardCheck,
-  ArrowRight, CheckCircle2, Sparkles, ChevronDown, Mail
+  ArrowRight, CheckCircle2, Sparkles, ChevronDown, Mail, Linkedin
 } from "lucide-react";
 import previewAts from "@/assets/preview-ats.png";
 import previewCv from "@/assets/preview-cv.png";
@@ -62,6 +62,7 @@ const FAQ = [
   {
     q: "How does PrepLane improve my chances of getting interviews?",
     a: "According to Jobscan research, 99% of Fortune 500 companies use Applicant Tracking Systems (ATS), and approximately 75% of resumes are automatically rejected before reaching human recruiters. PrepLane helps you beat these systems by analyzing keyword match between your CV and job description, identifying ATS-unfriendly formatting (tables, images, columns), scoring your CV compatibility (0–100), and providing specific, actionable improvements. We can't guarantee interviews, but we help ensure your CV gets past the first automated screening and into human hands.",
+    link: { label: "Jobscan ATS Research", url: "https://www.jobscan.co/blog/fortune-500-use-applicant-tracking-systems/" },
   },
   {
     q: "What makes PrepLane different from other AI CV tools?",
@@ -77,7 +78,7 @@ const FAQ = [
   },
 ];
 
-const FaqItem = ({ q, a }: { q: string; a: string }) => {
+const FaqItem = ({ q, a, link }: { q: string; a: string; link?: { label: string; url: string } }) => {
   const [open, setOpen] = useState(false);
   return (
     <button
@@ -88,7 +89,22 @@ const FaqItem = ({ q, a }: { q: string; a: string }) => {
         <h3 className="font-semibold text-base">{q}</h3>
         <ChevronDown className={`h-4 w-4 text-muted-foreground shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
       </div>
-      {open && <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{a}</p>}
+      {open && (
+        <div className="mt-3 text-sm text-muted-foreground leading-relaxed">
+          <p>{a}</p>
+          {link && (
+            <a
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="inline-block mt-2 text-primary hover:underline text-sm font-medium"
+            >
+              {link.label} →
+            </a>
+          )}
+        </div>
+      )}
     </button>
   );
 };
@@ -283,7 +299,7 @@ const Landing = () => {
           </h2>
           <div className="divide-y-0">
             {FAQ.map((item, i) => (
-              <FaqItem key={i} q={item.q} a={item.a} />
+              <FaqItem key={i} q={item.q} a={item.a} link={(item as any).link} />
             ))}
           </div>
         </div>
@@ -320,6 +336,15 @@ const Landing = () => {
             <span className="text-sm font-medium">PrepLane</span>
           </div>
           <div className="flex items-center gap-6">
+            <a
+              href="https://www.linkedin.com/in/marcodonghiaa"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"
+            >
+              <Linkedin className="h-3.5 w-3.5" />
+              LinkedIn
+            </a>
             <a
               href="mailto:feedback@preplane.com"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"
