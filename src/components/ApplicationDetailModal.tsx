@@ -203,6 +203,7 @@ const ApplicationDetailModal = ({ open, onClose, app, userId }: ApplicationDetai
               jobTitle={app.job_title}
               company={app.company}
               cvSummary={app.cv_content}
+              appliedDate={app.applied_date}
             />
           </TabsContent>
 
