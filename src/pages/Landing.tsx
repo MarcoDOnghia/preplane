@@ -57,23 +57,23 @@ const STATS = [
 const FAQ = [
   {
     q: "Is PrepLane free to use?",
-    a: "Yes — sign up for free and start tailoring your applications immediately. No credit card required.",
+    a: "Yes! No credit card, no trial period, no hidden costs. Sign up and start tailoring applications immediately.",
   },
   {
-    q: "How does the ATS score work?",
-    a: "We analyze your CV against the job description for keyword matches, formatting issues, and structural alignment. You get a score out of 100 plus actionable quick wins.",
+    q: "How does PrepLane improve my chances of getting interviews?",
+    a: "According to Jobscan research, 99% of Fortune 500 companies use Applicant Tracking Systems (ATS), and approximately 75% of resumes are automatically rejected before reaching human recruiters. PrepLane helps you beat these systems by analyzing keyword match between your CV and job description, identifying ATS-unfriendly formatting (tables, images, columns), scoring your CV compatibility (0–100), and providing specific, actionable improvements. We can't guarantee interviews, but we help ensure your CV gets past the first automated screening and into human hands.",
   },
   {
-    q: "Can I use my own CV format?",
-    a: "Absolutely. Upload a PDF or Word doc, or paste your CV text directly. PrepLane works with any format.",
+    q: "What makes PrepLane different from other AI CV tools?",
+    a: "Most tools just rewrite your CV. PrepLane gives you an ATS compatibility score, generates three cover letter styles, creates interview prep questions, tracks all your applications, and analyzes what's working. It's a complete job search system, not just a CV formatter.",
   },
   {
-    q: "How are cover letters generated?",
-    a: "Our AI reads your CV and the job description, then writes three versions (conservative, balanced, bold) matching your selected tone.",
+    q: "Is my data private and secure?",
+    a: "Yes. Your CV and applications are encrypted and only visible to you. We use high-level security (AES-256 encryption) and never share your data with third parties. You can delete everything at any time.",
   },
   {
-    q: "Is my data secure?",
-    a: "Yes. All data is encrypted and stored securely. You're the only person who can access your applications and CV content.",
+    q: "Can PrepLane help me track my job applications?",
+    a: "Yes! Beyond tailoring, PrepLane tracks every application from \"Applied\" through \"Interview\" to \"Offer.\" You'll see which strategies work best, when to follow up, and get insights on improving your success rate.",
   },
 ];
 
