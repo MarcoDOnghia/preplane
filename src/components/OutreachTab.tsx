@@ -40,13 +40,14 @@ interface OutreachTabProps {
   jobTitle: string;
   company: string;
   cvSummary?: string;
+  appliedDate?: string | null;
 }
 
-const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary }: OutreachTabProps) => {
+const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appliedDate }: OutreachTabProps) => {
   const [messages, setMessages] = useState<OutreachMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
-  const [copiedId, setCopiedId] = useState<string | null>(null); // null = generator, id = history item
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Generator form state
   const [selectedType, setSelectedType] = useState("hiring_manager");
@@ -55,9 +56,17 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary }: Ou
   const [additionalContext, setAdditionalContext] = useState("");
   const [roleInterest, setRoleInterest] = useState("");
   const [showPersonalTouch, setShowPersonalTouch] = useState(false);
+  const [strongestFit, setStrongestFit] = useState("");
+  const [showStrongestFit, setShowStrongestFit] = useState(false);
   const [generatedSubject, setGeneratedSubject] = useState("");
   const [generatedContent, setGeneratedContent] = useState("");
   const [showGenerator, setShowGenerator] = useState(false);
+  const [toneOverride, setToneOverride] = useState<string | undefined>(undefined);
+
+  // Compute days since applied
+  const daysSinceApplied = appliedDate
+    ? Math.floor((Date.now() - new Date(appliedDate).getTime()) / (1000 * 60 * 60 * 24))
+    : null;
 
   const { toast } = useToast();
 
@@ -82,10 +91,13 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary }: Ou
     setGeneratedSubject("");
     setRoleInterest("");
     setShowPersonalTouch(false);
+    setStrongestFit("");
+    setShowStrongestFit(false);
+    setToneOverride(undefined);
     setShowGenerator(true);
   };
 
-  const generateMessage = async () => {
+  const generateMessage = async (toneHint?: string) => {
     setGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke("generate-outreach", {
@@ -97,6 +109,10 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary }: Ou
           recipientName: recipientName || undefined,
           additionalContext: additionalContext || undefined,
           roleInterest: roleInterest.trim() || undefined,
+          strongestFit: strongestFit.trim() || undefined,
+          appliedDate: appliedDate || undefined,
+          daysAgo: daysSinceApplied ?? undefined,
+          toneHint: toneHint || toneOverride || undefined,
         },
       });
 
@@ -291,8 +307,57 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary }: Ou
               </div>
             )}
 
-            {/* Additional context for other types */}
-            {selectedType !== "hiring_manager" && (
+            {/* Follow-up: days since applied + strongest fit */}
+            {selectedType === "follow_up" && (
+              <div className="space-y-3">
+                {daysSinceApplied !== null && (
+                  <div className={`text-sm rounded-md px-3 py-2 border ${
+                    daysSinceApplied < 7
+                      ? "bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-950 dark:border-yellow-800 dark:text-yellow-200"
+                      : daysSinceApplied <= 14
+                      ? "bg-green-50 border-green-200 text-green-800 dark:bg-green-950 dark:border-green-800 dark:text-green-200"
+                      : "bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-950 dark:border-blue-800 dark:text-blue-200"
+                  }`}>
+                    <p className="font-medium">You applied {daysSinceApplied} days ago</p>
+                    <p className="text-xs mt-0.5">
+                      {daysSinceApplied < 7
+                        ? "Consider waiting at least 1-2 weeks before following up"
+                        : daysSinceApplied <= 14
+                        ? "Good timing for a follow-up!"
+                        : "Definitely time to follow up!"}
+                    </p>
+                  </div>
+                )}
+                {!showStrongestFit ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowStrongestFit(true)}
+                    className="text-xs text-primary hover:underline flex items-center gap-1"
+                  >
+                    + Add your strongest fit
+                  </button>
+                ) : (
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs">What's your strongest fit for this role?</Label>
+                      <span className={`text-xs ${strongestFit.length > 120 ? "text-destructive" : "text-muted-foreground"}`}>
+                        {strongestFit.length}/120
+                      </span>
+                    </div>
+                    <Input
+                      placeholder="e.g., 5 years PM experience in B2B SaaS, shipped similar features, etc."
+                      value={strongestFit}
+                      maxLength={120}
+                      onChange={(e) => setStrongestFit(e.target.value)}
+                    />
+                    <p className="text-[10px] text-muted-foreground">Optional · 1 sentence · reinforces why you're a great fit</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Additional context for other types (not hiring_manager, not follow_up) */}
+            {selectedType !== "hiring_manager" && selectedType !== "follow_up" && (
               <div className="space-y-1.5">
                 <Label>Additional Context (optional)</Label>
                 <Textarea
@@ -313,7 +378,7 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary }: Ou
             )}
 
             <div className="flex gap-2">
-              <Button onClick={generateMessage} disabled={generating}>
+              <Button onClick={() => generateMessage()} disabled={generating}>
                 {generating ? (
                   <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating...</>
                 ) : (
@@ -340,8 +405,8 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary }: Ou
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <Label>Message</Label>
-                    {selectedType === "hiring_manager" ? (
-                      <WordCountBadge text={generatedContent} />
+                    {(selectedType === "hiring_manager" || selectedType === "follow_up") ? (
+                      <WordCountBadge text={generatedContent} target={selectedType === "follow_up" ? [80, 120] : [100, 150]} />
                     ) : (
                       <span className="text-xs text-muted-foreground">
                         {generatedContent.length} characters
@@ -354,6 +419,31 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary }: Ou
                     className="min-h-[200px]"
                   />
                 </div>
+
+                {/* Tone regeneration buttons for follow_up */}
+                {selectedType === "follow_up" && (
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={generating}
+                      onClick={() => generateMessage("more_casual")}
+                    >
+                      {generating ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}
+                      Regenerate – More Casual
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={generating}
+                      onClick={() => generateMessage("more_formal")}
+                    >
+                      {generating ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}
+                      Regenerate – More Formal
+                    </Button>
+                  </div>
+                )}
+
                 <div className="flex gap-2 flex-wrap">
                   <Button size="sm" onClick={saveMessage}>
                     <Check className="h-4 w-4 mr-1" /> Save to History
@@ -471,18 +561,19 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary }: Ou
 };
 
 // Word count badge with color coding for hiring manager messages
-function WordCountBadge({ text }: { text: string }) {
+function WordCountBadge({ text, target = [100, 150] }: { text: string; target?: [number, number] }) {
   const words = text.trim().split(/\s+/).filter(Boolean).length;
+  const [low, high] = target;
   const colorClass =
-    words >= 100 && words <= 150
+    words >= low && words <= high
       ? "text-green-600"
-      : words <= 200
+      : words <= high + 50
       ? "text-yellow-600"
       : "text-destructive";
   return (
     <span className={`text-xs flex items-center gap-1 ${colorClass}`} title="Shorter messages get better response rates">
       {words} words
-      {words > 150 && " · aim for under 150"}
+      {words > high && ` · aim for under ${high}`}
     </span>
   );
 }
