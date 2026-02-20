@@ -11,10 +11,16 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import {
+  Collapsible, CollapsibleContent, CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
+  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Mail, Copy, Send, Loader2, MessageSquare, Clock, Trash2, Check, ChevronDown, X, UserPlus,
+  Mail, Copy, Send, Loader2, MessageSquare, Clock, Trash2, Check, ChevronDown, X, UserPlus, Info, Settings, RefreshCw,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { formatDistanceToNow } from "date-fns";
@@ -34,6 +40,20 @@ const REFERRAL_RELATIONSHIPS = [
   { value: "met_at_event", label: "Met at event" },
   { value: "linkedin", label: "LinkedIn connection" },
   { value: "other", label: "Other" },
+];
+
+const NEGOTIATION_REASONS = [
+  { value: "market_data", label: "Market data for this role/location" },
+  { value: "competing_offer", label: "Competing offer" },
+  { value: "experience_level", label: "My experience level" },
+  { value: "cost_of_living", label: "Cost of living" },
+  { value: "other", label: "Other" },
+];
+
+const TONE_OPTIONS = [
+  { value: "more_formal", label: "More Formal", description: "Less contractions, slightly more professional" },
+  { value: "balanced", label: "Balanced", description: "Conversational but professional" },
+  { value: "more_casual", label: "More Casual", description: "Very conversational, friendly" },
 ];
 
 interface OutreachMessage {
@@ -82,6 +102,17 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appl
   const [showGenerator, setShowGenerator] = useState(false);
   const [toneOverride, setToneOverride] = useState<string | undefined>(undefined);
 
+  // Offer negotiation state
+  const [offeredSalary, setOfferedSalary] = useState("");
+  const [targetSalary, setTargetSalary] = useState("");
+  const [salaryCurrency, setSalaryCurrency] = useState("USD");
+  const [negotiationReason, setNegotiationReason] = useState("market_data");
+  const [otherConsiderations, setOtherConsiderations] = useState("");
+
+  // System-wide tone setting
+  const [defaultTone, setDefaultTone] = useState("balanced");
+  const [showToneSettings, setShowToneSettings] = useState(false);
+
   // Compute days since applied
   const daysSinceApplied = appliedDate
     ? Math.floor((Date.now() - new Date(appliedDate).getTime()) / (1000 * 60 * 60 * 24))
@@ -119,7 +150,19 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appl
     setReferralQualification("");
     setReferralAsked(false);
     setToneOverride(undefined);
+    setOfferedSalary("");
+    setTargetSalary("");
+    setSalaryCurrency("USD");
+    setNegotiationReason("market_data");
+    setOtherConsiderations("");
     setShowGenerator(true);
+  };
+
+  const getEffectiveTone = (explicitHint?: string) => {
+    if (explicitHint) return explicitHint;
+    if (toneOverride) return toneOverride;
+    if (defaultTone !== "balanced") return defaultTone;
+    return undefined;
   };
 
   const generateMessage = async (toneHint?: string) => {
@@ -137,13 +180,21 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appl
           strongestFit: strongestFit.trim() || undefined,
           appliedDate: appliedDate || undefined,
           daysAgo: daysSinceApplied ?? undefined,
-          toneHint: toneHint || toneOverride || undefined,
+          toneHint: getEffectiveTone(toneHint),
           interviewTopics: interviewTopics.trim() || undefined,
           interviewType: selectedType === "thank_you" ? interviewType : undefined,
           referralRelationship: selectedType === "referral_request"
             ? (referralRelationship === "other" ? referralRelationshipOther.trim() : REFERRAL_RELATIONSHIPS.find(r => r.value === referralRelationship)?.label)
             : undefined,
           referralQualification: referralQualification.trim() || undefined,
+          // Offer negotiation fields
+          offeredSalary: selectedType === "offer_negotiation" ? offeredSalary || undefined : undefined,
+          targetSalary: selectedType === "offer_negotiation" ? targetSalary || undefined : undefined,
+          salaryCurrency: selectedType === "offer_negotiation" ? salaryCurrency : undefined,
+          negotiationReason: selectedType === "offer_negotiation"
+            ? NEGOTIATION_REASONS.find(r => r.value === negotiationReason)?.label
+            : undefined,
+          otherConsiderations: selectedType === "offer_negotiation" ? otherConsiderations.trim() || undefined : undefined,
         },
       });
 
@@ -271,8 +322,59 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appl
 
   const selectedTypeInfo = MESSAGE_TYPES.find((t) => t.value === selectedType);
 
+  const getWordTarget = (): [number, number] => {
+    switch (selectedType) {
+      case "follow_up": return [80, 120];
+      case "referral_request": return [120, 150];
+      case "offer_negotiation": return [150, 180];
+      default: return [100, 150];
+    }
+  };
+
+  const canGenerate = () => {
+    if (selectedType === "thank_you" && !recipientName.trim()) return false;
+    if (selectedType === "referral_request" && !recipientName.trim()) return false;
+    return true;
+  };
+
   return (
     <div className="space-y-4">
+      {/* Tone Settings */}
+      <Collapsible open={showToneSettings} onOpenChange={setShowToneSettings}>
+        <CollapsibleTrigger asChild>
+          <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground text-xs gap-1.5">
+            <Settings className="h-3.5 w-3.5" />
+            Message Tone Settings
+            <ChevronDown className={`h-3 w-3 ml-auto transition-transform ${showToneSettings ? "rotate-180" : ""}`} />
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="pt-2 pb-1">
+          <Card className="border-dashed">
+            <CardContent className="pt-3 pb-3">
+              <Label className="text-xs font-medium">Default Tone for All Messages</Label>
+              <div className="mt-2 space-y-1.5">
+                {TONE_OPTIONS.map((opt) => (
+                  <label key={opt.value} className="flex items-start gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="default-tone"
+                      value={opt.value}
+                      checked={defaultTone === opt.value}
+                      onChange={() => setDefaultTone(opt.value)}
+                      className="mt-0.5 accent-primary"
+                    />
+                    <div>
+                      <span className="text-sm font-medium">{opt.label}</span>
+                      <p className="text-[10px] text-muted-foreground">{opt.description}</p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </CollapsibleContent>
+      </Collapsible>
+
       {/* Generate new message — dropdown trigger */}
       {!showGenerator ? (
         <DropdownMenu>
@@ -315,8 +417,8 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appl
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Generic recipient fields — hide for thank_you which has its own */}
-            {selectedType !== "thank_you" && selectedType !== "referral_request" && (
+            {/* Generic recipient fields — hide for types with their own */}
+            {selectedType !== "thank_you" && selectedType !== "referral_request" && selectedType !== "offer_negotiation" && (
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label>Recipient Name (optional)</Label>
@@ -499,16 +601,95 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appl
               </div>
             )}
 
-            {/* Additional context for other types (not hiring_manager, not follow_up, not thank_you, not referral_request) */}
-            {selectedType !== "hiring_manager" && selectedType !== "follow_up" && selectedType !== "thank_you" && selectedType !== "referral_request" && (
+            {/* Offer negotiation: structured inputs */}
+            {selectedType === "offer_negotiation" && (
+              <div className="space-y-3">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label>Recipient Name (optional)</Label>
+                    <Input
+                      placeholder="e.g. Sarah Chen"
+                      value={recipientName}
+                      onChange={(e) => setRecipientName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Recipient Email (optional)</Label>
+                    <Input
+                      type="email"
+                      placeholder="sarah@company.com"
+                      value={recipientEmail}
+                      onChange={(e) => setRecipientEmail(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="space-y-1.5">
+                    <Label>Currency</Label>
+                    <Select value={salaryCurrency} onValueChange={setSalaryCurrency}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="USD">USD</SelectItem>
+                        <SelectItem value="EUR">EUR</SelectItem>
+                        <SelectItem value="GBP">GBP</SelectItem>
+                        <SelectItem value="CAD">CAD</SelectItem>
+                        <SelectItem value="AUD">AUD</SelectItem>
+                        <SelectItem value="INR">INR</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Offered Salary</Label>
+                    <Input
+                      type="number"
+                      placeholder="e.g. 120000"
+                      value={offeredSalary}
+                      onChange={(e) => setOfferedSalary(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Your Target Salary</Label>
+                    <Input
+                      type="number"
+                      placeholder="e.g. 140000"
+                      value={targetSalary}
+                      onChange={(e) => setTargetSalary(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Reason for Target</Label>
+                  <Select value={negotiationReason} onValueChange={setNegotiationReason}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {NEGOTIATION_REASONS.map((r) => (
+                        <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Other Considerations (optional)</Label>
+                  <Textarea
+                    placeholder="e.g., equity, remote flexibility, benefits, signing bonus"
+                    value={otherConsiderations}
+                    onChange={(e) => setOtherConsiderations(e.target.value)}
+                    className="min-h-[60px]"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Additional context for remaining types */}
+            {selectedType !== "hiring_manager" && selectedType !== "follow_up" && selectedType !== "thank_you" && selectedType !== "referral_request" && selectedType !== "offer_negotiation" && (
               <div className="space-y-1.5">
                 <Label>Additional Context (optional)</Label>
                 <Textarea
-                  placeholder={
-                    selectedType === "offer_negotiation"
-                      ? "Current offer details, competing offers, market data..."
-                      : "Any specific details to include..."
-                  }
+                  placeholder="Any specific details to include..."
                   value={additionalContext}
                   onChange={(e) => setAdditionalContext(e.target.value)}
                   className="min-h-[80px]"
@@ -519,7 +700,7 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appl
             <div className="flex gap-2">
               <Button
                 onClick={() => generateMessage()}
-                disabled={generating || (selectedType === "thank_you" && !recipientName.trim()) || (selectedType === "referral_request" && !recipientName.trim())}
+                disabled={generating || !canGenerate()}
               >
                 {generating ? (
                   <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating...</>
@@ -535,6 +716,21 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appl
             {/* Generated result */}
             {generatedContent && (
               <div className="space-y-3 border-t pt-4">
+                {/* AI disclaimer */}
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-3.5 w-3.5 shrink-0 cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-[240px]">
+                        <p>These messages are AI-generated starting points. Always review and personalize before sending!</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <span>AI-generated draft — review before sending</span>
+                </div>
+
                 {generatedSubject && (
                   <div className="space-y-1.5">
                     <Label>Subject Line</Label>
@@ -547,13 +743,7 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appl
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <Label>Message</Label>
-                    {(selectedType === "hiring_manager" || selectedType === "follow_up" || selectedType === "thank_you" || selectedType === "referral_request") ? (
-                      <WordCountBadge text={generatedContent} target={selectedType === "follow_up" ? [80, 120] : selectedType === "referral_request" ? [120, 150] : [100, 150]} />
-                    ) : (
-                      <span className="text-xs text-muted-foreground">
-                        {generatedContent.length} characters
-                      </span>
-                    )}
+                    <WordCountBadge text={generatedContent} target={getWordTarget()} />
                   </div>
                   <Textarea
                     value={generatedContent}
@@ -592,29 +782,27 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appl
                   </div>
                 )}
 
-                {/* Tone regeneration buttons for follow_up */}
-                {selectedType === "follow_up" && (
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={generating}
-                      onClick={() => generateMessage("more_casual")}
-                    >
-                      {generating ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}
-                      Regenerate – More Casual
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={generating}
-                      onClick={() => generateMessage("more_formal")}
-                    >
-                      {generating ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}
-                      Regenerate – More Formal
-                    </Button>
-                  </div>
-                )}
+                {/* Tone regeneration buttons — all message types */}
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={generating}
+                    onClick={() => generateMessage("more_casual")}
+                  >
+                    {generating ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <RefreshCw className="h-3 w-3 mr-1" />}
+                    ↻ Make More Casual
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={generating}
+                    onClick={() => generateMessage("more_formal")}
+                  >
+                    {generating ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <RefreshCw className="h-3 w-3 mr-1" />}
+                    ↻ Make More Formal
+                  </Button>
+                </div>
 
                 <div className="flex gap-2 flex-wrap">
                   <Button size="sm" onClick={saveMessage}>
@@ -732,7 +920,6 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appl
   );
 };
 
-// Word count badge with color coding for hiring manager messages
 function WordCountBadge({ text, target = [100, 150] }: { text: string; target?: [number, number] }) {
   const words = text.trim().split(/\s+/).filter(Boolean).length;
   const [low, high] = target;
