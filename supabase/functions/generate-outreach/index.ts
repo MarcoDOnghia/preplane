@@ -77,7 +77,29 @@ Example: "Hi {Name}, thanks for taking the time to walk me through {Company}'s a
 Write like you're following up with a professional peer you enjoyed talking to, not thanking a gatekeeper.
 
 Also suggest a short, specific subject line.`,
-  referral_request: `Generate a referral request message. Make it easy for the contact to say yes by being specific about the role, providing context about your fit, and offering to send your resume. Keep it personal and appreciative. Also suggest a subject line.`,
+  referral_request: `Write a referral request message that's easy to say yes to.
+
+Instructions:
+- 4-5 sentences maximum (120-150 words)
+- Acknowledge relationship briefly (1 sentence)
+- Be direct about what you're asking — don't bury the lead
+- Give ONE clear reason why you're qualified (not your whole resume)
+- Make it easy for them to help (offer to send resume, no pressure)
+- Don't guilt trip or over-explain
+- Give them a comfortable out
+
+AVOID:
+- "I hope I'm not bothering you"
+- "I know you're busy but..."
+- Long paragraphs explaining your desperation
+- Guilt trips
+
+USE clear, confident asks.
+Example: "Hi {Name}, hope you're doing well! I'm applying for a {Role} position at {Company}. Given my {qualification}, I think I'd be a strong fit. Would you be comfortable referring me? Happy to send over my resume if that helps. Totally understand if timing doesn't work!"
+
+Sound appreciative but not groveling. Make declining easy and pressure-free.
+
+Also suggest a short, specific subject line.`,
   offer_negotiation: `Generate a professional offer negotiation email. Express gratitude for the offer, clearly state the counter-request with reasoning, reference market data or competing offers if context is provided, and maintain enthusiasm for the role. Also suggest a subject line.`,
 };
 
@@ -162,6 +184,8 @@ serve(async (req) => {
     const toneHint = validateStringField(body.toneHint, "toneHint", 50);
     const interviewTopics = validateStringField(body.interviewTopics, "interviewTopics", 1000);
     const interviewTypeField = validateStringField(body.interviewType, "interviewType", 50);
+    const referralRelationship = validateStringField(body.referralRelationship, "referralRelationship", 200);
+    const referralQualification = validateStringField(body.referralQualification, "referralQualification", 200);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -191,6 +215,8 @@ ${appliedDateStr ? `\nApplied on: ${appliedDateStr}` : ""}
 ${daysAgo !== undefined ? `\nDays since application: ${daysAgo}` : ""}
 ${interviewTopics ? `\nKey topics discussed in interview:\n${interviewTopics}` : ""}
 ${interviewTypeField ? `\nInterview type: ${interviewTypeField}` : ""}
+${referralRelationship ? `\nRelationship with contact: ${referralRelationship}` : ""}
+${referralQualification ? `\nKey qualification: ${referralQualification}` : ""}
 ${additionalContext ? `\nAdditional context: ${additionalContext}` : ""}
 </USER_CONTEXT>`;
 

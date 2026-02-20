@@ -14,8 +14,9 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Mail, Copy, Send, Loader2, MessageSquare, Clock, Trash2, Check, ChevronDown, X,
+  Mail, Copy, Send, Loader2, MessageSquare, Clock, Trash2, Check, ChevronDown, X, UserPlus,
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { formatDistanceToNow } from "date-fns";
 
 const MESSAGE_TYPES = [
@@ -24,6 +25,15 @@ const MESSAGE_TYPES = [
   { value: "thank_you", label: "Thank You After Interview", icon: "🙏" },
   { value: "referral_request", label: "Referral Request", icon: "🤝" },
   { value: "offer_negotiation", label: "Offer Negotiation", icon: "💼" },
+];
+
+const REFERRAL_RELATIONSHIPS = [
+  { value: "former_colleague", label: "Former colleague" },
+  { value: "friend", label: "Friend" },
+  { value: "classmate", label: "Classmate" },
+  { value: "met_at_event", label: "Met at event" },
+  { value: "linkedin", label: "LinkedIn connection" },
+  { value: "other", label: "Other" },
 ];
 
 interface OutreachMessage {
@@ -63,6 +73,10 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appl
   const [showStrongestFit, setShowStrongestFit] = useState(false);
   const [interviewTopics, setInterviewTopics] = useState("");
   const [interviewType, setInterviewType] = useState("video");
+  const [referralRelationship, setReferralRelationship] = useState("former_colleague");
+  const [referralRelationshipOther, setReferralRelationshipOther] = useState("");
+  const [referralQualification, setReferralQualification] = useState("");
+  const [referralAsked, setReferralAsked] = useState(false);
   const [generatedSubject, setGeneratedSubject] = useState("");
   const [generatedContent, setGeneratedContent] = useState("");
   const [showGenerator, setShowGenerator] = useState(false);
@@ -100,6 +114,10 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appl
     setShowStrongestFit(false);
     setInterviewTopics("");
     setInterviewType("video");
+    setReferralRelationship("former_colleague");
+    setReferralRelationshipOther("");
+    setReferralQualification("");
+    setReferralAsked(false);
     setToneOverride(undefined);
     setShowGenerator(true);
   };
@@ -122,6 +140,10 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appl
           toneHint: toneHint || toneOverride || undefined,
           interviewTopics: interviewTopics.trim() || undefined,
           interviewType: selectedType === "thank_you" ? interviewType : undefined,
+          referralRelationship: selectedType === "referral_request"
+            ? (referralRelationship === "other" ? referralRelationshipOther.trim() : REFERRAL_RELATIONSHIPS.find(r => r.value === referralRelationship)?.label)
+            : undefined,
+          referralQualification: referralQualification.trim() || undefined,
         },
       });
 
@@ -175,6 +197,29 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appl
     }
 
     setMessages((prev) => [data as OutreachMessage, ...prev]);
+
+    // If referral request with "asked" checked, log timeline + create reminder
+    if (selectedType === "referral_request" && referralAsked && recipientName.trim()) {
+      await supabase.from("application_timeline").insert({
+        application_id: applicationId,
+        user_id: userId,
+        event_type: "referral_requested",
+        note: `Asked ${recipientName.trim()} for a referral`,
+        metadata: { contact_name: recipientName.trim(), relationship: referralRelationship === "other" ? referralRelationshipOther : referralRelationship },
+      });
+
+      // Create follow-up reminder in 4 days
+      const followUpDate = new Date();
+      followUpDate.setDate(followUpDate.getDate() + 4);
+      await supabase.from("application_reminders").insert({
+        application_id: applicationId,
+        user_id: userId,
+        title: `Follow up with ${recipientName.trim()} about referral`,
+        reminder_type: "follow_up",
+        due_date: followUpDate.toISOString(),
+      });
+    }
+
     setGeneratedContent("");
     setGeneratedSubject("");
     setRecipientName("");
@@ -182,6 +227,7 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appl
     setAdditionalContext("");
     setRoleInterest("");
     setShowPersonalTouch(false);
+    setReferralAsked(false);
     setShowGenerator(false);
     toast({ title: "Message saved to history" });
   };
@@ -270,7 +316,7 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appl
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Generic recipient fields — hide for thank_you which has its own */}
-            {selectedType !== "thank_you" && (
+            {selectedType !== "thank_you" && selectedType !== "referral_request" && (
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label>Recipient Name (optional)</Label>
@@ -408,16 +454,59 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appl
               </div>
             )}
 
-            {/* Additional context for other types (not hiring_manager, not follow_up, not thank_you) */}
-            {selectedType !== "hiring_manager" && selectedType !== "follow_up" && selectedType !== "thank_you" && (
+            {/* Referral request: contact name (required), relationship, qualification */}
+            {selectedType === "referral_request" && (
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label>Contact's Name <span className="text-destructive">*</span></Label>
+                  <Input
+                    placeholder="e.g. Alex Johnson"
+                    value={recipientName}
+                    onChange={(e) => setRecipientName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>How do you know them?</Label>
+                  <Select value={referralRelationship} onValueChange={setReferralRelationship}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {REFERRAL_RELATIONSHIPS.map((r) => (
+                        <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {referralRelationship === "other" && (
+                    <Input
+                      placeholder="How do you know them?"
+                      value={referralRelationshipOther}
+                      onChange={(e) => setReferralRelationshipOther(e.target.value)}
+                      className="mt-1.5"
+                    />
+                  )}
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Your strongest qualification for this role</Label>
+                  <Input
+                    placeholder="e.g., 5 years PM experience in B2B SaaS, shipped similar products"
+                    value={referralQualification}
+                    onChange={(e) => setReferralQualification(e.target.value)}
+                    maxLength={150}
+                  />
+                  <p className="text-[10px] text-muted-foreground">1 sentence · helps your contact advocate for you</p>
+                </div>
+              </div>
+            )}
+
+            {/* Additional context for other types (not hiring_manager, not follow_up, not thank_you, not referral_request) */}
+            {selectedType !== "hiring_manager" && selectedType !== "follow_up" && selectedType !== "thank_you" && selectedType !== "referral_request" && (
               <div className="space-y-1.5">
                 <Label>Additional Context (optional)</Label>
                 <Textarea
                   placeholder={
                     selectedType === "offer_negotiation"
                       ? "Current offer details, competing offers, market data..."
-                      : selectedType === "referral_request"
-                      ? "How you know this person, what you're asking for..."
                       : "Any specific details to include..."
                   }
                   value={additionalContext}
@@ -430,7 +519,7 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appl
             <div className="flex gap-2">
               <Button
                 onClick={() => generateMessage()}
-                disabled={generating || (selectedType === "thank_you" && !recipientName.trim())}
+                disabled={generating || (selectedType === "thank_you" && !recipientName.trim()) || (selectedType === "referral_request" && !recipientName.trim())}
               >
                 {generating ? (
                   <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating...</>
@@ -458,8 +547,8 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appl
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <Label>Message</Label>
-                    {(selectedType === "hiring_manager" || selectedType === "follow_up" || selectedType === "thank_you") ? (
-                      <WordCountBadge text={generatedContent} target={selectedType === "follow_up" ? [80, 120] : [100, 150]} />
+                    {(selectedType === "hiring_manager" || selectedType === "follow_up" || selectedType === "thank_you" || selectedType === "referral_request") ? (
+                      <WordCountBadge text={generatedContent} target={selectedType === "follow_up" ? [80, 120] : selectedType === "referral_request" ? [120, 150] : [100, 150]} />
                     ) : (
                       <span className="text-xs text-muted-foreground">
                         {generatedContent.length} characters
@@ -479,6 +568,28 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appl
                     <Clock className="h-3 w-3" />
                     Send within 24 hours of your interview for best results
                   </p>
+                )}
+
+                {/* Referral: mark as asked checkbox */}
+                {selectedType === "referral_request" && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="referral-asked"
+                        checked={referralAsked}
+                        onCheckedChange={(checked) => setReferralAsked(checked === true)}
+                      />
+                      <label htmlFor="referral-asked" className="text-sm cursor-pointer flex items-center gap-1">
+                        <UserPlus className="h-3 w-3" />
+                        Mark as "Asked for referral"
+                      </label>
+                    </div>
+                    {referralAsked && (
+                      <p className="text-xs text-muted-foreground ml-6">
+                        Will log to timeline and create a reminder to follow up in 3-5 days
+                      </p>
+                    )}
+                  </div>
                 )}
 
                 {/* Tone regeneration buttons for follow_up */}
