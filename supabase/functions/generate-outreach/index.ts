@@ -56,7 +56,27 @@ Example: "Hi {Name}, I submitted my application for the {Role} position on {Date
 Keep it professional but human. No robotic corporate speak.
 
 Also suggest a short, specific subject line (avoid generic "Following up on..." phrasing).`,
-  thank_you: `Generate a personalized thank-you email after an interview. Thank the interviewer by name if provided, reference specific discussion topics if given, reaffirm fit and interest, and mention next steps. Keep it warm and professional. Also suggest a subject line.`,
+  thank_you: `Write a warm, specific thank you message after an interview.
+
+Instructions:
+- Address interviewer by first name
+- Thank them specifically for discussing 1-2 topics the user mentioned
+- Connect ONE of the user's experiences to something specific discussed
+- Keep it 3-4 sentences (100-150 words)
+- Sound warm and enthusiastic but not desperate
+- Don't oversell yourself in a thank you note
+
+AVOID:
+- Generic gratitude: "Thank you for your time and consideration"
+- Robotic: "It was a pleasure to meet with you"
+- Overeager: "I am extremely passionate and would be honored"
+
+USE specific references.
+Example: "Hi {Name}, thanks for taking the time to walk me through {Company}'s approach to {specific topic}. The way you're thinking about {specific thing discussed} really resonated with my experience doing {relevant experience}. I'm excited about the possibility of contributing to {specific team goal}. Looking forward to next steps!"
+
+Write like you're following up with a professional peer you enjoyed talking to, not thanking a gatekeeper.
+
+Also suggest a short, specific subject line.`,
   referral_request: `Generate a referral request message. Make it easy for the contact to say yes by being specific about the role, providing context about your fit, and offering to send your resume. Keep it personal and appreciative. Also suggest a subject line.`,
   offer_negotiation: `Generate a professional offer negotiation email. Express gratitude for the offer, clearly state the counter-request with reasoning, reference market data or competing offers if context is provided, and maintain enthusiasm for the role. Also suggest a subject line.`,
 };
@@ -140,6 +160,8 @@ serve(async (req) => {
     const appliedDateStr = validateStringField(body.appliedDate, "appliedDate", 50);
     const daysAgo = typeof body.daysAgo === "number" ? body.daysAgo : undefined;
     const toneHint = validateStringField(body.toneHint, "toneHint", 50);
+    const interviewTopics = validateStringField(body.interviewTopics, "interviewTopics", 1000);
+    const interviewTypeField = validateStringField(body.interviewType, "interviewType", 50);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -167,6 +189,8 @@ ${roleInterest ? `\nWhat specifically interests them about this role: ${roleInte
 ${strongestFit ? `\nStrongest fit for this role: ${strongestFit}` : ""}
 ${appliedDateStr ? `\nApplied on: ${appliedDateStr}` : ""}
 ${daysAgo !== undefined ? `\nDays since application: ${daysAgo}` : ""}
+${interviewTopics ? `\nKey topics discussed in interview:\n${interviewTopics}` : ""}
+${interviewTypeField ? `\nInterview type: ${interviewTypeField}` : ""}
 ${additionalContext ? `\nAdditional context: ${additionalContext}` : ""}
 </USER_CONTEXT>`;
 
