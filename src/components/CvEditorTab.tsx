@@ -1,0 +1,205 @@
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Highlight from "@tiptap/extension-highlight";
+import { useEffect, useCallback, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Bold,
+  Italic,
+  List,
+  Heading2,
+  Undo2,
+  Redo2,
+  RotateCcw,
+  CheckCheck,
+  Save,
+  Check,
+} from "lucide-react";
+import type { CvSuggestion } from "@/lib/types";
+
+interface CvEditorTabProps {
+  originalCv: string;
+  currentCv: string;
+  onChange: (html: string) => void;
+  onApplyAll: () => void;
+  onReset: () => void;
+  atsScore?: number;
+  suggestions: CvSuggestion[];
+  appliedSuggestions: number[];
+  saveStatus: "idle" | "saving" | "saved" | "error";
+}
+
+function cvTextToHtml(text: string): string {
+  return text
+    .split("\n")
+    .map((line) => {
+      const trimmed = line.trim();
+      if (!trimmed) return "";
+      return `<p>${trimmed}</p>`;
+    })
+    .filter(Boolean)
+    .join("");
+}
+
+function countWords(html: string): number {
+  const text = html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  return text ? text.split(" ").length : 0;
+}
+
+const CvEditorTab = ({
+  originalCv,
+  currentCv,
+  onChange,
+  onApplyAll,
+  onReset,
+  atsScore = 0,
+  suggestions,
+  appliedSuggestions,
+  saveStatus,
+}: CvEditorTabProps) => {
+  const [showTooltip, setShowTooltip] = useState(true);
+  const initializedRef = useRef(false);
+
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Highlight.configure({ multicolor: true }),
+    ],
+    content: currentCv.includes("<") ? currentCv : cvTextToHtml(currentCv),
+    onUpdate: ({ editor }) => {
+      onChange(editor.getHTML());
+    },
+    editorProps: {
+      attributes: {
+        class:
+          "prose prose-sm sm:prose max-w-none min-h-[400px] p-4 focus:outline-none [&_p]:my-1 [&_h1]:text-xl [&_h1]:font-bold [&_h1]:mt-4 [&_h1]:mb-2 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:mt-3 [&_h2]:mb-1 [&_ul]:ml-4 [&_ol]:ml-4 [&_li]:my-0.5",
+      },
+    },
+  });
+
+  // Update editor content when currentCv changes externally (e.g., applying suggestions)
+  useEffect(() => {
+    if (!editor) return;
+    if (!initializedRef.current) {
+      initializedRef.current = true;
+      return;
+    }
+    const newContent = currentCv.includes("<") ? currentCv : cvTextToHtml(currentCv);
+    const currentContent = editor.getHTML();
+    if (newContent !== currentContent) {
+      editor.commands.setContent(newContent, { emitUpdate: false });
+    }
+  }, [currentCv, editor]);
+
+  // Dismiss tooltip after 8 seconds
+  useEffect(() => {
+    const t = setTimeout(() => setShowTooltip(false), 8000);
+    return () => clearTimeout(t);
+  }, []);
+
+  const remaining = suggestions.length - appliedSuggestions.length;
+  const wordCount = editor ? countWords(editor.getHTML()) : 0;
+
+  if (!editor) return null;
+
+  return (
+    <div className="space-y-3">
+      {/* Tooltip */}
+      {showTooltip && (
+        <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm text-muted-foreground flex items-start gap-2">
+          <span className="text-primary">💡</span>
+          Edit your CV directly below. Use "Apply All Suggestions" to accept AI improvements, or type freely to customize.
+          <button onClick={() => setShowTooltip(false)} className="ml-auto text-xs hover:text-foreground">✕</button>
+        </div>
+      )}
+
+      {/* Toolbar */}
+      <div className="flex items-center gap-2 flex-wrap rounded-lg border bg-card p-2">
+        <div className="flex items-center gap-1 border-r pr-2 mr-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            data-active={editor.isActive("bold")}
+          >
+            <Bold className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+            data-active={editor.isActive("italic")}
+          >
+            <Italic className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+            data-active={editor.isActive("bulletList")}
+          >
+            <List className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+            data-active={editor.isActive("heading")}
+          >
+            <Heading2 className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="flex items-center gap-1 border-r pr-2 mr-1">
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => editor.chain().focus().undo().run()}>
+            <Undo2 className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => editor.chain().focus().redo().run()}>
+            <Redo2 className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <Button variant="default" size="sm" onClick={onApplyAll} disabled={remaining === 0}>
+          <CheckCheck className="h-4 w-4 mr-1" />
+          Apply All Suggestions ({remaining})
+        </Button>
+        <Button variant="outline" size="sm" onClick={onReset}>
+          <RotateCcw className="h-4 w-4 mr-1" />
+          Reset to Original
+        </Button>
+
+        <div className="ml-auto flex items-center gap-3 text-xs text-muted-foreground">
+          {saveStatus === "saving" && (
+            <span className="flex items-center gap-1">
+              <Save className="h-3 w-3 animate-pulse" /> Saving...
+            </span>
+          )}
+          {saveStatus === "saved" && (
+            <span className="flex items-center gap-1 text-success">
+              <Check className="h-3 w-3" /> Saved
+            </span>
+          )}
+          {saveStatus === "error" && (
+            <span className="text-destructive">Save failed</span>
+          )}
+          <Badge variant="outline" className="text-xs">
+            ATS: {atsScore}/100
+          </Badge>
+          <span>{wordCount} words</span>
+        </div>
+      </div>
+
+      {/* Editor */}
+      <div className="rounded-lg border bg-card overflow-hidden">
+        <EditorContent editor={editor} />
+      </div>
+    </div>
+  );
+};
+
+export default CvEditorTab;
