@@ -135,12 +135,14 @@ export type Database = {
         Row: {
           application_method: string | null
           applied_date: string | null
+          applied_suggestions: Json | null
           ats_score: number | null
           company: string
           company_brief: string | null
           cover_letter: string
           cover_letter_versions: Json | null
           created_at: string
+          current_cv: string | null
           cv_content: string
           cv_suggestions: Json
           follow_up_date: string | null
@@ -154,6 +156,7 @@ export type Database = {
           key_requirements: Json
           keywords_found: Json | null
           keywords_missing: Json | null
+          last_edited: string | null
           offer_deadline: string | null
           questions_to_ask: Json | null
           quick_wins: Json | null
@@ -169,12 +172,14 @@ export type Database = {
         Insert: {
           application_method?: string | null
           applied_date?: string | null
+          applied_suggestions?: Json | null
           ats_score?: number | null
           company?: string
           company_brief?: string | null
           cover_letter?: string
           cover_letter_versions?: Json | null
           created_at?: string
+          current_cv?: string | null
           cv_content: string
           cv_suggestions?: Json
           follow_up_date?: string | null
@@ -188,6 +193,7 @@ export type Database = {
           key_requirements?: Json
           keywords_found?: Json | null
           keywords_missing?: Json | null
+          last_edited?: string | null
           offer_deadline?: string | null
           questions_to_ask?: Json | null
           quick_wins?: Json | null
@@ -203,12 +209,14 @@ export type Database = {
         Update: {
           application_method?: string | null
           applied_date?: string | null
+          applied_suggestions?: Json | null
           ats_score?: number | null
           company?: string
           company_brief?: string | null
           cover_letter?: string
           cover_letter_versions?: Json | null
           created_at?: string
+          current_cv?: string | null
           cv_content?: string
           cv_suggestions?: Json
           follow_up_date?: string | null
@@ -222,6 +230,7 @@ export type Database = {
           key_requirements?: Json
           keywords_found?: Json | null
           keywords_missing?: Json | null
+          last_edited?: string | null
           offer_deadline?: string | null
           questions_to_ask?: Json | null
           quick_wins?: Json | null

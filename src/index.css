@@ -112,3 +112,20 @@
     font-family: 'Outfit', sans-serif;
   }
 }
+
+/* TipTap editor styles */
+.tiptap {
+  outline: none;
+}
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: hsl(var(--muted-foreground));
+  pointer-events: none;
+  height: 0;
+}
+.tiptap mark {
+  background-color: hsl(48 96% 89%);
+  border-radius: 2px;
+  padding: 1px 2px;
+}

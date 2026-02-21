@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/Header";
@@ -19,6 +19,14 @@ const LOADING_STEPS = [
   { message: "Polishing results...", progress: 95 },
 ];
 
+interface CvState {
+  original: string;
+  current: string;
+  appliedSuggestions: number[];
+  dismissedSuggestions: number[];
+  isDirty: boolean;
+}
+
 const Index = () => {
   const { user, loading: authLoading } = useAuth();
   const [result, setResult] = useState<TailorResult | null>(null);
@@ -28,9 +36,59 @@ const Index = () => {
   const [lastJobTitle, setLastJobTitle] = useState("Untitled Position");
   const [lastCompany, setLastCompany] = useState("Unknown Company");
   const [showTrackingModal, setShowTrackingModal] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [cvState, setCvState] = useState<CvState>({
+    original: "",
+    current: "",
+    appliedSuggestions: [],
+    dismissedSuggestions: [],
+    isDirty: false,
+  });
   const lastAppIdRef = useRef<string | null>(null);
   const downloadCountRef = useRef(0);
+  const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { toast } = useToast();
+
+  // Autosave to database
+  const saveCvToDb = useCallback(async (html: string, applied: number[]) => {
+    if (!lastAppIdRef.current) return;
+    setSaveStatus("saving");
+    try {
+      await supabase
+        .from("applications")
+        .update({
+          current_cv: html,
+          applied_suggestions: applied,
+          last_edited: new Date().toISOString(),
+        } as any)
+        .eq("id", lastAppIdRef.current);
+      setSaveStatus("saved");
+      setTimeout(() => setSaveStatus("idle"), 2000);
+    } catch {
+      setSaveStatus("error");
+    }
+  }, []);
+
+  // Debounced autosave
+  const debouncedSave = useCallback(
+    (html: string, applied: number[]) => {
+      if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+      autosaveTimerRef.current = setTimeout(() => saveCvToDb(html, applied), 3000);
+    },
+    [saveCvToDb]
+  );
+
+  // Warn on unsaved changes
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (cvState.isDirty) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [cvState.isDirty]);
 
   if (authLoading) {
     return (
@@ -68,11 +126,113 @@ const Index = () => {
     });
   };
 
+  // --- CV Editing Handlers ---
+  const handleCvChange = (html: string) => {
+    setCvState((prev) => ({ ...prev, current: html, isDirty: true }));
+    debouncedSave(html, cvState.appliedSuggestions);
+  };
+
+  const applySuggestionToText = (text: string, original: string, suggested: string): string => {
+    // Try to find and replace in plain text and HTML
+    if (text.includes(original)) {
+      return text.replace(original, suggested);
+    }
+    // If not found exactly, append to end with a marker
+    return text;
+  };
+
+  const handleApplySuggestion = (index: number) => {
+    if (!result) return;
+    const s = result.cvSuggestions[index];
+    setCvState((prev) => {
+      const newCurrent = applySuggestionToText(prev.current, s.original, s.suggested);
+      const newApplied = [...prev.appliedSuggestions, index];
+      debouncedSave(newCurrent, newApplied);
+      return { ...prev, current: newCurrent, appliedSuggestions: newApplied, isDirty: true };
+    });
+    toast({ title: "✓ Applied", description: `Updated "${s.section}"` });
+  };
+
+  const handleDismissSuggestion = (index: number) => {
+    setCvState((prev) => ({
+      ...prev,
+      dismissedSuggestions: [...prev.dismissedSuggestions, index],
+    }));
+  };
+
+  const handleUndoSuggestion = (index: number) => {
+    if (!result) return;
+    const s = result.cvSuggestions[index];
+    setCvState((prev) => {
+      const newCurrent = applySuggestionToText(prev.current, s.suggested, s.original);
+      const newApplied = prev.appliedSuggestions.filter((i) => i !== index);
+      debouncedSave(newCurrent, newApplied);
+      return { ...prev, current: newCurrent, appliedSuggestions: newApplied, isDirty: true };
+    });
+  };
+
+  const handleApplyAllSuggestions = () => {
+    if (!result) return;
+    setCvState((prev) => {
+      let newCurrent = prev.current;
+      const newApplied = [...prev.appliedSuggestions];
+      result.cvSuggestions.forEach((s, i) => {
+        if (!newApplied.includes(i) && !prev.dismissedSuggestions.includes(i)) {
+          newCurrent = applySuggestionToText(newCurrent, s.original, s.suggested);
+          newApplied.push(i);
+        }
+      });
+      debouncedSave(newCurrent, newApplied);
+      return { ...prev, current: newCurrent, appliedSuggestions: newApplied, isDirty: true };
+    });
+    toast({ title: "Applied all suggestions!" });
+  };
+
+  const handleApplyHighPriority = () => {
+    if (!result) return;
+    let count = 0;
+    setCvState((prev) => {
+      let newCurrent = prev.current;
+      const newApplied = [...prev.appliedSuggestions];
+      result.cvSuggestions.forEach((s, i) => {
+        if (s.priority === "high" && !newApplied.includes(i) && !prev.dismissedSuggestions.includes(i)) {
+          newCurrent = applySuggestionToText(newCurrent, s.original, s.suggested);
+          newApplied.push(i);
+          count++;
+        }
+      });
+      debouncedSave(newCurrent, newApplied);
+      return { ...prev, current: newCurrent, appliedSuggestions: newApplied, isDirty: true };
+    });
+    toast({ title: `Applied ${count} high priority improvements` });
+  };
+
+  const handleResetCv = () => {
+    setCvState((prev) => ({
+      ...prev,
+      current: prev.original,
+      appliedSuggestions: [],
+      dismissedSuggestions: [],
+      isDirty: true,
+    }));
+    debouncedSave(cvState.original, []);
+    toast({ title: "CV reset to original" });
+  };
+
   const handleSubmit = async (cvContent: string, jobDescription: string, tone: Tone) => {
     setLoading(true);
     setResult(null);
     downloadCountRef.current = 0;
     lastAppIdRef.current = null;
+
+    // Initialize CV state with uploaded content
+    setCvState({
+      original: cvContent,
+      current: cvContent,
+      appliedSuggestions: [],
+      dismissedSuggestions: [],
+      isDirty: false,
+    });
 
     let stepIndex = 0;
     setLoadingMessage(LOADING_STEPS[0].message);
@@ -93,7 +253,6 @@ const Index = () => {
 
       setResult(data);
 
-      // Use em-dash/en-dash as separator (not regular hyphen which appears in "Full-Stack" etc.)
       const firstLine = jobDescription.split(/\n/)[0]?.trim() || "";
       const dashMatch = firstLine.match(/^(.+?)\s*[—–]\s*(.+)$/);
       const jobTitle = (dashMatch?.[1]?.trim() || firstLine).slice(0, 100) || "Untitled Position";
@@ -108,6 +267,8 @@ const Index = () => {
         cv_content: cvContent,
         job_description: jobDescription,
         tone,
+        current_cv: cvContent,
+        applied_suggestions: [],
         key_requirements: data.keyRequirements,
         cv_suggestions: data.cvSuggestions,
         cover_letter: data.coverLetter || data.coverLetterVersions?.[0]?.content || "",
@@ -120,7 +281,7 @@ const Index = () => {
         interview_questions: data.interviewQuestions || [],
         questions_to_ask: data.questionsToAsk || [],
         company_brief: data.companyBrief || "",
-      }).select("id").single();
+      } as any).select("id").single();
 
       if (inserted) lastAppIdRef.current = inserted.id;
 
@@ -152,16 +313,34 @@ const Index = () => {
             </p>
           </div>
         )}
-        {result && <ResultsSection result={result} jobTitle={lastJobTitle} onDownload={handleDownload} />}
+        {result && (
+          <ResultsSection
+            result={result}
+            jobTitle={lastJobTitle}
+            onDownload={handleDownload}
+            originalCv={cvState.original}
+            currentCv={cvState.current}
+            onCvChange={handleCvChange}
+            onApplySuggestion={handleApplySuggestion}
+            onDismissSuggestion={handleDismissSuggestion}
+            onUndoSuggestion={handleUndoSuggestion}
+            onApplyAllSuggestions={handleApplyAllSuggestions}
+            onApplyHighPriority={handleApplyHighPriority}
+            onResetCv={handleResetCv}
+            appliedSuggestions={cvState.appliedSuggestions}
+            dismissedSuggestions={cvState.dismissedSuggestions}
+            saveStatus={saveStatus}
+          />
+        )}
       </main>
 
       <ApplicationTrackingModal
-          open={showTrackingModal}
-          onClose={() => setShowTrackingModal(false)}
-          onSave={handleTrackingSave}
-          jobTitle={lastJobTitle}
-          company={lastCompany}
-        />
+        open={showTrackingModal}
+        onClose={() => setShowTrackingModal(false)}
+        onSave={handleTrackingSave}
+        jobTitle={lastJobTitle}
+        company={lastCompany}
+      />
     </div>
   );
 };
