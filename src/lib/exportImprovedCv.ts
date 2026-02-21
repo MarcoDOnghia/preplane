@@ -1,75 +1,121 @@
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from "docx";
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle } from "docx";
 import { saveAs } from "file-saver";
-
-/**
- * Convert HTML from TipTap editor to docx paragraphs.
- * Strips tags and creates ATS-friendly structure.
- */
-function htmlToPlainLines(html: string): string[] {
-  // Replace block elements with newlines, strip remaining tags
-  const text = html
-    .replace(/<\/?(p|div|br|h[1-6]|li|ul|ol)[^>]*>/gi, "\n")
-    .replace(/<[^>]*>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&#39;/g, "'")
-    .replace(/&quot;/g, '"');
-  return text.split("\n").map((l) => l.trim()).filter(Boolean);
-}
-
-function isHeadingLine(line: string): boolean {
-  const headings = [
-    "summary", "experience", "education", "skills", "projects",
-    "certifications", "awards", "languages", "references",
-    "professional experience", "work experience", "technical skills",
-    "professional summary", "objective", "contact", "about",
-  ];
-  return headings.some((h) => line.toLowerCase().startsWith(h));
-}
+import { parseCvToLines } from "./cvParser";
 
 export async function exportImprovedCv(
   cvHtml: string,
   userName: string,
   jobTitle: string
 ) {
-  const lines = htmlToPlainLines(cvHtml);
+  const lines = parseCvToLines(cvHtml);
   const children: Paragraph[] = [];
 
   for (const line of lines) {
-    if (isHeadingLine(line)) {
-      children.push(
-        new Paragraph({
-          text: line.toUpperCase(),
-          heading: HeadingLevel.HEADING_2,
-          spacing: { before: 300, after: 150 },
-          border: {
-            bottom: { style: "single" as any, size: 6, color: "999999" },
-          },
-        })
-      );
-    } else if (line.startsWith("•") || line.startsWith("-") || line.startsWith("*")) {
-      children.push(
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: line.replace(/^[•\-*]\s*/, ""),
-              size: 22,
-              font: "Calibri",
-            }),
-          ],
-          bullet: { level: 0 },
-          spacing: { after: 60 },
-        })
-      );
-    } else {
-      children.push(
-        new Paragraph({
-          children: [new TextRun({ text: line, size: 22, font: "Calibri" })],
-          spacing: { after: 100 },
-        })
-      );
+    switch (line.type) {
+      case "name":
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: line.text.toUpperCase(),
+                bold: true,
+                size: 28, // 14pt
+                font: "Calibri",
+              }),
+            ],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 80 },
+          })
+        );
+        break;
+
+      case "contact":
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: line.text,
+                size: 22, // 11pt
+                font: "Calibri",
+              }),
+            ],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 200 },
+          })
+        );
+        break;
+
+      case "section":
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: line.text,
+                bold: true,
+                size: 24, // 12pt
+                font: "Calibri",
+              }),
+            ],
+            spacing: { before: 240, after: 80 },
+            border: {
+              bottom: {
+                style: BorderStyle.SINGLE,
+                size: 6,
+                color: "444444",
+              },
+            },
+          })
+        );
+        break;
+
+      case "date":
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: line.text,
+                italics: true,
+                size: 22,
+                font: "Calibri",
+              }),
+            ],
+            spacing: { after: 60 },
+          })
+        );
+        break;
+
+      case "bullet":
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: line.text,
+                size: 22,
+                font: "Calibri",
+              }),
+            ],
+            bullet: { level: 0 },
+            spacing: { after: 40 },
+          })
+        );
+        break;
+
+      case "subtitle":
+      case "text":
+      default:
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: line.text,
+                size: 22,
+                font: "Calibri",
+              }),
+            ],
+            spacing: { after: 60 },
+          })
+        );
+        break;
     }
   }
 
@@ -78,12 +124,7 @@ export async function exportImprovedCv(
       {
         properties: {
           page: {
-            margin: {
-              top: 1440,
-              right: 1440,
-              bottom: 1440,
-              left: 1440,
-            },
+            margin: { top: 720, right: 720, bottom: 720, left: 720 },
           },
         },
         children,

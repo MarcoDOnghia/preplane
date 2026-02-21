@@ -133,12 +133,31 @@ const Index = () => {
   };
 
   const applySuggestionToText = (text: string, original: string, suggested: string): string => {
-    // Try to find and replace in plain text and HTML
+    // Direct match
     if (text.includes(original)) {
       return text.replace(original, suggested);
     }
-    // If not found exactly, append to end with a marker
-    return text;
+    // Try matching after stripping HTML tags from the search text
+    const plainOriginal = original.replace(/<[^>]*>/g, "").trim();
+    if (plainOriginal && text.includes(plainOriginal)) {
+      return text.replace(plainOriginal, suggested);
+    }
+    // Try case-insensitive match
+    const idx = text.toLowerCase().indexOf(original.toLowerCase());
+    if (idx !== -1) {
+      return text.slice(0, idx) + suggested + text.slice(idx + original.length);
+    }
+    // Try matching first 40 chars as anchor
+    const anchor = original.slice(0, 40);
+    const anchorIdx = text.toLowerCase().indexOf(anchor.toLowerCase());
+    if (anchorIdx !== -1) {
+      // Find the end of the original-length segment
+      const endIdx = anchorIdx + original.length;
+      return text.slice(0, anchorIdx) + suggested + text.slice(Math.min(endIdx, text.length));
+    }
+    // Fallback: append suggestion
+    console.warn("[Apply] Could not find original text, appending suggestion");
+    return text + "\n" + suggested;
   };
 
   const handleApplySuggestion = (index: number) => {

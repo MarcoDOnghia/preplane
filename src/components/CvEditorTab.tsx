@@ -17,6 +17,7 @@ import {
   Check,
 } from "lucide-react";
 import type { CvSuggestion } from "@/lib/types";
+import { cvTextToStructuredHtml } from "@/lib/cvParser";
 
 interface CvEditorTabProps {
   originalCv: string;
@@ -30,16 +31,11 @@ interface CvEditorTabProps {
   saveStatus: "idle" | "saving" | "saved" | "error";
 }
 
-function cvTextToHtml(text: string): string {
-  return text
-    .split("\n")
-    .map((line) => {
-      const trimmed = line.trim();
-      if (!trimmed) return "";
-      return `<p>${trimmed}</p>`;
-    })
-    .filter(Boolean)
-    .join("");
+function ensureHtml(text: string): string {
+  if (text.includes("<h1") || text.includes("<h2") || text.includes("<ul")) {
+    return text;
+  }
+  return cvTextToStructuredHtml(text);
 }
 
 function countWords(html: string): number {
@@ -66,7 +62,7 @@ const CvEditorTab = ({
       StarterKit,
       Highlight.configure({ multicolor: true }),
     ],
-    content: currentCv.includes("<") ? currentCv : cvTextToHtml(currentCv),
+    content: ensureHtml(currentCv),
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
     },
@@ -85,7 +81,7 @@ const CvEditorTab = ({
       initializedRef.current = true;
       return;
     }
-    const newContent = currentCv.includes("<") ? currentCv : cvTextToHtml(currentCv);
+    const newContent = ensureHtml(currentCv);
     const currentContent = editor.getHTML();
     if (newContent !== currentContent) {
       editor.commands.setContent(newContent, { emitUpdate: false });
