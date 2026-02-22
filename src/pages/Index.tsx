@@ -35,6 +35,7 @@ const Index = () => {
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [lastJobTitle, setLastJobTitle] = useState("Untitled Position");
   const [lastCompany, setLastCompany] = useState("Unknown Company");
+  const [lastJobDescription, setLastJobDescription] = useState("");
   const [showTrackingModal, setShowTrackingModal] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [cvState, setCvState] = useState<CvState>({
@@ -278,6 +279,7 @@ const Index = () => {
       const company = dashMatch?.[2]?.trim().slice(0, 100) || "Unknown Company";
       setLastJobTitle(jobTitle);
       setLastCompany(company);
+      setLastJobDescription(jobDescription);
 
       const { data: inserted } = await supabase.from("applications").insert({
         user_id: user.id,
@@ -336,6 +338,7 @@ const Index = () => {
           <ResultsSection
             result={result}
             jobTitle={lastJobTitle}
+            jobDescription={lastJobDescription}
             onDownload={handleDownload}
             originalCv={cvState.original}
             currentCv={cvState.current}
