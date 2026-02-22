@@ -38,7 +38,7 @@ interface AtsCvEditorProps {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground border-b border-border pb-1 mt-6 mb-3 first:mt-0">
+    <h3 className="text-sm font-bold text-foreground mt-6 mb-2 first:mt-0">
       {children}
     </h3>
   );
@@ -219,14 +219,14 @@ const AtsCvEditor = ({
         </div>
       </div>
 
-      {/* Document */}
-      <Card className="shadow-sm">
+      {/* Document — single-column, clean ATS format */}
+      <Card className="shadow-sm font-[Arial,Helvetica,sans-serif]">
         <CardContent className="pt-6 space-y-1">
           {/* Header */}
           <Input
             value={model.name}
             onChange={(e) => set("name", e.target.value)}
-            className="text-xl font-bold text-center border-none shadow-none focus-visible:ring-0 uppercase"
+            className="text-lg font-bold text-center border-none shadow-none focus-visible:ring-0"
             placeholder="Your Name"
           />
           <Input
@@ -236,8 +236,8 @@ const AtsCvEditor = ({
             placeholder="City ● email@example.com ● +1 234 567 8900"
           />
 
-          {/* Summary */}
-          <SectionLabel>Summary</SectionLabel>
+          {/* Profile Summary */}
+          <SectionLabel>PROFILE SUMMARY</SectionLabel>
           <Textarea
             value={model.summary}
             onChange={(e) => set("summary", e.target.value)}
@@ -246,7 +246,7 @@ const AtsCvEditor = ({
           />
 
           {/* Professional Experience */}
-          <SectionLabel>Professional Experience</SectionLabel>
+          <SectionLabel>PROFESSIONAL EXPERIENCE</SectionLabel>
           {model.experience.map((exp, i) => (
             <div key={i} className="mb-4 group relative">
               <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-1.5 mb-1">
@@ -297,7 +297,7 @@ const AtsCvEditor = ({
           </Button>
 
           {/* Education */}
-          <SectionLabel>Education</SectionLabel>
+          <SectionLabel>EDUCATION</SectionLabel>
           {model.education.map((edu, i) => (
             <div key={i} className="mb-3 group relative">
               <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-1.5 mb-1">
@@ -348,7 +348,7 @@ const AtsCvEditor = ({
           </Button>
 
           {/* Skills */}
-          <SectionLabel>Skills</SectionLabel>
+          <SectionLabel>SKILLS</SectionLabel>
           <Textarea
             value={model.skills}
             onChange={(e) => set("skills", e.target.value)}
@@ -361,7 +361,7 @@ const AtsCvEditor = ({
             <>
               {model.projects.length > 0 && (
                 <>
-                  <SectionLabel>Projects</SectionLabel>
+                  <SectionLabel>PROJECTS</SectionLabel>
                   {model.projects.map((proj, i) => (
                     <div key={i} className="mb-3 group relative">
                       <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-1.5 mb-1">
@@ -397,7 +397,7 @@ const AtsCvEditor = ({
 
               {model.certifications.length > 0 && (
                 <>
-                  <SectionLabel>Certifications</SectionLabel>
+                  <SectionLabel>CERTIFICATIONS</SectionLabel>
                   {model.certifications.map((c, i) => (
                     <div key={i} className="flex items-center gap-1.5 group mb-1">
                       <span className="text-muted-foreground text-xs">•</span>
@@ -425,7 +425,7 @@ const AtsCvEditor = ({
 
               {model.awards.length > 0 && (
                 <>
-                  <SectionLabel>Awards</SectionLabel>
+                  <SectionLabel>AWARDS</SectionLabel>
                   {model.awards.map((a, i) => (
                     <div key={i} className="flex items-center gap-1.5 group mb-1">
                       <Input

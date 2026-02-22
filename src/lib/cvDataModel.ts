@@ -345,7 +345,7 @@ export function cvModelToPlainText(model: CvDataModel): string {
   parts.push("");
 
   if (model.summary) {
-    parts.push("SUMMARY");
+    parts.push("PROFILE SUMMARY");
     parts.push(model.summary);
     parts.push("");
   }
@@ -416,7 +416,7 @@ export function cvModelToHtml(model: CvDataModel): string {
   if (model.contact) parts.push(`<p>${esc(model.contact)}</p>`);
 
   if (model.summary) {
-    parts.push(`<h2>SUMMARY</h2>`);
+    parts.push(`<h2>PROFILE SUMMARY</h2>`);
     parts.push(`<p>${esc(model.summary)}</p>`);
   }
 
