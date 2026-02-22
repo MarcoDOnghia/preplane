@@ -3,12 +3,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import {
   Download,
   CheckCircle2,
   ChevronDown,
   Copy,
   FileText,
+  Target,
+  TrendingUp,
+  AlertTriangle,
+  Sparkles,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -85,6 +90,19 @@ const ResultsSection = ({
     keywordsMissing: liveAts.missingKeywords,
   }), [result.atsAnalysis, liveAts]);
 
+  // Projected score if all missing keywords were added
+  const highPriorityRemaining = useMemo(() => {
+    return result.cvSuggestions.filter((s) => s.priority === "high").length;
+  }, [result.cvSuggestions]);
+
+  const projectedScore = useMemo(() => {
+    if (!jobDescription || !cvPlainText) return liveAts.score;
+    const missingCount = liveAts.missingKeywords.length;
+    if (missingCount === 0) return liveAts.score;
+    const totalKeywords = liveAts.matchedKeywords.length + missingCount;
+    return Math.min(100, Math.round((totalKeywords / totalKeywords) * 100));
+  }, [liveAts, jobDescription, cvPlainText]);
+
   const handleSelectVersion = (content: string) => {
     setSelectedCoverLetter(content);
     const idx = result.coverLetterVersions?.findIndex((v) => v.content === content);
@@ -143,7 +161,7 @@ const ResultsSection = ({
         </div>
       </div>
 
-      {/* 3-tab layout */}
+      {/* 2-tab layout (Requirements merged into editor left column) */}
       <Tabs defaultValue="ats-editor" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="ats-editor" className="font-semibold">
@@ -156,42 +174,16 @@ const ResultsSection = ({
         {/* ATS CV Editor: two-column layout */}
         <TabsContent value="ats-editor" className="mt-4">
           <div className="grid grid-cols-1 md:grid-cols-[30%_1fr] gap-4">
-            {/* Left: JD & Requirements */}
-            <div className="space-y-4">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
-                    <CheckCircle2 className="h-4 w-4 text-primary" />
-                    Key Requirements ({result.keyRequirements.length})
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-1.5">
-                    {result.keyRequirements.map((req, i) => (
-                      <Badge key={i} variant="secondary" className="text-xs py-1 px-2.5">
-                        {req}
-                      </Badge>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {jobDescription && (
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
-                      <FileText className="h-4 w-4 text-primary" />
-                      Job Description
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-xs text-muted-foreground leading-relaxed line-clamp-[20] whitespace-pre-line">
-                      {jobDescription}
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+            {/* Left: Job Requirements & Keywords panel */}
+            <JdRequirementsPanel
+              requirements={result.keyRequirements}
+              matchedKeywords={liveAts.matchedKeywords}
+              missingKeywords={liveAts.missingKeywords}
+              currentScore={liveAts.score}
+              projectedScore={projectedScore}
+              highPriorityRemaining={highPriorityRemaining}
+              jobDescription={jobDescription}
+            />
 
             {/* Right: Editable ATS CV */}
             <AtsCvEditor
@@ -238,3 +230,137 @@ const ResultsSection = ({
 };
 
 export default ResultsSection;
+
+// ─── Left-column panel ─────────────────────────────────────
+
+function JdRequirementsPanel({
+  requirements,
+  matchedKeywords,
+  missingKeywords,
+  currentScore,
+  projectedScore,
+  highPriorityRemaining,
+  jobDescription,
+}: {
+  requirements: string[];
+  matchedKeywords: string[];
+  missingKeywords: string[];
+  currentScore: number;
+  projectedScore: number;
+  highPriorityRemaining: number;
+  jobDescription: string;
+}) {
+  const scoreColor =
+    currentScore >= 80 ? "text-success" : currentScore >= 60 ? "text-yellow-500" : "text-destructive";
+  const progressColor =
+    currentScore >= 80 ? "bg-success" : currentScore >= 60 ? "bg-yellow-500" : "bg-destructive";
+
+  return (
+    <div className="space-y-4">
+      {/* ATS Score overview */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
+            <Target className="h-4 w-4 text-primary" />
+            ATS Score
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-end justify-between">
+            <span className={`text-3xl font-bold ${scoreColor}`}>{currentScore}%</span>
+            {projectedScore > currentScore && (
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <TrendingUp className="h-3 w-3 text-success" />
+                Projected: {projectedScore}%
+              </span>
+            )}
+          </div>
+          <Progress value={currentScore} className="h-2" />
+          {highPriorityRemaining > 0 && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <AlertTriangle className="h-3.5 w-3.5 text-yellow-500" />
+              {highPriorityRemaining} high-priority suggestion{highPriorityRemaining > 1 ? "s" : ""} remaining
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Requirements */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
+            <CheckCircle2 className="h-4 w-4 text-primary" />
+            Job Requirements ({requirements.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="space-y-1.5">
+            {requirements.map((req, i) => (
+              <li key={i} className="flex items-start gap-2 text-xs leading-relaxed">
+                <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary/60" />
+                {req}
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
+
+      {/* Keywords */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
+            <Sparkles className="h-4 w-4 text-primary" />
+            Keywords ({matchedKeywords.length + missingKeywords.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {matchedKeywords.length > 0 && (
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 font-medium">
+                Matched ({matchedKeywords.length})
+              </p>
+              <div className="flex flex-wrap gap-1">
+                {matchedKeywords.map((kw, i) => (
+                  <Badge key={i} variant="secondary" className="text-[11px] py-0.5 px-2 bg-success/10 text-success border-success/20">
+                    ✓ {kw}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+          {missingKeywords.length > 0 && (
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 font-medium">
+                Missing ({missingKeywords.length})
+              </p>
+              <div className="flex flex-wrap gap-1">
+                {missingKeywords.map((kw, i) => (
+                  <Badge key={i} variant="outline" className="text-[11px] py-0.5 px-2 border-destructive/30 text-destructive">
+                    ✗ {kw}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Collapsed JD */}
+      {jobDescription && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
+              <FileText className="h-4 w-4 text-primary" />
+              Job Description
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-xs text-muted-foreground leading-relaxed line-clamp-[12] whitespace-pre-line">
+              {jobDescription}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
