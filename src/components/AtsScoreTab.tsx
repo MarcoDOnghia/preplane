@@ -7,7 +7,6 @@ import {
   XCircle,
   AlertTriangle,
   Zap,
-  Copy,
   Check,
   Plus,
   Loader2,
@@ -15,10 +14,13 @@ import {
   Sparkles,
   Target,
   TrendingUp,
+  Wrench,
+  ScrollText,
 } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { calculateAtsScore } from "@/lib/atsScore";
 import type { AtsAnalysis } from "@/lib/types";
 
 interface AtsScoreTabProps {
@@ -36,61 +38,152 @@ interface GeneratedBullet {
 }
 
 const TARGET_SCORE = 90;
+const SCORE_DEBOUNCE_MS = 500;
 
 const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange }: AtsScoreTabProps) => {
   const { score, keywordsFound, keywordsMissing, formattingIssues, quickWins } = atsAnalysis;
-  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
-  const [loadingKeyword, setLoadingKeyword] = useState<number | null>(null);
-  const [previews, setPreviews] = useState<Record<number, GeneratedBullet>>({});
-  const [addedKeywords, setAddedKeywords] = useState<Set<number>>(new Set());
+  const [loadingKeyword, setLoadingKeyword] = useState<string | null>(null);
+  const [previews, setPreviews] = useState<Record<string, GeneratedBullet>>({});
+  const [addedKeywords, setAddedKeywords] = useState<Set<string>>(new Set());
+  const [fixingFormat, setFixingFormat] = useState(false);
+  const [animatedScore, setAnimatedScore] = useState(score);
+  const [highlightedSection, setHighlightedSection] = useState<string | null>(null);
+  const scoreTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { toast } = useToast();
+
+  // Animate score changes smoothly
+  useEffect(() => {
+    if (animatedScore === score) return;
+    const diff = score - animatedScore;
+    const step = diff > 0 ? 1 : -1;
+    const timer = setInterval(() => {
+      setAnimatedScore((prev) => {
+        const next = prev + step;
+        if ((step > 0 && next >= score) || (step < 0 && next <= score)) {
+          clearInterval(timer);
+          return score;
+        }
+        return next;
+      });
+    }, 30);
+    return () => clearInterval(timer);
+  }, [score]);
+
+  // Effective missing: from props minus already-added ones that haven't been picked up by rescan yet
+  const effectiveMissing = useMemo(
+    () => keywordsMissing.filter((kw) => !addedKeywords.has(kw.toLowerCase())),
+    [keywordsMissing, addedKeywords]
+  );
+
+  // Effective found: from props plus added ones
+  const effectiveFound = useMemo(() => {
+    const fromProps = new Set(keywordsFound.map((k) => k.toLowerCase()));
+    addedKeywords.forEach((k) => fromProps.add(k));
+    return Array.from(fromProps);
+  }, [keywordsFound, addedKeywords]);
 
   const totalKeywords = keywordsFound.length + keywordsMissing.length;
 
-  // Calculate how many keywords need to be added to reach target
   const keywordsNeeded = useMemo(() => {
     if (totalKeywords === 0) return 0;
-    const currentMatchRate = keywordsFound.length / totalKeywords;
+    const currentMatchRate = effectiveFound.length / totalKeywords;
     const targetMatchRate = TARGET_SCORE / 100;
     if (currentMatchRate >= targetMatchRate) return 0;
-    return Math.ceil(targetMatchRate * totalKeywords) - keywordsFound.length;
-  }, [keywordsFound.length, totalKeywords]);
+    return Math.ceil(targetMatchRate * totalKeywords) - effectiveFound.length;
+  }, [effectiveFound.length, totalKeywords]);
 
-  // Projected score after adding a keyword
-  const projectedScore = useMemo(() => {
-    if (totalKeywords === 0) return score;
-    const addedCount = addedKeywords.size;
-    const newMatchRate = (keywordsFound.length + addedCount) / totalKeywords;
-    return Math.min(100, Math.round(newMatchRate * 70 + 30)); // 70% keyword weight + 30% format
-  }, [keywordsFound.length, totalKeywords, addedKeywords.size, score]);
+  const projectedScorePerKeyword = useMemo(() => {
+    if (totalKeywords === 0) return 0;
+    return Math.round(70 / totalKeywords); // each keyword is worth ~70/total points
+  }, [totalKeywords]);
 
   const scoreColor =
-    score >= 80 ? "text-success" : score >= 60 ? "text-yellow-500" : "text-destructive";
+    animatedScore >= 80 ? "text-success" : animatedScore >= 60 ? "text-yellow-500" : "text-destructive";
   const scoreBarColor =
-    score >= 80 ? "[&>div]:bg-success" : score >= 60 ? "[&>div]:bg-yellow-500" : "[&>div]:bg-destructive";
-  const targetBarColor =
-    projectedScore >= 80 ? "[&>div]:bg-success" : projectedScore >= 60 ? "[&>div]:bg-yellow-500" : "[&>div]:bg-destructive";
+    animatedScore >= 80 ? "[&>div]:bg-success" : animatedScore >= 60 ? "[&>div]:bg-yellow-500" : "[&>div]:bg-destructive";
 
-  const handleCopyKeyword = async (kw: string, index: number) => {
-    await navigator.clipboard.writeText(kw);
-    setCopiedIndex(index);
-    toast({ title: `"${kw}" copied`, description: "Paste it into your CV in the Edit tab." });
-    setTimeout(() => setCopiedIndex(null), 2000);
-  };
+  // Check if keyword already exists in CV (duplicate detection)
+  const keywordExistsInCv = useCallback(
+    (keyword: string): boolean => {
+      if (!currentCv) return false;
+      const cvLower = currentCv.toLowerCase();
+      return cvLower.includes(keyword.toLowerCase());
+    },
+    [currentCv]
+  );
 
-  const handleGenerateBullet = async (keyword: string, index: number) => {
+  // Find best matching section in CV for a keyword
+  const findBestSection = useCallback(
+    (sectionHint: string): { position: number; sectionName: string } | null => {
+      if (!currentCv) return null;
+
+      const sectionMap: Record<string, string[]> = {
+        skills: ["skills", "technical skills", "core competencies", "competenze", "abilità"],
+        experience: ["experience", "work experience", "professional experience", "esperienza", "esperienze"],
+        education: ["education", "academic", "istruzione", "formazione"],
+        summary: ["summary", "profile", "about", "objective", "profilo", "riepilogo"],
+        certifications: ["certifications", "certificates", "certificazioni"],
+      };
+
+      const hint = sectionHint.toLowerCase();
+      const sectionKeys = Object.entries(sectionMap);
+
+      // Find matching section category
+      let targetPatterns: string[] = [];
+      for (const [key, patterns] of sectionKeys) {
+        if (hint.includes(key) || patterns.some((p) => hint.includes(p))) {
+          targetPatterns = patterns;
+          break;
+        }
+      }
+
+      if (targetPatterns.length === 0) {
+        // Default to experience
+        targetPatterns = sectionMap.experience;
+      }
+
+      // Search CV for section heading
+      for (const pattern of targetPatterns) {
+        const regex = new RegExp(`<h[12][^>]*>[^<]*${pattern}[^<]*</h[12]>`, "i");
+        const match = currentCv.match(regex);
+        if (match && match.index !== undefined) {
+          return { position: match.index + match[0].length, sectionName: pattern };
+        }
+        // Try bold/strong headings
+        const boldRegex = new RegExp(`<(?:strong|b)>[^<]*${pattern}[^<]*</(?:strong|b)>`, "i");
+        const boldMatch = currentCv.match(boldRegex);
+        if (boldMatch && boldMatch.index !== undefined) {
+          return { position: boldMatch.index + boldMatch[0].length, sectionName: pattern };
+        }
+      }
+
+      return null;
+    },
+    [currentCv]
+  );
+
+  const handleGenerateBullet = async (keyword: string) => {
     if (!currentCv) {
       toast({ title: "No CV loaded", description: "Please analyze a CV first.", variant: "destructive" });
       return;
     }
-    setLoadingKeyword(index);
+
+    // Check for duplicates
+    if (keywordExistsInCv(keyword)) {
+      toast({
+        title: "Keyword already in CV",
+        description: `"${keyword}" already appears in your CV. Consider enhancing the existing bullet instead.`,
+      });
+    }
+
+    setLoadingKeyword(keyword);
     try {
       const { data, error } = await supabase.functions.invoke("generate-keyword-bullet", {
         body: { keyword, cvContent: currentCv, jobDescription },
       });
       if (error) throw error;
       if (data.error) throw new Error(data.error);
-      setPreviews((prev) => ({ ...prev, [index]: data }));
+      setPreviews((prev) => ({ ...prev, [keyword]: data }));
     } catch (err: any) {
       toast({
         title: "Failed to generate",
@@ -102,70 +195,103 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange }: Ats
     }
   };
 
-  const handleApplyBullet = (keyword: string, index: number) => {
-    const preview = previews[index];
+  const handleApplyBullet = (keyword: string) => {
+    const preview = previews[keyword];
     if (!preview || !onCvChange || !currentCv) return;
 
-    // Find the right section in CV and append the bullet
-    const sectionName = preview.section.toLowerCase();
-    const cvLower = currentCv.toLowerCase();
-
-    // Try to find the section heading
-    const sectionPatterns = [
-      new RegExp(`<h[12][^>]*>[^<]*${sectionName}[^<]*</h[12]>`, "i"),
-      new RegExp(`<strong>[^<]*${sectionName}[^<]*</strong>`, "i"),
-      new RegExp(`<b>[^<]*${sectionName}[^<]*</b>`, "i"),
-    ];
-
-    let insertPosition = -1;
-    let matchLength = 0;
-    for (const pattern of sectionPatterns) {
-      const match = currentCv.match(pattern);
-      if (match && match.index !== undefined) {
-        insertPosition = match.index + match[0].length;
-        matchLength = match[0].length;
-        break;
-      }
-    }
-
-    let newCv: string;
     const bulletHtml = `<ul><li>${preview.bullet}</li></ul>`;
 
-    if (insertPosition !== -1) {
-      // Find the next section or end, and insert before it
-      const afterSection = currentCv.slice(insertPosition);
+    // Find the right section
+    const section = findBestSection(preview.section);
+    let newCv: string;
+
+    if (section) {
+      const afterSection = currentCv.slice(section.position);
       const nextSectionMatch = afterSection.match(/<h[12][^>]*>/i);
       if (nextSectionMatch && nextSectionMatch.index !== undefined) {
-        const insertAt = insertPosition + nextSectionMatch.index;
+        const insertAt = section.position + nextSectionMatch.index;
         newCv = currentCv.slice(0, insertAt) + bulletHtml + currentCv.slice(insertAt);
       } else {
-        // Append at end of section
-        newCv = currentCv.slice(0, insertPosition) + bulletHtml + currentCv.slice(insertPosition);
+        newCv = currentCv.slice(0, section.position) + bulletHtml + currentCv.slice(section.position);
       }
     } else {
-      // Fallback: append at end
       newCv = currentCv + bulletHtml;
     }
 
+    // Apply change immediately
     onCvChange(newCv);
-    setAddedKeywords((prev) => new Set(prev).add(index));
+
+    // Track as added
+    setAddedKeywords((prev) => new Set(prev).add(keyword.toLowerCase()));
+
+    // Clear preview
     setPreviews((prev) => {
       const next = { ...prev };
-      delete next[index];
+      delete next[keyword];
       return next;
     });
+
+    // Highlight the section briefly
+    setHighlightedSection(preview.section);
+    setTimeout(() => setHighlightedSection(null), 3000);
+
+    // Debug logging
+    console.log(`[ATS] Added keyword "${keyword}" to section "${preview.section}"`);
+    console.log(`[ATS] Keywords: found=${effectiveFound.length + 1}, missing=${effectiveMissing.length - 1}, total=${totalKeywords}`);
+    console.log(`[ATS] Score before: ${score}, projected after: ~${score + projectedScorePerKeyword}`);
+
     toast({
       title: `✓ Added "${keyword}"`,
-      description: `Inserted in ${preview.section} section`,
+      description: `Inserted in ${preview.section} section • Score updating...`,
     });
   };
 
-  const handleDismissPreview = (index: number) => {
+  const handleDismissPreview = (keyword: string) => {
     setPreviews((prev) => {
       const next = { ...prev };
-      delete next[index];
+      delete next[keyword];
       return next;
     });
+  };
+
+  // Auto-fix formatting issues
+  const handleAutoFixFormatting = () => {
+    if (!currentCv || !onCvChange) return;
+    setFixingFormat(true);
+
+    let fixed = currentCv;
+
+    // Strip hyperlinks but keep text
+    fixed = fixed.replace(/<a[^>]*>(.*?)<\/a>/gi, "$1");
+
+    // Remove images
+    fixed = fixed.replace(/<img[^>]*>/gi, "");
+
+    // Strip inline styles that ATS can't read
+    fixed = fixed.replace(/\s*style="[^"]*"/gi, "");
+
+    // Remove problematic special characters
+    fixed = fixed.replace(/[★☆►▶●○◆◇■□▪▫–—]/g, "");
+    fixed = fixed.replace(/\u00A0/g, " "); // non-breaking spaces
+
+    // Normalize whitespace
+    fixed = fixed.replace(/\s{2,}/g, " ");
+
+    // Clean empty tags
+    fixed = fixed.replace(/<(p|li|div|span)>\s*<\/\1>/gi, "");
+
+    onCvChange(fixed);
+
+    const issuesFixed = formattingIssues.length;
+    console.log(`[ATS] Auto-fixed formatting: ${issuesFixed} issues addressed`);
+    console.log(`[ATS] Predicted score boost: +${Math.min(5, issuesFixed * 2)}%`);
+
+    toast({
+      title: `✓ Formatting fixed`,
+      description: `${issuesFixed} issue${issuesFixed !== 1 ? "s" : ""} addressed • Expected +3-5% score boost`,
+    });
+
+    setTimeout(() => setFixingFormat(false), 500);
   };
 
   return (
@@ -180,18 +306,20 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange }: Ats
                 <div>
                   <p className="text-sm font-medium">ATS Compatibility Score</p>
                   <p className="text-xs text-muted-foreground">
-                    {score >= TARGET_SCORE
+                    {animatedScore >= TARGET_SCORE
                       ? "Your CV is ATS-optimized!"
-                      : `Add ${Math.max(0, keywordsNeeded - addedKeywords.size)} more keywords to reach ${TARGET_SCORE}%`}
+                      : `Add ${Math.max(0, keywordsNeeded)} more keywords to reach ${TARGET_SCORE}%`}
                   </p>
                 </div>
               </div>
               <div className="text-right">
-                <div className={`text-4xl font-bold ${scoreColor}`}>{score}</div>
-                {addedKeywords.size > 0 && projectedScore > score && (
+                <div className={`text-4xl font-bold tabular-nums transition-colors duration-300 ${scoreColor}`}>
+                  {animatedScore}
+                </div>
+                {addedKeywords.size > 0 && (
                   <div className="flex items-center gap-1 text-success text-sm font-medium">
                     <TrendingUp className="h-3.5 w-3.5" />
-                    → {projectedScore} projected
+                    +{addedKeywords.size * projectedScorePerKeyword} from additions
                   </div>
                 )}
               </div>
@@ -201,13 +329,13 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange }: Ats
             <div className="space-y-1">
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>Current</span>
-                <span>{score}%</span>
+                <span>{animatedScore}%</span>
               </div>
-              <Progress value={score} className={`h-2.5 ${scoreBarColor}`} />
+              <Progress value={animatedScore} className={`h-2.5 transition-all duration-700 ${scoreBarColor}`} />
             </div>
 
             {/* Target score bar */}
-            {score < TARGET_SCORE && (
+            {animatedScore < TARGET_SCORE && (
               <div className="space-y-1">
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
@@ -216,26 +344,30 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange }: Ats
                   <span>{TARGET_SCORE}%</span>
                 </div>
                 <div className="relative">
-                  <Progress value={projectedScore} className={`h-2.5 ${targetBarColor} opacity-60`} />
+                  <Progress value={TARGET_SCORE} className="h-2.5 [&>div]:bg-muted-foreground/20 opacity-40" />
                   <div
                     className="absolute top-0 h-2.5 border-r-2 border-dashed border-foreground/40"
                     style={{ left: `${TARGET_SCORE}%` }}
                   />
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Reach {TARGET_SCORE}% ATS by adding {keywordsNeeded} keyword{keywordsNeeded !== 1 ? "s" : ""} →
+                  each adds ~{projectedScorePerKeyword}%
+                </p>
               </div>
             )}
 
             {/* Summary badges */}
-            <div className="flex gap-3 pt-1">
+            <div className="flex gap-3 pt-1 flex-wrap">
               <Badge variant="outline" className="bg-success/10 text-success border-success/20">
-                ✓ {keywordsFound.length} matched
+                ✓ {effectiveFound.length} matched
               </Badge>
               <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20">
-                ✗ {keywordsMissing.length - addedKeywords.size} missing
+                ✗ {effectiveMissing.length} missing
               </Badge>
               {addedKeywords.size > 0 && (
                 <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-                  + {addedKeywords.size} added
+                  + {addedKeywords.size} added this session
                 </Badge>
               )}
             </div>
@@ -250,7 +382,7 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange }: Ats
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-success" />
-              Keywords Found ({keywordsFound.length})
+              Keywords Found ({effectiveFound.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -260,7 +392,15 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange }: Ats
                   ✓ {kw}
                 </Badge>
               ))}
-              {keywordsFound.length === 0 && (
+              {/* Show newly added keywords with special styling */}
+              {Array.from(addedKeywords)
+                .filter((kw) => !keywordsFound.map((k) => k.toLowerCase()).includes(kw))
+                .map((kw) => (
+                  <Badge key={`added-${kw}`} className="bg-primary/10 text-primary border-primary/20 animate-in fade-in-0 slide-in-from-bottom-2 duration-300">
+                    ✓ {kw} <span className="text-[10px] ml-1 opacity-60">new</span>
+                  </Badge>
+                ))}
+              {effectiveFound.length === 0 && (
                 <p className="text-sm text-muted-foreground">No matching keywords found</p>
               )}
             </div>
@@ -272,63 +412,58 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange }: Ats
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <XCircle className="h-4 w-4 text-destructive" />
-              Missing Keywords ({keywordsMissing.length - addedKeywords.size})
+              Missing Keywords ({effectiveMissing.length})
             </CardTitle>
-            {keywordsMissing.length > 0 && (
+            {effectiveMissing.length > 0 && (
               <p className="text-xs text-muted-foreground">
                 {currentCv
-                  ? "If a keyword matches your experience, click ADD to generate a tailored bullet point."
+                  ? "If a keyword matches your experience, click ADD to generate a tailored bullet."
                   : "Click a keyword to copy it, then add it to your CV in the Edit tab."}
               </p>
             )}
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex flex-wrap gap-2">
-              {keywordsMissing.map((kw, i) => {
-                if (addedKeywords.has(i)) {
-                  return (
-                    <Badge key={i} className="bg-success/10 text-success border-success/20">
-                      <Check className="h-3 w-3 mr-1" /> {kw} — Added
-                    </Badge>
-                  );
-                }
+              {effectiveMissing.map((kw) => {
+                const isDuplicate = keywordExistsInCv(kw);
                 return (
-                  <div key={i} className="inline-flex">
+                  <div key={kw} className="inline-flex">
                     {currentCv ? (
                       <Button
                         variant="ghost"
                         size="sm"
                         className="h-auto px-2.5 py-1 gap-1.5 bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 text-xs font-normal rounded-full"
-                        onClick={() => handleGenerateBullet(kw, i)}
-                        disabled={loadingKeyword === i}
+                        onClick={() => handleGenerateBullet(kw)}
+                        disabled={loadingKeyword === kw}
                       >
-                        {loadingKeyword === i ? (
+                        {loadingKeyword === kw ? (
                           <Loader2 className="h-3 w-3 animate-spin" />
                         ) : (
                           <Plus className="h-3 w-3" />
                         )}
                         {kw}
+                        {isDuplicate && (
+                          <span className="text-[10px] opacity-60 ml-0.5">(enhance)</span>
+                        )}
                       </Button>
                     ) : (
                       <Button
                         variant="ghost"
                         size="sm"
                         className="h-auto px-2.5 py-1 gap-1.5 bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 text-xs font-normal rounded-full"
-                        onClick={() => handleCopyKeyword(kw, i)}
+                        onClick={async () => {
+                          await navigator.clipboard.writeText(kw);
+                          toast({ title: `"${kw}" copied`, description: "Paste it into your CV in the Edit tab." });
+                        }}
                       >
                         ✗ {kw}
-                        {copiedIndex === i ? (
-                          <Check className="h-3 w-3" />
-                        ) : (
-                          <Copy className="h-3 w-3 opacity-50" />
-                        )}
                       </Button>
                     )}
                   </div>
                 );
               })}
-              {keywordsMissing.length === 0 && (
-                <p className="text-sm text-muted-foreground">All keywords covered!</p>
+              {effectiveMissing.length === 0 && (
+                <p className="text-sm text-success font-medium">🎉 All keywords covered!</p>
               )}
             </div>
           </CardContent>
@@ -336,18 +471,15 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange }: Ats
       </div>
 
       {/* AI-Generated Bullet Previews */}
-      {Object.entries(previews).map(([indexStr, preview]) => {
-        const index = parseInt(indexStr);
-        const keyword = keywordsMissing[index];
-        if (!keyword) return null;
+      {Object.entries(previews).map(([keyword, preview]) => {
         return (
-          <Card key={index} className="border-primary/30 bg-primary/5">
+          <Card key={keyword} className="border-primary/30 bg-primary/5 animate-in fade-in-0 slide-in-from-top-2 duration-300">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2 flex-wrap">
                 <Sparkles className="h-4 w-4 text-primary" />
                 AI-generated for "{keyword}"
                 <Badge variant="outline" className="text-[10px] ml-1">
-                  {preview.section}
+                  → {preview.section}
                 </Badge>
                 {preview.isRephrase && (
                   <Badge variant="outline" className="text-[10px] bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
@@ -366,6 +498,9 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange }: Ats
                 >
                   {preview.confidence} match
                 </Badge>
+                <span className="text-[10px] text-muted-foreground ml-auto">
+                  +~{projectedScorePerKeyword}% score
+                </span>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -377,7 +512,7 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange }: Ats
                 <Button
                   size="sm"
                   className="bg-success hover:bg-success/90 text-success-foreground"
-                  onClick={() => handleApplyBullet(keyword, index)}
+                  onClick={() => handleApplyBullet(keyword)}
                 >
                   <Check className="h-3.5 w-3.5 mr-1" /> Add to CV
                 </Button>
@@ -385,17 +520,17 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange }: Ats
                   size="sm"
                   variant="ghost"
                   className="text-muted-foreground"
-                  onClick={() => handleDismissPreview(index)}
+                  onClick={() => handleDismissPreview(keyword)}
                 >
                   Dismiss
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => handleGenerateBullet(keyword, index)}
-                  disabled={loadingKeyword === index}
+                  onClick={() => handleGenerateBullet(keyword)}
+                  disabled={loadingKeyword === keyword}
                 >
-                  {loadingKeyword === index ? (
+                  {loadingKeyword === keyword ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
                   ) : null}
                   Regenerate
@@ -406,14 +541,35 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange }: Ats
         );
       })}
 
-      {/* Formatting Issues */}
+      {/* Formatting Issues with Auto-Fix */}
       {formattingIssues.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-yellow-500" />
-              Formatting Issues ({formattingIssues.length})
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                Formatting Issues ({formattingIssues.length})
+              </CardTitle>
+              {currentCv && onCvChange && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5"
+                  onClick={handleAutoFixFormatting}
+                  disabled={fixingFormat}
+                >
+                  {fixingFormat ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Wrench className="h-3.5 w-3.5" />
+                  )}
+                  Auto-Fix All
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 ml-1">
+                    +3-5%
+                  </Badge>
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             <ul className="space-y-2">
@@ -450,6 +606,14 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange }: Ats
             </ol>
           </CardContent>
         </Card>
+      )}
+
+      {/* Section highlight indicator */}
+      {highlightedSection && (
+        <div className="fixed bottom-6 right-6 bg-success text-success-foreground px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 animate-in fade-in-0 slide-in-from-bottom-4 duration-300 z-50">
+          <ScrollText className="h-4 w-4" />
+          Bullet added to {highlightedSection} — switch to Edit CV tab to review
+        </div>
       )}
     </div>
   );
