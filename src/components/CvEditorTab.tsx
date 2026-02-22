@@ -1,7 +1,7 @@
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Highlight from "@tiptap/extension-highlight";
-import { useEffect, useCallback, useRef, useState } from "react";
+import { useEffect, useCallback, useRef, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -15,9 +15,11 @@ import {
   CheckCheck,
   Save,
   Check,
+  TrendingUp,
 } from "lucide-react";
 import type { CvSuggestion } from "@/lib/types";
 import { cvTextToStructuredHtml } from "@/lib/cvParser";
+import { calculateAtsScore } from "@/lib/atsScore";
 
 interface CvEditorTabProps {
   originalCv: string;
@@ -25,7 +27,8 @@ interface CvEditorTabProps {
   onChange: (html: string) => void;
   onApplyAll: () => void;
   onReset: () => void;
-  atsScore?: number;
+  originalAtsScore?: number;
+  jobDescription?: string;
   suggestions: CvSuggestion[];
   appliedSuggestions: number[];
   saveStatus: "idle" | "saving" | "saved" | "error";
@@ -49,7 +52,8 @@ const CvEditorTab = ({
   onChange,
   onApplyAll,
   onReset,
-  atsScore = 0,
+  originalAtsScore = 0,
+  jobDescription = "",
   suggestions,
   appliedSuggestions,
   saveStatus,
@@ -96,6 +100,15 @@ const CvEditorTab = ({
 
   const remaining = suggestions.length - appliedSuggestions.length;
   const wordCount = editor ? countWords(editor.getHTML()) : 0;
+
+  // Live ATS score recalculation
+  const liveAtsScore = useMemo(() => {
+    if (!jobDescription || !currentCv) return originalAtsScore;
+    return calculateAtsScore(currentCv, jobDescription).score;
+  }, [currentCv, jobDescription, originalAtsScore]);
+
+  const scoreImprovement = liveAtsScore - originalAtsScore;
+  const scoreColor = liveAtsScore >= 80 ? "text-success" : liveAtsScore >= 60 ? "text-yellow-500" : "text-destructive";
 
   if (!editor) return null;
 
@@ -183,8 +196,13 @@ const CvEditorTab = ({
           {saveStatus === "error" && (
             <span className="text-destructive">Save failed</span>
           )}
-          <Badge variant="outline" className="text-xs">
-            ATS: {atsScore}/100
+          <Badge variant="outline" className={`text-xs ${scoreColor}`}>
+            ATS: {liveAtsScore}/100
+            {scoreImprovement > 0 && (
+              <span className="ml-1 text-success flex items-center gap-0.5">
+                <TrendingUp className="h-3 w-3" />+{scoreImprovement}
+              </span>
+            )}
           </Badge>
           <span>{wordCount} words</span>
         </div>

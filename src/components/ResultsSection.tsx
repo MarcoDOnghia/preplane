@@ -32,6 +32,7 @@ import type { TailorResult, CvSuggestion } from "@/lib/types";
 interface ResultsSectionProps {
   result: TailorResult;
   jobTitle: string;
+  jobDescription?: string;
   onDownload?: () => void;
   // CV editing props
   originalCv: string;
@@ -57,6 +58,7 @@ const PRIORITY_COLORS: Record<string, string> = {
 const ResultsSection = ({
   result,
   jobTitle,
+  jobDescription = "",
   onDownload,
   originalCv,
   currentCv,
@@ -243,7 +245,8 @@ const ResultsSection = ({
             onChange={onCvChange}
             onApplyAll={onApplyAllSuggestions}
             onReset={onResetCv}
-            atsScore={result.atsAnalysis?.score || 0}
+            originalAtsScore={result.atsAnalysis?.score || 0}
+            jobDescription={jobDescription}
             suggestions={result.cvSuggestions}
             appliedSuggestions={appliedSuggestions}
             saveStatus={saveStatus}

@@ -18,7 +18,6 @@ function isSectionHeader(line: string): boolean {
 }
 
 function isContactLine(line: string): boolean {
-  // Lines with email, phone, linkedin, location patterns
   const patterns = [/@/, /\+?\d[\d\s\-()]{6,}/, /linkedin\.com/, /github\.com/];
   return patterns.some((p) => p.test(line));
 }
@@ -123,9 +122,10 @@ function escapeHtml(text: string): string {
 
 /**
  * Parses CV HTML/text into structured lines for docx export.
+ * Improved: better detection of titles vs regular text, handles contact info on same line.
  */
 export interface CvLine {
-  type: "name" | "contact" | "section" | "subtitle" | "date" | "bullet" | "text";
+  type: "name" | "contact" | "section" | "subtitle" | "date" | "bullet" | "text" | "blank";
   text: string;
 }
 
@@ -134,8 +134,12 @@ export function parseCvToLines(input: string): CvLine[] {
   const lines = raw.split("\n").map((l) => l.trim()).filter(Boolean);
   const result: CvLine[] = [];
   let isFirstLine = true;
+  let headerDone = false;
 
-  for (const line of lines) {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // First line = name
     if (isFirstLine) {
       isFirstLine = false;
       if (!isSectionHeader(line) && !isBulletLine(line)) {
@@ -144,19 +148,47 @@ export function parseCvToLines(input: string): CvLine[] {
       }
     }
 
-    if (isContactLine(line) && !isSectionHeader(line) && result.length <= 3) {
+    // Contact lines (only before first section header)
+    if (!headerDone && isContactLine(line) && !isSectionHeader(line)) {
       result.push({ type: "contact", text: line });
-    } else if (isSectionHeader(line)) {
+      continue;
+    }
+
+    // Section header
+    if (isSectionHeader(line)) {
+      headerDone = true;
       result.push({ type: "section", text: line.toUpperCase() });
-    } else if (isBulletLine(line)) {
+      continue;
+    }
+
+    // Bullet line
+    if (isBulletLine(line)) {
       const text = line.replace(/^\s*[•\-*▪◦‣⁃]\s*/, "").replace(/^\s*\d+[.)]\s*/, "");
       result.push({ type: "bullet", text });
-    } else if (isDateLine(line)) {
+      continue;
+    }
+
+    // Date line
+    if (isDateLine(line)) {
       result.push({ type: "date", text: line });
+      continue;
+    }
+
+    // Subtitle detection: short line that isn't a sentence (likely job title, company, degree)
+    const isSubtitle = line.length < 80 && !line.endsWith(".") && headerDone;
+    if (isSubtitle) {
+      result.push({ type: "subtitle", text: line });
     } else {
       result.push({ type: "text", text: line });
     }
   }
 
   return result;
+}
+
+/**
+ * Extract plain text from HTML for ATS score calculation.
+ */
+export function cvToPlainText(html: string): string {
+  return stripHtml(html).replace(/\n{3,}/g, "\n\n").trim();
 }

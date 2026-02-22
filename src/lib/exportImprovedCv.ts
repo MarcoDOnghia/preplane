@@ -1,4 +1,4 @@
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle } from "docx";
+import { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle } from "docx";
 import { saveAs } from "file-saver";
 import { parseCvToLines } from "./cvParser";
 
@@ -10,7 +10,9 @@ export async function exportImprovedCv(
   const lines = parseCvToLines(cvHtml);
   const children: Paragraph[] = [];
 
-  for (const line of lines) {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
     switch (line.type) {
       case "name":
         children.push(
@@ -19,7 +21,7 @@ export async function exportImprovedCv(
               new TextRun({
                 text: line.text.toUpperCase(),
                 bold: true,
-                size: 28, // 14pt
+                size: 32, // 16pt
                 font: "Calibri",
               }),
             ],
@@ -40,9 +42,14 @@ export async function exportImprovedCv(
               }),
             ],
             alignment: AlignmentType.CENTER,
-            spacing: { after: 200 },
+            spacing: { after: 40 },
           })
         );
+        // Add extra space after the last contact line
+        const nextLine = lines[i + 1];
+        if (!nextLine || nextLine.type !== "contact") {
+          children.push(new Paragraph({ spacing: { after: 200 } }));
+        }
         break;
 
       case "section":
@@ -56,7 +63,7 @@ export async function exportImprovedCv(
                 font: "Calibri",
               }),
             ],
-            spacing: { before: 240, after: 80 },
+            spacing: { before: 280, after: 120 },
             border: {
               bottom: {
                 style: BorderStyle.SINGLE,
@@ -64,6 +71,22 @@ export async function exportImprovedCv(
                 color: "444444",
               },
             },
+          })
+        );
+        break;
+
+      case "subtitle":
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: line.text,
+                bold: true,
+                size: 22, // 11pt
+                font: "Calibri",
+              }),
+            ],
+            spacing: { before: 80, after: 40 },
           })
         );
         break;
@@ -100,7 +123,6 @@ export async function exportImprovedCv(
         );
         break;
 
-      case "subtitle":
       case "text":
       default:
         children.push(
