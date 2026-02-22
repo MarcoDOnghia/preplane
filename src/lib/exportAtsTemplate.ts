@@ -22,21 +22,30 @@ function bullet(text: string): Paragraph {
   });
 }
 
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export function reformattedCvToHtml(cv: ReformattedCv): string {
   const parts: string[] = [];
-  parts.push(`<h1>${cv.name}</h1>`);
-  parts.push(`<p>${cv.contact}</p>`);
+  parts.push(`<h1>${escapeHtml(cv.name)}</h1>`);
+  parts.push(`<p>${escapeHtml(cv.contact)}</p>`);
 
   parts.push(`<h2>PROFILE SUMMARY</h2>`);
-  parts.push(`<p>${cv.profileSummary}</p>`);
+  parts.push(`<p>${escapeHtml(cv.profileSummary)}</p>`);
 
   if (cv.education?.length) {
     parts.push(`<h2>EDUCATION</h2>`);
     cv.education.forEach((e) => {
-      parts.push(`<p><strong>${e.degree}</strong> ${e.dates}</p>`);
-      parts.push(`<p>${e.university}</p>`);
+      parts.push(`<p><strong>${escapeHtml(e.degree)}</strong> ${escapeHtml(e.dates)}</p>`);
+      parts.push(`<p>${escapeHtml(e.university)}</p>`);
       if (e.coursework) {
-        parts.push(`<p><strong>Relevant Coursework:</strong> ${e.coursework}</p>`);
+        parts.push(`<p><strong>Relevant Coursework:</strong> ${escapeHtml(e.coursework)}</p>`);
       }
     });
   }
@@ -44,10 +53,10 @@ export function reformattedCvToHtml(cv: ReformattedCv): string {
   if (cv.experience?.length) {
     parts.push(`<h2>PROFESSIONAL EXPERIENCE</h2>`);
     cv.experience.forEach((exp) => {
-      parts.push(`<p><strong>${exp.role}</strong> — ${exp.company} — ${exp.dates}</p>`);
+      parts.push(`<p><strong>${escapeHtml(exp.role)}</strong> — ${escapeHtml(exp.company)} — ${escapeHtml(exp.dates)}</p>`);
       if (exp.bullets?.length) {
         parts.push("<ul>");
-        exp.bullets.forEach((b) => parts.push(`<li>${b}</li>`));
+        exp.bullets.forEach((b) => parts.push(`<li>${escapeHtml(b)}</li>`));
         parts.push("</ul>");
       }
     });
@@ -55,25 +64,25 @@ export function reformattedCvToHtml(cv: ReformattedCv): string {
 
   if (cv.technicalSkills) {
     parts.push(`<h2>TECHNICAL SKILLS</h2>`);
-    parts.push(`<p>${cv.technicalSkills}</p>`);
+    parts.push(`<p>${escapeHtml(cv.technicalSkills)}</p>`);
   }
 
   if (cv.projectExperience?.length) {
     parts.push(`<h2>PROJECT EXPERIENCE</h2>`);
     cv.projectExperience.forEach((p) => {
-      parts.push(`<p><strong>${p.title}</strong> ${p.dates}</p>`);
+      parts.push(`<p><strong>${escapeHtml(p.title)}</strong> ${escapeHtml(p.dates)}</p>`);
       if (p.bullets?.length) {
         parts.push("<ul>");
-        p.bullets.forEach((b) => parts.push(`<li>${b}</li>`));
+        p.bullets.forEach((b) => parts.push(`<li>${escapeHtml(b)}</li>`));
         parts.push("</ul>");
       }
     });
   }
 
   if (cv.honorsAwards?.length) {
-    parts.push(`<h2>HONORS & AWARDS</h2>`);
+    parts.push(`<h2>HONORS &amp; AWARDS</h2>`);
     cv.honorsAwards.forEach((a) => {
-      parts.push(`<p><strong>${a.title}</strong> ${a.date}</p>`);
+      parts.push(`<p><strong>${escapeHtml(a.title)}</strong> ${escapeHtml(a.date)}</p>`);
     });
   }
 
