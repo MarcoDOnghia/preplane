@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
 import type { TailorResult } from "@/lib/types";
-import { parseCvToModel, reformattedCvToModel, cvModelToPlainText } from "@/lib/cvDataModel";
+import { parseCvToModel, cvModelToPlainText } from "@/lib/cvDataModel";
 import type { CvDataModel } from "@/lib/cvDataModel";
 
 const LOADING_STEPS = [
@@ -38,28 +38,35 @@ const Index = () => {
   const [originalCvModel, setOriginalCvModel] = useState<CvDataModel | null>(null);
   const [isDirty, setIsDirty] = useState(false);
 
+  // Suggestion tracking
+  const [appliedSuggestions, setAppliedSuggestions] = useState<number[]>([]);
+  const [dismissedSuggestions, setDismissedSuggestions] = useState<number[]>([]);
+
+  // Undo stack: stores snapshots of the model before each change
+  const undoStackRef = useRef<CvDataModel[]>([]);
+
   const lastAppIdRef = useRef<string | null>(null);
   const downloadCountRef = useRef(0);
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { toast } = useToast();
 
   // --- Autosave ---
-  const saveCvToDb = useCallback(async (model: CvDataModel) => {
+  const saveCvToDb = useCallback(async (model: CvDataModel, applied: number[]) => {
     if (!lastAppIdRef.current) return;
     setSaveStatus("saving");
     try {
       const plainText = cvModelToPlainText(model);
       await supabase.from("applications").update({
-        current_cv: plainText, last_edited: new Date().toISOString(),
+        current_cv: plainText, applied_suggestions: applied, last_edited: new Date().toISOString(),
       } as any).eq("id", lastAppIdRef.current);
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 2000);
     } catch { setSaveStatus("error"); }
   }, []);
 
-  const debouncedSave = useCallback((model: CvDataModel) => {
+  const debouncedSave = useCallback((model: CvDataModel, applied: number[]) => {
     if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
-    autosaveTimerRef.current = setTimeout(() => saveCvToDb(model), 3000);
+    autosaveTimerRef.current = setTimeout(() => saveCvToDb(model, applied), 3000);
   }, [saveCvToDb]);
 
   useEffect(() => {
@@ -96,20 +103,155 @@ const Index = () => {
     });
   };
 
-  // --- CV Model Editing ---
+  // --- CV Model Editing (manual edits push undo) ---
   const handleCvModelChange = (model: CvDataModel) => {
+    if (cvModel) {
+      undoStackRef.current = [...undoStackRef.current.slice(-19), cvModel];
+    }
     setCvModel(model);
     setIsDirty(true);
-    debouncedSave(model);
+    debouncedSave(model, appliedSuggestions);
+  };
+
+  const handleUndo = () => {
+    const stack = undoStackRef.current;
+    if (stack.length === 0) return;
+    const prev = stack[stack.length - 1];
+    undoStackRef.current = stack.slice(0, -1);
+    setCvModel(prev);
+    setIsDirty(true);
+    debouncedSave(prev, appliedSuggestions);
+    toast({ title: "Undone" });
   };
 
   const handleResetCv = () => {
-    if (originalCvModel) {
+    if (originalCvModel && cvModel) {
+      undoStackRef.current = [...undoStackRef.current.slice(-19), cvModel];
       setCvModel({ ...originalCvModel });
+      setAppliedSuggestions([]);
+      setDismissedSuggestions([]);
       setIsDirty(true);
-      debouncedSave(originalCvModel);
+      debouncedSave(originalCvModel, []);
       toast({ title: "CV reset to original" });
     }
+  };
+
+  // --- Suggestion handlers (opt-in only) ---
+  const applySuggestionToModel = (model: CvDataModel, original: string, suggested: string): CvDataModel => {
+    const plainText = cvModelToPlainText(model);
+    // Try to find which field contains the original text and replace it
+    const clone: CvDataModel = JSON.parse(JSON.stringify(model));
+
+    // Check summary
+    if (clone.summary.includes(original)) {
+      clone.summary = clone.summary.replace(original, suggested);
+      return clone;
+    }
+
+    // Check experience bullets
+    for (const exp of clone.experience) {
+      for (let j = 0; j < exp.bullets.length; j++) {
+        if (exp.bullets[j].includes(original)) {
+          exp.bullets[j] = exp.bullets[j].replace(original, suggested);
+          return clone;
+        }
+      }
+      // Check role/company
+      if (exp.role.includes(original)) { exp.role = exp.role.replace(original, suggested); return clone; }
+    }
+
+    // Check skills
+    if (clone.skills.includes(original)) {
+      clone.skills = clone.skills.replace(original, suggested);
+      return clone;
+    }
+
+    // Check education
+    for (const edu of clone.education) {
+      if (edu.degree.includes(original)) { edu.degree = edu.degree.replace(original, suggested); return clone; }
+      if (edu.coursework.includes(original)) { edu.coursework = edu.coursework.replace(original, suggested); return clone; }
+    }
+
+    // Check projects
+    for (const proj of clone.projects) {
+      for (let j = 0; j < proj.bullets.length; j++) {
+        if (proj.bullets[j].includes(original)) {
+          proj.bullets[j] = proj.bullets[j].replace(original, suggested);
+          return clone;
+        }
+      }
+    }
+
+    // Fuzzy: case-insensitive match across plain text
+    const lowerOriginal = original.toLowerCase();
+    // Try experience bullets fuzzy
+    for (const exp of clone.experience) {
+      for (let j = 0; j < exp.bullets.length; j++) {
+        if (exp.bullets[j].toLowerCase().includes(lowerOriginal)) {
+          const idx = exp.bullets[j].toLowerCase().indexOf(lowerOriginal);
+          exp.bullets[j] = exp.bullets[j].slice(0, idx) + suggested + exp.bullets[j].slice(idx + original.length);
+          return clone;
+        }
+      }
+    }
+
+    // Fallback: append as a new bullet in the first experience entry
+    if (clone.experience.length > 0) {
+      clone.experience[0].bullets.push(suggested);
+    } else {
+      clone.summary = clone.summary + " " + suggested;
+    }
+    return clone;
+  };
+
+  const handleApplySuggestion = (index: number) => {
+    if (!result || !cvModel) return;
+    const s = result.cvSuggestions[index];
+    undoStackRef.current = [...undoStackRef.current.slice(-19), cvModel];
+    const newModel = applySuggestionToModel(cvModel, s.original, s.suggested);
+    const newApplied = [...appliedSuggestions, index];
+    setCvModel(newModel);
+    setAppliedSuggestions(newApplied);
+    setIsDirty(true);
+    debouncedSave(newModel, newApplied);
+    toast({ title: "✓ Applied", description: `Updated "${s.section}"` });
+  };
+
+  const handleDismissSuggestion = (index: number) => {
+    setDismissedSuggestions((prev) => [...prev, index]);
+  };
+
+  const handleUndoSuggestion = (index: number) => {
+    if (!result || !cvModel) return;
+    const s = result.cvSuggestions[index];
+    undoStackRef.current = [...undoStackRef.current.slice(-19), cvModel];
+    const newModel = applySuggestionToModel(cvModel, s.suggested, s.original);
+    const newApplied = appliedSuggestions.filter((i) => i !== index);
+    setCvModel(newModel);
+    setAppliedSuggestions(newApplied);
+    setIsDirty(true);
+    debouncedSave(newModel, newApplied);
+    toast({ title: "Suggestion undone" });
+  };
+
+  const handleApplyHighPriority = () => {
+    if (!result || !cvModel) return;
+    undoStackRef.current = [...undoStackRef.current.slice(-19), cvModel];
+    let model = cvModel;
+    const newApplied = [...appliedSuggestions];
+    let count = 0;
+    result.cvSuggestions.forEach((s, i) => {
+      if (s.priority === "high" && !newApplied.includes(i) && !dismissedSuggestions.includes(i)) {
+        model = applySuggestionToModel(model, s.original, s.suggested);
+        newApplied.push(i);
+        count++;
+      }
+    });
+    setCvModel(model);
+    setAppliedSuggestions(newApplied);
+    setIsDirty(true);
+    debouncedSave(model, newApplied);
+    toast({ title: `Applied ${count} high-priority suggestion${count !== 1 ? "s" : ""}` });
   };
 
   // --- Submit ---
@@ -118,8 +260,11 @@ const Index = () => {
     setResult(null);
     downloadCountRef.current = 0;
     lastAppIdRef.current = null;
+    setAppliedSuggestions([]);
+    setDismissedSuggestions([]);
+    undoStackRef.current = [];
 
-    // Parse raw CV into data model immediately
+    // Parse raw CV into data model — this is the ONLY initial model (no auto-apply)
     const parsed = parseCvToModel(cvContent);
     setCvModel(parsed);
     setOriginalCvModel(parsed);
@@ -141,14 +286,8 @@ const Index = () => {
       if (error) throw error;
       if (data.error) throw new Error(data.error);
 
+      // Store result with suggestions — but do NOT apply them to the model
       setResult(data);
-
-      // If AI returned a reformatted CV, use that as the model (it has keyword injections)
-      if (data.reformattedCv) {
-        const aiModel = reformattedCvToModel(data.reformattedCv);
-        setCvModel(aiModel);
-        setOriginalCvModel(aiModel);
-      }
 
       const firstLine = jobDescription.split(/\n/)[0]?.trim() || "";
       const dashMatch = firstLine.match(/^(.+?)\s*[—–]\s*(.+)$/);
@@ -213,7 +352,15 @@ const Index = () => {
             cvModel={cvModel}
             onCvModelChange={handleCvModelChange}
             onResetCv={handleResetCv}
+            onUndo={handleUndo}
+            canUndo={undoStackRef.current.length > 0}
             saveStatus={saveStatus}
+            appliedSuggestions={appliedSuggestions}
+            dismissedSuggestions={dismissedSuggestions}
+            onApplySuggestion={handleApplySuggestion}
+            onDismissSuggestion={handleDismissSuggestion}
+            onUndoSuggestion={handleUndoSuggestion}
+            onApplyHighPriority={handleApplyHighPriority}
           />
         )}
       </main>
