@@ -282,7 +282,12 @@ const ResultsSection = ({
         </TabsContent>
 
         <TabsContent value="ats" className="mt-4">
-          <AtsScoreTab atsAnalysis={liveAtsAnalysis} />
+          <AtsScoreTab
+            atsAnalysis={liveAtsAnalysis}
+            currentCv={currentCv}
+            jobDescription={jobDescription}
+            onCvChange={onCvChange}
+          />
         </TabsContent>
 
         <TabsContent value="cover-letter" className="mt-4">
