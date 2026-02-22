@@ -175,7 +175,7 @@ const ResultsSection = ({
       </div>
 
       <Tabs defaultValue="requirements" className="w-full">
-        <TabsList className="grid w-full grid-cols-5 md:grid-cols-6">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="requirements">Requirements</TabsTrigger>
           <TabsTrigger value="suggestions">
             CV Suggestions
@@ -190,9 +190,6 @@ const ResultsSection = ({
           </TabsTrigger>
           <TabsTrigger value="ats">ATS Score</TabsTrigger>
           <TabsTrigger value="cover-letter">Cover Letters</TabsTrigger>
-          <TabsTrigger value="interview" disabled className="opacity-50">
-            🧠 Interview Prep (SOON)
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="requirements" className="mt-4">
@@ -304,17 +301,6 @@ const ResultsSection = ({
           )}
         </TabsContent>
 
-        <TabsContent value="interview" className="mt-4">
-          <Card>
-            <CardContent className="py-12 text-center space-y-3">
-              <p className="text-3xl">🧠</p>
-              <h3 className="text-lg font-semibold text-muted-foreground">Interview Prep — Coming Soon</h3>
-              <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                Real interview questions sourced from Reddit & Glassdoor, tailored to your role. No AI fluff.
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
     </div>
   );

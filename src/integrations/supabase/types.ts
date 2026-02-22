@@ -245,6 +245,33 @@ export type Database = {
         }
         Relationships: []
       }
+      cvs: {
+        Row: {
+          created_at: string
+          file_url: string | null
+          id: string
+          name: string
+          parsed_text: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          name: string
+          parsed_text?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          name?: string
+          parsed_text?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       interview_feedback: {
         Row: {
           application_id: string
