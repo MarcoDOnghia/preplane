@@ -35,9 +35,7 @@ interface CvEditorTabProps {
 }
 
 function ensureHtml(text: string): string {
-  if (text.includes("<h1") || text.includes("<h2") || text.includes("<ul")) {
-    return text;
-  }
+  // Always run through the parser to guarantee proper structure
   return cvTextToStructuredHtml(text);
 }
 
@@ -63,7 +61,9 @@ const CvEditorTab = ({
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        heading: { levels: [1, 2, 3] },
+      }),
       Highlight.configure({ multicolor: true }),
     ],
     content: ensureHtml(currentCv),
@@ -72,8 +72,7 @@ const CvEditorTab = ({
     },
     editorProps: {
       attributes: {
-        class:
-          "prose prose-sm sm:prose max-w-none min-h-[400px] p-4 focus:outline-none [&_p]:my-1 [&_h1]:text-xl [&_h1]:font-bold [&_h1]:mt-4 [&_h1]:mb-2 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:mt-3 [&_h2]:mb-1 [&_ul]:ml-4 [&_ol]:ml-4 [&_li]:my-0.5",
+        class: "cv-editor-content",
       },
     },
   });
@@ -208,8 +207,8 @@ const CvEditorTab = ({
         </div>
       </div>
 
-      {/* Editor */}
-      <div className="rounded-lg border bg-card overflow-hidden">
+      {/* Editor - styled like a real document */}
+      <div className="rounded-lg border bg-white dark:bg-card overflow-hidden shadow-sm">
         <EditorContent editor={editor} />
       </div>
     </div>

@@ -46,8 +46,8 @@ function stripHtml(html: string): string {
 }
 
 export function cvTextToStructuredHtml(input: string): string {
-  // If already has rich HTML structure, return as-is
-  if (/<h[12][^>]*>/.test(input) && /<(ul|li)[^>]*>/.test(input)) {
+  // If already has well-formed HTML structure with both headings and list items, return as-is
+  if (/<h[12][^>]*>.+<\/h[12]>/.test(input) && /<li[^>]*>.+<\/li>/.test(input)) {
     return input;
   }
 
