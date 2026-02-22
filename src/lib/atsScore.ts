@@ -42,9 +42,20 @@ export interface AtsScoreResult {
   missingKeywords: string[];
 }
 
-export function calculateAtsScore(cvContent: string, jobDescription: string): AtsScoreResult {
+/**
+ * Recalculate ATS score using AI-provided keywords (preferred) or fallback to regex extraction.
+ * When aiKeywords are provided, they are used as the canonical keyword list instead of
+ * the broken regex extraction, giving accurate scores that match the AI's initial analysis.
+ */
+export function calculateAtsScore(
+  cvContent: string,
+  jobDescription: string,
+  aiKeywords?: string[]
+): AtsScoreResult {
   const cvText = cvToPlainText(cvContent).toLowerCase();
-  const keywords = extractKeywords(jobDescription);
+  const keywords = aiKeywords && aiKeywords.length > 0
+    ? aiKeywords.map((k) => k.toLowerCase())
+    : extractKeywords(jobDescription);
 
   if (keywords.length === 0) {
     return { score: 0, matchedKeywords: [], missingKeywords: [] };
@@ -54,7 +65,7 @@ export function calculateAtsScore(cvContent: string, jobDescription: string): At
   const missing: string[] = [];
 
   for (const kw of keywords) {
-    if (cvText.includes(kw)) {
+    if (cvText.includes(kw.toLowerCase())) {
       matched.push(kw);
     } else {
       missing.push(kw);
@@ -69,7 +80,6 @@ export function calculateAtsScore(cvContent: string, jobDescription: string): At
   const lineCount = cvText.split("\n").filter((l) => l.trim()).length;
   if (lineCount < 10) formatScore -= 10;
   if (cvText.length < 200) formatScore -= 10;
-  // Check for section headers
   const hasHeaders = /\b(education|experience|skills|certifications)\b/i.test(cvText);
   if (!hasHeaders) formatScore -= 5;
 
