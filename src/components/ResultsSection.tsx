@@ -27,6 +27,7 @@ import InterviewPrepTab from "@/components/InterviewPrepTab";
 import CoverLetterVersionsTab from "@/components/CoverLetterVersionsTab";
 import CvEditorTab from "@/components/CvEditorTab";
 import { useToast } from "@/hooks/use-toast";
+import { calculateAtsScore } from "@/lib/atsScore";
 import type { TailorResult, CvSuggestion } from "@/lib/types";
 
 interface ResultsSectionProps {
@@ -89,6 +90,25 @@ const ResultsSection = ({
 
   const appliedCount = appliedSuggestions.length;
   const totalCount = result.cvSuggestions.length;
+
+  // Single source of truth for live ATS score
+  const liveAts = useMemo(() => {
+    if (!jobDescription || !currentCv) {
+      return {
+        score: result.atsAnalysis?.score || 0,
+        matchedKeywords: result.atsAnalysis?.keywordsFound || [],
+        missingKeywords: result.atsAnalysis?.keywordsMissing || [],
+      };
+    }
+    return calculateAtsScore(currentCv, jobDescription);
+  }, [currentCv, jobDescription, result.atsAnalysis]);
+
+  const liveAtsAnalysis = useMemo(() => ({
+    ...result.atsAnalysis,
+    score: liveAts.score,
+    keywordsFound: liveAts.matchedKeywords,
+    keywordsMissing: liveAts.missingKeywords,
+  }), [result.atsAnalysis, liveAts]);
 
   const handleSelectVersion = (content: string) => {
     setSelectedCoverLetter(content);
@@ -246,6 +266,7 @@ const ResultsSection = ({
             onApplyAll={onApplyAllSuggestions}
             onReset={onResetCv}
             originalAtsScore={result.atsAnalysis?.score || 0}
+            liveAtsScore={liveAts.score}
             jobDescription={jobDescription}
             suggestions={result.cvSuggestions}
             appliedSuggestions={appliedSuggestions}
@@ -254,7 +275,7 @@ const ResultsSection = ({
         </TabsContent>
 
         <TabsContent value="ats" className="mt-4">
-          <AtsScoreTab atsAnalysis={result.atsAnalysis} />
+          <AtsScoreTab atsAnalysis={liveAtsAnalysis} />
         </TabsContent>
 
         <TabsContent value="cover-letter" className="mt-4">
