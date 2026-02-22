@@ -1,183 +1,222 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, FileText, Sparkles, Trash2, Loader2 } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Upload, FileText, Sparkles, Loader2, X, CheckCircle2 } from "lucide-react";
 import { extractTextFromFile } from "@/lib/fileParser";
-import { sampleCV, sampleJobDescription } from "@/lib/sampleData";
 import { useToast } from "@/hooks/use-toast";
-import type { Tone } from "@/lib/types";
 
 interface InputSectionProps {
-  onSubmit: (cvContent: string, jobDescription: string, tone: Tone) => void;
+  onSubmit: (cvContent: string, jobDescription: string) => void;
   onClear?: () => void;
   loading: boolean;
   loadingMessage: string;
 }
 
+interface FileState {
+  file: File | null;
+  text: string;
+  name: string;
+  error: string;
+}
+
+const MAX_SIZE = 2 * 1024 * 1024; // 2MB
+
 const InputSection = ({ onSubmit, onClear, loading, loadingMessage }: InputSectionProps) => {
-  const [cvText, setCvText] = useState("");
-  const [jobDesc, setJobDesc] = useState("");
-  const [tone, setTone] = useState<Tone>("professional");
-  const [fileName, setFileName] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [cv, setCv] = useState<FileState>({ file: null, text: "", name: "", error: "" });
+  const [jd, setJd] = useState<FileState>({ file: null, text: "", name: "", error: "" });
+  const [cvDragOver, setCvDragOver] = useState(false);
+  const [jdDragOver, setJdDragOver] = useState(false);
+  const cvInputRef = useRef<HTMLInputElement>(null);
+  const jdInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      const text = await extractTextFromFile(file);
-      setCvText(text);
-      setFileName(file.name);
-      toast({ title: "File parsed", description: `Extracted text from ${file.name}` });
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    }
-  };
-
-  const handleSubmit = () => {
-    if (!cvText.trim() || !jobDesc.trim()) {
-      toast({ title: "Missing input", description: "Please provide both your CV and a job description.", variant: "destructive" });
+  const processFile = useCallback(async (file: File, setter: typeof setCv) => {
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    if (!["pdf", "docx"].includes(ext || "")) {
+      setter({ file: null, text: "", name: "", error: "Only .pdf and .docx files are supported" });
       return;
     }
-    onSubmit(cvText, jobDesc, tone);
+    if (file.size > MAX_SIZE) {
+      setter({ file: null, text: "", name: "", error: "File exceeds 2MB limit" });
+      return;
+    }
+    try {
+      const text = await extractTextFromFile(file);
+      setter({ file, text, name: file.name, error: "" });
+      toast({ title: "File parsed", description: `Extracted text from ${file.name}` });
+    } catch (err: any) {
+      setter({ file: null, text: "", name: "", error: err.message });
+    }
+  }, [toast]);
+
+  const handleDrop = useCallback((e: React.DragEvent, setter: typeof setCv, setDrag: typeof setCvDragOver) => {
+    e.preventDefault();
+    setDrag(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) processFile(file, setter);
+  }, [processFile]);
+
+  const handleSubmit = () => {
+    if (!cv.text || !jd.text) {
+      toast({ title: "Missing files", description: "Please upload both your CV and a job description.", variant: "destructive" });
+      return;
+    }
+    onSubmit(cv.text, jd.text);
   };
 
   const handleClear = () => {
-    setCvText("");
-    setJobDesc("");
-    setTone("professional");
-    setFileName("");
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    setCv({ file: null, text: "", name: "", error: "" });
+    setJd({ file: null, text: "", name: "", error: "" });
+    if (cvInputRef.current) cvInputRef.current.value = "";
+    if (jdInputRef.current) jdInputRef.current.value = "";
     onClear?.();
   };
 
-  const loadSample = () => {
-    setCvText(sampleCV);
-    setJobDesc(sampleJobDescription);
-    toast({ title: "Sample loaded", description: "Demo CV and job description loaded." });
-  };
+  const bothReady = cv.text.length > 0 && jd.text.length > 0;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Tailor Your Application</h2>
-          <p className="text-muted-foreground mt-1">Upload your CV and paste the job description to get started</p>
-        </div>
-        <Button variant="outline" size="sm" onClick={loadSample}>
-          Try Demo
-        </Button>
+    <div className="space-y-8">
+      {/* Hero */}
+      <div className="text-center space-y-3">
+        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
+          ATS-Optimized Application Kit
+        </h1>
+        <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+          Upload both → Get 90% ATS CV + 3 cover letters instantly
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* CV Input */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <FileText className="h-5 w-5 text-primary" />
-              Your CV
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf,.docx"
-                onChange={handleFileUpload}
-                className="hidden"
-                id="cv-upload"
-              />
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                {fileName || "Upload .pdf or .docx"}
-              </Button>
-            </div>
-            <div className="relative">
-              <Label htmlFor="cv-text" className="text-xs text-muted-foreground">
-                Or paste your CV text below
-              </Label>
-              <Textarea
-                id="cv-text"
-                value={cvText}
-                onChange={(e) => setCvText(e.target.value)}
-                placeholder="Paste your CV content here..."
-                className="min-h-[280px] mt-1 text-sm"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Job Description */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" />
-              Job Description
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <Label htmlFor="tone" className="text-xs text-muted-foreground">
-                Cover letter tone
-              </Label>
-              <Select value={tone} onValueChange={(v) => setTone(v as Tone)}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="professional">Professional</SelectItem>
-                  <SelectItem value="enthusiastic">Enthusiastic</SelectItem>
-                  <SelectItem value="creative">Creative</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="job-desc" className="text-xs text-muted-foreground">
-                Paste the job description
-              </Label>
-              <Textarea
-                id="job-desc"
-                value={jobDesc}
-                onChange={(e) => setJobDesc(e.target.value)}
-                placeholder="Paste the job description here..."
-                className="min-h-[280px] mt-1 text-sm"
-              />
-            </div>
-          </CardContent>
-        </Card>
+      {/* Dropzones */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <DropZone
+          label="Your CV / Resume"
+          icon={<FileText className="h-8 w-8" />}
+          state={cv}
+          isDragOver={cvDragOver}
+          inputRef={cvInputRef}
+          onDragOver={(e) => { e.preventDefault(); setCvDragOver(true); }}
+          onDragLeave={() => setCvDragOver(false)}
+          onDrop={(e) => handleDrop(e, setCv, setCvDragOver)}
+          onFileChange={(e) => { const f = e.target.files?.[0]; if (f) processFile(f, setCv); }}
+          onClear={() => { setCv({ file: null, text: "", name: "", error: "" }); if (cvInputRef.current) cvInputRef.current.value = ""; }}
+        />
+        <DropZone
+          label="Job Description"
+          icon={<Sparkles className="h-8 w-8" />}
+          state={jd}
+          isDragOver={jdDragOver}
+          inputRef={jdInputRef}
+          onDragOver={(e) => { e.preventDefault(); setJdDragOver(true); }}
+          onDragLeave={() => setJdDragOver(false)}
+          onDrop={(e) => handleDrop(e, setJd, setJdDragOver)}
+          onFileChange={(e) => { const f = e.target.files?.[0]; if (f) processFile(f, setJd); }}
+          onClear={() => { setJd({ file: null, text: "", name: "", error: "" }); if (jdInputRef.current) jdInputRef.current.value = ""; }}
+        />
       </div>
 
-      {/* Actions */}
-      <div className="flex items-center gap-3">
-        <Button onClick={handleSubmit} disabled={loading} size="lg" className="flex-1 max-w-xs">
+      {/* CTA */}
+      <div className="flex flex-col items-center gap-3">
+        <Button
+          onClick={handleSubmit}
+          disabled={loading || !bothReady}
+          size="lg"
+          className="w-full max-w-xl h-14 text-lg font-bold bg-primary hover:bg-primary/90"
+        >
           {loading ? (
             <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              <Loader2 className="h-5 w-5 mr-2 animate-spin" />
               {loadingMessage}
             </>
           ) : (
             <>
-              <Sparkles className="h-4 w-4 mr-2" />
-              Tailor My Application
+              <Sparkles className="h-5 w-5 mr-2" />
+              Generate Full Application
             </>
           )}
         </Button>
-        <Button variant="outline" onClick={handleClear} disabled={loading}>
-          <Trash2 className="h-4 w-4 mr-1" />
-          Clear All
-        </Button>
+        {!bothReady && !loading && (
+          <p className="text-sm text-muted-foreground">
+            {!cv.text && !jd.text ? "Upload your CV and job description to get started" :
+             !cv.text ? "Upload your CV to continue" : "Upload the job description to continue"}
+          </p>
+        )}
+        {(cv.text || jd.text) && !loading && (
+          <Button variant="ghost" size="sm" onClick={handleClear} className="text-muted-foreground">
+            <X className="h-4 w-4 mr-1" /> Clear All
+          </Button>
+        )}
       </div>
     </div>
   );
 };
+
+function DropZone({
+  label, icon, state, isDragOver, inputRef,
+  onDragOver, onDragLeave, onDrop, onFileChange, onClear,
+}: {
+  label: string;
+  icon: React.ReactNode;
+  state: FileState;
+  isDragOver: boolean;
+  inputRef: React.RefObject<HTMLInputElement>;
+  onDragOver: (e: React.DragEvent) => void;
+  onDragLeave: () => void;
+  onDrop: (e: React.DragEvent) => void;
+  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onClear: () => void;
+}) {
+  const hasFile = state.text.length > 0;
+
+  return (
+    <Card
+      className={`relative cursor-pointer transition-all duration-200 ${
+        isDragOver ? "border-primary border-2 bg-primary/5 scale-[1.02]" :
+        hasFile ? "border-success/40 bg-success/5" :
+        state.error ? "border-destructive/40 bg-destructive/5" :
+        "border-dashed border-2 border-muted-foreground/25 hover:border-primary/50 hover:bg-primary/5"
+      }`}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+      onClick={() => !hasFile && inputRef.current?.click()}
+    >
+      <input
+        ref={inputRef}
+        type="file"
+        accept=".pdf,.docx"
+        onChange={onFileChange}
+        className="hidden"
+      />
+      <div className="flex flex-col items-center justify-center py-12 px-6 min-h-[200px]">
+        {hasFile ? (
+          <div className="text-center space-y-2">
+            <CheckCircle2 className="h-10 w-10 text-success mx-auto" />
+            <p className="font-semibold text-sm">{state.name}</p>
+            <p className="text-xs text-muted-foreground">{Math.round(state.text.length / 100) / 10}k characters extracted</p>
+            <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onClear(); }} className="text-xs text-muted-foreground mt-1">
+              <X className="h-3 w-3 mr-1" /> Remove
+            </Button>
+          </div>
+        ) : (
+          <div className="text-center space-y-3">
+            <div className={`mx-auto rounded-full p-4 ${isDragOver ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
+              {isDragOver ? <Upload className="h-8 w-8" /> : icon}
+            </div>
+            <div>
+              <p className="font-semibold text-sm">{label}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {isDragOver ? "Drop file here" : "Drag & drop or click to browse"}
+              </p>
+              <p className="text-xs text-muted-foreground">PDF or DOCX · Max 2MB</p>
+            </div>
+            {state.error && (
+              <p className="text-xs text-destructive font-medium">{state.error}</p>
+            )}
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+}
 
 export default InputSection;
