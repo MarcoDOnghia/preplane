@@ -114,12 +114,12 @@ const InputSection = ({ onSubmit, onClear, loading, loadingMessage }: InputSecti
   return (
     <div className="space-y-8">
       {/* Hero */}
-      <div className="text-center space-y-3">
-        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
-          Preplane — ATS CV + Cover Letters
+      <div className="text-center space-y-2">
+        <h1 className="text-[32px] font-bold tracking-tight text-foreground">
+          Preplane — 90% ATS + 3 Cover Letters
         </h1>
-        <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-          Upload CV + paste JD → Get 90% ATS score + 3 cover letters instantly
+        <p className="text-muted-foreground text-sm">
+          PDF CV + JD paste → Instant optimization
         </p>
       </div>
 
@@ -127,7 +127,7 @@ const InputSection = ({ onSubmit, onClear, loading, loadingMessage }: InputSecti
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         {/* CV Column - 2/5 = 40% */}
         <div className="md:col-span-2 space-y-2">
-          <label className="text-sm font-semibold text-foreground">CV / Resume</label>
+          <label className="text-sm font-medium text-foreground">CV (PDF/Docx)</label>
           <Card
             className={`relative cursor-pointer transition-all duration-200 ${
               cvDragOver ? "border-primary border-2 bg-primary/5 scale-[1.02]" :
@@ -175,7 +175,7 @@ const InputSection = ({ onSubmit, onClear, loading, loadingMessage }: InputSecti
 
         {/* JD Column - 3/5 = 60% */}
         <div className="md:col-span-3 space-y-3">
-          <label className="text-sm font-semibold text-foreground">Job Description</label>
+          <label className="text-sm font-medium text-foreground">JD (Paste)</label>
           
           {/* Primary: Paste textarea */}
           <Textarea

@@ -138,9 +138,7 @@ Only extract keywords from sections relevant to candidate requirements.
    - Version A "Conservative": formal, traditional, safe
    - Version B "Balanced": professional but personable
    - Version C "Bold": creative, memorable, shows personality
-5. Generate 10 likely interview questions for this specific role with STAR method guidance and suggested answers based on the CV
-6. Generate 5 intelligent questions the candidate should ask the interviewer
-7. Write a brief 2-3 paragraph company research summary based on what can be inferred from the job description
+5. Skip interview questions generation entirely — return empty arrays for interviewQuestions and questionsToAsk, and empty string for companyBrief.
 
 You MUST call the tailor_application function with your analysis.`;
 
@@ -215,26 +213,17 @@ You MUST call the tailor_application function with your analysis.`;
                   },
                   interviewQuestions: {
                     type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        question: { type: "string" },
-                        starGuidance: { type: "string", description: "STAR method framework for answering" },
-                        suggestedAnswer: { type: "string", description: "Suggested answer using CV experience" },
-                      },
-                      required: ["question", "starGuidance", "suggestedAnswer"],
-                      additionalProperties: false,
-                    },
-                    description: "10 likely interview questions",
+                    items: { type: "object", properties: { question: { type: "string" }, starGuidance: { type: "string" }, suggestedAnswer: { type: "string" } }, required: ["question"], additionalProperties: false },
+                    description: "Empty array — not generated",
                   },
                   questionsToAsk: {
                     type: "array",
                     items: { type: "string" },
-                    description: "5 questions candidate should ask the interviewer",
+                    description: "Empty array — not generated",
                   },
                   companyBrief: {
                     type: "string",
-                    description: "2-3 paragraph company research summary",
+                    description: "Empty string — not generated",
                   },
                 },
                 required: ["keyRequirements", "atsAnalysis", "cvSuggestions", "coverLetterVersions", "interviewQuestions", "questionsToAsk", "companyBrief"],
