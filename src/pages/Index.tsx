@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/Header";
@@ -9,6 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
 import type { TailorResult } from "@/lib/types";
+import { parseCvToModel, reformattedCvToModel, cvModelToPlainText } from "@/lib/cvDataModel";
+import type { CvDataModel } from "@/lib/cvDataModel";
 
 const LOADING_STEPS = [
   { message: "Analyzing job requirements...", progress: 15 },
@@ -18,14 +20,6 @@ const LOADING_STEPS = [
   { message: "Preparing interview questions...", progress: 90 },
   { message: "Polishing results...", progress: 95 },
 ];
-
-interface CvState {
-  original: string;
-  current: string;
-  appliedSuggestions: number[];
-  dismissedSuggestions: number[];
-  isDirty: boolean;
-}
 
 const Index = () => {
   const { user, loading: authLoading } = useAuth();
@@ -38,37 +32,41 @@ const Index = () => {
   const [lastJobDescription, setLastJobDescription] = useState("");
   const [showTrackingModal, setShowTrackingModal] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
-  const [cvState, setCvState] = useState<CvState>({
-    original: "", current: "", appliedSuggestions: [], dismissedSuggestions: [], isDirty: false,
-  });
+
+  // CV data model state
+  const [cvModel, setCvModel] = useState<CvDataModel | null>(null);
+  const [originalCvModel, setOriginalCvModel] = useState<CvDataModel | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
+
   const lastAppIdRef = useRef<string | null>(null);
   const downloadCountRef = useRef(0);
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { toast } = useToast();
 
   // --- Autosave ---
-  const saveCvToDb = useCallback(async (html: string, applied: number[]) => {
+  const saveCvToDb = useCallback(async (model: CvDataModel) => {
     if (!lastAppIdRef.current) return;
     setSaveStatus("saving");
     try {
+      const plainText = cvModelToPlainText(model);
       await supabase.from("applications").update({
-        current_cv: html, applied_suggestions: applied, last_edited: new Date().toISOString(),
+        current_cv: plainText, last_edited: new Date().toISOString(),
       } as any).eq("id", lastAppIdRef.current);
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 2000);
     } catch { setSaveStatus("error"); }
   }, []);
 
-  const debouncedSave = useCallback((html: string, applied: number[]) => {
+  const debouncedSave = useCallback((model: CvDataModel) => {
     if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
-    autosaveTimerRef.current = setTimeout(() => saveCvToDb(html, applied), 3000);
+    autosaveTimerRef.current = setTimeout(() => saveCvToDb(model), 3000);
   }, [saveCvToDb]);
 
   useEffect(() => {
-    const handler = (e: BeforeUnloadEvent) => { if (cvState.isDirty) { e.preventDefault(); e.returnValue = ""; } };
+    const handler = (e: BeforeUnloadEvent) => { if (isDirty) { e.preventDefault(); e.returnValue = ""; } };
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
-  }, [cvState.isDirty]);
+  }, [isDirty]);
 
   if (authLoading) {
     return (
@@ -98,104 +96,34 @@ const Index = () => {
     });
   };
 
-  // --- CV Editing ---
-  const handleCvChange = (html: string) => {
-    setCvState((prev) => ({ ...prev, current: html, isDirty: true }));
-    debouncedSave(html, cvState.appliedSuggestions);
-  };
-
-  const applySuggestionToText = (text: string, original: string, suggested: string): string => {
-    if (text.includes(original)) return text.replace(original, suggested);
-    const plainOriginal = original.replace(/<[^>]*>/g, "").trim();
-    if (plainOriginal && text.includes(plainOriginal)) return text.replace(plainOriginal, suggested);
-    const idx = text.toLowerCase().indexOf(original.toLowerCase());
-    if (idx !== -1) return text.slice(0, idx) + suggested + text.slice(idx + original.length);
-    const anchor = original.slice(0, 40);
-    const anchorIdx = text.toLowerCase().indexOf(anchor.toLowerCase());
-    if (anchorIdx !== -1) {
-      const endIdx = anchorIdx + original.length;
-      return text.slice(0, anchorIdx) + suggested + text.slice(Math.min(endIdx, text.length));
-    }
-    console.warn("[Apply] Could not find original text, appending suggestion");
-    return text + "\n" + suggested;
-  };
-
-  const handleApplySuggestion = (index: number) => {
-    if (!result) return;
-    const s = result.cvSuggestions[index];
-    setCvState((prev) => {
-      const newCurrent = applySuggestionToText(prev.current, s.original, s.suggested);
-      const newApplied = [...prev.appliedSuggestions, index];
-      debouncedSave(newCurrent, newApplied);
-      return { ...prev, current: newCurrent, appliedSuggestions: newApplied, isDirty: true };
-    });
-    toast({ title: "✓ Applied", description: `Updated "${s.section}"` });
-  };
-
-  const handleDismissSuggestion = (index: number) => {
-    setCvState((prev) => ({ ...prev, dismissedSuggestions: [...prev.dismissedSuggestions, index] }));
-  };
-
-  const handleUndoSuggestion = (index: number) => {
-    if (!result) return;
-    const s = result.cvSuggestions[index];
-    setCvState((prev) => {
-      const newCurrent = applySuggestionToText(prev.current, s.suggested, s.original);
-      const newApplied = prev.appliedSuggestions.filter((i) => i !== index);
-      debouncedSave(newCurrent, newApplied);
-      return { ...prev, current: newCurrent, appliedSuggestions: newApplied, isDirty: true };
-    });
-  };
-
-  const handleApplyAllSuggestions = () => {
-    if (!result) return;
-    setCvState((prev) => {
-      let newCurrent = prev.current;
-      const newApplied = [...prev.appliedSuggestions];
-      result.cvSuggestions.forEach((s, i) => {
-        if (!newApplied.includes(i) && !prev.dismissedSuggestions.includes(i)) {
-          newCurrent = applySuggestionToText(newCurrent, s.original, s.suggested);
-          newApplied.push(i);
-        }
-      });
-      debouncedSave(newCurrent, newApplied);
-      return { ...prev, current: newCurrent, appliedSuggestions: newApplied, isDirty: true };
-    });
-    toast({ title: "Applied all suggestions!" });
-  };
-
-  const handleApplyHighPriority = () => {
-    if (!result) return;
-    let count = 0;
-    setCvState((prev) => {
-      let newCurrent = prev.current;
-      const newApplied = [...prev.appliedSuggestions];
-      result.cvSuggestions.forEach((s, i) => {
-        if (s.priority === "high" && !newApplied.includes(i) && !prev.dismissedSuggestions.includes(i)) {
-          newCurrent = applySuggestionToText(newCurrent, s.original, s.suggested);
-          newApplied.push(i);
-          count++;
-        }
-      });
-      debouncedSave(newCurrent, newApplied);
-      return { ...prev, current: newCurrent, appliedSuggestions: newApplied, isDirty: true };
-    });
-    toast({ title: `Applied ${count} high priority improvements` });
+  // --- CV Model Editing ---
+  const handleCvModelChange = (model: CvDataModel) => {
+    setCvModel(model);
+    setIsDirty(true);
+    debouncedSave(model);
   };
 
   const handleResetCv = () => {
-    setCvState((prev) => ({ ...prev, current: prev.original, appliedSuggestions: [], dismissedSuggestions: [], isDirty: true }));
-    debouncedSave(cvState.original, []);
-    toast({ title: "CV reset to original" });
+    if (originalCvModel) {
+      setCvModel({ ...originalCvModel });
+      setIsDirty(true);
+      debouncedSave(originalCvModel);
+      toast({ title: "CV reset to original" });
+    }
   };
 
-  // --- Submit (no tone param, auto-generates all 3) ---
+  // --- Submit ---
   const handleSubmit = async (cvContent: string, jobDescription: string) => {
     setLoading(true);
     setResult(null);
     downloadCountRef.current = 0;
     lastAppIdRef.current = null;
-    setCvState({ original: cvContent, current: cvContent, appliedSuggestions: [], dismissedSuggestions: [], isDirty: false });
+
+    // Parse raw CV into data model immediately
+    const parsed = parseCvToModel(cvContent);
+    setCvModel(parsed);
+    setOriginalCvModel(parsed);
+    setIsDirty(false);
 
     let stepIndex = 0;
     setLoadingMessage(LOADING_STEPS[0].message);
@@ -214,6 +142,13 @@ const Index = () => {
       if (data.error) throw new Error(data.error);
 
       setResult(data);
+
+      // If AI returned a reformatted CV, use that as the model (it has keyword injections)
+      if (data.reformattedCv) {
+        const aiModel = reformattedCvToModel(data.reformattedCv);
+        setCvModel(aiModel);
+        setOriginalCvModel(aiModel);
+      }
 
       const firstLine = jobDescription.split(/\n/)[0]?.trim() || "";
       const dashMatch = firstLine.match(/^(.+?)\s*[—–]\s*(.+)$/);
@@ -269,23 +204,15 @@ const Index = () => {
             </p>
           </div>
         )}
-        {result && (
+        {result && cvModel && (
           <ResultsSection
             result={result}
             jobTitle={lastJobTitle}
             jobDescription={lastJobDescription}
             onDownload={handleDownload}
-            originalCv={cvState.original}
-            currentCv={cvState.current}
-            onCvChange={handleCvChange}
-            onApplySuggestion={handleApplySuggestion}
-            onDismissSuggestion={handleDismissSuggestion}
-            onUndoSuggestion={handleUndoSuggestion}
-            onApplyAllSuggestions={handleApplyAllSuggestions}
-            onApplyHighPriority={handleApplyHighPriority}
+            cvModel={cvModel}
+            onCvModelChange={handleCvModelChange}
             onResetCv={handleResetCv}
-            appliedSuggestions={cvState.appliedSuggestions}
-            dismissedSuggestions={cvState.dismissedSuggestions}
             saveStatus={saveStatus}
           />
         )}

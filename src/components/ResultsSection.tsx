@@ -20,27 +20,22 @@ import { exportCoverLetter, exportCvSuggestions } from "@/lib/exportDoc";
 import { exportImprovedCv, copyToClipboard } from "@/lib/exportImprovedCv";
 import AtsScoreTab from "@/components/AtsScoreTab";
 import CoverLetterVersionsTab from "@/components/CoverLetterVersionsTab";
-import AtsTemplateTab from "@/components/AtsTemplateTab";
+import AtsCvEditor from "@/components/AtsCvEditor";
 import { useToast } from "@/hooks/use-toast";
 import { calculateAtsScore } from "@/lib/atsScore";
-import type { TailorResult, CvSuggestion } from "@/lib/types";
+import { cvModelToPlainText, cvModelToHtml } from "@/lib/cvDataModel";
+import type { CvDataModel } from "@/lib/cvDataModel";
+import type { TailorResult } from "@/lib/types";
 
 interface ResultsSectionProps {
   result: TailorResult;
   jobTitle: string;
   jobDescription?: string;
   onDownload?: () => void;
-  originalCv: string;
-  currentCv: string;
-  onCvChange: (html: string) => void;
-  onApplySuggestion: (index: number) => void;
-  onDismissSuggestion: (index: number) => void;
-  onUndoSuggestion: (index: number) => void;
-  onApplyAllSuggestions: () => void;
-  onApplyHighPriority: () => void;
+  // CV data model
+  cvModel: CvDataModel;
+  onCvModelChange: (model: CvDataModel) => void;
   onResetCv: () => void;
-  appliedSuggestions: number[];
-  dismissedSuggestions: number[];
   saveStatus: "idle" | "saving" | "saved" | "error";
 }
 
@@ -49,17 +44,9 @@ const ResultsSection = ({
   jobTitle,
   jobDescription = "",
   onDownload,
-  originalCv,
-  currentCv,
-  onCvChange,
-  onApplySuggestion,
-  onDismissSuggestion,
-  onUndoSuggestion,
-  onApplyAllSuggestions,
-  onApplyHighPriority,
+  cvModel,
+  onCvModelChange,
   onResetCv,
-  appliedSuggestions,
-  dismissedSuggestions,
   saveStatus,
 }: ResultsSectionProps) => {
   const [selectedCoverLetterIndex, setSelectedCoverLetterIndex] = useState(0);
@@ -68,7 +55,11 @@ const ResultsSection = ({
   );
   const { toast } = useToast();
 
-  // Use AI-extracted keywords as the canonical keyword list for recalculation
+  // Derive plain text and HTML from model for ATS scoring
+  const cvPlainText = useMemo(() => cvModelToPlainText(cvModel), [cvModel]);
+  const cvHtml = useMemo(() => cvModelToHtml(cvModel), [cvModel]);
+
+  // Use AI-extracted keywords as the canonical keyword list
   const aiKeywords = useMemo(() => {
     const found = result.atsAnalysis?.keywordsFound || [];
     const missing = result.atsAnalysis?.keywordsMissing || [];
@@ -77,15 +68,15 @@ const ResultsSection = ({
 
   // Single source of truth for live ATS score
   const liveAts = useMemo(() => {
-    if (!jobDescription || !currentCv) {
+    if (!jobDescription || !cvPlainText) {
       return {
         score: result.atsAnalysis?.score || 0,
         matchedKeywords: result.atsAnalysis?.keywordsFound || [],
         missingKeywords: result.atsAnalysis?.keywordsMissing || [],
       };
     }
-    return calculateAtsScore(currentCv, jobDescription, aiKeywords);
-  }, [currentCv, jobDescription, result.atsAnalysis, aiKeywords]);
+    return calculateAtsScore(cvPlainText, jobDescription, aiKeywords);
+  }, [cvPlainText, jobDescription, result.atsAnalysis, aiKeywords]);
 
   const liveAtsAnalysis = useMemo(() => ({
     ...result.atsAnalysis,
@@ -101,13 +92,13 @@ const ResultsSection = ({
   };
 
   const handleDownloadImprovedCv = async () => {
-    await exportImprovedCv(currentCv, "", jobTitle);
+    await exportImprovedCv(cvHtml, "", jobTitle);
     onDownload?.();
     toast({ title: "✓ CV downloaded successfully" });
   };
 
   const handleCopyToClipboard = async () => {
-    const text = copyToClipboard(currentCv);
+    const text = cvModelToPlainText(cvModel);
     await navigator.clipboard.writeText(text);
     toast({ title: "✓ Copied to clipboard" });
   };
@@ -124,7 +115,7 @@ const ResultsSection = ({
               className="rounded-r-none bg-primary hover:bg-primary/90"
               onClick={handleDownloadImprovedCv}
             >
-              <Download className="h-4 w-4 mr-1" /> Download Improved CV
+              <Download className="h-4 w-4 mr-1" /> Download CV
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -165,9 +156,8 @@ const ResultsSection = ({
         {/* ATS CV Editor: two-column layout */}
         <TabsContent value="ats-editor" className="mt-4">
           <div className="grid grid-cols-1 md:grid-cols-[30%_1fr] gap-4">
-            {/* Left column: JD & Requirements */}
+            {/* Left: JD & Requirements */}
             <div className="space-y-4">
-              {/* Requirements */}
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
@@ -186,7 +176,6 @@ const ResultsSection = ({
                 </CardContent>
               </Card>
 
-              {/* JD Summary */}
               {jobDescription && (
                 <Card>
                   <CardHeader className="pb-2">
@@ -204,24 +193,16 @@ const ResultsSection = ({
               )}
             </div>
 
-            {/* Right column: ATS Template editor/preview */}
-            <div>
-              {result.reformattedCv ? (
-                <AtsTemplateTab
-                  reformattedCv={result.reformattedCv}
-                  jobTitle={jobTitle}
-                  atsScore={liveAts.score}
-                />
-              ) : (
-                <Card>
-                  <CardContent className="pt-6">
-                    <p className="text-sm text-muted-foreground">
-                      No ATS-reformatted CV available. Generate results with a job description to see the template.
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+            {/* Right: Editable ATS CV */}
+            <AtsCvEditor
+              model={cvModel}
+              onChange={onCvModelChange}
+              onReset={onResetCv}
+              originalAtsScore={result.atsAnalysis?.score || 0}
+              liveAtsScore={liveAts.score}
+              saveStatus={saveStatus}
+              jobTitle={jobTitle}
+            />
           </div>
         </TabsContent>
 
@@ -229,9 +210,9 @@ const ResultsSection = ({
         <TabsContent value="ats-score" className="mt-4">
           <AtsScoreTab
             atsAnalysis={liveAtsAnalysis}
-            currentCv={currentCv}
+            currentCv={cvPlainText}
             jobDescription={jobDescription}
-            onCvChange={onCvChange}
+            onCvChange={() => {}}
           />
         </TabsContent>
 
