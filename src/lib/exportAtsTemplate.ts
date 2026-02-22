@@ -1,22 +1,24 @@
-import { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle } from "docx";
+import { Document, Packer, Paragraph, TextRun, AlignmentType } from "docx";
 import { saveAs } from "file-saver";
 import type { ReformattedCv } from "./types";
+
+const FONT = "Arial";
+const BODY_SIZE = 21;   // 10.5pt (half-points)
+const HEADER_SIZE = 22; // 11pt
+const NAME_SIZE = 26;   // 13pt
 
 function sectionHeader(text: string): Paragraph {
   return new Paragraph({
     children: [
-      new TextRun({ text: text.toUpperCase(), bold: true, size: 24, font: "Calibri" }),
+      new TextRun({ text: text.toUpperCase(), bold: true, size: HEADER_SIZE, font: FONT }),
     ],
-    spacing: { before: 280, after: 120 },
-    border: {
-      bottom: { style: BorderStyle.SINGLE, size: 6, color: "444444" },
-    },
+    spacing: { before: 240, after: 100 },
   });
 }
 
 function bullet(text: string): Paragraph {
   return new Paragraph({
-    children: [new TextRun({ text, size: 22, font: "Calibri" })],
+    children: [new TextRun({ text, size: BODY_SIZE, font: FONT })],
     bullet: { level: 0 },
     spacing: { after: 40 },
   });
@@ -36,18 +38,9 @@ export function reformattedCvToHtml(cv: ReformattedCv): string {
   parts.push(`<h1>${escapeHtml(cv.name)}</h1>`);
   parts.push(`<p>${escapeHtml(cv.contact)}</p>`);
 
-  parts.push(`<h2>PROFILE SUMMARY</h2>`);
-  parts.push(`<p>${escapeHtml(cv.profileSummary)}</p>`);
-
-  if (cv.education?.length) {
-    parts.push(`<h2>EDUCATION</h2>`);
-    cv.education.forEach((e) => {
-      parts.push(`<p><strong>${escapeHtml(e.degree)}</strong> ${escapeHtml(e.dates)}</p>`);
-      parts.push(`<p>${escapeHtml(e.university)}</p>`);
-      if (e.coursework) {
-        parts.push(`<p><strong>Relevant Coursework:</strong> ${escapeHtml(e.coursework)}</p>`);
-      }
-    });
+  if (cv.profileSummary) {
+    parts.push(`<h2>PROFILE SUMMARY</h2>`);
+    parts.push(`<p>${escapeHtml(cv.profileSummary)}</p>`);
   }
 
   if (cv.experience?.length) {
@@ -62,13 +55,24 @@ export function reformattedCvToHtml(cv: ReformattedCv): string {
     });
   }
 
+  if (cv.education?.length) {
+    parts.push(`<h2>EDUCATION</h2>`);
+    cv.education.forEach((e) => {
+      parts.push(`<p><strong>${escapeHtml(e.degree)}</strong> ${escapeHtml(e.dates)}</p>`);
+      parts.push(`<p>${escapeHtml(e.university)}</p>`);
+      if (e.coursework) {
+        parts.push(`<p><strong>Relevant Coursework:</strong> ${escapeHtml(e.coursework)}</p>`);
+      }
+    });
+  }
+
   if (cv.technicalSkills) {
-    parts.push(`<h2>TECHNICAL SKILLS</h2>`);
+    parts.push(`<h2>SKILLS</h2>`);
     parts.push(`<p>${escapeHtml(cv.technicalSkills)}</p>`);
   }
 
   if (cv.projectExperience?.length) {
-    parts.push(`<h2>PROJECT EXPERIENCE</h2>`);
+    parts.push(`<h2>PROJECTS</h2>`);
     cv.projectExperience.forEach((p) => {
       parts.push(`<p><strong>${escapeHtml(p.title)}</strong> ${escapeHtml(p.dates)}</p>`);
       if (p.bullets?.length) {
@@ -80,7 +84,7 @@ export function reformattedCvToHtml(cv: ReformattedCv): string {
   }
 
   if (cv.honorsAwards?.length) {
-    parts.push(`<h2>HONORS &amp; AWARDS</h2>`);
+    parts.push(`<h2>AWARDS</h2>`);
     cv.honorsAwards.forEach((a) => {
       parts.push(`<p><strong>${escapeHtml(a.title)}</strong> ${escapeHtml(a.date)}</p>`);
     });
@@ -92,64 +96,33 @@ export function reformattedCvToHtml(cv: ReformattedCv): string {
 export async function exportAtsTemplateCv(cv: ReformattedCv, jobTitle: string) {
   const children: Paragraph[] = [];
 
-  // Name
+  // Name — bold, centered, not all-caps
   children.push(
     new Paragraph({
-      children: [new TextRun({ text: cv.name.toUpperCase(), bold: true, size: 32, font: "Calibri" })],
+      children: [new TextRun({ text: cv.name, bold: true, size: NAME_SIZE, font: FONT })],
       alignment: AlignmentType.CENTER,
-      spacing: { after: 80 },
+      spacing: { after: 60 },
     })
   );
 
-  // Contact
+  // Contact line
   children.push(
     new Paragraph({
-      children: [new TextRun({ text: cv.contact, size: 22, font: "Calibri" })],
+      children: [new TextRun({ text: cv.contact, size: BODY_SIZE, font: FONT })],
       alignment: AlignmentType.CENTER,
       spacing: { after: 200 },
     })
   );
 
   // Profile Summary
-  children.push(sectionHeader("Profile Summary"));
-  children.push(
-    new Paragraph({
-      children: [new TextRun({ text: cv.profileSummary, size: 22, font: "Calibri" })],
-      spacing: { after: 120 },
-    })
-  );
-
-  // Education
-  if (cv.education?.length) {
-    children.push(sectionHeader("Education"));
-    cv.education.forEach((ed) => {
-      children.push(
-        new Paragraph({
-          children: [
-            new TextRun({ text: ed.degree, bold: true, size: 22, font: "Calibri" }),
-            new TextRun({ text: `  ${ed.dates}`, italics: true, size: 22, font: "Calibri" }),
-          ],
-          spacing: { after: 40 },
-        })
-      );
-      children.push(
-        new Paragraph({
-          children: [new TextRun({ text: ed.university, size: 22, font: "Calibri" })],
-          spacing: { after: 40 },
-        })
-      );
-      if (ed.coursework) {
-        children.push(
-          new Paragraph({
-            children: [
-              new TextRun({ text: "Relevant Coursework: ", bold: true, size: 20, font: "Calibri" }),
-              new TextRun({ text: ed.coursework, size: 20, font: "Calibri" }),
-            ],
-            spacing: { after: 80 },
-          })
-        );
-      }
-    });
+  if (cv.profileSummary) {
+    children.push(sectionHeader("Profile Summary"));
+    children.push(
+      new Paragraph({
+        children: [new TextRun({ text: cv.profileSummary, size: BODY_SIZE, font: FONT })],
+        spacing: { after: 100 },
+      })
+    );
   }
 
   // Professional Experience
@@ -159,60 +132,95 @@ export async function exportAtsTemplateCv(cv: ReformattedCv, jobTitle: string) {
       children.push(
         new Paragraph({
           children: [
-            new TextRun({ text: `${exp.role} — ${exp.company}`, bold: true, size: 22, font: "Calibri" }),
+            new TextRun({ text: exp.role, bold: true, size: BODY_SIZE, font: FONT }),
+            new TextRun({ text: ` — ${exp.company}`, size: BODY_SIZE, font: FONT }),
           ],
           spacing: { before: 80, after: 20 },
         })
       );
       children.push(
         new Paragraph({
-          children: [new TextRun({ text: exp.dates, italics: true, size: 22, font: "Calibri" })],
-          spacing: { after: 60 },
+          children: [new TextRun({ text: exp.dates, italics: true, size: BODY_SIZE, font: FONT })],
+          spacing: { after: 40 },
         })
       );
       exp.bullets?.forEach((b) => children.push(bullet(b)));
     });
   }
 
-  // Technical Skills
+  // Education
+  if (cv.education?.length) {
+    children.push(sectionHeader("Education"));
+    cv.education.forEach((ed) => {
+      children.push(
+        new Paragraph({
+          children: [
+            new TextRun({ text: ed.degree, bold: true, size: BODY_SIZE, font: FONT }),
+            new TextRun({ text: `  ${ed.dates}`, italics: true, size: BODY_SIZE, font: FONT }),
+          ],
+          spacing: { after: 20 },
+        })
+      );
+      children.push(
+        new Paragraph({
+          children: [new TextRun({ text: ed.university, size: BODY_SIZE, font: FONT })],
+          spacing: { after: 20 },
+        })
+      );
+      if (ed.coursework) {
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: "Relevant Coursework: ", bold: true, size: BODY_SIZE, font: FONT }),
+              new TextRun({ text: ed.coursework, size: BODY_SIZE, font: FONT }),
+            ],
+            spacing: { after: 60 },
+          })
+        );
+      }
+    });
+  }
+
+  // Skills
   if (cv.technicalSkills) {
-    children.push(sectionHeader("Technical Skills"));
+    children.push(sectionHeader("Skills"));
     children.push(
       new Paragraph({
-        children: [new TextRun({ text: cv.technicalSkills, size: 22, font: "Calibri" })],
+        children: [new TextRun({ text: cv.technicalSkills, size: BODY_SIZE, font: FONT })],
         spacing: { after: 80 },
       })
     );
   }
 
-  // Project Experience
+  // Certifications (only if present — via honorsAwards with "cert" marker or dedicated field)
+  // Projects
   if (cv.projectExperience?.length) {
-    children.push(sectionHeader("Project Experience"));
+    children.push(sectionHeader("Projects"));
     cv.projectExperience.forEach((proj) => {
       children.push(
         new Paragraph({
           children: [
-            new TextRun({ text: proj.title, bold: true, size: 22, font: "Calibri" }),
-            new TextRun({ text: `  ${proj.dates}`, italics: true, size: 22, font: "Calibri" }),
+            new TextRun({ text: proj.title, bold: true, size: BODY_SIZE, font: FONT }),
+            new TextRun({ text: `  ${proj.dates}`, italics: true, size: BODY_SIZE, font: FONT }),
           ],
-          spacing: { before: 80, after: 40 },
+          spacing: { before: 60, after: 20 },
         })
       );
       proj.bullets?.forEach((b) => children.push(bullet(b)));
     });
   }
 
-  // Honors & Awards
+  // Awards
   if (cv.honorsAwards?.length) {
-    children.push(sectionHeader("Honors & Awards"));
+    children.push(sectionHeader("Awards"));
     cv.honorsAwards.forEach((award) => {
       children.push(
         new Paragraph({
           children: [
-            new TextRun({ text: award.title, bold: true, size: 22, font: "Calibri" }),
-            new TextRun({ text: `  ${award.date}`, italics: true, size: 22, font: "Calibri" }),
+            new TextRun({ text: award.title, bold: true, size: BODY_SIZE, font: FONT }),
+            new TextRun({ text: `  ${award.date}`, italics: true, size: BODY_SIZE, font: FONT }),
           ],
-          spacing: { after: 60 },
+          spacing: { after: 40 },
         })
       );
     });
@@ -227,5 +235,5 @@ export async function exportAtsTemplateCv(cv: ReformattedCv, jobTitle: string) {
 
   const blob = await Packer.toBlob(doc);
   const date = new Date().toISOString().slice(0, 10);
-  saveAs(blob, `ATS_Template_CV_${date}.docx`);
+  saveAs(blob, `ATS_CV_${date}.docx`);
 }
