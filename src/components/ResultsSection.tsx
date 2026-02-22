@@ -25,6 +25,7 @@ import { exportImprovedCv, copyToClipboard } from "@/lib/exportImprovedCv";
 import AtsScoreTab from "@/components/AtsScoreTab";
 import CoverLetterVersionsTab from "@/components/CoverLetterVersionsTab";
 import CvEditorTab from "@/components/CvEditorTab";
+import AtsTemplateTab from "@/components/AtsTemplateTab";
 import { useToast } from "@/hooks/use-toast";
 import { calculateAtsScore } from "@/lib/atsScore";
 import type { TailorResult, CvSuggestion } from "@/lib/types";
@@ -174,8 +175,13 @@ const ResultsSection = ({
         </div>
       </div>
 
-      <Tabs defaultValue="requirements" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+      <Tabs defaultValue={result.reformattedCv ? "ats-template" : "requirements"} className="w-full">
+        <TabsList className="grid w-full grid-cols-6">
+          {result.reformattedCv && (
+            <TabsTrigger value="ats-template" className="font-semibold text-primary">
+              📄 ATS Template
+            </TabsTrigger>
+          )}
           <TabsTrigger value="requirements">Requirements</TabsTrigger>
           <TabsTrigger value="suggestions">
             CV Suggestions
@@ -211,6 +217,16 @@ const ResultsSection = ({
             </CardContent>
           </Card>
         </TabsContent>
+
+        {result.reformattedCv && (
+          <TabsContent value="ats-template" className="mt-4">
+            <AtsTemplateTab
+              reformattedCv={result.reformattedCv}
+              jobTitle={jobTitle}
+              atsScore={liveAts.score}
+            />
+          </TabsContent>
+        )}
 
         <TabsContent value="suggestions" className="mt-4 space-y-4">
           {/* Top actions */}
