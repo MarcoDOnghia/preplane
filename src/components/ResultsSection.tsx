@@ -14,6 +14,10 @@ import {
   TrendingUp,
   AlertTriangle,
   Sparkles,
+  Check,
+  X,
+  Undo2,
+  ArrowRight,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -22,7 +26,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { exportCoverLetter, exportCvSuggestions } from "@/lib/exportDoc";
-import { exportImprovedCv, copyToClipboard } from "@/lib/exportImprovedCv";
+import { exportImprovedCv } from "@/lib/exportImprovedCv";
 import AtsScoreTab from "@/components/AtsScoreTab";
 import CoverLetterVersionsTab from "@/components/CoverLetterVersionsTab";
 import AtsCvEditor from "@/components/AtsCvEditor";
@@ -30,19 +34,33 @@ import { useToast } from "@/hooks/use-toast";
 import { calculateAtsScore } from "@/lib/atsScore";
 import { cvModelToPlainText, cvModelToHtml } from "@/lib/cvDataModel";
 import type { CvDataModel } from "@/lib/cvDataModel";
-import type { TailorResult } from "@/lib/types";
+import type { TailorResult, CvSuggestion } from "@/lib/types";
 
 interface ResultsSectionProps {
   result: TailorResult;
   jobTitle: string;
   jobDescription?: string;
   onDownload?: () => void;
-  // CV data model
   cvModel: CvDataModel;
   onCvModelChange: (model: CvDataModel) => void;
   onResetCv: () => void;
+  onUndo: () => void;
+  canUndo: boolean;
   saveStatus: "idle" | "saving" | "saved" | "error";
+  // Suggestions
+  appliedSuggestions: number[];
+  dismissedSuggestions: number[];
+  onApplySuggestion: (index: number) => void;
+  onDismissSuggestion: (index: number) => void;
+  onUndoSuggestion: (index: number) => void;
+  onApplyHighPriority: () => void;
 }
+
+const PRIORITY_COLORS: Record<string, string> = {
+  high: "bg-destructive/10 text-destructive border-destructive/20",
+  medium: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
+  low: "bg-success/10 text-success border-success/20",
+};
 
 const ResultsSection = ({
   result,
@@ -52,12 +70,21 @@ const ResultsSection = ({
   cvModel,
   onCvModelChange,
   onResetCv,
+  onUndo,
+  canUndo,
   saveStatus,
+  appliedSuggestions,
+  dismissedSuggestions,
+  onApplySuggestion,
+  onDismissSuggestion,
+  onUndoSuggestion,
+  onApplyHighPriority,
 }: ResultsSectionProps) => {
   const [selectedCoverLetterIndex, setSelectedCoverLetterIndex] = useState(0);
   const [selectedCoverLetter, setSelectedCoverLetter] = useState(
     result.coverLetterVersions?.[0]?.content || result.coverLetter
   );
+  const [priorityFilter, setPriorityFilter] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Derive plain text and HTML from model for ATS scoring
@@ -90,10 +117,12 @@ const ResultsSection = ({
     keywordsMissing: liveAts.missingKeywords,
   }), [result.atsAnalysis, liveAts]);
 
-  // Projected score if all missing keywords were added
+  // Suggestion counts
   const highPriorityRemaining = useMemo(() => {
-    return result.cvSuggestions.filter((s) => s.priority === "high").length;
-  }, [result.cvSuggestions]);
+    return result.cvSuggestions.filter(
+      (s, i) => s.priority === "high" && !appliedSuggestions.includes(i) && !dismissedSuggestions.includes(i)
+    ).length;
+  }, [result.cvSuggestions, appliedSuggestions, dismissedSuggestions]);
 
   const projectedScore = useMemo(() => {
     if (!jobDescription || !cvPlainText) return liveAts.score;
@@ -102,6 +131,15 @@ const ResultsSection = ({
     const totalKeywords = liveAts.matchedKeywords.length + missingCount;
     return Math.min(100, Math.round((totalKeywords / totalKeywords) * 100));
   }, [liveAts, jobDescription, cvPlainText]);
+
+  const visibleSuggestions = useMemo(() => {
+    return result.cvSuggestions
+      .map((s, i) => ({ ...s, originalIndex: i }))
+      .filter((_, i) => !dismissedSuggestions.includes(i))
+      .filter((s) => (priorityFilter ? s.priority === priorityFilter : true));
+  }, [result.cvSuggestions, dismissedSuggestions, priorityFilter]);
+
+  const totalActive = result.cvSuggestions.length - dismissedSuggestions.length;
 
   const handleSelectVersion = (content: string) => {
     setSelectedCoverLetter(content);
@@ -161,7 +199,7 @@ const ResultsSection = ({
         </div>
       </div>
 
-      {/* 2-tab layout (Requirements merged into editor left column) */}
+      {/* Tabs */}
       <Tabs defaultValue="ats-editor" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="ats-editor" className="font-semibold">
@@ -171,8 +209,8 @@ const ResultsSection = ({
           <TabsTrigger value="cover-letters">Cover Letters</TabsTrigger>
         </TabsList>
 
-        {/* ATS CV Editor: two-column layout */}
-        <TabsContent value="ats-editor" className="mt-4">
+        {/* ATS CV Editor: two-column layout + suggestions below */}
+        <TabsContent value="ats-editor" className="mt-4 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-[30%_1fr] gap-4">
             {/* Left: Job Requirements & Keywords panel */}
             <JdRequirementsPanel
@@ -190,12 +228,68 @@ const ResultsSection = ({
               model={cvModel}
               onChange={onCvModelChange}
               onReset={onResetCv}
+              onUndo={onUndo}
+              canUndo={canUndo}
               originalAtsScore={result.atsAnalysis?.score || 0}
               liveAtsScore={liveAts.score}
               saveStatus={saveStatus}
               jobTitle={jobTitle}
             />
           </div>
+
+          {/* Suggestions panel below the editor */}
+          {result.cvSuggestions.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <h3 className="text-lg font-semibold">AI Suggestions</h3>
+                <div className="flex gap-2 flex-wrap items-center">
+                  <Button size="sm" variant={priorityFilter === null ? "default" : "outline"} onClick={() => setPriorityFilter(null)}>
+                    All ({totalActive})
+                  </Button>
+                  {(["high", "medium", "low"] as const).map((p) => {
+                    const count = result.cvSuggestions.filter(
+                      (s, i) => s.priority === p && !dismissedSuggestions.includes(i)
+                    ).length;
+                    return (
+                      <Button key={p} size="sm" variant={priorityFilter === p ? "default" : "outline"} onClick={() => setPriorityFilter(p)}>
+                        {p.charAt(0).toUpperCase() + p.slice(1)} ({count})
+                      </Button>
+                    );
+                  })}
+                  <Button
+                    size="sm"
+                    variant="default"
+                    onClick={onApplyHighPriority}
+                    disabled={highPriorityRemaining === 0}
+                    className="ml-2"
+                  >
+                    <CheckCircle2 className="h-4 w-4 mr-1" />
+                    Apply All High Priority
+                  </Button>
+                </div>
+              </div>
+
+              {visibleSuggestions.map((suggestion) => (
+                <SuggestionCard
+                  key={suggestion.originalIndex}
+                  suggestion={suggestion}
+                  index={suggestion.originalIndex}
+                  isApplied={appliedSuggestions.includes(suggestion.originalIndex)}
+                  onApply={() => onApplySuggestion(suggestion.originalIndex)}
+                  onDismiss={() => onDismissSuggestion(suggestion.originalIndex)}
+                  onUndo={() => onUndoSuggestion(suggestion.originalIndex)}
+                />
+              ))}
+
+              {visibleSuggestions.length === 0 && (
+                <div className="text-center py-6 text-muted-foreground text-sm">
+                  {dismissedSuggestions.length > 0
+                    ? "All suggestions have been handled!"
+                    : "No suggestions match the selected filter."}
+                </div>
+              )}
+            </div>
+          )}
         </TabsContent>
 
         {/* ATS Score tab */}
@@ -231,6 +325,77 @@ const ResultsSection = ({
 
 export default ResultsSection;
 
+// ─── Suggestion Card ────────────────────────────────────────
+
+function SuggestionCard({
+  suggestion,
+  index,
+  isApplied,
+  onApply,
+  onDismiss,
+  onUndo,
+}: {
+  suggestion: CvSuggestion & { originalIndex: number };
+  index: number;
+  isApplied: boolean;
+  onApply: () => void;
+  onDismiss: () => void;
+  onUndo: () => void;
+}) {
+  return (
+    <Card className={isApplied ? "border-success/30 bg-success/5" : ""}>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base flex items-center gap-2 flex-wrap">
+          <span className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold ${isApplied ? "bg-success text-success-foreground" : "bg-primary text-primary-foreground"}`}>
+            {isApplied ? <Check className="h-3.5 w-3.5" /> : index + 1}
+          </span>
+          {suggestion.section}
+          {suggestion.priority && (
+            <Badge variant="outline" className={`text-xs ${PRIORITY_COLORS[suggestion.priority] || ""}`}>
+              {suggestion.priority}
+            </Badge>
+          )}
+          {suggestion.impactScore && (
+            <span className="text-xs text-muted-foreground">Impact: {suggestion.impactScore}/10</span>
+          )}
+          <div className="ml-auto flex gap-1.5">
+            {isApplied ? (
+              <Button size="sm" variant="outline" onClick={onUndo} className="text-xs h-7">
+                <Undo2 className="h-3 w-3 mr-1" /> Undo
+              </Button>
+            ) : (
+              <>
+                <Button size="sm" onClick={onApply} className="text-xs h-7 bg-success hover:bg-success/90 text-success-foreground">
+                  <Check className="h-3 w-3 mr-1" /> Apply
+                </Button>
+                <Button size="sm" variant="ghost" onClick={onDismiss} className="text-xs h-7 text-muted-foreground">
+                  <X className="h-3 w-3 mr-1" /> Dismiss
+                </Button>
+              </>
+            )}
+          </div>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className={`rounded-lg p-4 text-sm ${isApplied ? "bg-muted/50 line-through opacity-60" : "bg-muted"}`}>
+            <p className="text-xs font-medium text-muted-foreground mb-2">Original</p>
+            <p>{suggestion.original}</p>
+          </div>
+          <div className={`rounded-lg border p-4 text-sm ${isApplied ? "bg-success/10 border-success/20" : "bg-primary/5 border-primary/20"}`}>
+            <p className={`text-xs font-medium mb-2 flex items-center gap-1 ${isApplied ? "text-success" : "text-primary"}`}>
+              {isApplied ? <Check className="h-3 w-3" /> : <ArrowRight className="h-3 w-3" />}
+              {isApplied ? "Applied" : "Suggested"}
+            </p>
+            <p>{suggestion.suggested}</p>
+          </div>
+        </div>
+        <p className="mt-3 text-sm text-muted-foreground italic">💡 {suggestion.reason}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
 // ─── Left-column panel ─────────────────────────────────────
 
 function JdRequirementsPanel({
@@ -252,12 +417,9 @@ function JdRequirementsPanel({
 }) {
   const scoreColor =
     currentScore >= 80 ? "text-success" : currentScore >= 60 ? "text-yellow-500" : "text-destructive";
-  const progressColor =
-    currentScore >= 80 ? "bg-success" : currentScore >= 60 ? "bg-yellow-500" : "bg-destructive";
 
   return (
     <div className="space-y-4">
-      {/* ATS Score overview */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
@@ -285,7 +447,6 @@ function JdRequirementsPanel({
         </CardContent>
       </Card>
 
-      {/* Requirements */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
@@ -305,7 +466,6 @@ function JdRequirementsPanel({
         </CardContent>
       </Card>
 
-      {/* Keywords */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
@@ -345,7 +505,6 @@ function JdRequirementsPanel({
         </CardContent>
       </Card>
 
-      {/* Collapsed JD */}
       {jobDescription && (
         <Card>
           <CardHeader className="pb-2">

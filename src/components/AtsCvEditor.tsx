@@ -8,6 +8,7 @@ import {
   Download,
   Copy,
   RotateCcw,
+  Undo2,
   TrendingUp,
   Save,
   Check,
@@ -25,6 +26,8 @@ interface AtsCvEditorProps {
   model: CvDataModel;
   onChange: (model: CvDataModel) => void;
   onReset: () => void;
+  onUndo: () => void;
+  canUndo: boolean;
   originalAtsScore: number;
   liveAtsScore: number;
   saveStatus: "idle" | "saving" | "saved" | "error";
@@ -90,6 +93,8 @@ const AtsCvEditor = ({
   model,
   onChange,
   onReset,
+  onUndo,
+  canUndo,
   originalAtsScore,
   liveAtsScore,
   saveStatus,
@@ -187,6 +192,9 @@ const AtsCvEditor = ({
         </Button>
         <Button size="sm" variant="outline" onClick={handleCopy}>
           <Copy className="h-4 w-4 mr-1" /> Copy
+        </Button>
+        <Button size="sm" variant="outline" onClick={onUndo} disabled={!canUndo}>
+          <Undo2 className="h-4 w-4 mr-1" /> Undo
         </Button>
         <Button size="sm" variant="outline" onClick={onReset}>
           <RotateCcw className="h-4 w-4 mr-1" /> Reset
