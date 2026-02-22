@@ -1,12 +1,14 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Upload, FileText, Sparkles, Loader2, X, CheckCircle2, Link2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Upload, FileText, Sparkles, Loader2, X, CheckCircle2, Link2, Plus, Trash2 } from "lucide-react";
 import { extractTextFromFile } from "@/lib/fileParser";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface InputSectionProps {
   onSubmit: (cvContent: string, jobDescription: string) => void;
@@ -15,56 +17,139 @@ interface InputSectionProps {
   loadingMessage: string;
 }
 
-interface FileState {
-  file: File | null;
-  text: string;
+interface SavedCv {
+  id: string;
   name: string;
-  error: string;
+  parsed_text: string;
+  created_at: string;
 }
 
 const MAX_SIZE = 2 * 1024 * 1024;
+const MAX_CVS = 5;
 
 const InputSection = ({ onSubmit, onClear, loading, loadingMessage }: InputSectionProps) => {
-  const [cv, setCv] = useState<FileState>({ file: null, text: "", name: "", error: "" });
+  const { user } = useAuth();
+  const [savedCvs, setSavedCvs] = useState<SavedCv[]>([]);
+  const [selectedCvId, setSelectedCvId] = useState<string>("");
+  const [cvText, setCvText] = useState("");
+  const [cvName, setCvName] = useState("");
+  const [uploading, setUploading] = useState(false);
+
   const [jdText, setJdText] = useState("");
-  const [jdFile, setJdFile] = useState<FileState>({ file: null, text: "", name: "", error: "" });
+  const [jdFile, setJdFile] = useState<{ text: string; name: string; error: string }>({ text: "", name: "", error: "" });
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [extracting, setExtracting] = useState(false);
-  const [cvDragOver, setCvDragOver] = useState(false);
+
   const cvInputRef = useRef<HTMLInputElement>(null);
   const jdInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const processFile = useCallback(async (file: File, setter: typeof setCv) => {
+  // Fetch saved CVs
+  useEffect(() => {
+    if (!user) return;
+    const fetchCvs = async () => {
+      const { data } = await supabase
+        .from("cvs")
+        .select("id, name, parsed_text, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+      if (data) {
+        setSavedCvs(data);
+        if (data.length > 0 && !selectedCvId) {
+          setSelectedCvId(data[0].id);
+          setCvText(data[0].parsed_text);
+          setCvName(data[0].name);
+        }
+      }
+    };
+    fetchCvs();
+  }, [user]);
+
+  // Handle CV selection
+  const handleSelectCv = (cvId: string) => {
+    setSelectedCvId(cvId);
+    const cv = savedCvs.find((c) => c.id === cvId);
+    if (cv) {
+      setCvText(cv.parsed_text);
+      setCvName(cv.name);
+    }
+  };
+
+  // Upload new CV
+  const handleUploadNewCv = async (file: File) => {
+    if (savedCvs.length >= MAX_CVS) {
+      toast({ title: "CV limit reached", description: `Remove a CV before adding new ones (${MAX_CVS} max).`, variant: "destructive" });
+      return;
+    }
     const ext = file.name.split(".").pop()?.toLowerCase();
     if (!["pdf", "docx"].includes(ext || "")) {
-      setter({ file: null, text: "", name: "", error: "Only .pdf and .docx files are supported" });
+      toast({ title: "Invalid format", description: "Only .pdf and .docx files", variant: "destructive" });
       return;
     }
     if (file.size > MAX_SIZE) {
-      setter({ file: null, text: "", name: "", error: "File exceeds 2MB limit" });
+      toast({ title: "Too large", description: "Max 2MB", variant: "destructive" });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const text = await extractTextFromFile(file);
+      const { data, error } = await supabase
+        .from("cvs")
+        .insert({ user_id: user!.id, name: file.name, parsed_text: text } as any)
+        .select("id, name, parsed_text, created_at")
+        .single();
+      if (error) throw error;
+      setSavedCvs((prev) => [data, ...prev]);
+      setSelectedCvId(data.id);
+      setCvText(data.parsed_text);
+      setCvName(data.name);
+      toast({ title: "CV saved!", description: `${file.name} added to your library.` });
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    } finally {
+      setUploading(false);
+      if (cvInputRef.current) cvInputRef.current.value = "";
+    }
+  };
+
+  const handleDeleteCv = async (cvId: string) => {
+    await supabase.from("cvs").delete().eq("id", cvId);
+    setSavedCvs((prev) => prev.filter((c) => c.id !== cvId));
+    if (selectedCvId === cvId) {
+      const remaining = savedCvs.filter((c) => c.id !== cvId);
+      if (remaining.length > 0) {
+        setSelectedCvId(remaining[0].id);
+        setCvText(remaining[0].parsed_text);
+        setCvName(remaining[0].name);
+      } else {
+        setSelectedCvId("");
+        setCvText("");
+        setCvName("");
+      }
+    }
+    toast({ title: "CV removed" });
+  };
+
+  // JD file upload
+  const handleJdFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    const ext = f.name.split(".").pop()?.toLowerCase();
+    if (!["pdf", "docx"].includes(ext || "")) {
+      setJdFile({ text: "", name: "", error: "Only .pdf and .docx" });
+      return;
+    }
+    if (f.size > MAX_SIZE) {
+      setJdFile({ text: "", name: "", error: "Max 2MB" });
       return;
     }
     try {
-      const text = await extractTextFromFile(file);
-      setter({ file, text, name: file.name, error: "" });
-      toast({ title: "File parsed", description: `Extracted text from ${file.name}` });
+      const text = await extractTextFromFile(f);
+      setJdFile({ text, name: f.name, error: "" });
+      toast({ title: "JD parsed", description: `Extracted from ${f.name}` });
     } catch (err: any) {
-      setter({ file: null, text: "", name: "", error: err.message });
-    }
-  }, [toast]);
-
-  const handleCvDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setCvDragOver(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) processFile(file, setCv);
-  }, [processFile]);
-
-  const handleJdFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (f) {
-      processFile(f, setJdFile);
+      setJdFile({ text: "", name: "", error: err.message });
     }
   };
 
@@ -78,35 +163,32 @@ const InputSection = ({ onSubmit, onClear, loading, loadingMessage }: InputSecti
       if (error) throw error;
       if (data?.jobDescription) {
         setJdText(data.jobDescription);
-        toast({ title: "Job description extracted!", description: "Review and edit if needed." });
+        toast({ title: "Job description extracted!" });
       } else {
-        toast({ title: "Couldn't extract", description: "Try pasting the job description manually.", variant: "destructive" });
+        toast({ title: "Couldn't extract", description: "Try pasting manually.", variant: "destructive" });
       }
     } catch (err: any) {
-      toast({ title: "Extraction failed", description: err.message || "Paste the job description manually.", variant: "destructive" });
+      toast({ title: "Extraction failed", description: err.message, variant: "destructive" });
     } finally {
       setExtracting(false);
     }
   };
 
-  // Effective JD: paste takes priority, then file
   const effectiveJd = jdText.trim() || jdFile.text;
-  const bothReady = cv.text.length > 0 && effectiveJd.length > 0;
+  const bothReady = cvText.length > 0 && effectiveJd.length > 0;
 
   const handleSubmit = () => {
-    if (!cv.text || !effectiveJd) {
-      toast({ title: "Missing input", description: "Upload your CV and provide a job description.", variant: "destructive" });
+    if (!cvText || !effectiveJd) {
+      toast({ title: "Missing input", description: "Select a CV and provide a job description.", variant: "destructive" });
       return;
     }
-    onSubmit(cv.text, effectiveJd);
+    onSubmit(cvText, effectiveJd);
   };
 
   const handleClear = () => {
-    setCv({ file: null, text: "", name: "", error: "" });
     setJdText("");
-    setJdFile({ file: null, text: "", name: "", error: "" });
+    setJdFile({ text: "", name: "", error: "" });
     setLinkedinUrl("");
-    if (cvInputRef.current) cvInputRef.current.value = "";
     if (jdInputRef.current) jdInputRef.current.value = "";
     onClear?.();
   };
@@ -119,65 +201,94 @@ const InputSection = ({ onSubmit, onClear, loading, loadingMessage }: InputSecti
           Preplane — 90% ATS + 3 Cover Letters
         </h1>
         <p className="text-muted-foreground text-sm">
-          PDF CV + JD paste → Instant optimization
+          Select your CV + paste JD → Instant optimization
         </p>
       </div>
 
-      {/* Two-column: CV (40%) | JD (60%) */}
+      {/* Two-column: CV Library (40%) | JD (60%) */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-        {/* CV Column - 2/5 = 40% */}
-        <div className="md:col-span-2 space-y-2">
-          <label className="text-sm font-medium text-foreground">CV (PDF/Docx)</label>
-          <Card
-            className={`relative cursor-pointer transition-all duration-200 ${
-              cvDragOver ? "border-primary border-2 bg-primary/5 scale-[1.02]" :
-              cv.text ? "border-green-500/40 bg-green-500/5" :
-              cv.error ? "border-destructive/40 bg-destructive/5" :
-              "border-dashed border-2 border-muted-foreground/25 hover:border-primary/50 hover:bg-primary/5"
-            }`}
-            onDragOver={(e) => { e.preventDefault(); setCvDragOver(true); }}
-            onDragLeave={() => setCvDragOver(false)}
-            onDrop={handleCvDrop}
-            onClick={() => !cv.text && cvInputRef.current?.click()}
-          >
-            <input
-              ref={cvInputRef}
-              type="file"
-              accept=".pdf,.docx"
-              onChange={(e) => { const f = e.target.files?.[0]; if (f) processFile(f, setCv); }}
-              className="hidden"
-            />
-            <div className="flex flex-col items-center justify-center py-12 px-6 min-h-[200px]">
-              {cv.text ? (
-                <div className="text-center space-y-2">
-                  <CheckCircle2 className="h-10 w-10 text-primary mx-auto" />
-                  <p className="font-semibold text-sm">{cv.name}</p>
-                  <p className="text-xs text-muted-foreground">{Math.round(cv.text.length / 100) / 10}k chars</p>
-                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setCv({ file: null, text: "", name: "", error: "" }); if (cvInputRef.current) cvInputRef.current.value = ""; }} className="text-xs text-muted-foreground mt-1">
-                    <X className="h-3 w-3 mr-1" /> Remove
+        {/* CV Library */}
+        <div className="md:col-span-2 space-y-3">
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium text-foreground">My CV Library</label>
+            <span className="text-xs text-muted-foreground">{savedCvs.length}/{MAX_CVS} used</span>
+          </div>
+
+          {savedCvs.length > 0 ? (
+            <div className="space-y-2">
+              <Select value={selectedCvId} onValueChange={handleSelectCv}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a CV..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {savedCvs.map((cv) => (
+                    <SelectItem key={cv.id} value={cv.id}>
+                      <span className="flex items-center gap-2">
+                        <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                        {cv.name}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {selectedCvId && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-xs text-primary">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    <span>{cvName}</span>
+                    <span className="text-muted-foreground">· {Math.round(cvText.length / 100) / 10}k chars</span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs text-muted-foreground hover:text-destructive"
+                    onClick={() => handleDeleteCv(selectedCvId)}
+                  >
+                    <Trash2 className="h-3 w-3 mr-1" /> Remove
                   </Button>
-                </div>
-              ) : (
-                <div className="text-center space-y-3">
-                  <div className={`mx-auto rounded-full p-4 ${cvDragOver ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
-                    {cvDragOver ? <Upload className="h-8 w-8" /> : <FileText className="h-8 w-8" />}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-sm">Drag & drop or click</p>
-                    <p className="text-xs text-muted-foreground mt-1">PDF or DOCX only · Max 2MB</p>
-                  </div>
-                  {cv.error && <p className="text-xs text-destructive font-medium">{cv.error}</p>}
                 </div>
               )}
             </div>
-          </Card>
+          ) : (
+            <Card className="border-dashed border-2 border-muted-foreground/25">
+              <div className="flex flex-col items-center justify-center py-10 px-6 text-center">
+                <div className="mx-auto rounded-full p-3 bg-muted text-muted-foreground mb-3">
+                  <FileText className="h-6 w-6" />
+                </div>
+                <p className="text-sm font-medium">No CVs yet</p>
+                <p className="text-xs text-muted-foreground mt-1">Upload your first CV to get started</p>
+              </div>
+            </Card>
+          )}
+
+          {/* Upload new button */}
+          <input
+            ref={cvInputRef}
+            type="file"
+            accept=".pdf,.docx"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUploadNewCv(f); }}
+            className="hidden"
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full text-xs"
+            onClick={() => cvInputRef.current?.click()}
+            disabled={uploading || savedCvs.length >= MAX_CVS}
+          >
+            {uploading ? (
+              <><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Parsing...</>
+            ) : (
+              <><Plus className="h-3 w-3 mr-1" /> Upload New PDF/Docx</>
+            )}
+          </Button>
         </div>
 
-        {/* JD Column - 3/5 = 60% */}
+        {/* JD Column */}
         <div className="md:col-span-3 space-y-3">
           <label className="text-sm font-medium text-foreground">JD (Paste)</label>
-          
-          {/* Primary: Paste textarea */}
+
           <Textarea
             value={jdText}
             onChange={(e) => setJdText(e.target.value)}
@@ -186,9 +297,7 @@ const InputSection = ({ onSubmit, onClear, loading, loadingMessage }: InputSecti
             disabled={loading}
           />
 
-          {/* Secondary options row */}
           <div className="flex flex-col sm:flex-row gap-3">
-            {/* Upload JD file */}
             <div className="flex items-center gap-2">
               <input
                 ref={jdInputRef}
@@ -197,20 +306,13 @@ const InputSection = ({ onSubmit, onClear, loading, loadingMessage }: InputSecti
                 onChange={handleJdFileUpload}
                 className="hidden"
               />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => jdInputRef.current?.click()}
-                disabled={loading}
-                className="text-xs"
-              >
-                <Upload className="h-3 w-3 mr-1" />
-                Upload PDF/Docx
+              <Button variant="outline" size="sm" onClick={() => jdInputRef.current?.click()} disabled={loading} className="text-xs">
+                <Upload className="h-3 w-3 mr-1" /> Upload PDF/Docx
               </Button>
               {jdFile.text && (
                 <span className="text-xs text-primary flex items-center gap-1">
                   <CheckCircle2 className="h-3 w-3" /> {jdFile.name}
-                  <button onClick={() => { setJdFile({ file: null, text: "", name: "", error: "" }); if (jdInputRef.current) jdInputRef.current.value = ""; }} className="text-muted-foreground hover:text-destructive ml-1">
+                  <button onClick={() => { setJdFile({ text: "", name: "", error: "" }); if (jdInputRef.current) jdInputRef.current.value = ""; }} className="text-muted-foreground hover:text-destructive ml-1">
                     <X className="h-3 w-3" />
                   </button>
                 </span>
@@ -218,7 +320,6 @@ const InputSection = ({ onSubmit, onClear, loading, loadingMessage }: InputSecti
               {jdFile.error && <span className="text-xs text-destructive">{jdFile.error}</span>}
             </div>
 
-            {/* LinkedIn URL */}
             <div className="flex items-center gap-2 flex-1">
               <div className="relative flex-1">
                 <Link2 className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
@@ -230,13 +331,7 @@ const InputSection = ({ onSubmit, onClear, loading, loadingMessage }: InputSecti
                   disabled={loading || extracting}
                 />
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExtractFromUrl}
-                disabled={!linkedinUrl.trim() || extracting || loading}
-                className="text-xs h-8"
-              >
+              <Button variant="outline" size="sm" onClick={handleExtractFromUrl} disabled={!linkedinUrl.trim() || extracting || loading} className="text-xs h-8">
                 {extracting ? <Loader2 className="h-3 w-3 animate-spin" /> : "Extract"}
               </Button>
             </div>
@@ -257,26 +352,20 @@ const InputSection = ({ onSubmit, onClear, loading, loadingMessage }: InputSecti
           className="w-full max-w-xl h-14 text-lg font-bold bg-primary hover:bg-primary/90"
         >
           {loading ? (
-            <>
-              <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-              {loadingMessage}
-            </>
+            <><Loader2 className="h-5 w-5 mr-2 animate-spin" />{loadingMessage}</>
           ) : (
-            <>
-              <Sparkles className="h-5 w-5 mr-2" />
-              Generate Application Kit
-            </>
+            <><Sparkles className="h-5 w-5 mr-2" />Generate Application Kit</>
           )}
         </Button>
         {!bothReady && !loading && (
           <p className="text-sm text-muted-foreground">
-            {!cv.text && !effectiveJd ? "Upload your CV and provide a job description to start" :
-             !cv.text ? "Upload your CV to continue" : "Paste or upload a job description"}
+            {!cvText && !effectiveJd ? "Select a CV and provide a job description to start" :
+             !cvText ? "Select or upload a CV to continue" : "Paste or upload a job description"}
           </p>
         )}
-        {(cv.text || effectiveJd) && !loading && (
+        {(cvText || effectiveJd) && !loading && (
           <Button variant="ghost" size="sm" onClick={handleClear} className="text-muted-foreground">
-            <X className="h-4 w-4 mr-1" /> Clear All
+            <X className="h-4 w-4 mr-1" /> Clear JD
           </Button>
         )}
       </div>
