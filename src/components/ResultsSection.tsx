@@ -91,6 +91,13 @@ const ResultsSection = ({
   const appliedCount = appliedSuggestions.length;
   const totalCount = result.cvSuggestions.length;
 
+  // Use AI-extracted keywords as the canonical keyword list for recalculation
+  const aiKeywords = useMemo(() => {
+    const found = result.atsAnalysis?.keywordsFound || [];
+    const missing = result.atsAnalysis?.keywordsMissing || [];
+    return [...found, ...missing];
+  }, [result.atsAnalysis]);
+
   // Single source of truth for live ATS score
   const liveAts = useMemo(() => {
     if (!jobDescription || !currentCv) {
@@ -100,8 +107,8 @@ const ResultsSection = ({
         missingKeywords: result.atsAnalysis?.keywordsMissing || [],
       };
     }
-    return calculateAtsScore(currentCv, jobDescription);
-  }, [currentCv, jobDescription, result.atsAnalysis]);
+    return calculateAtsScore(currentCv, jobDescription, aiKeywords);
+  }, [currentCv, jobDescription, result.atsAnalysis, aiKeywords]);
 
   const liveAtsAnalysis = useMemo(() => ({
     ...result.atsAnalysis,
