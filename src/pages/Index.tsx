@@ -8,13 +8,13 @@ import ApplicationTrackingModal from "@/components/ApplicationTrackingModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
-import type { TailorResult, Tone } from "@/lib/types";
+import type { TailorResult } from "@/lib/types";
 
 const LOADING_STEPS = [
   { message: "Analyzing job requirements...", progress: 15 },
   { message: "Checking ATS compatibility...", progress: 35 },
   { message: "Tailoring your CV suggestions...", progress: 55 },
-  { message: "Generating cover letter versions...", progress: 75 },
+  { message: "Generating 3 cover letter versions...", progress: 75 },
   { message: "Preparing interview questions...", progress: 90 },
   { message: "Polishing results...", progress: 95 },
 ];
@@ -39,54 +39,33 @@ const Index = () => {
   const [showTrackingModal, setShowTrackingModal] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [cvState, setCvState] = useState<CvState>({
-    original: "",
-    current: "",
-    appliedSuggestions: [],
-    dismissedSuggestions: [],
-    isDirty: false,
+    original: "", current: "", appliedSuggestions: [], dismissedSuggestions: [], isDirty: false,
   });
   const lastAppIdRef = useRef<string | null>(null);
   const downloadCountRef = useRef(0);
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { toast } = useToast();
 
-  // Autosave to database
+  // --- Autosave ---
   const saveCvToDb = useCallback(async (html: string, applied: number[]) => {
     if (!lastAppIdRef.current) return;
     setSaveStatus("saving");
     try {
-      await supabase
-        .from("applications")
-        .update({
-          current_cv: html,
-          applied_suggestions: applied,
-          last_edited: new Date().toISOString(),
-        } as any)
-        .eq("id", lastAppIdRef.current);
+      await supabase.from("applications").update({
+        current_cv: html, applied_suggestions: applied, last_edited: new Date().toISOString(),
+      } as any).eq("id", lastAppIdRef.current);
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 2000);
-    } catch {
-      setSaveStatus("error");
-    }
+    } catch { setSaveStatus("error"); }
   }, []);
 
-  // Debounced autosave
-  const debouncedSave = useCallback(
-    (html: string, applied: number[]) => {
-      if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
-      autosaveTimerRef.current = setTimeout(() => saveCvToDb(html, applied), 3000);
-    },
-    [saveCvToDb]
-  );
+  const debouncedSave = useCallback((html: string, applied: number[]) => {
+    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+    autosaveTimerRef.current = setTimeout(() => saveCvToDb(html, applied), 3000);
+  }, [saveCvToDb]);
 
-  // Warn on unsaved changes
   useEffect(() => {
-    const handler = (e: BeforeUnloadEvent) => {
-      if (cvState.isDirty) {
-        e.preventDefault();
-        e.returnValue = "";
-      }
-    };
+    const handler = (e: BeforeUnloadEvent) => { if (cvState.isDirty) { e.preventDefault(); e.returnValue = ""; } };
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
   }, [cvState.isDirty]);
@@ -98,28 +77,20 @@ const Index = () => {
       </div>
     );
   }
-
   if (!user) return <Navigate to="/auth" replace />;
 
+  // --- Download / Tracking ---
   const handleDownload = () => {
     downloadCountRef.current += 1;
-    if (downloadCountRef.current === 1) {
-      setShowTrackingModal(true);
-    }
+    if (downloadCountRef.current === 1) setShowTrackingModal(true);
   };
 
-  const handleTrackingSave = async (data: {
-    status: string;
-    applicationMethod?: string;
-    appliedDate?: string;
-    followUpDate?: string | null;
-  }) => {
+  const handleTrackingSave = async (data: { status: string; applicationMethod?: string; appliedDate?: string; followUpDate?: string | null; }) => {
     if (!lastAppIdRef.current) return;
     const updates: Record<string, any> = { status: data.status };
     if (data.applicationMethod) updates.application_method = data.applicationMethod;
     if (data.appliedDate) updates.applied_date = data.appliedDate;
     if (data.followUpDate !== undefined) updates.follow_up_date = data.followUpDate;
-
     await supabase.from("applications").update(updates).eq("id", lastAppIdRef.current);
     toast({
       title: data.status === "applied" ? "Marked as Applied!" : "Saved for Later",
@@ -127,36 +98,24 @@ const Index = () => {
     });
   };
 
-  // --- CV Editing Handlers ---
+  // --- CV Editing ---
   const handleCvChange = (html: string) => {
     setCvState((prev) => ({ ...prev, current: html, isDirty: true }));
     debouncedSave(html, cvState.appliedSuggestions);
   };
 
   const applySuggestionToText = (text: string, original: string, suggested: string): string => {
-    // Direct match
-    if (text.includes(original)) {
-      return text.replace(original, suggested);
-    }
-    // Try matching after stripping HTML tags from the search text
+    if (text.includes(original)) return text.replace(original, suggested);
     const plainOriginal = original.replace(/<[^>]*>/g, "").trim();
-    if (plainOriginal && text.includes(plainOriginal)) {
-      return text.replace(plainOriginal, suggested);
-    }
-    // Try case-insensitive match
+    if (plainOriginal && text.includes(plainOriginal)) return text.replace(plainOriginal, suggested);
     const idx = text.toLowerCase().indexOf(original.toLowerCase());
-    if (idx !== -1) {
-      return text.slice(0, idx) + suggested + text.slice(idx + original.length);
-    }
-    // Try matching first 40 chars as anchor
+    if (idx !== -1) return text.slice(0, idx) + suggested + text.slice(idx + original.length);
     const anchor = original.slice(0, 40);
     const anchorIdx = text.toLowerCase().indexOf(anchor.toLowerCase());
     if (anchorIdx !== -1) {
-      // Find the end of the original-length segment
       const endIdx = anchorIdx + original.length;
       return text.slice(0, anchorIdx) + suggested + text.slice(Math.min(endIdx, text.length));
     }
-    // Fallback: append suggestion
     console.warn("[Apply] Could not find original text, appending suggestion");
     return text + "\n" + suggested;
   };
@@ -174,10 +133,7 @@ const Index = () => {
   };
 
   const handleDismissSuggestion = (index: number) => {
-    setCvState((prev) => ({
-      ...prev,
-      dismissedSuggestions: [...prev.dismissedSuggestions, index],
-    }));
+    setCvState((prev) => ({ ...prev, dismissedSuggestions: [...prev.dismissedSuggestions, index] }));
   };
 
   const handleUndoSuggestion = (index: number) => {
@@ -228,31 +184,18 @@ const Index = () => {
   };
 
   const handleResetCv = () => {
-    setCvState((prev) => ({
-      ...prev,
-      current: prev.original,
-      appliedSuggestions: [],
-      dismissedSuggestions: [],
-      isDirty: true,
-    }));
+    setCvState((prev) => ({ ...prev, current: prev.original, appliedSuggestions: [], dismissedSuggestions: [], isDirty: true }));
     debouncedSave(cvState.original, []);
     toast({ title: "CV reset to original" });
   };
 
-  const handleSubmit = async (cvContent: string, jobDescription: string, tone: Tone) => {
+  // --- Submit (no tone param, auto-generates all 3) ---
+  const handleSubmit = async (cvContent: string, jobDescription: string) => {
     setLoading(true);
     setResult(null);
     downloadCountRef.current = 0;
     lastAppIdRef.current = null;
-
-    // Initialize CV state with uploaded content
-    setCvState({
-      original: cvContent,
-      current: cvContent,
-      appliedSuggestions: [],
-      dismissedSuggestions: [],
-      isDirty: false,
-    });
+    setCvState({ original: cvContent, current: cvContent, appliedSuggestions: [], dismissedSuggestions: [], isDirty: false });
 
     let stepIndex = 0;
     setLoadingMessage(LOADING_STEPS[0].message);
@@ -265,9 +208,8 @@ const Index = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke("tailor-cv", {
-        body: { cvContent, jobDescription, tone },
+        body: { cvContent, jobDescription, tone: "professional" },
       });
-
       if (error) throw error;
       if (data.error) throw new Error(data.error);
 
@@ -282,16 +224,9 @@ const Index = () => {
       setLastJobDescription(jobDescription);
 
       const { data: inserted } = await supabase.from("applications").insert({
-        user_id: user.id,
-        job_title: jobTitle,
-        company: company,
-        cv_content: cvContent,
-        job_description: jobDescription,
-        tone,
-        current_cv: cvContent,
-        applied_suggestions: [],
-        key_requirements: data.keyRequirements,
-        cv_suggestions: data.cvSuggestions,
+        user_id: user.id, job_title: jobTitle, company, cv_content: cvContent,
+        job_description: jobDescription, tone: "professional", current_cv: cvContent, applied_suggestions: [],
+        key_requirements: data.keyRequirements, cv_suggestions: data.cvSuggestions,
         cover_letter: data.coverLetter || data.coverLetterVersions?.[0]?.content || "",
         cover_letter_versions: data.coverLetterVersions || [],
         ats_score: data.atsAnalysis?.score || 0,
@@ -305,14 +240,9 @@ const Index = () => {
       } as any).select("id").single();
 
       if (inserted) lastAppIdRef.current = inserted.id;
-
       toast({ title: "Analysis complete!", description: "Your tailored results are ready." });
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Something went wrong",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: error.message || "Something went wrong", variant: "destructive" });
     } finally {
       clearInterval(interval);
       setLoading(false);
@@ -324,8 +254,13 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container mx-auto px-4 py-8 max-w-6xl space-y-10">
-        <InputSection onSubmit={handleSubmit} onClear={() => { setResult(null); downloadCountRef.current = 0; }} loading={loading} loadingMessage={loadingMessage} />
+      <main className="mx-auto px-4 py-8 max-w-[1200px] space-y-10">
+        <InputSection
+          onSubmit={handleSubmit}
+          onClear={() => { setResult(null); downloadCountRef.current = 0; }}
+          loading={loading}
+          loadingMessage={loadingMessage}
+        />
         {loading && loadingProgress > 0 && (
           <div className="space-y-2">
             <Progress value={loadingProgress} className="h-2" />
