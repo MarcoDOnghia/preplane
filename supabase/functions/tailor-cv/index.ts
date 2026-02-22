@@ -140,6 +140,33 @@ Only extract keywords from sections relevant to candidate requirements.
    - Version C "Bold": creative, memorable, shows personality
 5. Skip interview questions generation entirely — return empty arrays for interviewQuestions and questionsToAsk, and empty string for companyBrief.
 
+**STEP 4 — REFORMAT CV INTO ATS TEMPLATE (CRITICAL)**
+You MUST reformat the user's CV into this EXACT standardized ATS template structure:
+
+[NAME] — Extract full name from CV
+[Contact] — Format as: City ● Email ● Phone (use ● as separator)
+
+PROFILE SUMMARY — Write a 3-line JD-tailored professional summary. Inject 3-4 keywords from the JD naturally. Focus on years of experience, core competencies, and value proposition.
+
+EDUCATION — Extract all education entries. Include:
+  - Degree + Dates on same line
+  - University name
+  - RELEVANT COURSEWORK: Comma-separated list of relevant courses (prioritize JD-relevant ones)
+
+PROFESSIONAL EXPERIENCE — For each role:
+  - Format: Role — Company — Dates
+  - Rewrite 3-5 bullets each as: Action verb + JD keyword + quantified result/metric
+  - Example: "Led [JD keyword: due diligence] for [CV data: 5 deals] resulting in [metric]"
+  - Inject 10-12 JD keywords across all experience bullets naturally
+
+TECHNICAL SKILLS — Comma-separated list. Put JD-matching keywords FIRST, then additional skills from CV.
+
+PROJECT EXPERIENCE — Extract any projects, volunteer work, or notable initiatives. Keep if present in CV.
+
+HONORS & AWARDS — Extract if present in CV. Keep as-is.
+
+The reformatted CV should score 90-95% ATS compatibility.
+
 You MUST call the tailor_application function with your analysis.`;
 
     const userPrompt = `<USER_CV>\n${safeCv}\n</USER_CV>\n\n<USER_JOB_DESC>\n${safeJobDesc}\n</USER_JOB_DESC>`;
@@ -225,8 +252,73 @@ You MUST call the tailor_application function with your analysis.`;
                     type: "string",
                     description: "Empty string — not generated",
                   },
+                  reformattedCv: {
+                    type: "object",
+                    properties: {
+                      name: { type: "string", description: "Full name from CV" },
+                      contact: { type: "string", description: "City ● Email ● Phone" },
+                      profileSummary: { type: "string", description: "3-line JD-tailored professional summary with keywords" },
+                      education: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            degree: { type: "string" },
+                            dates: { type: "string" },
+                            university: { type: "string" },
+                            coursework: { type: "string", description: "Comma-separated relevant coursework" },
+                          },
+                          required: ["degree", "dates", "university", "coursework"],
+                          additionalProperties: false,
+                        },
+                      },
+                      experience: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            role: { type: "string" },
+                            company: { type: "string" },
+                            dates: { type: "string" },
+                            bullets: { type: "array", items: { type: "string" }, description: "3-5 ATS-optimized bullets with JD keywords and metrics" },
+                          },
+                          required: ["role", "company", "dates", "bullets"],
+                          additionalProperties: false,
+                        },
+                      },
+                      technicalSkills: { type: "string", description: "Comma-separated skills, JD keywords first" },
+                      projectExperience: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            title: { type: "string" },
+                            dates: { type: "string" },
+                            bullets: { type: "array", items: { type: "string" } },
+                          },
+                          required: ["title", "dates", "bullets"],
+                          additionalProperties: false,
+                        },
+                      },
+                      honorsAwards: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            title: { type: "string" },
+                            date: { type: "string" },
+                          },
+                          required: ["title", "date"],
+                          additionalProperties: false,
+                        },
+                      },
+                    },
+                    required: ["name", "contact", "profileSummary", "education", "experience", "technicalSkills", "projectExperience", "honorsAwards"],
+                    additionalProperties: false,
+                    description: "CV reformatted into the standardized 306 ATS template structure",
+                  },
                 },
-                required: ["keyRequirements", "atsAnalysis", "cvSuggestions", "coverLetterVersions", "interviewQuestions", "questionsToAsk", "companyBrief"],
+                required: ["keyRequirements", "atsAnalysis", "cvSuggestions", "coverLetterVersions", "interviewQuestions", "questionsToAsk", "companyBrief", "reformattedCv"],
                 additionalProperties: false,
               },
             },

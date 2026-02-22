@@ -35,6 +35,7 @@ export interface TailorResult {
   interviewQuestions: InterviewQuestion[];
   questionsToAsk: string[];
   companyBrief: string;
+  reformattedCv?: ReformattedCv;
 }
 
 export interface ApplicationRecord {
@@ -60,6 +61,42 @@ export interface ApplicationRecord {
   applied_date: string | null;
   follow_up_date: string | null;
   created_at: string;
+}
+
+export interface ReformattedEducation {
+  degree: string;
+  dates: string;
+  university: string;
+  coursework: string;
+}
+
+export interface ReformattedExperience {
+  role: string;
+  company: string;
+  dates: string;
+  bullets: string[];
+}
+
+export interface ReformattedProject {
+  title: string;
+  dates: string;
+  bullets: string[];
+}
+
+export interface ReformattedAward {
+  title: string;
+  date: string;
+}
+
+export interface ReformattedCv {
+  name: string;
+  contact: string;
+  profileSummary: string;
+  education: ReformattedEducation[];
+  experience: ReformattedExperience[];
+  technicalSkills: string;
+  projectExperience: ReformattedProject[];
+  honorsAwards: ReformattedAward[];
 }
 
 export type Tone = "professional" | "enthusiastic" | "creative";
