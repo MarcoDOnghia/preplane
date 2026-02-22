@@ -1,7 +1,7 @@
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Highlight from "@tiptap/extension-highlight";
-import { useEffect, useCallback, useRef, useState, useMemo } from "react";
+import { useEffect, useCallback, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -19,7 +19,6 @@ import {
 } from "lucide-react";
 import type { CvSuggestion } from "@/lib/types";
 import { cvTextToStructuredHtml } from "@/lib/cvParser";
-import { calculateAtsScore } from "@/lib/atsScore";
 
 interface CvEditorTabProps {
   originalCv: string;
@@ -28,6 +27,7 @@ interface CvEditorTabProps {
   onApplyAll: () => void;
   onReset: () => void;
   originalAtsScore?: number;
+  liveAtsScore?: number;
   jobDescription?: string;
   suggestions: CvSuggestion[];
   appliedSuggestions: number[];
@@ -51,6 +51,7 @@ const CvEditorTab = ({
   onApplyAll,
   onReset,
   originalAtsScore = 0,
+  liveAtsScore,
   jobDescription = "",
   suggestions,
   appliedSuggestions,
@@ -100,14 +101,10 @@ const CvEditorTab = ({
   const remaining = suggestions.length - appliedSuggestions.length;
   const wordCount = editor ? countWords(editor.getHTML()) : 0;
 
-  // Live ATS score recalculation
-  const liveAtsScore = useMemo(() => {
-    if (!jobDescription || !currentCv) return originalAtsScore;
-    return calculateAtsScore(currentCv, jobDescription).score;
-  }, [currentCv, jobDescription, originalAtsScore]);
-
-  const scoreImprovement = liveAtsScore - originalAtsScore;
-  const scoreColor = liveAtsScore >= 80 ? "text-success" : liveAtsScore >= 60 ? "text-yellow-500" : "text-destructive";
+  // Use the live ATS score passed from parent (single source of truth)
+  const currentAtsScore = liveAtsScore ?? originalAtsScore;
+  const scoreImprovement = currentAtsScore - originalAtsScore;
+  const scoreColor = currentAtsScore >= 80 ? "text-success" : currentAtsScore >= 60 ? "text-yellow-500" : "text-destructive";
 
   if (!editor) return null;
 
@@ -196,7 +193,7 @@ const CvEditorTab = ({
             <span className="text-destructive">Save failed</span>
           )}
           <Badge variant="outline" className={`text-xs ${scoreColor}`}>
-            ATS: {liveAtsScore}/100
+            ATS: {currentAtsScore}/100
             {scoreImprovement > 0 && (
               <span className="ml-1 text-success flex items-center gap-0.5">
                 <TrendingUp className="h-3 w-3" />+{scoreImprovement}
