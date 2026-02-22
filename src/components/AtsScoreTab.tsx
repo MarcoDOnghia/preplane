@@ -1,7 +1,10 @@
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle2, XCircle, AlertTriangle, Zap } from "lucide-react";
+import { CheckCircle2, XCircle, AlertTriangle, Zap, Copy, Check } from "lucide-react";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 import type { AtsAnalysis } from "@/lib/types";
 
 interface AtsScoreTabProps {
@@ -10,11 +13,20 @@ interface AtsScoreTabProps {
 
 const AtsScoreTab = ({ atsAnalysis }: AtsScoreTabProps) => {
   const { score, keywordsFound, keywordsMissing, formattingIssues, quickWins } = atsAnalysis;
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const { toast } = useToast();
 
   const scoreColor =
     score >= 80 ? "text-success" : score >= 60 ? "text-yellow-500" : "text-destructive";
   const scoreBarColor =
     score >= 80 ? "[&>div]:bg-success" : score >= 60 ? "[&>div]:bg-yellow-500" : "[&>div]:bg-destructive";
+
+  const handleCopyKeyword = async (kw: string, index: number) => {
+    await navigator.clipboard.writeText(kw);
+    setCopiedIndex(index);
+    toast({ title: `"${kw}" copied`, description: "Paste it into your CV in the Edit tab." });
+    setTimeout(() => setCopiedIndex(null), 2000);
+  };
 
   return (
     <div className="space-y-6">
@@ -65,13 +77,29 @@ const AtsScoreTab = ({ atsAnalysis }: AtsScoreTabProps) => {
               <XCircle className="h-4 w-4 text-destructive" />
               Keywords Missing ({keywordsMissing.length})
             </CardTitle>
+            {keywordsMissing.length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                Click a keyword to copy it, then add it to your CV in the Edit tab.
+              </p>
+            )}
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
               {keywordsMissing.map((kw, i) => (
-                <Badge key={i} variant="destructive" className="bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive/20">
+                <Button
+                  key={i}
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto px-2.5 py-1 gap-1.5 bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 text-xs font-normal rounded-full"
+                  onClick={() => handleCopyKeyword(kw, i)}
+                >
                   ✗ {kw}
-                </Badge>
+                  {copiedIndex === i ? (
+                    <Check className="h-3 w-3" />
+                  ) : (
+                    <Copy className="h-3 w-3 opacity-50" />
+                  )}
+                </Button>
               ))}
               {keywordsMissing.length === 0 && (
                 <p className="text-sm text-muted-foreground">All keywords covered!</p>
