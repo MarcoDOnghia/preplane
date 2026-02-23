@@ -134,10 +134,38 @@ Only extract keywords from sections relevant to candidate requirements.
    - Identify formatting issues (tables, columns, special characters, images, headers that ATS can't parse)
    - Provide 3 "quick wins" - easiest improvements for better ATS score
 3. Suggest specific CV modifications with original text, suggested replacement, reasoning, priority (high/medium/low), and impact score (1-10)
-4. Generate 3 cover letter versions:
-   - Version A "Conservative": formal, traditional, safe
-   - Version B "Balanced": professional but personable
-   - Version C "Bold": creative, memorable, shows personality
+4. Generate 3 cover letter versions following these STRICT rules:
+
+   TONE RULES:
+   - Open with "Dear [Hiring Manager Name]" (if name available from JD) or "Dear Hiring Manager" — NEVER "Dear Sir/Madam" or "To whom it may concern"
+   - Write in plain conversational business English — no legal or overly formal phrasing
+   - One clear sentence of genuine motivation — no excessive enthusiasm or exclamation marks
+
+   CONTENT RULES:
+   - Pick 2–3 specific stories from the CV and go deeper with context and results — do NOT copy bullet points verbatim from the CV
+   - Always mention 1–2 specific things about the company or role taken directly from the job description
+   - Frame everything as what the candidate will do for them, not what they want to gain
+
+   LANGUAGE RULES:
+   - Never use unsupported cliché claims like "highly motivated", "detail-oriented team player", "passionate", "rockstar", "ninja", "guru"
+   - Never stack buzzwords unnaturally — weave keywords into real sentences with concrete examples
+   - Vary sentence structure — do not start consecutive sentences with "I"
+   - Use natural contractions (I'm, you're, we're) for a conversational tone
+
+   CLAIMS RULES:
+   - Let achievements speak — no self-labels like "master of", "superior skills in", "expert in"
+   - Never mention salary expectations
+
+   FORMAT RULES:
+   - Short paragraphs of 3–4 lines max
+   - Total length: approximately ¾ of a page (~250-300 words)
+   - Always double-check company name and role title are correct for this specific application
+   - Never open with "I hope this email finds you well" or "I wanted to reach out"
+
+   The 3 versions:
+   - Version A "Professional": clear, structured, confident — conversational but businesslike
+   - Version B "Direct": gets to the point fast, leads with strongest achievement, minimal fluff
+   - Version C "Friendly": warm and personable, shows personality while staying professional
 5. Skip interview questions generation entirely — return empty arrays for interviewQuestions and questionsToAsk, and empty string for companyBrief.
 
 **STEP 4 — REFORMAT CV INTO ATS TEMPLATE (CRITICAL)**
