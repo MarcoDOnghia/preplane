@@ -191,12 +191,8 @@ const Index = () => {
       }
     }
 
-    // Fallback: append to first experience
-    if (clone.experience.length > 0) {
-      clone.experience[0].bullets.push(suggested);
-    } else {
-      clone.summary = clone.summary + " " + suggested;
-    }
+    // Fallback: no match found — do not mutate
+    console.warn("Suggestion match not found, returning CV unchanged. Original:", matchPrefix);
     return clone;
   };
 
