@@ -54,6 +54,8 @@ const Index = () => {
 
   // Undo stack: stores snapshots of the model before each change
   const undoStackRef = useRef<CvDataModel[]>([]);
+  // BUG 5: Track which bullets have been replaced by keyword additions
+  const replacedBulletsRef = useRef<Set<string>>(new Set());
 
   const lastAppIdRef = useRef<string | null>(null);
   const downloadCountRef = useRef(0);
@@ -150,7 +152,12 @@ const Index = () => {
   const applySuggestionToModel = (model: CvDataModel, original: string, suggested: string): CvDataModel => {
     const clone: CvDataModel = JSON.parse(JSON.stringify(model));
     const matchPrefix = original.slice(0, 60).toLowerCase();
-    const fuzzyMatch = (text: string) => text.toLowerCase().includes(matchPrefix);
+    // BUG 3: Also try shorter prefix without trailing ellipsis for truncated bullets
+    const shortPrefix = original.replace(/\.{3,}$/, '').slice(0, 40).toLowerCase();
+    const fuzzyMatch = (text: string) => {
+      const lower = text.toLowerCase();
+      return lower.includes(matchPrefix) || lower.includes(shortPrefix);
+    };
 
     // Check summary
     if (fuzzyMatch(clone.summary)) {
@@ -166,10 +173,20 @@ const Index = () => {
           return clone;
         }
       }
-      if (fuzzyMatch(exp.role)) {
-        // Strip trailing date patterns to avoid merging role + dates
-        const datePattern = /\s+(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{4}\s*[-–—].*$/i;
-        exp.role = suggested.replace(datePattern, '').trim();
+      // BUG 2: Strip parenthesized portion before building match prefix for role
+      const roleOnly = exp.role.replace(/\s*\(.*$/, '').toLowerCase();
+      const origRoleOnly = original.replace(/\s*\(.*$/, '').slice(0, 60).toLowerCase();
+      if (roleOnly.includes(origRoleOnly) || exp.role.toLowerCase().includes(matchPrefix)) {
+        // BUG 1: Strip trailing date patterns from suggested text, only update role
+        const datePattern = /\s+(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+\d{4}\s*[-–—].*$/i;
+        const datePattern2 = /\s+\d{4}\s*[-–—]\s*(?:present|\d{4}).*$/i;
+        let cleanRole = suggested.replace(datePattern, '').replace(datePattern2, '').trim();
+        // Also strip company name if appended after dash
+        const dashParts = cleanRole.split(/\s*[—–]\s*/);
+        if (dashParts.length > 1 && exp.company && dashParts[dashParts.length - 1].toLowerCase().includes(exp.company.toLowerCase())) {
+          cleanRole = dashParts.slice(0, -1).join(' — ').trim();
+        }
+        exp.role = cleanRole;
         return clone;
       }
     }
@@ -251,25 +268,43 @@ const Index = () => {
     toast({ title: `Applied ${count} high-priority suggestion${count !== 1 ? "s" : ""}` });
   };
 
-  // --- Add keyword bullet to CV model ---
+  // --- Add keyword bullet to CV model (BUG 4: replace best-matching bullet, not append) ---
   const handleAddKeywordBullet = (keyword: string, bullet: string, sectionHint: string) => {
     if (!cvModel) return;
     undoStackRef.current = [...undoStackRef.current.slice(-19), cvModel];
     const clone: CvDataModel = JSON.parse(JSON.stringify(cvModel));
-    const hint = sectionHint.toLowerCase();
+    const kwWords = keyword.toLowerCase().split(/\s+/);
 
-    // Find the most relevant experience entry
-    let targetExp = clone.experience[0];
-    for (const exp of clone.experience) {
-      if (exp.role.toLowerCase().includes(hint) || exp.company.toLowerCase().includes(hint)) {
-        targetExp = exp;
-        break;
+    // Score each bullet across all experience entries by shared word overlap with the keyword
+    let bestScore = -1;
+    let bestExpIdx = -1;
+    let bestBulletIdx = -1;
+    let bestBulletKey = '';
+
+    for (let ei = 0; ei < clone.experience.length; ei++) {
+      const exp = clone.experience[ei];
+      for (let bi = 0; bi < exp.bullets.length; bi++) {
+        const bulletKey = `${ei}:${bi}:${exp.bullets[bi].slice(0, 50)}`;
+        // BUG 5: Skip bullets already replaced by a previous keyword addition
+        if (replacedBulletsRef.current.has(bulletKey)) continue;
+
+        const bulletWords = exp.bullets[bi].toLowerCase().split(/\s+/);
+        const overlap = kwWords.filter(w => bulletWords.some(bw => bw.includes(w) || w.includes(bw))).length;
+        if (overlap > bestScore) {
+          bestScore = overlap;
+          bestExpIdx = ei;
+          bestBulletIdx = bi;
+          bestBulletKey = bulletKey;
+        }
       }
     }
 
-    if (targetExp) {
-      targetExp.bullets.push(bullet);
+    if (bestExpIdx >= 0 && bestBulletIdx >= 0) {
+      clone.experience[bestExpIdx].bullets[bestBulletIdx] = bullet;
+      // Track this bullet as replaced
+      replacedBulletsRef.current = new Set(replacedBulletsRef.current).add(bestBulletKey);
     } else if (clone.experience.length > 0) {
+      // Fallback: if all bullets are already replaced, append to first experience
       clone.experience[0].bullets.push(bullet);
     } else {
       clone.summary = clone.summary ? `${clone.summary} ${bullet}` : bullet;
