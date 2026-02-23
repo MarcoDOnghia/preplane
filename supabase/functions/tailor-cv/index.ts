@@ -141,26 +141,50 @@ Only extract keywords from sections relevant to candidate requirements.
    - Write in plain conversational business English — no legal or overly formal phrasing
    - One clear sentence of genuine motivation — no excessive enthusiasm or exclamation marks
 
+   OPENING LINE RULES:
+   - NEVER start with "I am writing to express my interest/enthusiasm/passion for..."
+   - Start directly with a hook: a specific achievement, context, or observation about the company
+   - Example: "Having scaled two businesses to $95k+ revenue while studying full-time, I know what founder-led growth actually looks like from the inside."
+
    CONTENT RULES:
-   - Pick 2–3 specific stories from the CV and go deeper with context and results — do NOT copy bullet points verbatim from the CV
-   - Always mention 1–2 specific things about the company or role taken directly from the job description
+   - Pick 2-3 specific stories from the CV and go deeper with context and results — do NOT copy bullet points verbatim from the CV
+   - Always mention 1-2 specific things about the company or role taken directly from the job description
    - Frame everything as what the candidate will do for them, not what they want to gain
 
+   CONFIDENCE WITHOUT POSTURING:
+   - Avoid performative toughness like "I thrive in high-stakes environments" or "I don't just want to learn, I want to ship" — these sound try-hard
+   - Let achievements demonstrate the attitude implicitly
+   - Never use defensive framing with quotes like "I don't just want to 'learn'" — state what you will do instead
+
    LANGUAGE RULES:
-   - Never use unsupported cliché claims like "highly motivated", "detail-oriented team player", "passionate", "rockstar", "ninja", "guru"
+   - Never use unsupported cliche claims like "highly motivated", "detail-oriented team player", "passionate", "rockstar", "ninja", "guru"
    - Never stack buzzwords unnaturally — weave keywords into real sentences with concrete examples
-   - Vary sentence structure — do not start consecutive sentences with "I"
    - Use natural contractions (I'm, you're, we're) for a conversational tone
+
+   SENTENCE VARIETY RULES:
+   - Never start more than 2 consecutive sentences with "I" or "My"
+   - Use varied openers like: "In my last role...", "The result was...", "This experience taught me...", "At [company]...", "Working with..."
+
+   PUNCTUATION RULES:
+   - NEVER use double dashes (--) or em dashes — anywhere in the cover letter
+   - Use a comma, period, or rewrite the sentence instead
 
    CLAIMS RULES:
    - Let achievements speak — no self-labels like "master of", "superior skills in", "expert in"
    - Never mention salary expectations
 
+   CLOSING LINE RULES:
+   - NEVER use "I look forward to the possibility of discussing..." — too weak and hedged
+   - Use a direct, warm close like: "I'd love to discuss how I can contribute. Happy to connect whenever works for you." or "Looking forward to connecting."
+
    FORMAT RULES:
-   - Short paragraphs of 3–4 lines max
-   - Total length: approximately ¾ of a page (~250-300 words)
+   - Short paragraphs of 3-4 lines max
+   - Total length: approximately 3/4 of a page (~250-300 words)
    - Always double-check company name and role title are correct for this specific application
    - Never open with "I hope this email finds you well" or "I wanted to reach out"
+
+   OVERALL TONE TEST:
+   - Before finalising, check: would a sharp, confident 22-year-old actually say this out loud in an interview? If not, rewrite it.
 
    The 3 versions:
    - Version A "Professional": clear, structured, confident — conversational but businesslike
