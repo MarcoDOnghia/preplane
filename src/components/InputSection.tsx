@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import type { CvDataModel } from "@/lib/cvDataModel";
-import { aiParsedCvToModel } from "@/lib/cvDataModel";
+import { aiParsedCvToModel, parseCvToModel } from "@/lib/cvDataModel";
 
 interface InputSectionProps {
   onSubmit: (cvContent: string, jobDescription: string) => void;
@@ -47,6 +47,17 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage }
   const jdInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
+  // Parse saved CV text into model and pass up
+  const parseAndNotify = useCallback((rawText: string) => {
+    if (!rawText || !onCvParsed) return;
+    try {
+      const model = parseCvToModel(rawText);
+      onCvParsed(model);
+    } catch {
+      // Silent failure — local parse is best-effort
+    }
+  }, [onCvParsed]);
+
   // Fetch saved CVs
   useEffect(() => {
     if (!user) return;
@@ -62,6 +73,8 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage }
           setSelectedCvId(data[0].id);
           setCvText(data[0].parsed_text);
           setCvName(data[0].name);
+          // Parse the auto-selected CV and pass model up
+          parseAndNotify(data[0].parsed_text);
         }
       }
     };
@@ -75,6 +88,8 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage }
     if (cv) {
       setCvText(cv.parsed_text);
       setCvName(cv.name);
+      // Parse selected CV and pass model up
+      parseAndNotify(cv.parsed_text);
     }
   };
 
@@ -97,9 +112,7 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage }
     setUploading(true);
     try {
       // 1. Extract raw text client-side
-      console.log("[Upload] Step 1: Extracting text from", file.name);
       const rawText = await extractTextFromFile(file);
-      console.log("[Upload] Step 1 done. Text length:", rawText.length);
 
       if (!rawText || rawText.trim().length < 20) {
         throw new Error("Could not extract text from file. Please try a different format.");
@@ -108,40 +121,20 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage }
       // 2. Call parse-cv edge function for AI-structured parsing
       let aiModel: CvDataModel | null = null;
       try {
-        console.log("[Upload] Step 2: Calling parse-cv edge function...");
         const { data: parseData, error: parseError } = await supabase.functions.invoke("parse-cv", {
           body: { rawText },
         });
-        console.log("[Upload] parse-cv response:", { parseData, parseError });
         if (parseError) throw parseError;
         if (parseData?.cvData) {
-          console.log("[Upload] AI cvData received:", JSON.stringify(parseData.cvData).substring(0, 500));
           aiModel = aiParsedCvToModel(parseData.cvData);
-          console.log("[Upload] aiModel mapped:", {
-            name: aiModel.name,
-            expCount: aiModel.experience.length,
-            eduCount: aiModel.education.length,
-            skills: aiModel.skills?.substring(0, 100),
-          });
-        } else {
-          console.warn("[Upload] parse-cv returned no cvData:", parseData);
         }
-      } catch (parseErr: any) {
-        console.error("[Upload] parse-cv failed:", parseErr);
+      } catch {
         toast({ title: "AI parsing unavailable", description: "Using local parser instead.", variant: "default" });
       }
 
       // 2b. If AI failed, use local parser as fallback
       if (!aiModel) {
-        console.log("[Upload] Falling back to local parseCvToModel...");
-        const { parseCvToModel } = await import("@/lib/cvDataModel");
         aiModel = parseCvToModel(rawText);
-        console.log("[Upload] Local parser result:", {
-          name: aiModel.name,
-          expCount: aiModel.experience.length,
-          eduCount: aiModel.education.length,
-          skills: aiModel.skills?.substring(0, 100),
-        });
       }
 
       // 3. Upload original file to storage bucket
@@ -179,13 +172,11 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage }
 
       // 5. Pass parsed model up to pre-fill the ATS editor
       if (aiModel && onCvParsed) {
-        console.log("[Upload] Step 5: Calling onCvParsed with model:", aiModel.name);
         onCvParsed(aiModel);
       }
 
       toast({ title: "CV saved!", description: `${file.name} added to your library.` });
     } catch (err: any) {
-      console.error("[Upload] Pipeline failed:", err);
       toast({ title: "Parsing failed, try again", description: err.message, variant: "destructive" });
     } finally {
       setUploading(false);
