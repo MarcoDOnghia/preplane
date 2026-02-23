@@ -28,6 +28,7 @@ interface AtsScoreTabProps {
   currentCv?: string;
   jobDescription?: string;
   onCvChange?: (html: string) => void;
+  onAddKeywordBullet?: (keyword: string, bullet: string, sectionHint: string) => void;
 }
 
 interface GeneratedBullet {
@@ -40,7 +41,7 @@ interface GeneratedBullet {
 const TARGET_SCORE = 90;
 const SCORE_DEBOUNCE_MS = 500;
 
-const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange }: AtsScoreTabProps) => {
+const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, onAddKeywordBullet }: AtsScoreTabProps) => {
   const { score, keywordsFound, keywordsMissing, formattingIssues, quickWins } = atsAnalysis;
   const [loadingKeyword, setLoadingKeyword] = useState<string | null>(null);
   const [previews, setPreviews] = useState<Record<string, GeneratedBullet>>({});
@@ -197,29 +198,30 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange }: Ats
 
   const handleApplyBullet = (keyword: string) => {
     const preview = previews[keyword];
-    if (!preview || !onCvChange || !currentCv) return;
+    if (!preview) return;
 
-    const bulletHtml = `<ul><li>${preview.bullet}</li></ul>`;
-
-    // Find the right section
-    const section = findBestSection(preview.section);
-    let newCv: string;
-
-    if (section) {
-      const afterSection = currentCv.slice(section.position);
-      const nextSectionMatch = afterSection.match(/<h[12][^>]*>/i);
-      if (nextSectionMatch && nextSectionMatch.index !== undefined) {
-        const insertAt = section.position + nextSectionMatch.index;
-        newCv = currentCv.slice(0, insertAt) + bulletHtml + currentCv.slice(insertAt);
+    // Use CvDataModel callback if available (preferred)
+    if (onAddKeywordBullet) {
+      onAddKeywordBullet(keyword, preview.bullet, preview.section);
+    } else if (onCvChange && currentCv) {
+      // Fallback to HTML insertion
+      const bulletHtml = `<ul><li>${preview.bullet}</li></ul>`;
+      const section = findBestSection(preview.section);
+      let newCv: string;
+      if (section) {
+        const afterSection = currentCv.slice(section.position);
+        const nextSectionMatch = afterSection.match(/<h[12][^>]*>/i);
+        if (nextSectionMatch && nextSectionMatch.index !== undefined) {
+          const insertAt = section.position + nextSectionMatch.index;
+          newCv = currentCv.slice(0, insertAt) + bulletHtml + currentCv.slice(insertAt);
+        } else {
+          newCv = currentCv.slice(0, section.position) + bulletHtml + currentCv.slice(section.position);
+        }
       } else {
-        newCv = currentCv.slice(0, section.position) + bulletHtml + currentCv.slice(section.position);
+        newCv = currentCv + bulletHtml;
       }
-    } else {
-      newCv = currentCv + bulletHtml;
+      onCvChange(newCv);
     }
-
-    // Apply change immediately
-    onCvChange(newCv);
 
     // Track as added
     setAddedKeywords((prev) => new Set(prev).add(keyword.toLowerCase()));
@@ -235,14 +237,9 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange }: Ats
     setHighlightedSection(preview.section);
     setTimeout(() => setHighlightedSection(null), 3000);
 
-    // Debug logging
-    console.log(`[ATS] Added keyword "${keyword}" to section "${preview.section}"`);
-    console.log(`[ATS] Keywords: found=${effectiveFound.length + 1}, missing=${effectiveMissing.length - 1}, total=${totalKeywords}`);
-    console.log(`[ATS] Score before: ${score}, projected after: ~${score + projectedScorePerKeyword}`);
-
     toast({
       title: `✓ Added "${keyword}"`,
-      description: `Inserted in ${preview.section} section • Score updating...`,
+      description: `Inserted in ${preview.section} section`,
     });
   };
 
@@ -380,7 +377,7 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange }: Ats
         {/* Matched Keywords */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
+            <CardTitle className="text-base font-bold flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-success" />
               Keywords Found ({effectiveFound.length})
             </CardTitle>
@@ -410,7 +407,7 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange }: Ats
         {/* Missing Keywords */}
         <Card className="border-destructive/20">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
+            <CardTitle className="text-base font-bold flex items-center gap-2">
               <XCircle className="h-4 w-4 text-destructive" />
               Missing Keywords ({effectiveMissing.length})
             </CardTitle>
@@ -430,9 +427,9 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange }: Ats
                   <div key={kw} className="inline-flex">
                     {currentCv ? (
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
-                        className="h-auto px-2.5 py-1 gap-1.5 bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 text-xs font-normal rounded-full"
+                        className="h-auto px-2.5 py-1 gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10 text-xs font-normal rounded-full"
                         onClick={() => handleGenerateBullet(kw)}
                         disabled={loadingKeyword === kw}
                       >
@@ -448,9 +445,9 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange }: Ats
                       </Button>
                     ) : (
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
-                        className="h-auto px-2.5 py-1 gap-1.5 bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 text-xs font-normal rounded-full"
+                        className="h-auto px-2.5 py-1 gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10 text-xs font-normal rounded-full"
                         onClick={async () => {
                           await navigator.clipboard.writeText(kw);
                           toast({ title: `"${kw}" copied`, description: "Paste it into your CV in the Edit tab." });
@@ -612,7 +609,7 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange }: Ats
       {highlightedSection && (
         <div className="fixed bottom-6 right-6 bg-success text-success-foreground px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 animate-in fade-in-0 slide-in-from-bottom-4 duration-300 z-50">
           <ScrollText className="h-4 w-4" />
-          Bullet added to {highlightedSection} — switch to Edit CV tab to review
+          Bullet added to {highlightedSection} — switch to ATS CV Editor tab to review
         </div>
       )}
     </div>
