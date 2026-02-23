@@ -9,10 +9,13 @@ import { extractTextFromFile } from "@/lib/fileParser";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import type { CvDataModel } from "@/lib/cvDataModel";
+import { aiParsedCvToModel } from "@/lib/cvDataModel";
 
 interface InputSectionProps {
   onSubmit: (cvContent: string, jobDescription: string) => void;
   onClear?: () => void;
+  onCvParsed?: (model: CvDataModel) => void;
   loading: boolean;
   loadingMessage: string;
 }
@@ -27,7 +30,7 @@ interface SavedCv {
 const MAX_SIZE = 2 * 1024 * 1024;
 const MAX_CVS = 5;
 
-const InputSection = ({ onSubmit, onClear, loading, loadingMessage }: InputSectionProps) => {
+const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage }: InputSectionProps) => {
   const { user } = useAuth();
   const [savedCvs, setSavedCvs] = useState<SavedCv[]>([]);
   const [selectedCvId, setSelectedCvId] = useState<string>("");
@@ -75,7 +78,7 @@ const InputSection = ({ onSubmit, onClear, loading, loadingMessage }: InputSecti
     }
   };
 
-  // Upload new CV
+  // Upload new CV: extract text → call parse-cv → upload to storage → save to DB
   const handleUploadNewCv = async (file: File) => {
     if (savedCvs.length >= MAX_CVS) {
       toast({ title: "CV limit reached", description: `Remove a CV before adding new ones (${MAX_CVS} max).`, variant: "destructive" });
@@ -93,20 +96,65 @@ const InputSection = ({ onSubmit, onClear, loading, loadingMessage }: InputSecti
 
     setUploading(true);
     try {
-      const text = await extractTextFromFile(file);
+      // 1. Extract raw text client-side
+      const rawText = await extractTextFromFile(file);
+
+      // 2. Call parse-cv edge function for AI-structured parsing
+      let aiModel: CvDataModel | null = null;
+      try {
+        const { data: parseData, error: parseError } = await supabase.functions.invoke("parse-cv", {
+          body: { rawText },
+        });
+        if (parseError) throw parseError;
+        if (parseData?.cvData) {
+          aiModel = aiParsedCvToModel(parseData.cvData);
+        }
+      } catch (parseErr: any) {
+        console.error("parse-cv failed, falling back to local parser:", parseErr);
+        toast({ title: "AI parsing unavailable", description: "Using local parser instead.", variant: "default" });
+      }
+
+      // 3. Upload original file to storage bucket
+      let fileUrl: string | null = null;
+      try {
+        const storagePath = `${user!.id}/${Date.now()}_${file.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from("cvs")
+          .upload(storagePath, file, { contentType: file.type, upsert: false });
+        if (!uploadError) {
+          const { data: urlData } = supabase.storage.from("cvs").getPublicUrl(storagePath);
+          fileUrl = urlData?.publicUrl || null;
+        }
+      } catch {
+        // Storage upload is best-effort, don't block the flow
+      }
+
+      // 4. Insert row in cvs table
       const { data, error } = await supabase
         .from("cvs")
-        .insert({ user_id: user!.id, name: file.name, parsed_text: text } as any)
+        .insert({
+          user_id: user!.id,
+          name: file.name,
+          parsed_text: rawText,
+          file_url: fileUrl,
+        } as any)
         .select("id, name, parsed_text, created_at")
         .single();
       if (error) throw error;
+
       setSavedCvs((prev) => [data, ...prev]);
       setSelectedCvId(data.id);
       setCvText(data.parsed_text);
       setCvName(data.name);
+
+      // 5. If AI model available, pass it up to pre-fill the ATS editor
+      if (aiModel && onCvParsed) {
+        onCvParsed(aiModel);
+      }
+
       toast({ title: "CV saved!", description: `${file.name} added to your library.` });
     } catch (err: any) {
-      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+      toast({ title: "Parsing failed, try again", description: err.message, variant: "destructive" });
     } finally {
       setUploading(false);
       if (cvInputRef.current) cvInputRef.current.value = "";
@@ -131,7 +179,6 @@ const InputSection = ({ onSubmit, onClear, loading, loadingMessage }: InputSecti
     toast({ title: "CV removed" });
   };
 
-  // JD file upload
   const handleJdFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
@@ -278,7 +325,7 @@ const InputSection = ({ onSubmit, onClear, loading, loadingMessage }: InputSecti
             disabled={uploading || savedCvs.length >= MAX_CVS}
           >
             {uploading ? (
-              <><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Parsing...</>
+              <><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Parsing with AI...</>
             ) : (
               <><Plus className="h-3 w-3 mr-1" /> Upload New PDF/Docx</>
             )}

@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
 import type { TailorResult } from "@/lib/types";
-import { parseCvToModel, cvModelToPlainText } from "@/lib/cvDataModel";
+import { parseCvToModel, cvModelToPlainText, aiParsedCvToModel } from "@/lib/cvDataModel";
 import type { CvDataModel } from "@/lib/cvDataModel";
 
 const LOADING_STEPS = [
@@ -36,6 +36,7 @@ const Index = () => {
   // CV data model state
   const [cvModel, setCvModel] = useState<CvDataModel | null>(null);
   const [originalCvModel, setOriginalCvModel] = useState<CvDataModel | null>(null);
+  const [preParsedModel, setPreParsedModel] = useState<CvDataModel | null>(null);
   const [isDirty, setIsDirty] = useState(false);
 
   // Suggestion tracking
@@ -264,10 +265,11 @@ const Index = () => {
     setDismissedSuggestions([]);
     undoStackRef.current = [];
 
-    // Parse raw CV into data model — this is the ONLY initial model (no auto-apply)
-    const parsed = parseCvToModel(cvContent);
+    // Use AI-parsed model if available, otherwise fall back to local parser
+    const parsed = preParsedModel || parseCvToModel(cvContent);
     setCvModel(parsed);
     setOriginalCvModel(parsed);
+    setPreParsedModel(null); // consumed
     setIsDirty(false);
 
     let stepIndex = 0;
@@ -332,6 +334,7 @@ const Index = () => {
         <InputSection
           onSubmit={handleSubmit}
           onClear={() => { setResult(null); downloadCountRef.current = 0; }}
+          onCvParsed={(model) => setPreParsedModel(model)}
           loading={loading}
           loadingMessage={loadingMessage}
         />

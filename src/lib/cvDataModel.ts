@@ -360,6 +360,39 @@ export function reformattedCvToModel(cv: ReformattedCv): CvDataModel {
   };
 }
 
+// ─── Convert parse-cv edge function response to CvDataModel ────
+
+export function aiParsedCvToModel(cvData: any): CvDataModel {
+  const contact = [
+    cvData.contact?.email,
+    cvData.contact?.phone,
+    cvData.contact?.location,
+    cvData.contact?.linkedin,
+  ].filter(Boolean).join(" | ");
+
+  return {
+    name: cvData.name || "",
+    contact,
+    summary: cvData.summary || "",
+    experience: (cvData.experience || []).map((e: any) => ({
+      role: e.title || "",
+      company: e.company || "",
+      dates: e.dates || "",
+      bullets: e.bullets || [],
+    })),
+    education: (cvData.education || []).map((e: any) => ({
+      degree: e.degree || "",
+      university: e.school || "",
+      dates: e.dates || "",
+      coursework: e.coursework || "",
+    })),
+    skills: cvData.skills || "",
+    projects: [],
+    certifications: cvData.certifications || [],
+    awards: [],
+  };
+}
+
 // ─── Serialize model to plain text (for ATS score, clipboard) ────
 
 export function cvModelToPlainText(model: CvDataModel): string {
