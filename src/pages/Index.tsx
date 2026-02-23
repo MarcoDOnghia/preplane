@@ -148,69 +148,55 @@ const Index = () => {
 
   // --- Suggestion handlers (opt-in only) ---
   const applySuggestionToModel = (model: CvDataModel, original: string, suggested: string): CvDataModel => {
-    const plainText = cvModelToPlainText(model);
-    // Try to find which field contains the original text and replace it
     const clone: CvDataModel = JSON.parse(JSON.stringify(model));
+    // Use first 50 chars for fuzzy partial matching
+    const matchPrefix = original.slice(0, 50).toLowerCase();
+
+    // Helper: check if a string fuzzy-matches the original
+    const fuzzyMatch = (text: string) => text.toLowerCase().includes(matchPrefix);
 
     // Check summary
-    if (clone.summary.includes(original)) {
-      clone.summary = clone.summary.replace(original, suggested);
+    if (fuzzyMatch(clone.summary)) {
+      clone.summary = suggested;
       return clone;
     }
 
-    // Check experience bullets
+    // Check experience bullets & role
     for (const exp of clone.experience) {
       for (let j = 0; j < exp.bullets.length; j++) {
-        if (exp.bullets[j].includes(original)) {
-          exp.bullets[j] = exp.bullets[j].replace(original, suggested);
+        if (fuzzyMatch(exp.bullets[j])) {
+          exp.bullets[j] = suggested; // replace in-place, not append
           return clone;
         }
       }
-      // Check role/company
-      if (exp.role.includes(original)) { exp.role = exp.role.replace(original, suggested); return clone; }
+      if (fuzzyMatch(exp.role)) { exp.role = suggested; return clone; }
     }
 
-    // Check skills
-    if (clone.skills.includes(original)) {
-      clone.skills = clone.skills.replace(original, suggested);
+    // Check skills — replace entirely
+    if (fuzzyMatch(clone.skills)) {
+      clone.skills = suggested;
       return clone;
     }
 
     // Check education
     for (const edu of clone.education) {
-      if (edu.degree.includes(original)) { edu.degree = edu.degree.replace(original, suggested); return clone; }
-      if (edu.coursework.includes(original)) { edu.coursework = edu.coursework.replace(original, suggested); return clone; }
+      if (fuzzyMatch(edu.degree)) { edu.degree = suggested; return clone; }
+      if (fuzzyMatch(edu.coursework)) { edu.coursework = suggested; return clone; }
     }
 
     // Check projects
     for (const proj of clone.projects) {
       for (let j = 0; j < proj.bullets.length; j++) {
-        if (proj.bullets[j].includes(original)) {
-          proj.bullets[j] = proj.bullets[j].replace(original, suggested);
+        if (fuzzyMatch(proj.bullets[j])) {
+          proj.bullets[j] = suggested;
           return clone;
         }
       }
     }
 
-    // Fuzzy: case-insensitive match across plain text
-    const lowerOriginal = original.toLowerCase();
-    // Try experience bullets fuzzy
-    for (const exp of clone.experience) {
-      for (let j = 0; j < exp.bullets.length; j++) {
-        if (exp.bullets[j].toLowerCase().includes(lowerOriginal)) {
-          const idx = exp.bullets[j].toLowerCase().indexOf(lowerOriginal);
-          exp.bullets[j] = exp.bullets[j].slice(0, idx) + suggested + exp.bullets[j].slice(idx + original.length);
-          return clone;
-        }
-      }
-    }
-
-    // Fallback: append as a new bullet in the first experience entry
-    if (clone.experience.length > 0) {
-      clone.experience[0].bullets.push(suggested);
-    } else {
-      clone.summary = clone.summary + " " + suggested;
-    }
+    // Final fallback: replace summary (do NOT add new bullets)
+    console.warn("Suggestion match not found, replacing summary as fallback");
+    clone.summary = suggested;
     return clone;
   };
 
