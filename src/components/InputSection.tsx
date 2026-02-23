@@ -47,9 +47,25 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage }
   const jdInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  // Parse saved CV text into model and pass up
-  const parseAndNotify = useCallback((rawText: string) => {
+  // Parse saved CV text into model via AI (with local fallback) and pass up
+  const parseAndNotify = useCallback(async (rawText: string) => {
     if (!rawText || !onCvParsed) return;
+    try {
+      // Try AI parse first (same pipeline as fresh upload)
+      const { data: parseData, error: parseError } = await supabase.functions.invoke("parse-cv", {
+        body: { rawText },
+      });
+      if (!parseError && parseData?.cvData) {
+        const aiModel = aiParsedCvToModel(parseData.cvData);
+        const hasContent = aiModel.name.length > 0 || aiModel.experience.length > 0 || aiModel.education.length > 0 || aiModel.skills.length > 0;
+        if (hasContent) {
+          onCvParsed(aiModel);
+          return;
+        }
+      }
+    } catch {
+      // AI parse failed — fall through to local
+    }
     try {
       const model = parseCvToModel(rawText);
       onCvParsed(model);
