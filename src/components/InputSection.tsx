@@ -152,8 +152,8 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage }
           .from("cvs")
           .upload(storagePath, file, { contentType: file.type, upsert: false });
         if (!uploadError) {
-          const { data: urlData } = supabase.storage.from("cvs").getPublicUrl(storagePath);
-          fileUrl = urlData?.publicUrl || null;
+          // Bucket is private — store the path for signed URL generation later
+          fileUrl = storagePath;
         }
       } catch {
         // Storage upload is best-effort, don't block the flow
