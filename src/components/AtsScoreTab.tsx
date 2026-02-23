@@ -29,6 +29,7 @@ interface AtsScoreTabProps {
   jobDescription?: string;
   onCvChange?: (html: string) => void;
   onAddKeywordBullet?: (keyword: string, bullet: string, sectionHint: string) => void;
+  addedKeywords?: Set<string>;
 }
 
 interface GeneratedBullet {
@@ -41,11 +42,12 @@ interface GeneratedBullet {
 const TARGET_SCORE = 90;
 const SCORE_DEBOUNCE_MS = 500;
 
-const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, onAddKeywordBullet }: AtsScoreTabProps) => {
+const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, onAddKeywordBullet, addedKeywords: parentAddedKeywords }: AtsScoreTabProps) => {
   const { score, keywordsFound, keywordsMissing, formattingIssues, quickWins } = atsAnalysis;
   const [loadingKeyword, setLoadingKeyword] = useState<string | null>(null);
   const [previews, setPreviews] = useState<Record<string, GeneratedBullet>>({});
-  const [addedKeywords, setAddedKeywords] = useState<Set<string>>(new Set());
+  // Use parent-provided addedKeywords (persistent across tab switches), fallback to empty set
+  const addedKeywords = parentAddedKeywords || new Set<string>();
   const [fixingFormat, setFixingFormat] = useState(false);
   const [animatedScore, setAnimatedScore] = useState(score);
   const [highlightedSection, setHighlightedSection] = useState<string | null>(null);
@@ -70,32 +72,13 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, onAdd
     return () => clearInterval(timer);
   }, [score]);
 
-  // BUG 4: Reset addedKeywords when live keywords change (CV was edited)
-  const prevMissingRef = useRef(keywordsMissing);
-  useEffect(() => {
-    // If missing keywords changed (due to CV update), clear stale tracking
-    if (prevMissingRef.current !== keywordsMissing) {
-      prevMissingRef.current = keywordsMissing;
-      // Remove from addedKeywords any keyword that is now in found (already detected by live scoring)
-      setAddedKeywords((prev) => {
-        const next = new Set(prev);
-        for (const kw of prev) {
-          if (!keywordsMissing.map(k => k.toLowerCase()).includes(kw)) {
-            next.delete(kw);
-          }
-        }
-        return next;
-      });
-    }
-  }, [keywordsMissing]);
-
-  // Effective missing: from props minus already-added ones that haven't been picked up by rescan yet
+  // Effective missing: from live props minus added keywords not yet picked up by live scoring
   const effectiveMissing = useMemo(
     () => keywordsMissing.filter((kw) => !addedKeywords.has(kw.toLowerCase())),
     [keywordsMissing, addedKeywords]
   );
 
-  // Effective found: from props plus added ones
+  // Effective found: from live props plus added ones
   const effectiveFound = useMemo(() => {
     const fromProps = new Set(keywordsFound.map((k) => k.toLowerCase()));
     addedKeywords.forEach((k) => fromProps.add(k));
@@ -242,8 +225,7 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, onAdd
       onCvChange(newCv);
     }
 
-    // Track as added
-    setAddedKeywords((prev) => new Set(prev).add(keyword.toLowerCase()));
+    // addedKeywords is now managed by parent via onAddKeywordBullet
 
     // Clear preview
     setPreviews((prev) => {
