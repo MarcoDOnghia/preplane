@@ -55,6 +55,7 @@ interface ResultsSectionProps {
   onUndoSuggestion: (index: number) => void;
   onApplyHighPriority: () => void;
   onAddKeywordBullet?: (keyword: string, bullet: string, sectionHint: string) => void;
+  appliedKeywordBullets?: string[];
 }
 
 const PRIORITY_COLORS: Record<string, string> = {
@@ -81,6 +82,7 @@ const ResultsSection = ({
   onUndoSuggestion,
   onApplyHighPriority,
   onAddKeywordBullet,
+  appliedKeywordBullets = [],
 }: ResultsSectionProps) => {
   const [selectedCoverLetterIndex, setSelectedCoverLetterIndex] = useState(0);
   const [selectedCoverLetter, setSelectedCoverLetter] = useState(
@@ -134,12 +136,30 @@ const ResultsSection = ({
     return Math.min(100, Math.round((totalKeywords / totalKeywords) * 100));
   }, [liveAts, jobDescription, cvPlainText]);
 
+  // BUG 5: Filter out AI suggestions that overlap >60% with applied keyword bullets
+  const wordOverlap = (a: string, b: string): number => {
+    const wordsA = a.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+    const wordsB = new Set(b.toLowerCase().split(/\s+/).filter(w => w.length > 3));
+    if (wordsA.length === 0) return 0;
+    const matched = wordsA.filter(w => wordsB.has(w)).length;
+    return matched / wordsA.length;
+  };
+
   const visibleSuggestions = useMemo(() => {
     return result.cvSuggestions
       .map((s, i) => ({ ...s, originalIndex: i }))
       .filter((_, i) => !dismissedSuggestions.includes(i))
+      .filter((s) => {
+        // Skip if overlaps >60% with any applied keyword bullet
+        if (appliedKeywordBullets.length > 0) {
+          for (const kb of appliedKeywordBullets) {
+            if (wordOverlap(s.suggested, kb) > 0.6) return false;
+          }
+        }
+        return true;
+      })
       .filter((s) => (priorityFilter ? s.priority === priorityFilter : true));
-  }, [result.cvSuggestions, dismissedSuggestions, priorityFilter]);
+  }, [result.cvSuggestions, dismissedSuggestions, priorityFilter, appliedKeywordBullets]);
 
   const totalActive = result.cvSuggestions.length - dismissedSuggestions.length;
 
@@ -205,13 +225,13 @@ const ResultsSection = ({
       <Tabs defaultValue="ats-editor" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="ats-editor" className="font-semibold">
-            ✏️ ATS CV Editor
+            ✏️ CV Editor
           </TabsTrigger>
           <TabsTrigger value="ats-score">ATS Score</TabsTrigger>
           <TabsTrigger value="cover-letters">Cover Letters</TabsTrigger>
         </TabsList>
 
-        {/* ATS CV Editor: two-column layout, no suggestions here */}
+        {/* CV Editor: two-column layout, no suggestions here */}
         <TabsContent value="ats-editor" className="mt-4">
           <div className="grid grid-cols-1 md:grid-cols-[30%_1fr] gap-4">
             {/* Left: Job Requirements & Keywords panel */}
