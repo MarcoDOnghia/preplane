@@ -61,21 +61,36 @@ const SECTION_MAP: Record<string, string> = {
   summary: "summary",
   "professional summary": "summary",
   "profile summary": "summary",
+  "executive summary": "summary",
   objective: "summary",
   about: "summary",
+  "about me": "summary",
+  profile: "summary",
   experience: "experience",
   "professional experience": "experience",
   "work experience": "experience",
+  "employment history": "experience",
+  "work history": "experience",
   education: "education",
+  "academic background": "education",
   skills: "skills",
   "technical skills": "skills",
+  "core competencies": "skills",
+  "key skills": "skills",
+  "competencies": "skills",
+  "areas of expertise": "skills",
   projects: "projects",
   "project experience": "projects",
+  "personal projects": "projects",
   certifications: "certifications",
   certificates: "certifications",
+  "licenses and certifications": "certifications",
   awards: "awards",
   "honors & awards": "awards",
   "honors and awards": "awards",
+  "achievements": "awards",
+  languages: "skills",
+  interests: "summary",
 };
 
 function classifySection(line: string): string | null {
@@ -391,15 +406,6 @@ export function aiParsedCvToModel(cvData: any): CvDataModel {
     certifications: cvData.certifications || [],
     awards: [],
   };
-
-  console.log("[aiParsedCvToModel] mapped:", {
-    name: model.name,
-    contact: model.contact,
-    experienceCount: model.experience.length,
-    experienceRoles: model.experience.map((e) => e.role),
-    educationCount: model.education.length,
-    skillsPreview: model.skills?.slice(0, 100),
-  });
 
   return model;
 }

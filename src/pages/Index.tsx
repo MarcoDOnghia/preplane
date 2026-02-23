@@ -42,13 +42,6 @@ const Index = () => {
   // Sync preParsedModel into editor state whenever it's set (from CV upload)
   useEffect(() => {
     if (preParsedModel) {
-      console.log("[CV] preParsedModel received:", {
-        name: preParsedModel.name,
-        experienceCount: preParsedModel.experience.length,
-        educationCount: preParsedModel.education.length,
-        skills: preParsedModel.skills?.slice(0, 80),
-        summary: preParsedModel.summary?.slice(0, 80),
-      });
       setCvModel(preParsedModel);
       setOriginalCvModel(preParsedModel);
       setIsDirty(false);

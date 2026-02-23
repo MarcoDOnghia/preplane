@@ -3,8 +3,6 @@ import mammoth from "mammoth";
 export async function extractTextFromFile(file: File): Promise<string> {
   const extension = file.name.split(".").pop()?.toLowerCase();
 
-  console.log("[FileParser] Extracting text from:", file.name, "type:", file.type, "size:", file.size);
-
   let text = "";
   if (extension === "docx") {
     text = await extractFromDocx(file);
@@ -13,9 +11,6 @@ export async function extractTextFromFile(file: File): Promise<string> {
   } else {
     throw new Error("Unsupported file type. Please upload a .pdf or .docx file.");
   }
-
-  console.log("[FileParser] Extracted text length:", text.length);
-  console.log("[FileParser] First 300 chars:", text.substring(0, 300));
 
   if (!text || text.trim().length < 20) {
     throw new Error("Could not extract text from file. The file may be scanned/image-based. Please try a different format.");
@@ -33,19 +28,14 @@ async function extractFromDocx(file: File): Promise<string> {
 async function extractFromPdf(file: File): Promise<string> {
   const pdfjsLib = await import("pdfjs-dist");
   
-  // Use Vite's ?url import for the worker
   const workerUrl = new URL(
     "pdfjs-dist/build/pdf.worker.min.mjs",
     import.meta.url
   ).toString();
   pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl;
 
-  console.log("[FileParser] PDF worker URL:", workerUrl);
-
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
-  
-  console.log("[FileParser] PDF pages:", pdf.numPages);
   
   const textParts: string[] = [];
 
@@ -73,12 +63,10 @@ async function extractFromPdf(file: File): Promise<string> {
     for (const item of sorted) {
       const y = item.transform[5];
       if (Math.abs(y - lastY) > 3) {
-        // New line
         if (currentLine.trim()) lines.push(currentLine.trim());
         currentLine = item.str;
         lastY = y;
       } else {
-        // Same line - add space if needed
         if (currentLine && !currentLine.endsWith(" ") && item.str && !item.str.startsWith(" ")) {
           currentLine += " ";
         }
@@ -90,7 +78,5 @@ async function extractFromPdf(file: File): Promise<string> {
     textParts.push(lines.join("\n"));
   }
 
-  const fullText = textParts.join("\n\n");
-  console.log("[FileParser] PDF extracted lines:", fullText.split("\n").length);
-  return fullText;
+  return textParts.join("\n\n");
 }
