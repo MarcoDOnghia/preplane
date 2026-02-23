@@ -135,14 +135,24 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage }
         if (parseError) throw parseError;
         if (parseData?.cvData) {
           aiModel = aiParsedCvToModel(parseData.cvData);
+          // Validate the AI model actually has content — if not, discard it
+          const hasContent = aiModel.name.length > 0 || aiModel.experience.length > 0 || aiModel.education.length > 0 || aiModel.skills.length > 0;
+          if (!hasContent) {
+            console.warn("AI parse returned empty model, falling back to local parser");
+            aiModel = null;
+          } else {
+            console.log("AI parsed model:", { name: aiModel.name, expCount: aiModel.experience.length, eduCount: aiModel.education.length, skillsLen: aiModel.skills.length });
+          }
         }
-      } catch {
+      } catch (err) {
+        console.error("parse-cv edge function failed:", err);
         toast({ title: "AI parsing unavailable", description: "Using local parser instead.", variant: "default" });
       }
 
-      // 2b. If AI failed, use local parser as fallback
+      // 2b. If AI failed or returned empty, use local parser as fallback
       if (!aiModel) {
         aiModel = parseCvToModel(rawText);
+        console.log("Local parsed model:", { name: aiModel.name, expCount: aiModel.experience.length, eduCount: aiModel.education.length, skillsLen: aiModel.skills.length });
       }
 
       // 3. Upload original file to storage bucket
