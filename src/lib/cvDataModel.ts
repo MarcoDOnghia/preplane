@@ -87,7 +87,19 @@ function classifySection(line: string): string | null {
 }
 
 function isContact(line: string): boolean {
-  return [/@/, /\+?\d[\d\s\-()]{6,}/, /linkedin\.com/, /github\.com/].some((p) => p.test(line));
+  // A line is contact info if it contains email, phone, linkedin, github, or location-like separators (|, •, ●)
+  const patterns = [/@/, /\+?\d[\d\s\-()]{6,}/, /linkedin\.com/i, /github\.com/i];
+  if (patterns.some((p) => p.test(line))) return true;
+  // Multi-item contact lines separated by | or • or ● (e.g. "Bologna | marco@gmail.com | +39 123...")
+  const separators = line.split(/\s*[|•●]\s*/);
+  if (separators.length >= 2 && separators.some((s) => patterns.some((p) => p.test(s)))) return true;
+  return false;
+}
+
+function isMultiContactLine(line: string): boolean {
+  // Detects lines like "City | email@x.com | +1 234 567 8900 | linkedin.com/in/x"
+  const sep = line.split(/\s*[|•●]\s*/);
+  return sep.length >= 2;
 }
 
 function isBullet(line: string): boolean {
@@ -134,6 +146,7 @@ export function parseCvToModel(input: string): CvDataModel {
   let currentSection: string | null = null;
   let headerDone = false;
   let contactParts: string[] = [];
+  let nameSet = false;
 
   // Temporary accumulators for structured entries
   let currentExp: CvExperience | null = null;
@@ -156,9 +169,15 @@ export function parseCvToModel(input: string): CvDataModel {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
 
-    // First line = name
-    if (!model.name && !headerDone && !classifySection(line) && !isBullet(line)) {
+    // First line = name (but check if it's actually a contact line or combined name+contact)
+    if (!nameSet && !headerDone && !classifySection(line) && !isBullet(line)) {
+      // If the first line IS contact info (multi-item with email/phone), skip it as name
+      if (isContact(line) && isMultiContactLine(line)) {
+        contactParts.push(line);
+        continue;
+      }
       model.name = line;
+      nameSet = true;
       continue;
     }
 
@@ -296,7 +315,12 @@ export function parseCvToModel(input: string): CvDataModel {
   if (currentSection === "skills") model.skills = skillsParts.join(", ").replace(/, ,/g, ",").trim();
   if (currentSection === "certifications") model.certifications = certParts;
 
-  model.contact = contactParts.join(" ● ");
+  // Join contact parts, normalizing separators to " | "
+  model.contact = contactParts
+    .map((p) => p.trim())
+    .join(" | ")
+    .replace(/\s*[|•●]\s*[|•●]\s*/g, " | ") // clean double separators
+    .trim();
 
   return model;
 }

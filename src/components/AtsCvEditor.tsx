@@ -229,12 +229,20 @@ const AtsCvEditor = ({
             className="text-lg font-bold text-center border-none shadow-none focus-visible:ring-0"
             placeholder="Your Name"
           />
-          <Input
-            value={model.contact}
-            onChange={(e) => set("contact", e.target.value)}
-            className="text-sm text-center text-muted-foreground border-none shadow-none focus-visible:ring-0"
-            placeholder="City ● email@example.com ● +1 234 567 8900"
-          />
+          {model.contact ? (
+            <Input
+              value={model.contact}
+              onChange={(e) => set("contact", e.target.value)}
+              className="text-sm text-center text-muted-foreground border-none shadow-none focus-visible:ring-0"
+            />
+          ) : (
+            <Input
+              value=""
+              onChange={(e) => set("contact", e.target.value)}
+              className="text-sm text-center text-muted-foreground border-none shadow-none focus-visible:ring-0"
+              placeholder="Add contact info (email, phone, location)"
+            />
+          )}
 
           {/* Profile Summary */}
           <SectionLabel>PROFILE SUMMARY</SectionLabel>
@@ -242,7 +250,7 @@ const AtsCvEditor = ({
             value={model.summary}
             onChange={(e) => set("summary", e.target.value)}
             className="text-sm min-h-[60px] resize-none"
-            placeholder="A concise professional summary tailored to the role…"
+            placeholder="Write a tailored summary..."
           />
 
           {/* Professional Experience */}
