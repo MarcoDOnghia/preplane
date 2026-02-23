@@ -260,6 +260,8 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage }
       toast({ title: "Missing input", description: "Select a CV and provide a job description.", variant: "destructive" });
       return;
     }
+    console.log("Full CV text length:", cvText.length);
+    console.log("Full CV text:", cvText);
     onSubmit(cvText, effectiveJd);
   };
 
