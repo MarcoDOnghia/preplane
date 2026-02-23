@@ -370,27 +370,38 @@ export function aiParsedCvToModel(cvData: any): CvDataModel {
     cvData.contact?.linkedin,
   ].filter(Boolean).join(" | ");
 
-  return {
+  const model: CvDataModel = {
     name: cvData.name || "",
     contact,
     summary: cvData.summary || "",
     experience: (cvData.experience || []).map((e: any) => ({
-      role: e.title || "",
+      role: e.title || e.role || "",
       company: e.company || "",
       dates: e.dates || "",
       bullets: e.bullets || [],
     })),
     education: (cvData.education || []).map((e: any) => ({
       degree: e.degree || "",
-      university: e.school || "",
+      university: e.school || e.university || "",
       dates: e.dates || "",
       coursework: e.coursework || "",
     })),
-    skills: cvData.skills || "",
+    skills: Array.isArray(cvData.skills) ? cvData.skills.join(", ") : (cvData.skills || ""),
     projects: [],
     certifications: cvData.certifications || [],
     awards: [],
   };
+
+  console.log("[aiParsedCvToModel] mapped:", {
+    name: model.name,
+    contact: model.contact,
+    experienceCount: model.experience.length,
+    experienceRoles: model.experience.map((e) => e.role),
+    educationCount: model.education.length,
+    skillsPreview: model.skills?.slice(0, 100),
+  });
+
+  return model;
 }
 
 // ─── Serialize model to plain text (for ATS score, clipboard) ────

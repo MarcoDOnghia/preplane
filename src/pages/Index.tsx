@@ -39,6 +39,22 @@ const Index = () => {
   const [preParsedModel, setPreParsedModel] = useState<CvDataModel | null>(null);
   const [isDirty, setIsDirty] = useState(false);
 
+  // Sync preParsedModel into editor state whenever it's set (from CV upload)
+  useEffect(() => {
+    if (preParsedModel) {
+      console.log("[CV] preParsedModel received:", {
+        name: preParsedModel.name,
+        experienceCount: preParsedModel.experience.length,
+        educationCount: preParsedModel.education.length,
+        skills: preParsedModel.skills?.slice(0, 80),
+        summary: preParsedModel.summary?.slice(0, 80),
+      });
+      setCvModel(preParsedModel);
+      setOriginalCvModel(preParsedModel);
+      setIsDirty(false);
+    }
+  }, [preParsedModel]);
+
   // Suggestion tracking
   const [appliedSuggestions, setAppliedSuggestions] = useState<number[]>([]);
   const [dismissedSuggestions, setDismissedSuggestions] = useState<number[]>([]);

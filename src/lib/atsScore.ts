@@ -1,4 +1,4 @@
-import { cvToPlainText } from "./cvParser";
+// No longer importing cvToPlainText — callers now pass plain text directly
 
 /**
  * Client-side ATS score recalculation with synonym-aware, fuzzy keyword matching.
@@ -121,7 +121,7 @@ export function calculateAtsScore(
   jobDescription: string,
   aiKeywords?: string[]
 ): AtsScoreResult {
-  const cvText = cvToPlainText(cvContent).toLowerCase();
+  const cvText = cvContent.toLowerCase();
   const keywords = aiKeywords && aiKeywords.length > 0
     ? aiKeywords
     : extractKeywords(jobDescription);
