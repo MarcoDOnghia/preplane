@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.extract-jd-from-url]
 verify_jwt = false
+
+[functions.parse-cv]
+verify_jwt = false
