@@ -70,6 +70,25 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, onAdd
     return () => clearInterval(timer);
   }, [score]);
 
+  // BUG 4: Reset addedKeywords when live keywords change (CV was edited)
+  const prevMissingRef = useRef(keywordsMissing);
+  useEffect(() => {
+    // If missing keywords changed (due to CV update), clear stale tracking
+    if (prevMissingRef.current !== keywordsMissing) {
+      prevMissingRef.current = keywordsMissing;
+      // Remove from addedKeywords any keyword that is now in found (already detected by live scoring)
+      setAddedKeywords((prev) => {
+        const next = new Set(prev);
+        for (const kw of prev) {
+          if (!keywordsMissing.map(k => k.toLowerCase()).includes(kw)) {
+            next.delete(kw);
+          }
+        }
+        return next;
+      });
+    }
+  }, [keywordsMissing]);
+
   // Effective missing: from props minus already-added ones that haven't been picked up by rescan yet
   const effectiveMissing = useMemo(
     () => keywordsMissing.filter((kw) => !addedKeywords.has(kw.toLowerCase())),
@@ -609,7 +628,7 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, onAdd
       {highlightedSection && (
         <div className="fixed bottom-6 right-6 bg-success text-success-foreground px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 animate-in fade-in-0 slide-in-from-bottom-4 duration-300 z-50">
           <ScrollText className="h-4 w-4" />
-          Bullet added to {highlightedSection} — switch to ATS CV Editor tab to review
+          Bullet added to {highlightedSection} — switch to CV Editor tab to review
         </div>
       )}
     </div>

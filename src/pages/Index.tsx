@@ -51,6 +51,8 @@ const Index = () => {
   // Suggestion tracking
   const [appliedSuggestions, setAppliedSuggestions] = useState<number[]>([]);
   const [dismissedSuggestions, setDismissedSuggestions] = useState<number[]>([]);
+  // Track keyword bullet texts for duplicate detection (Bug 5)
+  const appliedKeywordBulletsRef = useRef<string[]>([]);
 
   // Undo stack: stores snapshots of the model before each change
   const undoStackRef = useRef<CvDataModel[]>([]);
@@ -149,18 +151,30 @@ const Index = () => {
   };
 
   // --- Suggestion handlers (opt-in only) ---
-  const applySuggestionToModel = (model: CvDataModel, original: string, suggested: string): CvDataModel => {
+  const applySuggestionToModel = (model: CvDataModel, original: string, suggested: string, sectionHint?: string): CvDataModel => {
     const clone: CvDataModel = JSON.parse(JSON.stringify(model));
+    const hint = (sectionHint || '').toLowerCase();
     const matchPrefix = original.slice(0, 60).toLowerCase();
-    // BUG 3: Also try shorter prefix without trailing ellipsis for truncated bullets
     const shortPrefix = original.replace(/\.{3,}$/, '').slice(0, 40).toLowerCase();
     const fuzzyMatch = (text: string) => {
       const lower = text.toLowerCase();
       return lower.includes(matchPrefix) || lower.includes(shortPrefix);
     };
 
-    // Check summary
-    if (fuzzyMatch(clone.summary)) {
+    // BUG 3: If section hint targets summary/profile, bypass fuzzy match
+    if (hint.includes('summary') || hint.includes('profile')) {
+      clone.summary = suggested;
+      return clone;
+    }
+
+    // BUG 1: If section hint targets skills, replace directly
+    if (hint.includes('skill')) {
+      clone.skills = suggested;
+      return clone;
+    }
+
+    // Check summary (fuzzy fallback)
+    if (clone.summary && fuzzyMatch(clone.summary)) {
       clone.summary = clone.summary.replace(original, suggested);
       return clone;
     }
@@ -177,11 +191,9 @@ const Index = () => {
       const roleOnly = exp.role.replace(/\s*\(.*$/, '').toLowerCase();
       const origRoleOnly = original.replace(/\s*\(.*$/, '').slice(0, 60).toLowerCase();
       if (roleOnly.includes(origRoleOnly) || exp.role.toLowerCase().includes(matchPrefix)) {
-        // BUG 1: Strip trailing date patterns from suggested text, only update role
         const datePattern = /\s+(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+\d{4}\s*[-–—].*$/i;
         const datePattern2 = /\s+\d{4}\s*[-–—]\s*(?:present|\d{4}).*$/i;
         let cleanRole = suggested.replace(datePattern, '').replace(datePattern2, '').trim();
-        // Also strip company name if appended after dash
         const dashParts = cleanRole.split(/\s*[—–]\s*/);
         if (dashParts.length > 1 && exp.company && dashParts[dashParts.length - 1].toLowerCase().includes(exp.company.toLowerCase())) {
           cleanRole = dashParts.slice(0, -1).join(' — ').trim();
@@ -191,8 +203,8 @@ const Index = () => {
       }
     }
 
-    // Check skills — replace entirely
-    if (fuzzyMatch(clone.skills)) {
+    // Check skills — replace entirely (fuzzy fallback)
+    if (clone.skills && fuzzyMatch(clone.skills)) {
       clone.skills = suggested;
       return clone;
     }
@@ -222,7 +234,7 @@ const Index = () => {
     if (!result || !cvModel) return;
     const s = result.cvSuggestions[index];
     undoStackRef.current = [...undoStackRef.current.slice(-19), cvModel];
-    const newModel = applySuggestionToModel(cvModel, s.original, s.suggested);
+    const newModel = applySuggestionToModel(cvModel, s.original, s.suggested, s.section);
     const newApplied = [...appliedSuggestions, index];
     setCvModel(newModel);
     setAppliedSuggestions(newApplied);
@@ -239,7 +251,7 @@ const Index = () => {
     if (!result || !cvModel) return;
     const s = result.cvSuggestions[index];
     undoStackRef.current = [...undoStackRef.current.slice(-19), cvModel];
-    const newModel = applySuggestionToModel(cvModel, s.suggested, s.original);
+    const newModel = applySuggestionToModel(cvModel, s.suggested, s.original, s.section);
     const newApplied = appliedSuggestions.filter((i) => i !== index);
     setCvModel(newModel);
     setAppliedSuggestions(newApplied);
@@ -256,7 +268,7 @@ const Index = () => {
     let count = 0;
     result.cvSuggestions.forEach((s, i) => {
       if (s.priority === "high" && !newApplied.includes(i) && !dismissedSuggestions.includes(i)) {
-        model = applySuggestionToModel(model, s.original, s.suggested);
+        model = applySuggestionToModel(model, s.original, s.suggested, s.section);
         newApplied.push(i);
         count++;
       }
@@ -268,15 +280,16 @@ const Index = () => {
     toast({ title: `Applied ${count} high-priority suggestion${count !== 1 ? "s" : ""}` });
   };
 
-  // --- Add keyword bullet to CV model (BUG 4: replace best-matching bullet, not append) ---
+  // --- Add keyword bullet to CV model ---
   const handleAddKeywordBullet = (keyword: string, bullet: string, sectionHint: string) => {
     if (!cvModel) return;
     undoStackRef.current = [...undoStackRef.current.slice(-19), cvModel];
     const clone: CvDataModel = JSON.parse(JSON.stringify(cvModel));
     const kwWords = keyword.toLowerCase().split(/\s+/);
+    const bulletLen = bullet.length;
 
-    // Score each bullet across all experience entries by shared word overlap with the keyword
-    let bestScore = -1;
+    // Score each bullet: word overlap + length similarity, deprioritize bullets containing the keyword
+    let bestScore = -Infinity;
     let bestExpIdx = -1;
     let bestBulletIdx = -1;
     let bestBulletKey = '';
@@ -288,10 +301,22 @@ const Index = () => {
         // BUG 5: Skip bullets already replaced by a previous keyword addition
         if (replacedBulletsRef.current.has(bulletKey)) continue;
 
-        const bulletWords = exp.bullets[bi].toLowerCase().split(/\s+/);
+        const bulletText = exp.bullets[bi];
+        const bulletLower = bulletText.toLowerCase();
+        const bulletWords = bulletLower.split(/\s+/);
+
+        // Word overlap score
         const overlap = kwWords.filter(w => bulletWords.some(bw => bw.includes(w) || w.includes(bw))).length;
-        if (overlap > bestScore) {
-          bestScore = overlap;
+
+        // Length similarity score (0-1, higher is better)
+        const lenSimilarity = 1 - Math.abs(bulletText.length - bulletLen) / Math.max(bulletText.length, bulletLen, 1);
+
+        // Deprioritize bullets that already contain the keyword (BUG 2 fix)
+        const alreadyHasKeyword = bulletLower.includes(keyword.toLowerCase()) ? -3 : 0;
+
+        const score = overlap + lenSimilarity + alreadyHasKeyword;
+        if (score > bestScore) {
+          bestScore = score;
           bestExpIdx = ei;
           bestBulletIdx = bi;
           bestBulletKey = bulletKey;
@@ -301,14 +326,15 @@ const Index = () => {
 
     if (bestExpIdx >= 0 && bestBulletIdx >= 0) {
       clone.experience[bestExpIdx].bullets[bestBulletIdx] = bullet;
-      // Track this bullet as replaced
       replacedBulletsRef.current = new Set(replacedBulletsRef.current).add(bestBulletKey);
     } else if (clone.experience.length > 0) {
-      // Fallback: if all bullets are already replaced, append to first experience
       clone.experience[0].bullets.push(bullet);
     } else {
       clone.summary = clone.summary ? `${clone.summary} ${bullet}` : bullet;
     }
+
+    // Track keyword bullet text for duplicate detection (Bug 5)
+    appliedKeywordBulletsRef.current = [...appliedKeywordBulletsRef.current, bullet];
 
     setCvModel(clone);
     setIsDirty(true);
@@ -425,6 +451,7 @@ const Index = () => {
             onUndoSuggestion={handleUndoSuggestion}
             onApplyHighPriority={handleApplyHighPriority}
             onAddKeywordBullet={handleAddKeywordBullet}
+            appliedKeywordBullets={appliedKeywordBulletsRef.current}
           />
         )}
       </main>
