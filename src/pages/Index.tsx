@@ -149,23 +149,20 @@ const Index = () => {
   // --- Suggestion handlers (opt-in only) ---
   const applySuggestionToModel = (model: CvDataModel, original: string, suggested: string): CvDataModel => {
     const clone: CvDataModel = JSON.parse(JSON.stringify(model));
-    // Use first 50 chars for fuzzy partial matching
-    const matchPrefix = original.slice(0, 50).toLowerCase();
-
-    // Helper: check if a string fuzzy-matches the original
+    const matchPrefix = original.slice(0, 60).toLowerCase();
     const fuzzyMatch = (text: string) => text.toLowerCase().includes(matchPrefix);
 
     // Check summary
     if (fuzzyMatch(clone.summary)) {
-      clone.summary = suggested;
+      clone.summary = clone.summary.replace(original, suggested);
       return clone;
     }
 
-    // Check experience bullets & role
+    // Check experience bullets — find by partial match, splice in-place
     for (const exp of clone.experience) {
       for (let j = 0; j < exp.bullets.length; j++) {
         if (fuzzyMatch(exp.bullets[j])) {
-          exp.bullets[j] = suggested; // replace in-place, not append
+          exp.bullets.splice(j, 1, suggested);
           return clone;
         }
       }
@@ -188,15 +185,18 @@ const Index = () => {
     for (const proj of clone.projects) {
       for (let j = 0; j < proj.bullets.length; j++) {
         if (fuzzyMatch(proj.bullets[j])) {
-          proj.bullets[j] = suggested;
+          proj.bullets.splice(j, 1, suggested);
           return clone;
         }
       }
     }
 
-    // Final fallback: replace summary (do NOT add new bullets)
-    console.warn("Suggestion match not found, replacing summary as fallback");
-    clone.summary = suggested;
+    // Fallback: append to first experience
+    if (clone.experience.length > 0) {
+      clone.experience[0].bullets.push(suggested);
+    } else {
+      clone.summary = clone.summary + " " + suggested;
+    }
     return clone;
   };
 
