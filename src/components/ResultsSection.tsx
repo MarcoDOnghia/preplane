@@ -56,6 +56,7 @@ interface ResultsSectionProps {
   onApplyHighPriority: () => void;
   onAddKeywordBullet?: (keyword: string, bullet: string, sectionHint: string) => void;
   appliedKeywordBullets?: string[];
+  addedKeywords?: Set<string>;
 }
 
 const PRIORITY_COLORS: Record<string, string> = {
@@ -83,6 +84,7 @@ const ResultsSection = ({
   onApplyHighPriority,
   onAddKeywordBullet,
   appliedKeywordBullets = [],
+  addedKeywords = new Set<string>(),
 }: ResultsSectionProps) => {
   const [selectedCoverLetterIndex, setSelectedCoverLetterIndex] = useState(0);
   const [selectedCoverLetter, setSelectedCoverLetter] = useState(
@@ -268,6 +270,7 @@ const ResultsSection = ({
             jobDescription={jobDescription}
             onCvChange={() => {}}
             onAddKeywordBullet={onAddKeywordBullet}
+            addedKeywords={addedKeywords}
           />
 
           {/* AI Suggestions panel */}

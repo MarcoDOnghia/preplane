@@ -53,6 +53,8 @@ const Index = () => {
   const [dismissedSuggestions, setDismissedSuggestions] = useState<number[]>([]);
   // Track keyword bullet texts for duplicate detection (Bug 5)
   const appliedKeywordBulletsRef = useRef<string[]>([]);
+  // Persistent added keywords set — survives tab switches, reset only on Reset/new CV
+  const [addedKeywords, setAddedKeywords] = useState<Set<string>>(new Set());
 
   // Undo stack: stores snapshots of the model before each change
   const undoStackRef = useRef<CvDataModel[]>([]);
@@ -144,6 +146,9 @@ const Index = () => {
       setCvModel({ ...originalCvModel });
       setAppliedSuggestions([]);
       setDismissedSuggestions([]);
+      setAddedKeywords(new Set());
+      replacedBulletsRef.current = new Set();
+      appliedKeywordBulletsRef.current = [];
       setIsDirty(true);
       debouncedSave(originalCvModel, []);
       toast({ title: "CV reset to original" });
@@ -336,6 +341,8 @@ const Index = () => {
     // Track keyword bullet text for duplicate detection (Bug 5)
     appliedKeywordBulletsRef.current = [...appliedKeywordBulletsRef.current, bullet];
 
+    // Atomically update addedKeywords AND cvModel together
+    setAddedKeywords((prev) => new Set(prev).add(keyword.toLowerCase()));
     setCvModel(clone);
     setIsDirty(true);
     debouncedSave(clone, appliedSuggestions);
@@ -349,6 +356,9 @@ const Index = () => {
     lastAppIdRef.current = null;
     setAppliedSuggestions([]);
     setDismissedSuggestions([]);
+    setAddedKeywords(new Set());
+    replacedBulletsRef.current = new Set();
+    appliedKeywordBulletsRef.current = [];
     undoStackRef.current = [];
 
     // Use AI-parsed model if available, otherwise fall back to local parser
@@ -452,6 +462,7 @@ const Index = () => {
             onApplyHighPriority={handleApplyHighPriority}
             onAddKeywordBullet={handleAddKeywordBullet}
             appliedKeywordBullets={appliedKeywordBulletsRef.current}
+            addedKeywords={addedKeywords}
           />
         )}
       </main>
