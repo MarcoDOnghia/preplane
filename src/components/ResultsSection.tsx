@@ -54,6 +54,7 @@ interface ResultsSectionProps {
   onDismissSuggestion: (index: number) => void;
   onUndoSuggestion: (index: number) => void;
   onApplyHighPriority: () => void;
+  onAddKeywordBullet?: (keyword: string, bullet: string, sectionHint: string) => void;
 }
 
 const PRIORITY_COLORS: Record<string, string> = {
@@ -79,6 +80,7 @@ const ResultsSection = ({
   onDismissSuggestion,
   onUndoSuggestion,
   onApplyHighPriority,
+  onAddKeywordBullet,
 }: ResultsSectionProps) => {
   const [selectedCoverLetterIndex, setSelectedCoverLetterIndex] = useState(0);
   const [selectedCoverLetter, setSelectedCoverLetter] = useState(
@@ -209,8 +211,8 @@ const ResultsSection = ({
           <TabsTrigger value="cover-letters">Cover Letters</TabsTrigger>
         </TabsList>
 
-        {/* ATS CV Editor: two-column layout + suggestions below */}
-        <TabsContent value="ats-editor" className="mt-4 space-y-6">
+        {/* ATS CV Editor: two-column layout, no suggestions here */}
+        <TabsContent value="ats-editor" className="mt-4">
           <div className="grid grid-cols-1 md:grid-cols-[30%_1fr] gap-4">
             {/* Left: Job Requirements & Keywords panel */}
             <JdRequirementsPanel
@@ -236,12 +238,23 @@ const ResultsSection = ({
               jobTitle={jobTitle}
             />
           </div>
+        </TabsContent>
 
-          {/* Suggestions panel below the editor */}
+        {/* ATS Score tab — now includes AI Suggestions */}
+        <TabsContent value="ats-score" className="mt-4 space-y-6">
+          <AtsScoreTab
+            atsAnalysis={liveAtsAnalysis}
+            currentCv={cvPlainText}
+            jobDescription={jobDescription}
+            onCvChange={() => {}}
+            onAddKeywordBullet={onAddKeywordBullet}
+          />
+
+          {/* AI Suggestions panel */}
           {result.cvSuggestions.length > 0 && (
             <div className="space-y-4">
               <div className="flex items-center justify-between flex-wrap gap-2">
-                <h3 className="text-lg font-semibold">AI Suggestions</h3>
+                <h3 className="text-lg font-bold">AI Suggestions</h3>
                 <div className="flex gap-2 flex-wrap items-center">
                   <Button size="sm" variant={priorityFilter === null ? "default" : "outline"} onClick={() => setPriorityFilter(null)}>
                     All ({totalActive})
@@ -290,16 +303,6 @@ const ResultsSection = ({
               )}
             </div>
           )}
-        </TabsContent>
-
-        {/* ATS Score tab */}
-        <TabsContent value="ats-score" className="mt-4">
-          <AtsScoreTab
-            atsAnalysis={liveAtsAnalysis}
-            currentCv={cvPlainText}
-            jobDescription={jobDescription}
-            onCvChange={() => {}}
-          />
         </TabsContent>
 
         {/* Cover Letters tab */}

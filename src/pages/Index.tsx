@@ -166,7 +166,12 @@ const Index = () => {
           return clone;
         }
       }
-      if (fuzzyMatch(exp.role)) { exp.role = suggested; return clone; }
+      if (fuzzyMatch(exp.role)) {
+        // Strip trailing date patterns to avoid merging role + dates
+        const datePattern = /\s+(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{4}\s*[-–—].*$/i;
+        exp.role = suggested.replace(datePattern, '').trim();
+        return clone;
+      }
     }
 
     // Check skills — replace entirely
@@ -244,6 +249,35 @@ const Index = () => {
     setIsDirty(true);
     debouncedSave(model, newApplied);
     toast({ title: `Applied ${count} high-priority suggestion${count !== 1 ? "s" : ""}` });
+  };
+
+  // --- Add keyword bullet to CV model ---
+  const handleAddKeywordBullet = (keyword: string, bullet: string, sectionHint: string) => {
+    if (!cvModel) return;
+    undoStackRef.current = [...undoStackRef.current.slice(-19), cvModel];
+    const clone: CvDataModel = JSON.parse(JSON.stringify(cvModel));
+    const hint = sectionHint.toLowerCase();
+
+    // Find the most relevant experience entry
+    let targetExp = clone.experience[0];
+    for (const exp of clone.experience) {
+      if (exp.role.toLowerCase().includes(hint) || exp.company.toLowerCase().includes(hint)) {
+        targetExp = exp;
+        break;
+      }
+    }
+
+    if (targetExp) {
+      targetExp.bullets.push(bullet);
+    } else if (clone.experience.length > 0) {
+      clone.experience[0].bullets.push(bullet);
+    } else {
+      clone.summary = clone.summary ? `${clone.summary} ${bullet}` : bullet;
+    }
+
+    setCvModel(clone);
+    setIsDirty(true);
+    debouncedSave(clone, appliedSuggestions);
   };
 
   // --- Submit ---
@@ -355,6 +389,7 @@ const Index = () => {
             onDismissSuggestion={handleDismissSuggestion}
             onUndoSuggestion={handleUndoSuggestion}
             onApplyHighPriority={handleApplyHighPriority}
+            onAddKeywordBullet={handleAddKeywordBullet}
           />
         )}
       </main>
