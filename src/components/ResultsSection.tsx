@@ -152,10 +152,10 @@ const ResultsSection = ({
       .map((s, i) => ({ ...s, originalIndex: i }))
       .filter((_, i) => !dismissedSuggestions.includes(i))
       .filter((s) => {
-        // Skip if overlaps >60% with any applied keyword bullet
+        // Issue 5: Skip if overlaps >50% with any applied keyword bullet
         if (appliedKeywordBullets.length > 0) {
           for (const kb of appliedKeywordBullets) {
-            if (wordOverlap(s.suggested, kb) > 0.6) return false;
+            if (wordOverlap(s.suggested, kb) > 0.5) return false;
           }
         }
         return true;
@@ -244,7 +244,6 @@ const ResultsSection = ({
               currentScore={liveAts.score}
               projectedScore={projectedScore}
               highPriorityRemaining={highPriorityRemaining}
-              jobDescription={jobDescription}
             />
 
             {/* Right: Editable ATS CV */}
@@ -431,7 +430,6 @@ function JdRequirementsPanel({
   currentScore,
   projectedScore,
   highPriorityRemaining,
-  jobDescription,
 }: {
   requirements: string[];
   matchedKeywords: string[];
@@ -439,7 +437,6 @@ function JdRequirementsPanel({
   currentScore: number;
   projectedScore: number;
   highPriorityRemaining: number;
-  jobDescription: string;
 }) {
   const scoreColor =
     currentScore >= 80 ? "text-success" : currentScore >= 60 ? "text-yellow-500" : "text-destructive";
@@ -531,21 +528,6 @@ function JdRequirementsPanel({
         </CardContent>
       </Card>
 
-      {jobDescription && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
-              <FileText className="h-4 w-4 text-primary" />
-              Job Description
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs text-muted-foreground leading-relaxed line-clamp-[12] whitespace-pre-line">
-              {jobDescription}
-            </p>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

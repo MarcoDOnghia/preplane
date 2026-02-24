@@ -310,10 +310,10 @@ const AtsCvEditor = ({
             <div key={i} className="mb-3 group relative">
               <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-1.5 mb-1">
                 <Input
-                  value={edu.degree}
-                  onChange={(e) => updateEdu(i, { degree: e.target.value })}
+                  value={edu.university}
+                  onChange={(e) => updateEdu(i, { university: e.target.value })}
                   className="text-sm font-semibold"
-                  placeholder="Degree"
+                  placeholder="University"
                 />
                 <Input
                   value={edu.dates}
@@ -323,10 +323,10 @@ const AtsCvEditor = ({
                 />
               </div>
               <Input
-                value={edu.university}
-                onChange={(e) => updateEdu(i, { university: e.target.value })}
+                value={edu.degree}
+                onChange={(e) => updateEdu(i, { degree: e.target.value })}
                 className="text-sm mb-1"
-                placeholder="University"
+                placeholder="Degree"
               />
               <Input
                 value={edu.coursework}
