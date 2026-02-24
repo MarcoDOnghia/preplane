@@ -294,6 +294,20 @@ const Index = () => {
     if (!cvModel) return;
     undoStackRef.current = [...undoStackRef.current.slice(-19), cvModel];
     const clone: CvDataModel = JSON.parse(JSON.stringify(cvModel));
+    const hint = sectionHint.toLowerCase();
+
+    // If the suggestion targets Skills, update the skills field directly
+    if (hint.includes('skill')) {
+      clone.skills = bullet;
+      // Track keyword bullet text for duplicate detection (Bug 5)
+      appliedKeywordBulletsRef.current = [...appliedKeywordBulletsRef.current, bullet];
+      setAddedKeywords((prev) => new Set(prev).add(keyword.toLowerCase()));
+      setCvModel(clone);
+      setIsDirty(true);
+      debouncedSave(clone, appliedSuggestions);
+      return;
+    }
+
     const kwWords = keyword.toLowerCase().split(/\s+/);
     const bulletLen = bullet.length;
 
