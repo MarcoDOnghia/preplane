@@ -239,11 +239,10 @@ const ResultsSection = ({
             {/* Left: Job Requirements & Keywords panel */}
             <JdRequirementsPanel
               requirements={result.keyRequirements}
-              matchedKeywords={liveAts.matchedKeywords}
-              missingKeywords={liveAts.missingKeywords}
               currentScore={liveAts.score}
               projectedScore={projectedScore}
               highPriorityRemaining={highPriorityRemaining}
+              quickWins={liveAtsAnalysis.quickWins || []}
             />
 
             {/* Right: Editable ATS CV */}
@@ -425,18 +424,16 @@ function SuggestionCard({
 
 function JdRequirementsPanel({
   requirements,
-  matchedKeywords,
-  missingKeywords,
   currentScore,
   projectedScore,
   highPriorityRemaining,
+  quickWins,
 }: {
   requirements: string[];
-  matchedKeywords: string[];
-  missingKeywords: string[];
   currentScore: number;
   projectedScore: number;
   highPriorityRemaining: number;
+  quickWins: string[];
 }) {
   const scoreColor =
     currentScore >= 80 ? "text-success" : currentScore >= 60 ? "text-yellow-500" : "text-destructive";
@@ -489,45 +486,26 @@ function JdRequirementsPanel({
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
-            <Sparkles className="h-4 w-4 text-primary" />
-            Keywords ({matchedKeywords.length + missingKeywords.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {matchedKeywords.length > 0 && (
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 font-medium">
-                Matched ({matchedKeywords.length})
-              </p>
-              <div className="flex flex-wrap gap-1">
-                {matchedKeywords.map((kw, i) => (
-                  <Badge key={i} variant="secondary" className="text-[11px] py-0.5 px-2 bg-success/10 text-success border-success/20">
-                    ✓ {kw}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-          {missingKeywords.length > 0 && (
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 font-medium">
-                Missing ({missingKeywords.length})
-              </p>
-              <div className="flex flex-wrap gap-1">
-                {missingKeywords.map((kw, i) => (
-                  <Badge key={i} variant="outline" className="text-[11px] py-0.5 px-2 border-destructive/30 text-destructive">
-                    ✗ {kw}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
+      {quickWins.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
+              <Sparkles className="h-4 w-4 text-primary" />
+              Quick Wins ({quickWins.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-1.5">
+              {quickWins.map((win, i) => (
+                <li key={i} className="flex items-start gap-2 text-xs leading-relaxed">
+                  <TrendingUp className="h-3.5 w-3.5 mt-0.5 shrink-0 text-success" />
+                  {win}
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
