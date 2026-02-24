@@ -58,8 +58,8 @@ export function reformattedCvToHtml(cv: ReformattedCv): string {
   if (cv.education?.length) {
     parts.push(`<h2>EDUCATION</h2>`);
     cv.education.forEach((e) => {
-      parts.push(`<p><strong>${escapeHtml(e.degree)}</strong> ${escapeHtml(e.dates)}</p>`);
-      parts.push(`<p>${escapeHtml(e.university)}</p>`);
+      parts.push(`<p><strong>${escapeHtml(e.university)}</strong> | ${escapeHtml(e.dates)}</p>`);
+      parts.push(`<p>${escapeHtml(e.degree)}</p>`);
       if (e.coursework) {
         parts.push(`<p><strong>Relevant Coursework:</strong> ${escapeHtml(e.coursework)}</p>`);
       }
@@ -155,15 +155,15 @@ export async function exportAtsTemplateCv(cv: ReformattedCv, jobTitle: string) {
       children.push(
         new Paragraph({
           children: [
-            new TextRun({ text: ed.degree, bold: true, size: BODY_SIZE, font: FONT }),
-            new TextRun({ text: `  ${ed.dates}`, italics: true, size: BODY_SIZE, font: FONT }),
+            new TextRun({ text: ed.university, bold: true, size: BODY_SIZE, font: FONT }),
+            new TextRun({ text: ` | ${ed.dates}`, italics: true, size: BODY_SIZE, font: FONT }),
           ],
           spacing: { after: 20 },
         })
       );
       children.push(
         new Paragraph({
-          children: [new TextRun({ text: ed.university, size: BODY_SIZE, font: FONT })],
+          children: [new TextRun({ text: ed.degree, size: BODY_SIZE, font: FONT })],
           spacing: { after: 20 },
         })
       );

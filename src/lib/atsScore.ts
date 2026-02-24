@@ -106,6 +106,31 @@ function extractKeywords(jobDescription: string): string[] {
   return unique.slice(0, 30);
 }
 
+/**
+ * Check if a keyword's component parts (especially parenthesized sub-items) are already
+ * covered in the CV text. E.g. "Microsoft Office (Excel, PowerPoint)" is covered if
+ * both "Excel" and "PowerPoint" appear in the CV.
+ */
+function checkComponentsCovered(keyword: string, cvText: string): boolean {
+  const kw = keyword.toLowerCase();
+  // Extract parenthesized components: "Microsoft Office (Excel, PowerPoint)" → ["Excel", "PowerPoint"]
+  const parenMatch = kw.match(/\(([^)]+)\)/);
+  if (parenMatch) {
+    const components = parenMatch[1].split(/[,;\/]+/).map(s => s.trim()).filter(s => s.length > 1);
+    if (components.length > 0) {
+      const allPresent = components.every(c => cvText.includes(c));
+      if (allPresent) return true;
+    }
+  }
+  // Also check multi-word keywords: if all significant words (>3 chars) appear individually
+  const words = kw.replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(w => w.length > 3);
+  if (words.length >= 2) {
+    const allWordsPresent = words.every(w => cvText.includes(w));
+    if (allWordsPresent) return true;
+  }
+  return false;
+}
+
 export interface AtsScoreResult {
   score: number;
   matchedKeywords: string[];
@@ -137,7 +162,14 @@ export function calculateAtsScore(
     if (matchKeyword(kw, cvText)) {
       matched.push(kw);
     } else {
-      missing.push(kw);
+      // Issue 4: Check if the keyword's component words are all covered semantically
+      // e.g. "Microsoft Office (Excel, PowerPoint)" — if Excel and PowerPoint are in CV, don't mark missing
+      const componentsCovered = checkComponentsCovered(kw, cvText);
+      if (componentsCovered) {
+        matched.push(kw);
+      } else {
+        missing.push(kw);
+      }
     }
   }
 

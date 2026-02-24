@@ -436,8 +436,8 @@ export function cvModelToPlainText(model: CvDataModel): string {
   if (model.education.length) {
     parts.push("EDUCATION");
     model.education.forEach((e) => {
-      parts.push(`${e.degree}${e.dates ? " " + e.dates : ""}`);
-      if (e.university) parts.push(e.university);
+      parts.push(`${e.university}${e.dates ? " | " + e.dates : ""}`);
+      if (e.degree) parts.push(e.degree);
       if (e.coursework) parts.push("Relevant Coursework: " + e.coursework);
       parts.push("");
     });
@@ -510,8 +510,8 @@ export function cvModelToHtml(model: CvDataModel): string {
   if (model.education.length) {
     parts.push(`<h2>EDUCATION</h2>`);
     model.education.forEach((e) => {
-      parts.push(`<p><strong>${esc(e.degree)}</strong>${e.dates ? " " + esc(e.dates) : ""}</p>`);
-      if (e.university) parts.push(`<p>${esc(e.university)}</p>`);
+      parts.push(`<p><strong>${esc(e.university)}</strong>${e.dates ? " | " + esc(e.dates) : ""}</p>`);
+      if (e.degree) parts.push(`<p>${esc(e.degree)}</p>`);
       if (e.coursework) parts.push(`<p><strong>Relevant Coursework:</strong> ${esc(e.coursework)}</p>`);
     });
   }

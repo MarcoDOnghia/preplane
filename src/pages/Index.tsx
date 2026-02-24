@@ -203,6 +203,10 @@ const Index = () => {
         if (dashParts.length > 1 && exp.company && dashParts[dashParts.length - 1].toLowerCase().includes(exp.company.toLowerCase())) {
           cleanRole = dashParts.slice(0, -1).join(' — ').trim();
         }
+        // BUG 3 (issue 3): Strip parenthesized company from role if company already stored separately
+        if (exp.company) {
+          cleanRole = cleanRole.replace(/\s*\([^)]*\)\s*$/, '').trim();
+        }
         exp.role = cleanRole;
         return clone;
       }
@@ -329,13 +333,37 @@ const Index = () => {
       }
     }
 
+    // Issue 6: Before inserting, check for >60% word overlap with existing bullets to replace instead of append
+    const bulletWords = bullet.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+    const wordOverlapCheck = (existing: string): number => {
+      const existingWords = new Set(existing.toLowerCase().split(/\s+/).filter(w => w.length > 3));
+      if (bulletWords.length === 0) return 0;
+      return bulletWords.filter(w => existingWords.has(w)).length / bulletWords.length;
+    };
+
     if (bestExpIdx >= 0 && bestBulletIdx >= 0) {
       clone.experience[bestExpIdx].bullets[bestBulletIdx] = bullet;
       replacedBulletsRef.current = new Set(replacedBulletsRef.current).add(bestBulletKey);
-    } else if (clone.experience.length > 0) {
-      clone.experience[0].bullets.push(bullet);
     } else {
-      clone.summary = clone.summary ? `${clone.summary} ${bullet}` : bullet;
+      // No best match from scoring — check all bullets for >60% overlap before appending
+      let foundOverlap = false;
+      for (const exp of clone.experience) {
+        for (let bi = 0; bi < exp.bullets.length; bi++) {
+          if (wordOverlapCheck(exp.bullets[bi]) > 0.6) {
+            exp.bullets[bi] = bullet;
+            foundOverlap = true;
+            break;
+          }
+        }
+        if (foundOverlap) break;
+      }
+      if (!foundOverlap) {
+        if (clone.experience.length > 0) {
+          clone.experience[0].bullets.push(bullet);
+        } else {
+          clone.summary = clone.summary ? `${clone.summary} ${bullet}` : bullet;
+        }
+      }
     }
 
     // Track keyword bullet text for duplicate detection (Bug 5)
