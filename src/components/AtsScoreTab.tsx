@@ -37,10 +37,58 @@ interface GeneratedBullet {
   section: string;
   isRephrase: boolean;
   confidence: string;
+  sourceBulletKey?: string; // tracks which source bullet this suggestion targets
 }
 
 const TARGET_SCORE = 90;
 const SCORE_DEBOUNCE_MS = 500;
+
+/**
+ * Identify which existing CV bullet a generated suggestion is most likely rephrasing.
+ * Returns a stable key like "expIdx:bulletIdx:first50chars" or null.
+ */
+function findSourceBullet(generatedBullet: string, cvText: string): string | null {
+  // Extract bullets from plain text CV (lines starting with •)
+  const lines = cvText.split('\n');
+  const bullets: { key: string; text: string }[] = [];
+  let expIdx = 0;
+  let bulletIdx = 0;
+  let inExperience = false;
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (/^PROFESSIONAL EXPERIENCE$/i.test(trimmed)) { inExperience = true; expIdx = 0; bulletIdx = 0; continue; }
+    if (/^(EDUCATION|SKILLS|PROJECTS|CERTIFICATIONS|AWARDS|PROFILE SUMMARY)$/i.test(trimmed)) { inExperience = false; continue; }
+    if (inExperience && trimmed.startsWith('•')) {
+      const text = trimmed.replace(/^•\s*/, '');
+      bullets.push({ key: `${expIdx}:${bulletIdx}:${text.slice(0, 50)}`, text });
+      bulletIdx++;
+    } else if (inExperience && !trimmed.startsWith('•') && trimmed.length > 0 && !trimmed.startsWith('—')) {
+      // New experience entry
+      expIdx++;
+      bulletIdx = 0;
+    }
+  }
+
+  if (bullets.length === 0) return null;
+
+  // Score each bullet for overlap with the generated one
+  const genWords = new Set(generatedBullet.toLowerCase().split(/\s+/).filter(w => w.length > 3));
+  let bestKey: string | null = null;
+  let bestScore = -1;
+
+  for (const b of bullets) {
+    const bWords = b.text.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+    if (bWords.length === 0) continue;
+    const overlap = bWords.filter(w => genWords.has(w)).length / bWords.length;
+    if (overlap > bestScore && overlap > 0.2) {
+      bestScore = overlap;
+      bestKey = b.key;
+    }
+  }
+
+  return bestKey;
+}
 
 const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, onAddKeywordBullet, addedKeywords: parentAddedKeywords }: AtsScoreTabProps) => {
   const { score, keywordsFound, keywordsMissing, formattingIssues, quickWins } = atsAnalysis;
@@ -186,7 +234,32 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, onAdd
       });
       if (error) throw error;
       if (data.error) throw new Error(data.error);
-      setPreviews((prev) => ({ ...prev, [keyword]: data }));
+      // Track which source bullet this suggestion targets
+      const sourceBulletKey = currentCv ? findSourceBullet(data.bullet, currentCv) : null;
+      const enrichedData: GeneratedBullet = { ...data, sourceBulletKey: sourceBulletKey || undefined };
+
+      setPreviews((prev) => {
+        const next = { ...prev };
+        // If another preview already targets the same source bullet, keep the higher-confidence one
+        if (sourceBulletKey) {
+          for (const [existingKw, existingPreview] of Object.entries(next)) {
+            if (existingKw !== keyword && existingPreview.sourceBulletKey === sourceBulletKey) {
+              const confOrder = { high: 3, medium: 2, low: 1 };
+              const existingConf = confOrder[existingPreview.confidence as keyof typeof confOrder] || 0;
+              const newConf = confOrder[enrichedData.confidence as keyof typeof confOrder] || 0;
+              if (newConf >= existingConf) {
+                delete next[existingKw]; // remove the lower-confidence duplicate
+              } else {
+                // Existing is better; discard the new one
+                toast({ title: `"${keyword}" targets the same bullet as "${existingKw}"`, description: "Keeping the higher-quality suggestion." });
+                return next;
+              }
+            }
+          }
+        }
+        next[keyword] = enrichedData;
+        return next;
+      });
     } catch (err: any) {
       toast({
         title: "Failed to generate",
@@ -227,10 +300,19 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, onAdd
 
     // addedKeywords is now managed by parent via onAddKeywordBullet
 
-    // Clear preview
+    // Clear this preview AND any other previews targeting the same source bullet
     setPreviews((prev) => {
       const next = { ...prev };
+      const sourceBulletKey = preview.sourceBulletKey;
       delete next[keyword];
+      // Remove other previews targeting the same source bullet
+      if (sourceBulletKey) {
+        for (const [otherKw, otherPreview] of Object.entries(next)) {
+          if (otherPreview.sourceBulletKey === sourceBulletKey) {
+            delete next[otherKw];
+          }
+        }
+      }
       return next;
     });
 
