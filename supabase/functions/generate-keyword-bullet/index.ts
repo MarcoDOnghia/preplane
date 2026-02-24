@@ -47,15 +47,21 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const systemPrompt = `You are an expert CV/resume writer. Given a missing ATS keyword and the user's existing CV, generate a tailored bullet point or short snippet that naturally incorporates this keyword.
+    const systemPrompt = `You are an expert CV/resume writer. Given a missing ATS keyword and the user's existing CV, generate a tailored addition that naturally incorporates this keyword.
 
-Rules:
-1. Pull from the user's ACTUAL experience in their CV — find the most relevant role, project, or skill
+CRITICAL: First classify the keyword into one of two types:
+
+TYPE A — Tool/Software keywords: Named tools, software, platforms, technologies, programming languages, or specific product names (e.g. Microsoft Office, Excel, PowerPoint, Salesforce, HubSpot, Python, SQL, SAP, Tableau, CRM tools, Google Analytics, Jira, Slack).
+→ For these: generate a suggestion to UPDATE THE SKILLS SECTION ONLY. Reformat the existing skills line to explicitly include the tool name. For example, if the CV has "Excel (Financial Modeling)" and the keyword is "Microsoft Office", suggest: "Microsoft Office: Excel (Financial Modeling, Data Analysis), PowerPoint". NEVER generate an experience bullet rephrase for tool keywords. Set section to "Skills" and isRephrase to true.
+
+TYPE B — Skill/Competency keywords: Actions, capabilities, or domain expertise (e.g. lead generation, cold calling, customer service, data analysis, project management, CRM hygiene).
+→ For these: generate a natural experience bullet rephrase. Weave the keyword in naturally mid-sentence, NEVER bolt it on at the start (bad: "Leveraged customer service to..."; good: "Resolved 50+ customer inquiries daily, maintaining a 95% customer service satisfaction rating").
+
+Rules for both types:
+1. Pull from the user's ACTUAL experience in their CV
 2. If the user has related but differently-worded experience, rephrase to include the keyword naturally
-3. If no direct experience match exists, suggest a rephrased version of an existing bullet that could incorporate the keyword (prefix with "Rephrase:")
-4. Use professional, metric-driven language: "Led [action] using [keyword] resulting in [impact]"
-5. Keep it to 1-2 lines maximum
-6. Suggest which CV section it belongs in (Skills, Experience, Education, Summary, etc.)
+3. Keep it to 1-2 lines maximum
+4. Set "section" to either "Skills" (Type A) or the relevant experience section name (Type B)
 
 You MUST call the generate_bullet function with your result.`;
 
@@ -67,7 +73,7 @@ ${(jobDescription || "").slice(0, 3000)}
 User's CV:
 ${cvContent.slice(0, 8000)}
 
-Generate a tailored bullet point incorporating "${keyword}" based on the user's actual experience.`;
+First classify "${keyword}" as a tool/software (Type A) or skill/competency (Type B), then generate the appropriate suggestion.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
