@@ -604,17 +604,6 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, onAdd
                 >
                   Dismiss
                 </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleGenerateBullet(keyword)}
-                  disabled={loadingKeyword === keyword}
-                >
-                  {loadingKeyword === keyword ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
-                  ) : null}
-                  Regenerate
-                </Button>
               </div>
             </CardContent>
           </Card>
@@ -664,7 +653,7 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, onAdd
         </Card>
       )}
 
-      {/* Quick Wins */}
+      {/* Quick Wins — max 3 */}
       {quickWins.length > 0 && (
         <Card className="border-primary/30 bg-primary/5">
           <CardHeader className="pb-3">
@@ -675,7 +664,7 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, onAdd
           </CardHeader>
           <CardContent>
             <ol className="space-y-2">
-              {quickWins.map((win, i) => (
+              {quickWins.slice(0, 3).map((win, i) => (
                 <li key={i} className="flex items-start gap-3 text-sm">
                   <span className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold shrink-0">
                     {i + 1}

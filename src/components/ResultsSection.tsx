@@ -240,7 +240,6 @@ const ResultsSection = ({
             <JdRequirementsPanel
               requirements={result.keyRequirements}
               currentScore={liveAts.score}
-              projectedScore={projectedScore}
               highPriorityRemaining={highPriorityRemaining}
               quickWins={liveAtsAnalysis.quickWins || []}
             />
@@ -280,7 +279,7 @@ const ResultsSection = ({
                   <Button size="sm" variant={priorityFilter === null ? "default" : "outline"} onClick={() => setPriorityFilter(null)}>
                     All ({totalActive})
                   </Button>
-                  {(["high", "medium", "low"] as const).map((p) => {
+                  {(["high", "medium"] as const).map((p) => {
                     const count = result.cvSuggestions.filter(
                       (s, i) => s.priority === p && !dismissedSuggestions.includes(i)
                     ).length;
@@ -379,9 +378,6 @@ function SuggestionCard({
               {suggestion.priority}
             </Badge>
           )}
-          {suggestion.impactScore && (
-            <span className="text-xs text-muted-foreground">Impact: {suggestion.impactScore}/10</span>
-          )}
           <div className="ml-auto flex gap-1.5">
             {isApplied ? (
               <Button size="sm" variant="outline" onClick={onUndo} className="text-xs h-7">
@@ -425,13 +421,11 @@ function SuggestionCard({
 function JdRequirementsPanel({
   requirements,
   currentScore,
-  projectedScore,
   highPriorityRemaining,
   quickWins,
 }: {
   requirements: string[];
   currentScore: number;
-  projectedScore: number;
   highPriorityRemaining: number;
   quickWins: string[];
 }) {
@@ -450,12 +444,6 @@ function JdRequirementsPanel({
         <CardContent className="space-y-3">
           <div className="flex items-end justify-between">
             <span className={`text-3xl font-bold ${scoreColor}`}>{currentScore}%</span>
-            {projectedScore > currentScore && (
-              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                <TrendingUp className="h-3 w-3 text-success" />
-                Projected: {projectedScore}%
-              </span>
-            )}
           </div>
           <Progress value={currentScore} className="h-2" />
           {highPriorityRemaining > 0 && (
@@ -491,12 +479,12 @@ function JdRequirementsPanel({
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
               <Sparkles className="h-4 w-4 text-primary" />
-              Quick Wins ({quickWins.length})
+              Quick Wins
             </CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="space-y-1.5">
-              {quickWins.map((win, i) => (
+              {quickWins.slice(0, 3).map((win, i) => (
                 <li key={i} className="flex items-start gap-2 text-xs leading-relaxed">
                   <TrendingUp className="h-3.5 w-3.5 mt-0.5 shrink-0 text-success" />
                   {win}
