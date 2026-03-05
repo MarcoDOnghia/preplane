@@ -35,7 +35,7 @@ serve(async (req) => {
       });
     }
 
-    const { keyword, cvContent, jobDescription } = await req.json();
+    const { keyword, cvContent, jobDescription, existingBullets } = await req.json();
 
     if (!keyword || !cvContent) {
       return new Response(JSON.stringify({ error: "keyword and cvContent are required" }), {
@@ -62,8 +62,13 @@ Rules for both types:
 2. If the user has related but differently-worded experience, rephrase to include the keyword naturally
 3. Keep it to 1-2 lines maximum
 4. Set "section" to either "Skills" (Type A) or the relevant experience section name (Type B)
+5. Do NOT repeat any metric, percentage, phrase, or achievement that already appears in the existing bullets provided below. Each bullet must add completely new information.
 
 You MUST call the generate_bullet function with your result.`;
+
+    const existingBulletsText = Array.isArray(existingBullets) && existingBullets.length > 0
+      ? `\n\nEXISTING BULLETS in the target experience entry (DO NOT repeat any metric, phrase, or achievement from these):\n${existingBullets.map((b: string, i: number) => `${i + 1}. ${b}`).join('\n')}`
+      : '';
 
     const userPrompt = `Missing keyword: "${keyword}"
 
@@ -71,7 +76,7 @@ Job Description context:
 ${(jobDescription || "").slice(0, 3000)}
 
 User's CV:
-${cvContent.slice(0, 8000)}
+${cvContent.slice(0, 8000)}${existingBulletsText}
 
 First classify "${keyword}" as a tool/software (Type A) or skill/competency (Type B), then generate the appropriate suggestion.`;
 
