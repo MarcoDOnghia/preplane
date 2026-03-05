@@ -66,6 +66,10 @@ const Index = () => {
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { toast } = useToast();
 
+  // Ref to always hold the latest cvModel (fixes stale closure bug)
+  const cvModelRef = useRef<CvDataModel | null>(null);
+  useEffect(() => { cvModelRef.current = cvModel; }, [cvModel]);
+
   // --- Autosave ---
   const saveCvToDb = useCallback(async (model: CvDataModel, applied: number[]) => {
     if (!lastAppIdRef.current) return;
@@ -159,28 +163,72 @@ const Index = () => {
   const applySuggestionToModel = (model: CvDataModel, original: string, suggested: string, sectionHint?: string): CvDataModel => {
     const clone: CvDataModel = JSON.parse(JSON.stringify(model));
     const hint = (sectionHint || '').toLowerCase();
-    const matchPrefix = original.slice(0, 60).toLowerCase();
+    const matchPrefix = original.replace(/\.{3,}$/, '').slice(0, 60).toLowerCase();
     const shortPrefix = original.replace(/\.{3,}$/, '').slice(0, 40).toLowerCase();
+    const veryShortPrefix = original.replace(/\.{3,}$/, '').slice(0, 30).toLowerCase();
     const fuzzyMatch = (text: string) => {
-      const lower = text.toLowerCase();
-      return lower.includes(matchPrefix) || lower.includes(shortPrefix);
+      const lower = text.replace(/\.{3,}$/, '').toLowerCase();
+      return lower.includes(matchPrefix) || lower.includes(shortPrefix) || lower.includes(veryShortPrefix);
     };
 
-    // BUG 3: If section hint targets summary/profile, bypass fuzzy match
+    console.log("APPLY called — original:", original.slice(0, 80));
+    console.log("APPLY called — suggested:", suggested.slice(0, 80));
+    console.log("APPLY called — sectionHint:", sectionHint);
+    console.log("APPLY called — model summary:", model?.summary?.slice(0, 80));
+    console.log("APPLY called — experience count:", model?.experience?.length);
+    console.log("APPLY called — first exp bullets:", model?.experience?.[0]?.bullets);
+
+    // STEP 5: If section hint targets summary/profile, bypass fuzzy match
     if (hint.includes('summary') || hint.includes('profile')) {
+      console.log("MATCH FOUND in summary (hint bypass):", clone.summary?.slice(0, 60));
       clone.summary = suggested;
       return clone;
     }
 
-    // BUG 1: If section hint targets skills, replace directly
+    // STEP 5: If section hint targets skills, replace directly
     if (hint.includes('skill')) {
+      console.log("MATCH FOUND in skills (hint bypass):", clone.skills?.slice(0, 60));
       clone.skills = suggested;
       return clone;
     }
 
+    // STEP 4: If section hint targets education, bypass fuzzy match
+    if (hint.includes('education') || hint.includes('coursework') || hint.includes('degree')) {
+      for (const edu of clone.education) {
+        if (hint.includes('coursework') || hint.includes('relevant')) {
+          console.log("MATCH FOUND in education coursework (hint bypass):", edu.coursework?.slice(0, 60));
+          edu.coursework = suggested;
+          return clone;
+        }
+        if (hint.includes('degree')) {
+          console.log("MATCH FOUND in education degree (hint bypass):", edu.degree?.slice(0, 60));
+          edu.degree = suggested;
+          return clone;
+        }
+        // Generic education hint — try coursework first, then degree
+        if (edu.coursework && fuzzyMatch(edu.coursework)) {
+          console.log("MATCH FOUND in education coursework (fuzzy):", edu.coursework.slice(0, 60));
+          edu.coursework = suggested;
+          return clone;
+        }
+        if (edu.degree && fuzzyMatch(edu.degree)) {
+          console.log("MATCH FOUND in education degree (fuzzy):", edu.degree.slice(0, 60));
+          edu.degree = suggested;
+          return clone;
+        }
+      }
+      // If we have education hint but couldn't match specific field, replace first education's coursework
+      if (clone.education.length > 0) {
+        console.log("MATCH FOUND in education (fallback first entry)");
+        clone.education[0].coursework = suggested;
+        return clone;
+      }
+    }
+
     // Check summary (fuzzy fallback)
     if (clone.summary && fuzzyMatch(clone.summary)) {
-      clone.summary = clone.summary.replace(original, suggested);
+      console.log("MATCH FOUND in summary (fuzzy):", clone.summary.slice(0, 60));
+      clone.summary = suggested;
       return clone;
     }
 
@@ -188,14 +236,16 @@ const Index = () => {
     for (const exp of clone.experience) {
       for (let j = 0; j < exp.bullets.length; j++) {
         if (fuzzyMatch(exp.bullets[j])) {
+          console.log("MATCH FOUND in experience bullet:", exp.bullets[j].slice(0, 60));
           exp.bullets.splice(j, 1, suggested);
           return clone;
         }
       }
-      // BUG 2: Strip parenthesized portion before building match prefix for role
+      // Strip parenthesized portion before building match prefix for role
       const roleOnly = exp.role.replace(/\s*\(.*$/, '').toLowerCase();
       const origRoleOnly = original.replace(/\s*\(.*$/, '').slice(0, 60).toLowerCase();
       if (roleOnly.includes(origRoleOnly) || exp.role.toLowerCase().includes(matchPrefix)) {
+        console.log("MATCH FOUND in experience role:", exp.role.slice(0, 60));
         const datePattern = /\s+(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+\d{4}\s*[-–—].*$/i;
         const datePattern2 = /\s+\d{4}\s*[-–—]\s*(?:present|\d{4}).*$/i;
         let cleanRole = suggested.replace(datePattern, '').replace(datePattern2, '').trim();
@@ -203,7 +253,6 @@ const Index = () => {
         if (dashParts.length > 1 && exp.company && dashParts[dashParts.length - 1].toLowerCase().includes(exp.company.toLowerCase())) {
           cleanRole = dashParts.slice(0, -1).join(' — ').trim();
         }
-        // BUG 3 (issue 3): Strip parenthesized company from role if company already stored separately
         if (exp.company) {
           cleanRole = cleanRole.replace(/\s*\([^)]*\)\s*$/, '').trim();
         }
@@ -214,36 +263,36 @@ const Index = () => {
 
     // Check skills — replace entirely (fuzzy fallback)
     if (clone.skills && fuzzyMatch(clone.skills)) {
+      console.log("MATCH FOUND in skills (fuzzy):", clone.skills.slice(0, 60));
       clone.skills = suggested;
       return clone;
     }
 
-    // Check education
+    // Check education (fuzzy fallback)
     for (const edu of clone.education) {
-      if (fuzzyMatch(edu.degree)) { edu.degree = suggested; return clone; }
-      if (fuzzyMatch(edu.coursework)) { edu.coursework = suggested; return clone; }
-    }
-
-    // Check projects
-    for (const proj of clone.projects) {
-      for (let j = 0; j < proj.bullets.length; j++) {
-        if (fuzzyMatch(proj.bullets[j])) {
-          proj.bullets.splice(j, 1, suggested);
-          return clone;
-        }
+      if (edu.degree && fuzzyMatch(edu.degree)) {
+        console.log("MATCH FOUND in education degree (fuzzy fallback):", edu.degree.slice(0, 60));
+        edu.degree = suggested;
+        return clone;
+      }
+      if (edu.coursework && fuzzyMatch(edu.coursework)) {
+        console.log("MATCH FOUND in education coursework (fuzzy fallback):", edu.coursework.slice(0, 60));
+        edu.coursework = suggested;
+        return clone;
       }
     }
 
     // Fallback: no match found — do not mutate
-    console.warn("Suggestion match not found, returning CV unchanged. Original:", matchPrefix);
+    console.warn("NO MATCH — original prefix was:", original.slice(0, 60));
     return clone;
   };
 
   const handleApplySuggestion = (index: number) => {
-    if (!result || !cvModel) return;
+    const currentModel = cvModelRef.current;
+    if (!result || !currentModel) return;
     const s = result.cvSuggestions[index];
-    undoStackRef.current = [...undoStackRef.current.slice(-19), cvModel];
-    const newModel = applySuggestionToModel(cvModel, s.original, s.suggested, s.section);
+    undoStackRef.current = [...undoStackRef.current.slice(-19), currentModel];
+    const newModel = applySuggestionToModel(currentModel, s.original, s.suggested, s.section);
     const newApplied = [...appliedSuggestions, index];
     setCvModel(newModel);
     setAppliedSuggestions(newApplied);
@@ -257,10 +306,11 @@ const Index = () => {
   };
 
   const handleUndoSuggestion = (index: number) => {
-    if (!result || !cvModel) return;
+    const currentModel = cvModelRef.current;
+    if (!result || !currentModel) return;
     const s = result.cvSuggestions[index];
-    undoStackRef.current = [...undoStackRef.current.slice(-19), cvModel];
-    const newModel = applySuggestionToModel(cvModel, s.suggested, s.original, s.section);
+    undoStackRef.current = [...undoStackRef.current.slice(-19), currentModel];
+    const newModel = applySuggestionToModel(currentModel, s.suggested, s.original, s.section);
     const newApplied = appliedSuggestions.filter((i) => i !== index);
     setCvModel(newModel);
     setAppliedSuggestions(newApplied);
@@ -270,9 +320,10 @@ const Index = () => {
   };
 
   const handleApplyHighPriority = () => {
-    if (!result || !cvModel) return;
-    undoStackRef.current = [...undoStackRef.current.slice(-19), cvModel];
-    let model = cvModel;
+    const currentModel = cvModelRef.current;
+    if (!result || !currentModel) return;
+    undoStackRef.current = [...undoStackRef.current.slice(-19), currentModel];
+    let model = currentModel;
     const newApplied = [...appliedSuggestions];
     let count = 0;
     result.cvSuggestions.forEach((s, i) => {
