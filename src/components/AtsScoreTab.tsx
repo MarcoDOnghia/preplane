@@ -30,6 +30,7 @@ interface AtsScoreTabProps {
   onCvChange?: (html: string) => void;
   onAddKeywordBullet?: (keyword: string, bullet: string, sectionHint: string) => void;
   addedKeywords?: Set<string>;
+  cvModelBullets?: string[][]; // all experience entry bullets for dedup
 }
 
 interface GeneratedBullet {
@@ -90,7 +91,7 @@ function findSourceBullet(generatedBullet: string, cvText: string): string | nul
   return bestKey;
 }
 
-const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, onAddKeywordBullet, addedKeywords: parentAddedKeywords }: AtsScoreTabProps) => {
+const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, onAddKeywordBullet, addedKeywords: parentAddedKeywords, cvModelBullets }: AtsScoreTabProps) => {
   const { score, keywordsFound, keywordsMissing, formattingIssues, quickWins } = atsAnalysis;
   const [loadingKeyword, setLoadingKeyword] = useState<string | null>(null);
   const [previews, setPreviews] = useState<Record<string, GeneratedBullet>>({});
@@ -230,7 +231,7 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, onAdd
     setLoadingKeyword(keyword);
     try {
       const { data, error } = await supabase.functions.invoke("generate-keyword-bullet", {
-        body: { keyword, cvContent: currentCv, jobDescription },
+        body: { keyword, cvContent: currentCv, jobDescription, existingBullets: cvModelBullets ? cvModelBullets.flat() : [] },
       });
       if (error) throw error;
       if (data.error) throw new Error(data.error);

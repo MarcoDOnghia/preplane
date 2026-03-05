@@ -268,6 +268,7 @@ const ResultsSection = ({
             onCvChange={() => {}}
             onAddKeywordBullet={onAddKeywordBullet}
             addedKeywords={addedKeywords}
+            cvModelBullets={cvModel.experience.map(e => e.bullets)}
           />
 
           {/* AI Suggestions panel */}

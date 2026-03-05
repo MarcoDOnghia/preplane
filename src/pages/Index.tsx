@@ -359,70 +359,132 @@ const Index = () => {
       return;
     }
 
-    const kwWords = keyword.toLowerCase().split(/\s+/);
-    const bulletLen = bullet.length;
-
-    // Score each bullet: word overlap + length similarity, deprioritize bullets containing the keyword
-    let bestScore = -Infinity;
-    let bestExpIdx = -1;
-    let bestBulletIdx = -1;
-    let bestBulletKey = '';
-
+    // BUG 1 FIX: Try to match sectionHint against company/role names first
+    let hintMatchedExpIdx = -1;
     for (let ei = 0; ei < clone.experience.length; ei++) {
       const exp = clone.experience[ei];
-      for (let bi = 0; bi < exp.bullets.length; bi++) {
-        const bulletKey = `${ei}:${bi}:${exp.bullets[bi].slice(0, 50)}`;
-        // BUG 5: Skip bullets already replaced by a previous keyword addition
-        if (replacedBulletsRef.current.has(bulletKey)) continue;
-
-        const bulletText = exp.bullets[bi];
-        const bulletLower = bulletText.toLowerCase();
-        const bulletWords = bulletLower.split(/\s+/);
-
-        // Word overlap score
-        const overlap = kwWords.filter(w => bulletWords.some(bw => bw.includes(w) || w.includes(bw))).length;
-
-        // Length similarity score (0-1, higher is better)
-        const lenSimilarity = 1 - Math.abs(bulletText.length - bulletLen) / Math.max(bulletText.length, bulletLen, 1);
-
-        // Deprioritize bullets that already contain the keyword (BUG 2 fix)
-        const alreadyHasKeyword = bulletLower.includes(keyword.toLowerCase()) ? -3 : 0;
-
-        const score = overlap + lenSimilarity + alreadyHasKeyword;
-        if (score > bestScore) {
-          bestScore = score;
-          bestExpIdx = ei;
-          bestBulletIdx = bi;
-          bestBulletKey = bulletKey;
-        }
+      const companyLower = (exp.company || '').toLowerCase();
+      const roleLower = (exp.role || '').toLowerCase();
+      if (companyLower && hint.includes(companyLower)) {
+        hintMatchedExpIdx = ei;
+        break;
+      }
+      if (roleLower && hint.includes(roleLower)) {
+        hintMatchedExpIdx = ei;
+        break;
+      }
+      // Also check if hint words overlap significantly with company/role
+      const hintWords = hint.split(/\s+/).filter(w => w.length > 2);
+      const companyWords = companyLower.split(/\s+/).filter(w => w.length > 2);
+      const roleWords = roleLower.split(/\s+/).filter(w => w.length > 2);
+      const companyMatch = companyWords.length > 0 && companyWords.every(w => hintWords.some(hw => hw.includes(w)));
+      const roleMatch = roleWords.length > 0 && roleWords.every(w => hintWords.some(hw => hw.includes(w)));
+      if (companyMatch || roleMatch) {
+        hintMatchedExpIdx = ei;
+        break;
       }
     }
 
-    // Issue 6: Before inserting, check for >60% word overlap with existing bullets to replace instead of append
-    const bulletWords = bullet.toLowerCase().split(/\s+/).filter(w => w.length > 3);
-    const wordOverlapCheck = (existing: string): number => {
-      const existingWords = new Set(existing.toLowerCase().split(/\s+/).filter(w => w.length > 3));
-      if (bulletWords.length === 0) return 0;
-      return bulletWords.filter(w => existingWords.has(w)).length / bulletWords.length;
-    };
-
-    if (bestExpIdx >= 0 && bestBulletIdx >= 0) {
-      clone.experience[bestExpIdx].bullets[bestBulletIdx] = bullet;
-      replacedBulletsRef.current = new Set(replacedBulletsRef.current).add(bestBulletKey);
-    } else {
-      // No best match from scoring — check all bullets for >60% overlap before appending
-      let foundOverlap = false;
-      for (const exp of clone.experience) {
-        for (let bi = 0; bi < exp.bullets.length; bi++) {
-          if (wordOverlapCheck(exp.bullets[bi]) > 0.6) {
-            exp.bullets[bi] = bullet;
-            foundOverlap = true;
-            break;
+    // BUG 3 FIX: Duplicate phrase detection helper (>5 word phrases)
+    const findDuplicatePhrase = (newBullet: string, existingBullets: string[]): string | null => {
+      const newWords = newBullet.toLowerCase().split(/\s+/);
+      for (const existing of existingBullets) {
+        const existingWords = existing.toLowerCase().split(/\s+/);
+        // Check all 6-word windows in the new bullet against existing
+        for (let i = 0; i <= newWords.length - 6; i++) {
+          const phrase = newWords.slice(i, i + 6).join(' ');
+          const existingText = existingWords.join(' ');
+          if (existingText.includes(phrase)) {
+            return phrase;
           }
         }
-        if (foundOverlap) break;
       }
-      if (!foundOverlap) {
+      return null;
+    };
+
+    // If sectionHint matched a specific experience entry, target it directly
+    if (hintMatchedExpIdx >= 0) {
+      const targetExp = clone.experience[hintMatchedExpIdx];
+      
+      // BUG 3: Check for duplicate phrases before inserting
+      const dupPhrase = findDuplicatePhrase(bullet, targetExp.bullets);
+      if (dupPhrase) {
+        toast({
+          title: "Generated bullet overlaps with existing content",
+          description: `Duplicate phrase: "${dupPhrase}..." — try Regenerate.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Find best bullet to replace within this entry by word overlap
+      const kwWords = keyword.toLowerCase().split(/\s+/);
+      let bestBi = -1;
+      let bestScore = -Infinity;
+      let bestKey = '';
+      for (let bi = 0; bi < targetExp.bullets.length; bi++) {
+        const bulletKey = `${hintMatchedExpIdx}:${bi}:${targetExp.bullets[bi].slice(0, 50)}`;
+        if (replacedBulletsRef.current.has(bulletKey)) continue;
+        const bWords = targetExp.bullets[bi].toLowerCase().split(/\s+/);
+        const overlap = kwWords.filter(w => bWords.some(bw => bw.includes(w) || w.includes(bw))).length;
+        const lenSim = 1 - Math.abs(targetExp.bullets[bi].length - bullet.length) / Math.max(targetExp.bullets[bi].length, bullet.length, 1);
+        const alreadyHas = targetExp.bullets[bi].toLowerCase().includes(keyword.toLowerCase()) ? -3 : 0;
+        const score = overlap + lenSim + alreadyHas;
+        if (score > bestScore) { bestScore = score; bestBi = bi; bestKey = bulletKey; }
+      }
+      if (bestBi >= 0) {
+        targetExp.bullets[bestBi] = bullet;
+        replacedBulletsRef.current = new Set(replacedBulletsRef.current).add(bestKey);
+      } else {
+        targetExp.bullets.push(bullet);
+      }
+    } else {
+      // Fallback: original word-overlap scoring across all entries
+      const kwWords = keyword.toLowerCase().split(/\s+/);
+      const bulletLen = bullet.length;
+      let bestScore = -Infinity;
+      let bestExpIdx = -1;
+      let bestBulletIdx = -1;
+      let bestBulletKey = '';
+
+      for (let ei = 0; ei < clone.experience.length; ei++) {
+        const exp = clone.experience[ei];
+        for (let bi = 0; bi < exp.bullets.length; bi++) {
+          const bulletKey = `${ei}:${bi}:${exp.bullets[bi].slice(0, 50)}`;
+          if (replacedBulletsRef.current.has(bulletKey)) continue;
+          const bulletText = exp.bullets[bi];
+          const bulletLower = bulletText.toLowerCase();
+          const bulletWords = bulletLower.split(/\s+/);
+          const overlap = kwWords.filter(w => bulletWords.some(bw => bw.includes(w) || w.includes(bw))).length;
+          const lenSimilarity = 1 - Math.abs(bulletText.length - bulletLen) / Math.max(bulletText.length, bulletLen, 1);
+          const alreadyHasKeyword = bulletLower.includes(keyword.toLowerCase()) ? -3 : 0;
+          const score = overlap + lenSimilarity + alreadyHasKeyword;
+          if (score > bestScore) {
+            bestScore = score; bestExpIdx = ei; bestBulletIdx = bi; bestBulletKey = bulletKey;
+          }
+        }
+      }
+
+      // Determine target experience index for duplicate check
+      const targetExpIdx = bestExpIdx >= 0 ? bestExpIdx : 0;
+      if (clone.experience[targetExpIdx]) {
+        // BUG 3: Check for duplicate phrases before inserting
+        const otherBullets = clone.experience[targetExpIdx].bullets.filter((_, i) => i !== bestBulletIdx);
+        const dupPhrase = findDuplicatePhrase(bullet, otherBullets);
+        if (dupPhrase) {
+          toast({
+            title: "Generated bullet overlaps with existing content",
+            description: `Duplicate phrase: "${dupPhrase}..." — try Regenerate.`,
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
+      if (bestExpIdx >= 0 && bestBulletIdx >= 0) {
+        clone.experience[bestExpIdx].bullets[bestBulletIdx] = bullet;
+        replacedBulletsRef.current = new Set(replacedBulletsRef.current).add(bestBulletKey);
+      } else {
         if (clone.experience.length > 0) {
           clone.experience[0].bullets.push(bullet);
         } else {
