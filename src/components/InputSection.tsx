@@ -314,7 +314,7 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage }
       {/* Two-column: CV Library (40%) | JD (60%) */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         {/* CV Library */}
-        <div className="md:col-span-2 space-y-3">
+        <div data-cv-library className="md:col-span-2 space-y-3">
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium text-foreground">My CV Library</label>
             <span className="text-xs text-muted-foreground">{savedCvs.length}/{MAX_CVS} used</span>

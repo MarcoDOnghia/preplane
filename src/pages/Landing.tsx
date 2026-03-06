@@ -35,12 +35,6 @@ const FEATURES = [
   },
 ];
 
-const STATS = [
-  { value: "60s", label: "To tailor your CV" },
-  { value: "85%+", label: "Avg job match boost" },
-  { value: "1", label: "Tailored cover letter" },
-];
-
 const FAQ = [
   {
     q: "Is PrepLane free to use?",
@@ -53,15 +47,11 @@ const FAQ = [
   },
   {
     q: "What makes PrepLane different from other AI CV tools?",
-    a: "Most tools just rewrite your CV. PrepLane gives you a job match score, generates a tailored cover letter, tracks all your applications, and analyzes what's working. It's a complete job search system, not just a CV formatter.",
+    a: "Most tools just rewrite your CV. PrepLane gives you a job match score, generates a tailored cover letter, and shows you exactly what to fix — it's a focused CV optimization tool, not just a formatter.",
   },
   {
     q: "Is my data private and secure?",
     a: "Yes. Your CV and applications are encrypted and only visible to you. We use high-level security (AES-256 encryption) and never share your data with third parties. You can delete everything at any time.",
-  },
-  {
-    q: "Can PrepLane help me track my job applications?",
-    a: "Yes! Beyond tailoring, PrepLane tracks every application from \"Applied\" through \"Interview\" to \"Offer.\" You'll see which strategies work best, when to follow up, and get insights on improving your success rate.",
   },
 ];
 
@@ -191,11 +181,11 @@ const Landing = () => {
             AI-Powered CV Tailoring
           </div>
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight max-w-4xl mx-auto leading-tight">
-            Tailor your CV in{" "}
-            <span className="text-primary">60 seconds</span>
+            Land the internship you{" "}
+            <span className="text-primary">actually want</span>
           </h1>
           <p className="mt-6 text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Paste your CV and a job description — get tailored suggestions, a cover letter, and job match scoring. All instantly.
+            Most students apply to 50 jobs and hear nothing. PrepLane helps you build a targeted, compelling application for the roles that matter — and actually get responses.
           </p>
           <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="text-base px-8 gap-2" onClick={() => navigate("/auth")}>
@@ -213,19 +203,6 @@ const Landing = () => {
       {/* App Preview Showcase */}
       <AppPreviewShowcase />
 
-      {/* Stats */}
-      <section className="border-y bg-card/50">
-        <div className="container mx-auto px-4 py-12">
-          <div className="grid grid-cols-3 gap-8">
-            {STATS.map((stat, i) => (
-              <div key={i} className="text-center">
-                <p className="text-3xl md:text-4xl font-bold text-primary">{stat.value}</p>
-                <p className="text-sm text-muted-foreground mt-1">{stat.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Features */}
       <section id="features" className="container mx-auto px-4 py-20 md:py-28">
@@ -235,7 +212,7 @@ const Landing = () => {
             <span className="text-primary">land interviews</span>
           </h2>
           <p className="mt-4 text-muted-foreground max-w-xl mx-auto">
-            A focused toolkit for every stage — from application to offer.
+            Three focused tools to help you stand out and get responses.
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
@@ -301,7 +278,7 @@ const Landing = () => {
               <span className="text-primary">every other applicant</span>?
             </h2>
             <div className="flex flex-wrap gap-3 justify-center text-sm text-muted-foreground">
-              {["AI-powered tailoring", "Job match scoring", "Tailored cover letter", "Application tracking"].map((t) => (
+              {["AI-powered tailoring", "Job match scoring", "Tailored cover letter"].map((t) => (
                 <span key={t} className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 text-primary" /> {t}
                 </span>

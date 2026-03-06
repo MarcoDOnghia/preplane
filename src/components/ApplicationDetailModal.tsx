@@ -3,11 +3,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, FileText, ScrollText, MessageSquare, Clock, DollarSign, Send } from "lucide-react";
-import { exportCoverLetter, exportCvSuggestions, exportInterviewPrep } from "@/lib/exportDoc";
+import { Download, Clock, DollarSign } from "lucide-react";
+import { exportCoverLetter, exportCvSuggestions } from "@/lib/exportDoc";
 import ApplicationTimeline from "./ApplicationTimeline";
-import OutreachTab from "./OutreachTab";
-import InterviewFeedback from "./InterviewFeedback";
 import type { TailorResult } from "@/lib/types";
 
 interface AppRow {
@@ -78,9 +76,9 @@ const ApplicationDetailModal = ({ open, onClose, app, userId }: ApplicationDetai
       formattingIssues: (app.formatting_issues as string[]) || [],
       quickWins: (app.quick_wins as string[]) || [],
     },
-    interviewQuestions: (app.interview_questions as any[]) || [],
-    questionsToAsk: (app.questions_to_ask as string[]) || [],
-    companyBrief: app.company_brief || "",
+    interviewQuestions: [],
+    questionsToAsk: [],
+    companyBrief: "",
   };
 
   return (
@@ -98,7 +96,7 @@ const ApplicationDetailModal = ({ open, onClose, app, userId }: ApplicationDetai
         <div className="flex flex-wrap gap-3 text-sm">
           {app.ats_score > 0 && (
             <Badge variant="outline" className={app.ats_score >= 80 ? "text-green-600 border-green-300" : app.ats_score >= 60 ? "text-yellow-600 border-yellow-300" : "text-destructive border-destructive/30"}>
-              ATS: {app.ats_score}
+              Match: {app.ats_score}
             </Badge>
           )}
           {app.salary_offered && (
@@ -116,13 +114,9 @@ const ApplicationDetailModal = ({ open, onClose, app, userId }: ApplicationDetai
         </div>
 
         <Tabs defaultValue="timeline" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
             <TabsTrigger value="cv">CV & Cover</TabsTrigger>
-            <TabsTrigger value="interview">Interview</TabsTrigger>
-            <TabsTrigger value="outreach">
-              <Send className="h-3 w-3 mr-1" /> Messages
-            </TabsTrigger>
             <TabsTrigger value="details">Details</TabsTrigger>
           </TabsList>
 
@@ -160,51 +154,6 @@ const ApplicationDetailModal = ({ open, onClose, app, userId }: ApplicationDetai
                 </CardContent>
               </Card>
             )}
-          </TabsContent>
-
-          <TabsContent value="interview" className="mt-4 space-y-4">
-            <Button variant="outline" size="sm" onClick={() => exportInterviewPrep(result.interviewQuestions, result.questionsToAsk, result.companyBrief, app.job_title)}>
-              <Download className="h-4 w-4 mr-1" /> Interview Prep
-            </Button>
-            {result.interviewQuestions.length > 0 && (
-              <Card>
-                <CardHeader><CardTitle className="text-base">Interview Questions</CardTitle></CardHeader>
-                <CardContent className="space-y-3">
-                  {result.interviewQuestions.map((q, i) => (
-                    <div key={i} className="border-b last:border-0 pb-3">
-                      <p className="text-sm font-medium">{q.question}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{q.suggestedAnswer}</p>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            )}
-            {result.companyBrief && (
-              <Card>
-                <CardHeader><CardTitle className="text-base">Company Brief</CardTitle></CardHeader>
-                <CardContent>
-                  <p className="text-sm leading-relaxed whitespace-pre-line">{result.companyBrief}</p>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Interview Feedback Logger */}
-            <InterviewFeedback
-              applicationId={app.id}
-              userId={userId}
-              predictedQuestions={result.interviewQuestions.map((q) => q.question)}
-            />
-          </TabsContent>
-
-          <TabsContent value="outreach" className="mt-4">
-            <OutreachTab
-              applicationId={app.id}
-              userId={userId}
-              jobTitle={app.job_title}
-              company={app.company}
-              cvSummary={app.cv_content}
-              appliedDate={app.applied_date}
-            />
           </TabsContent>
 
           <TabsContent value="details" className="mt-4 space-y-4">
