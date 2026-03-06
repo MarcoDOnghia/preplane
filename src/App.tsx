@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
+import NewCampaign from "./pages/NewCampaign";
 import Onboarding from "./pages/Onboarding";
 import Campaign from "./pages/Campaign";
 import ResetPassword from "./pages/ResetPassword";
@@ -22,6 +23,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<RootRedirect />} />
           <Route path="/app" element={<Index />} />
+          <Route path="/app/new" element={<NewCampaign />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/campaign/:id" element={<Campaign />} />
           <Route path="/auth" element={<Navigate to="/onboarding?step=4" replace />} />
