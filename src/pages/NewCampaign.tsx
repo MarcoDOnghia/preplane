@@ -620,6 +620,17 @@ const Index = () => {
     }, 4000);
 
     try {
+      // Fire alignment check in parallel (non-blocking)
+      if (targetRole) {
+        supabase.functions.invoke("check-alignment", {
+          body: { targetRole, jobDescription },
+        }).then(({ data: alignData }) => {
+          if (alignData && !alignData.skipped && alignData.alignment) {
+            setAlignmentData(alignData);
+          }
+        }).catch(() => {});
+      }
+
       const { data, error } = await supabase.functions.invoke("tailor-cv", {
         body: { cvContent, jobDescription, tone: "professional" },
       });
