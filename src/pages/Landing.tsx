@@ -4,19 +4,17 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  Compass, FileText, PenTool, BarChart3, MessageSquare, ClipboardCheck,
+  Compass, FileText, PenTool, BarChart3,
   ArrowRight, CheckCircle2, Sparkles, ChevronDown, Mail, Linkedin
 } from "lucide-react";
 import previewAts from "@/assets/preview-ats.png";
 import previewCv from "@/assets/preview-cv.png";
 import previewCover from "@/assets/preview-cover.png";
-import previewInterview from "@/assets/preview-interview.png";
 
 const PREVIEW_TABS = [
-  { label: "ATS Score", image: previewAts, alt: "ATS compatibility score with keyword analysis and quick wins" },
+  { label: "Job Match Score", image: previewAts, alt: "Job match score with keyword analysis and quick wins" },
   { label: "CV Suggestions", image: previewCv, alt: "Side-by-side CV suggestions with impact scoring" },
-  { label: "Cover Letters", image: previewCover, alt: "Three cover letter versions: conservative, balanced, and bold" },
-  { label: "Interview Prep", image: previewInterview, alt: "Predicted interview questions with STAR guidance" },
+  { label: "Cover Letter", image: previewCover, alt: "Tailored cover letter for the role" },
 ];
 
 const FEATURES = [
@@ -27,31 +25,20 @@ const FEATURES = [
   },
   {
     icon: PenTool,
-    title: "3 Cover Letter Versions",
-    description: "Get conservative, balanced, and bold cover letters — each tailored to the role, company, and your chosen tone.",
+    title: "Tailored Cover Letter",
+    description: "Get a cover letter tailored to the role, company, and your chosen tone — ready to send.",
   },
   {
     icon: BarChart3,
-    title: "ATS Score & Quick Wins",
-    description: "See your ATS compatibility score, missing keywords, formatting issues, and actionable quick wins before you apply.",
-  },
-  {
-    icon: ClipboardCheck,
-    title: "Interview Prep & Feedback",
-    description: "10+ predicted questions with STAR guidance. Log post-interview feedback and track which questions actually came up.",
-  },
-  {
-    icon: MessageSquare,
-    title: "Outreach Templates",
-    description: "AI-generated messages for hiring managers, follow-ups, thank-yous, and offer negotiations — ready to send.",
+    title: "Job Match Score & Quick Wins",
+    description: "See your job match score, missing keywords, formatting issues, and actionable quick wins before you apply.",
   },
 ];
 
 const STATS = [
   { value: "60s", label: "To tailor your CV" },
-  { value: "85%+", label: "Avg ATS score boost" },
-  { value: "3", label: "Cover letter versions" },
-  { value: "10+", label: "Interview questions" },
+  { value: "85%+", label: "Avg job match boost" },
+  { value: "1", label: "Tailored cover letter" },
 ];
 
 const FAQ = [
@@ -66,7 +53,7 @@ const FAQ = [
   },
   {
     q: "What makes PrepLane different from other AI CV tools?",
-    a: "Most tools just rewrite your CV. PrepLane gives you an ATS compatibility score, generates three cover letter styles, creates interview prep questions, tracks all your applications, and analyzes what's working. It's a complete job search system, not just a CV formatter.",
+    a: "Most tools just rewrite your CV. PrepLane gives you a job match score, generates a tailored cover letter, tracks all your applications, and analyzes what's working. It's a complete job search system, not just a CV formatter.",
   },
   {
     q: "Is my data private and secure?",
@@ -208,7 +195,7 @@ const Landing = () => {
             <span className="text-primary">60 seconds</span>
           </h1>
           <p className="mt-6 text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Paste your CV and a job description — get tailored suggestions, three cover letter versions, ATS scoring, and interview prep. All instantly.
+            Paste your CV and a job description — get tailored suggestions, a cover letter, and job match scoring. All instantly.
           </p>
           <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="text-base px-8 gap-2" onClick={() => navigate("/auth")}>
@@ -229,7 +216,7 @@ const Landing = () => {
       {/* Stats */}
       <section className="border-y bg-card/50">
         <div className="container mx-auto px-4 py-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-3 gap-8">
             {STATS.map((stat, i) => (
               <div key={i} className="text-center">
                 <p className="text-3xl md:text-4xl font-bold text-primary">{stat.value}</p>
@@ -251,7 +238,7 @@ const Landing = () => {
             A focused toolkit for every stage — from application to offer.
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {FEATURES.map((feature, i) => (
             <Card key={i} className="group hover:shadow-lg transition-shadow border-border/60">
               <CardContent className="pt-6 pb-6">
@@ -277,7 +264,7 @@ const Landing = () => {
             {[
               { step: "1", title: "Upload your CV", desc: "Paste or upload your existing CV as PDF, Word, or plain text." },
               { step: "2", title: "Add job description", desc: "Paste the job listing. AI identifies key requirements and matches them to your profile." },
-              { step: "3", title: "Get instant results", desc: "Tailored CV suggestions, 3 cover letters, ATS score, and interview prep — all at once." },
+              { step: "3", title: "Get instant results", desc: "Tailored CV suggestions, a cover letter, and job match score — all at once." },
             ].map((item, i) => (
               <div key={i} className="text-center space-y-4">
                 <div className="h-12 w-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-lg font-bold mx-auto">
@@ -314,7 +301,7 @@ const Landing = () => {
               <span className="text-primary">every other applicant</span>?
             </h2>
             <div className="flex flex-wrap gap-3 justify-center text-sm text-muted-foreground">
-              {["AI-powered tailoring", "ATS optimization", "Interview prep", "Application tracking", "Outreach templates"].map((t) => (
+              {["AI-powered tailoring", "Job match scoring", "Tailored cover letter", "Application tracking"].map((t) => (
                 <span key={t} className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 text-primary" /> {t}
                 </span>

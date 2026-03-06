@@ -55,7 +55,7 @@ const AtsTemplateTab = ({ reformattedCv, jobTitle, atsScore }: AtsTemplateTabPro
           </Badge>
           <Badge variant="outline" className="text-sm px-3 py-1">
             <CheckCircle2 className="h-3.5 w-3.5 mr-1.5 text-primary" />
-            ATS Score: {atsScore}%
+            Job Match Score: {atsScore}%
           </Badge>
         </div>
         <div className="flex gap-2">
