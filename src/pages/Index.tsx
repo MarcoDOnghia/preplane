@@ -15,19 +15,19 @@ const ONBOARDING_KEY = "preplane_onboarding_done";
 
 const STEPS = [
   { key: "step_cv_done", label: "Tailor CV", weight: 20 },
-  { key: "step_connection_done", label: "Find connection", weight: 15 },
+  { key: "step_connection_done", label: "Find contact", weight: 15 },
+  { key: "step_proof_done", label: "Build proof of work", weight: 20 },
   { key: "step_outreach_done", label: "Send outreach", weight: 20 },
-  { key: "step_proof_done", label: "Create proof of work", weight: 20 },
   { key: "step_cover_letter_done", label: "Cover letter", weight: 10 },
-  { key: "step_followup_done", label: "Schedule follow-up", weight: 15 },
+  { key: "step_followup_done", label: "Follow up", weight: 15 },
 ] as const;
 
 const STATUS_BADGES: Record<string, { label: string; color: string }> = {
-  targeting: { label: "Targeting", color: "bg-blue-500/10 text-blue-600 border-blue-500/20" },
-  applied: { label: "Applied", color: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20" },
-  followed_up: { label: "Followed Up", color: "bg-purple-500/10 text-purple-600 border-purple-500/20" },
-  response_received: { label: "Response", color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" },
-  rejected: { label: "Rejected", color: "bg-destructive/10 text-destructive border-destructive/20" },
+  targeting: { label: "Researching", color: "bg-blue-500/10 text-blue-600 border-blue-500/20" },
+  applied: { label: "Formally Applied", color: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20" },
+  followed_up: { label: "Following Up", color: "bg-purple-500/10 text-purple-600 border-purple-500/20" },
+  response_received: { label: "In Conversation", color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" },
+  rejected: { label: "Not This Time", color: "bg-destructive/10 text-destructive border-destructive/20" },
 };
 
 interface CampaignRow {
@@ -51,6 +51,10 @@ function getStrength(c: CampaignRow) {
 }
 
 function getNextStep(c: CampaignRow) {
+  // Prioritize Step 3 (proof of work) if Step 2 (connection) done but Step 3 not
+  if (c.step_connection_done && !c.step_proof_done) {
+    return "Build proof of work";
+  }
   const idx = STEPS.findIndex((s) => !(c as any)[s.key]);
   return idx >= 0 ? STEPS[idx].label : null;
 }
