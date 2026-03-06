@@ -398,48 +398,24 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage }
             disabled={loading}
           />
 
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="flex items-center gap-2">
-              <input
-                ref={jdInputRef}
-                type="file"
-                accept=".pdf,.docx"
-                onChange={handleJdFileUpload}
-                className="hidden"
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Link2 className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                value={linkedinUrl}
+                onChange={(e) => setLinkedinUrl(e.target.value)}
+                placeholder="LinkedIn / job URL (optional)"
+                className="pl-8 h-8 text-xs"
+                disabled={loading || extracting}
               />
-              <Button variant="outline" size="sm" onClick={() => jdInputRef.current?.click()} disabled={loading} className="text-xs">
-                <Upload className="h-3 w-3 mr-1" /> Upload PDF/Docx
-              </Button>
-              {jdFile.text && (
-                <span className="text-xs text-primary flex items-center gap-1">
-                  <CheckCircle2 className="h-3 w-3" /> {jdFile.name}
-                  <button onClick={() => { setJdFile({ text: "", name: "", error: "" }); if (jdInputRef.current) jdInputRef.current.value = ""; }} className="text-muted-foreground hover:text-destructive ml-1">
-                    <X className="h-3 w-3" />
-                  </button>
-                </span>
-              )}
-              {jdFile.error && <span className="text-xs text-destructive">{jdFile.error}</span>}
             </div>
-
-            <div className="flex items-center gap-2 flex-1">
-              <div className="relative flex-1">
-                <Link2 className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                <Input
-                  value={linkedinUrl}
-                  onChange={(e) => setLinkedinUrl(e.target.value)}
-                  placeholder="LinkedIn job URL (optional)"
-                  className="pl-8 h-8 text-xs"
-                  disabled={loading || extracting}
-                />
-              </div>
-              <Button variant="outline" size="sm" onClick={handleExtractFromUrl} disabled={!linkedinUrl.trim() || extracting || loading} className="text-xs h-8">
-                {extracting ? <Loader2 className="h-3 w-3 animate-spin" /> : "Extract"}
-              </Button>
-            </div>
+            <Button variant="outline" size="sm" onClick={handleExtractFromUrl} disabled={!linkedinUrl.trim() || extracting || loading} className="text-xs h-8">
+              {extracting ? <Loader2 className="h-3 w-3 animate-spin" /> : "Extract"}
+            </Button>
           </div>
 
           {!jdText && !jdFile.text && (
-            <p className="text-xs text-muted-foreground">Paste is fastest — or upload a PDF / enter a LinkedIn URL</p>
+            <p className="text-xs text-muted-foreground">Paste the job description or drop in the URL.</p>
           )}
         </div>
       </div>
