@@ -1,0 +1,126 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+/** Infer categories from a target_role string using keyword matching. */
+function inferCategories(targetRole: string, extraCategories?: string[]): string[] {
+  const role = targetRole.toLowerCase();
+  const cats = new Set<string>(extraCategories ?? []);
+
+  const rules: [RegExp, string[]][] = [
+    [/\b(vc|venture|invest)/i, ["VC", "Finance"]],
+    [/\b(startup|operations|ops)\b/i, ["Operations", "Startup"]],
+    [/\b(sales|sdr|gtm|business development)\b/i, ["Sales"]],
+    [/\b(marketing|content|growth)\b/i, ["Marketing"]],
+    [/\b(finance|banking|analyst)\b/i, ["Finance"]],
+    [/\b(tech|software|engineer)\b/i, ["Tech"]],
+  ];
+
+  for (const [pattern, matched] of rules) {
+    if (pattern.test(role)) {
+      matched.forEach((c) => cats.add(c));
+    }
+  }
+
+  // Fallback: if nothing matched, return all categories so we still get results
+  if (cats.size === 0) {
+    return ["VC", "Finance", "Operations", "Sales", "Marketing", "Tech"];
+  }
+
+  return Array.from(cats);
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { target_role, target_location, experience_level, categories } = await req.json();
+
+    if (!target_role) {
+      return new Response(JSON.stringify({ error: "target_role is required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const inferredCategories = inferCategories(target_role, categories);
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    // Build query: filter by hiring_juniors, overlap on categories
+    let query = supabase
+      .from("companies")
+      .select("*")
+      .eq("hiring_juniors", true)
+      .overlaps("categories", inferredCategories)
+      .order("prestige_level", { ascending: true }) // hidden gems first
+      .limit(8);
+
+    // Location matching: try country first, then city
+    if (target_location) {
+      const loc = target_location.trim();
+      // We'll do a broad ilike match on both country and city
+      // First try exact country match, fallback to city
+      const { data: byCountry, error: err1 } = await query.ilike("country", `%${loc}%`);
+
+      if (!err1 && byCountry && byCountry.length > 0) {
+        return new Response(JSON.stringify({ companies: byCountry, inferred_categories: inferredCategories }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Try city match
+      const { data: byCity, error: err2 } = await supabase
+        .from("companies")
+        .select("*")
+        .eq("hiring_juniors", true)
+        .overlaps("categories", inferredCategories)
+        .ilike("city", `%${loc}%`)
+        .order("prestige_level", { ascending: true })
+        .limit(8);
+
+      if (!err2 && byCity && byCity.length > 0) {
+        return new Response(JSON.stringify({ companies: byCity, inferred_categories: inferredCategories }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Fallback: return without location filter
+      const { data: fallback, error: err3 } = await supabase
+        .from("companies")
+        .select("*")
+        .eq("hiring_juniors", true)
+        .overlaps("categories", inferredCategories)
+        .order("prestige_level", { ascending: true })
+        .limit(8);
+
+      return new Response(
+        JSON.stringify({ companies: fallback ?? [], inferred_categories: inferredCategories, location_matched: false }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // No location provided
+    const { data, error } = await query;
+
+    if (error) throw error;
+
+    return new Response(JSON.stringify({ companies: data ?? [], inferred_categories: inferredCategories }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});
