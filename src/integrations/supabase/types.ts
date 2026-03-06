@@ -247,6 +247,7 @@ export type Database = {
       }
       campaigns: {
         Row: {
+          archived: boolean
           company: string
           connection_name: string | null
           connection_url: string | null
@@ -271,6 +272,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          archived?: boolean
           company: string
           connection_name?: string | null
           connection_url?: string | null
@@ -295,6 +297,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          archived?: boolean
           company?: string
           connection_name?: string | null
           connection_url?: string | null

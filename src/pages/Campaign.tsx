@@ -19,6 +19,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
@@ -38,6 +49,7 @@ import {
   Target,
   ArrowLeft,
   Flag,
+  Archive,
 } from "lucide-react";
 
 interface CampaignData {
@@ -190,6 +202,13 @@ const Campaign = () => {
     }
   };
 
+  const handleArchive = async () => {
+    if (!id) return;
+    await supabase.from("campaigns").update({ archived: true } as any).eq("id", id);
+    toast({ title: "Campaign archived" });
+    navigate("/app");
+  };
+
   const toggleStep = (idx: number) => {
     setOpenSteps((prev) => {
       const next = new Set(prev);
@@ -228,27 +247,49 @@ const Campaign = () => {
           <ArrowLeft className="h-4 w-4 mr-1" /> Back to dashboard
         </Button>
 
-        {/* Top: Company + Role + Status */}
+        {/* Top: Company + Role + Status + Archive */}
         <div className="flex items-start justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">{campaign.role}</h1>
             <p className="text-muted-foreground">{campaign.company}</p>
           </div>
-          <Select
-            value={campaign.status}
-            onValueChange={(val) => updateCampaign({ status: val })}
-          >
-            <SelectTrigger className="w-auto">
-              <Badge variant="outline" className={statusInfo.color}>
-                {statusInfo.label}
-              </Badge>
-            </SelectTrigger>
-            <SelectContent>
-              {STATUS_OPTIONS.map((s) => (
-                <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            <Select
+              value={campaign.status}
+              onValueChange={(val) => updateCampaign({ status: val })}
+            >
+              <SelectTrigger className="w-auto">
+                <Badge variant="outline" className={statusInfo.color}>
+                  {statusInfo.label}
+                </Badge>
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_OPTIONS.map((s) => (
+                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground h-8 px-2">
+                  <Archive className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Archive this campaign?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    It will be removed from your dashboard but you can still access it later.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleArchive}>Archive campaign</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
 
         {/* Campaign Strength Score */}
