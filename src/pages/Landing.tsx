@@ -165,7 +165,7 @@ const Landing = () => {
             <Button variant="ghost" size="sm" onClick={() => navigate("/auth")}>
               Sign In
             </Button>
-            <Button size="sm" onClick={() => navigate("/auth")}>
+            <Button size="sm" onClick={() => navigate("/onboarding")}>
               Get Started Free
             </Button>
           </div>
@@ -188,7 +188,7 @@ const Landing = () => {
             Most students apply to 50 jobs and hear nothing. PrepLane helps you build a targeted, compelling application for the roles that matter — and actually get responses.
           </p>
           <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="text-base px-8 gap-2" onClick={() => navigate("/auth")}>
+            <Button size="lg" className="text-base px-8 gap-2" onClick={() => navigate("/onboarding")}>
               Try It Free <ArrowRight className="h-4 w-4" />
             </Button>
             <Button size="lg" variant="outline" className="text-base px-8" onClick={() => {
@@ -284,7 +284,7 @@ const Landing = () => {
                 </span>
               ))}
             </div>
-            <Button size="lg" className="text-base px-10 gap-2" onClick={() => navigate("/auth")}>
+            <Button size="lg" className="text-base px-10 gap-2" onClick={() => navigate("/onboarding")}>
               Get Started Free <ArrowRight className="h-4 w-4" />
             </Button>
             <p className="text-xs text-muted-foreground">No credit card required</p>

@@ -25,16 +25,36 @@ const Index = () => {
   const nav = useNavigate();
   const [onboardingChecked, setOnboardingChecked] = useState(false);
 
-  // Check onboarding status
+  // Check onboarding status and save any pending target from onboarding
   useEffect(() => {
     if (!user) return;
+    const savedTarget = localStorage.getItem("preplane_onboarding_target");
+
     supabase
       .from("profiles")
       .select("onboarding_completed")
       .eq("user_id", user.id)
       .single()
-      .then(({ data }) => {
-        if (data && !(data as any).onboarding_completed) {
+      .then(async ({ data }) => {
+        // Save pending onboarding target if exists
+        if (savedTarget) {
+          try {
+            const target = JSON.parse(savedTarget);
+            await supabase
+              .from("profiles")
+              .update({
+                target_role: target.target_role || null,
+                target_location: target.target_location || null,
+                target_start: target.target_start || null,
+                onboarding_completed: true,
+              } as any)
+              .eq("user_id", user.id);
+            localStorage.removeItem("preplane_onboarding_target");
+            setOnboardingChecked(true);
+          } catch {
+            localStorage.removeItem("preplane_onboarding_target");
+          }
+        } else if (data && !(data as any).onboarding_completed) {
           nav("/onboarding", { replace: true });
         } else {
           setOnboardingChecked(true);
