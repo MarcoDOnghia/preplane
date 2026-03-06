@@ -38,7 +38,7 @@ interface AtsCvEditorProps {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="text-sm font-bold text-foreground mt-6 mb-2 first:mt-0">
+    <h3 className="text-[13px] font-bold text-foreground tracking-wider uppercase mt-8 mb-3 first:mt-0 border-b border-border pb-1.5">
       {children}
     </h3>
   );
@@ -67,7 +67,7 @@ function BulletEditor({
           <Textarea
             value={b}
             onChange={(e) => update(i, e.target.value)}
-            className="min-h-[36px] text-sm py-1.5 px-2 resize-none"
+            className="min-h-[36px] text-sm py-1.5 px-2 resize-none border-transparent hover:border-input focus-visible:border-input bg-transparent transition-colors"
             rows={1}
           />
           <Button
@@ -220,8 +220,8 @@ const AtsCvEditor = ({
       </div>
 
       {/* Document — single-column, clean ATS format */}
-      <Card className="shadow-sm font-[Arial,Helvetica,sans-serif]">
-        <CardContent className="pt-6 space-y-1">
+      <Card className="shadow-lg border-border/50 font-[Arial,Helvetica,sans-serif]">
+        <CardContent className="pt-8 pb-10 px-8 md:px-12 space-y-1">
           {/* Header */}
           <Input
             value={model.name}
@@ -249,7 +249,7 @@ const AtsCvEditor = ({
           <Textarea
             value={model.summary}
             onChange={(e) => set("summary", e.target.value)}
-            className="text-sm min-h-[60px] resize-none"
+            className="text-sm min-h-[60px] resize-none border-transparent hover:border-input focus-visible:border-input bg-transparent transition-colors"
             placeholder="Write a tailored summary..."
           />
 
@@ -360,7 +360,7 @@ const AtsCvEditor = ({
           <Textarea
             value={model.skills}
             onChange={(e) => set("skills", e.target.value)}
-            className="text-sm min-h-[40px] resize-none"
+            className="text-sm min-h-[40px] resize-none border-transparent hover:border-input focus-visible:border-input bg-transparent transition-colors"
             placeholder="Comma-separated skills list"
           />
 

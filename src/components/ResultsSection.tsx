@@ -236,7 +236,7 @@ const ResultsSection = ({
         {/* CV Editor: two-column layout, no suggestions here */}
         <TabsContent value="ats-editor" className="mt-4">
           <div className="grid grid-cols-1 md:grid-cols-[30%_1fr] gap-4">
-            {/* Left: Job Requirements & Keywords panel */}
+            {/* Left: Score first, then Requirements & Quick Wins */}
             <JdRequirementsPanel
               requirements={result.keyRequirements}
               currentScore={liveAts.score}
@@ -435,6 +435,7 @@ function JdRequirementsPanel({
 
   return (
     <div className="space-y-4">
+      {/* Job Match Score — first and most prominent */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
@@ -456,25 +457,7 @@ function JdRequirementsPanel({
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
-            <CheckCircle2 className="h-4 w-4 text-primary" />
-            Job Requirements ({requirements.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-1.5">
-            {requirements.map((req, i) => (
-              <li key={i} className="flex items-start gap-2 text-xs leading-relaxed">
-                <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary/60" />
-                {req}
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
-
+      {/* Quick Wins — actionable, shown second */}
       {quickWins.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
@@ -495,6 +478,26 @@ function JdRequirementsPanel({
           </CardContent>
         </Card>
       )}
+
+      {/* Job Requirements — reference list, shown last */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
+            <CheckCircle2 className="h-4 w-4 text-primary" />
+            Job Requirements ({requirements.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="space-y-1.5">
+            {requirements.map((req, i) => (
+              <li key={i} className="flex items-start gap-2 text-xs leading-relaxed">
+                <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary/60" />
+                {req}
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
     </div>
   );
 }
