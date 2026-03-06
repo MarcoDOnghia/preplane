@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Example Fund",
+    "website": "https://example.com",
+    "country": "Italy",
+    "city": "Milan",
+    "size": "boutique",
+    "categories": ["VC", "Finance"],
+    "description": "Early stage VC fund focused on Italian startups",
+    "why_good_for_juniors": "Small team means real responsibility from day one",
+    "prestige_level": 2,
+    "hiring_juniors": true
+  }
+]

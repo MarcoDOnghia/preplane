@@ -320,6 +320,60 @@ export type Database = {
         }
         Relationships: []
       }
+      companies: {
+        Row: {
+          added_by: string | null
+          categories: string[]
+          city: string | null
+          country: string
+          created_at: string
+          description: string | null
+          hiring_juniors: boolean
+          id: string
+          linkedin_url: string | null
+          name: string
+          prestige_level: number
+          remote_friendly: boolean
+          size: string
+          website: string | null
+          why_good_for_juniors: string | null
+        }
+        Insert: {
+          added_by?: string | null
+          categories?: string[]
+          city?: string | null
+          country: string
+          created_at?: string
+          description?: string | null
+          hiring_juniors?: boolean
+          id?: string
+          linkedin_url?: string | null
+          name: string
+          prestige_level?: number
+          remote_friendly?: boolean
+          size: string
+          website?: string | null
+          why_good_for_juniors?: string | null
+        }
+        Update: {
+          added_by?: string | null
+          categories?: string[]
+          city?: string | null
+          country?: string
+          created_at?: string
+          description?: string | null
+          hiring_juniors?: boolean
+          id?: string
+          linkedin_url?: string | null
+          name?: string
+          prestige_level?: number
+          remote_friendly?: boolean
+          size?: string
+          website?: string | null
+          why_good_for_juniors?: string | null
+        }
+        Relationships: []
+      }
       cvs: {
         Row: {
           created_at: string
