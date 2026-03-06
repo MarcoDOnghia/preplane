@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Sparkles, ArrowRight, Target, Clock } from "lucide-react";
+import { Plus, Sparkles, ArrowRight, Target, Clock, RotateCcw } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 const TARGET_KEY = "preplane_onboarding_target";
@@ -43,6 +43,7 @@ interface CampaignRow {
   step_cover_letter_done: boolean;
   step_followup_done: boolean;
   created_at: string;
+  archived: boolean;
 }
 
 function getStrength(c: CampaignRow) {
@@ -61,6 +62,7 @@ const Index = () => {
   const [targetLocation, setTargetLocation] = useState<string | null>(null);
   const [campaigns, setCampaigns] = useState<CampaignRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showArchived, setShowArchived] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -108,7 +110,7 @@ const Index = () => {
         // Load campaigns
         const { data: campData } = await supabase
           .from("campaigns")
-          .select("id, company, role, match_score, status, step_cv_done, step_connection_done, step_outreach_done, step_proof_done, step_cover_letter_done, step_followup_done, created_at")
+          .select("id, company, role, match_score, status, step_cv_done, step_connection_done, step_outreach_done, step_proof_done, step_cover_letter_done, step_followup_done, created_at, archived")
           .order("created_at", { ascending: false });
         setCampaigns((campData as any as CampaignRow[]) || []);
         setLoading(false);
@@ -124,12 +126,20 @@ const Index = () => {
   }
   if (!user) return <Navigate to="/onboarding" replace />;
 
-  // Find best focus campaign: highest strength with incomplete steps
-  const focusCampaign = campaigns
+  const activeCampaigns = campaigns.filter((c) => !c.archived);
+  const archivedCampaigns = campaigns.filter((c) => c.archived);
+
+  // Find best focus campaign: highest strength with incomplete steps (active only)
+  const focusCampaign = activeCampaigns
     .filter((c) => getNextStep(c) !== null && c.status !== "rejected")
     .sort((a, b) => getStrength(b) - getStrength(a))[0] || null;
 
-  const atLimit = campaigns.length >= 10;
+  const atLimit = activeCampaigns.length >= 10;
+
+  const handleUnarchive = async (campaignId: string) => {
+    await supabase.from("campaigns").update({ archived: false } as any).eq("id", campaignId);
+    setCampaigns((prev) => prev.map((c) => c.id === campaignId ? { ...c, archived: false } : c));
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -168,7 +178,7 @@ const Index = () => {
           <div className="flex items-center justify-center py-20">
             <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
           </div>
-        ) : campaigns.length === 0 ? (
+        ) : activeCampaigns.length === 0 && archivedCampaigns.length === 0 ? (
           /* Empty state */
           <Card className="border-dashed">
             <CardContent className="pt-8 pb-8 text-center space-y-4">
@@ -210,7 +220,7 @@ const Index = () => {
 
             {/* Campaign grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {campaigns.map((c) => {
+              {activeCampaigns.map((c) => {
                 const strength = getStrength(c);
                 const next = getNextStep(c);
                 const status = STATUS_BADGES[c.status] || STATUS_BADGES.targeting;
@@ -259,6 +269,49 @@ const Index = () => {
                 );
               })}
             </div>
+
+            {/* Archived section */}
+            {archivedCampaigns.length > 0 && (
+              <div className="pt-4">
+                <button
+                  onClick={() => setShowArchived(!showArchived)}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
+                >
+                  {showArchived ? "Hide archived" : `View archived (${archivedCampaigns.length})`}
+                </button>
+
+                {showArchived && (
+                  <div className="mt-4 space-y-2">
+                    {archivedCampaigns.map((c) => {
+                      const status = STATUS_BADGES[c.status] || STATUS_BADGES.targeting;
+                      return (
+                        <Card key={c.id} className="opacity-60 hover:opacity-80 transition-opacity">
+                          <CardContent className="py-3 flex items-center justify-between gap-3">
+                            <div className="min-w-0 flex items-center gap-3">
+                              <div className="min-w-0">
+                                <span className="text-sm font-medium truncate block">{c.role}</span>
+                                <span className="text-xs text-muted-foreground truncate block">{c.company}</span>
+                              </div>
+                              <Badge variant="outline" className={`text-xs shrink-0 ${status.color}`}>
+                                {status.label}
+                              </Badge>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-xs text-muted-foreground shrink-0"
+                              onClick={(e) => { e.stopPropagation(); handleUnarchive(c.id); }}
+                            >
+                              <RotateCcw className="h-3 w-3 mr-1" /> Unarchive
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </>
         )}
       </main>
