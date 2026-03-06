@@ -14,10 +14,9 @@ import type { CvDataModel } from "@/lib/cvDataModel";
 
 const LOADING_STEPS = [
   { message: "Analyzing job requirements...", progress: 15 },
-  { message: "Checking ATS compatibility...", progress: 35 },
+  { message: "Checking job match compatibility...", progress: 35 },
   { message: "Tailoring your CV suggestions...", progress: 55 },
-  { message: "Generating 3 cover letter versions...", progress: 75 },
-  { message: "Preparing interview questions...", progress: 90 },
+  { message: "Generating your cover letter...", progress: 75 },
   { message: "Polishing results...", progress: 95 },
 ];
 

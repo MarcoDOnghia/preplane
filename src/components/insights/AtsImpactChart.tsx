@@ -25,7 +25,7 @@ const AtsImpactChart = ({ data }: AtsImpactChartProps) => {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg">ATS Score Impact</CardTitle>
+        <CardTitle className="text-lg">Job Match Score Impact</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="h-48">

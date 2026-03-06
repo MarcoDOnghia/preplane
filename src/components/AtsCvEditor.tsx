@@ -369,7 +369,7 @@ const AtsCvEditor = ({
       </Card>
 
       <p className="text-xs text-muted-foreground text-center">
-        Edit any field above. Changes auto-save and update your ATS score in real-time.
+        Edit any field above. Changes auto-save and update your Job Match Score in real-time.
       </p>
     </div>
   );

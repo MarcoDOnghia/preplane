@@ -304,10 +304,10 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage }
       {/* Hero */}
       <div className="text-center space-y-2">
         <h1 className="text-[32px] font-bold tracking-tight text-foreground">
-          Preplane — 90% ATS + 3 Cover Letters
+          Tailor your CV to any job in 60 seconds
         </h1>
         <p className="text-muted-foreground text-sm">
-          Select your CV + paste JD → Instant optimization
+          Upload your CV, paste a job description, get instant improvements
         </p>
       </div>
 
@@ -460,7 +460,7 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage }
           {loading ? (
             <><Loader2 className="h-5 w-5 mr-2 animate-spin" />{loadingMessage}</>
           ) : (
-            <><Sparkles className="h-5 w-5 mr-2" />Generate Application Kit</>
+            <><Sparkles className="h-5 w-5 mr-2" />Tailor My CV</>
           )}
         </Button>
         {!bothReady && !loading && (

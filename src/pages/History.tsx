@@ -58,8 +58,8 @@ const METHOD_LABELS: Record<string, string> = {
 const SORT_OPTIONS = [
   { value: "date_desc", label: "Newest First" },
   { value: "date_asc", label: "Oldest First" },
-  { value: "ats_desc", label: "ATS Score (High)" },
-  { value: "ats_asc", label: "ATS Score (Low)" },
+  { value: "ats_desc", label: "Job Match Score (High)" },
+  { value: "ats_asc", label: "Job Match Score (Low)" },
 ];
 
 const FILTER_STATUSES = ["all", "preparing", "applied", "interview", "offer", "rejected"];

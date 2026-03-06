@@ -227,10 +227,10 @@ const ResultsSection = ({
       <Tabs defaultValue="ats-editor" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="ats-editor" className="font-semibold">
-            ✏️ CV Editor
+            CV Editor
           </TabsTrigger>
-          <TabsTrigger value="ats-score">ATS Score</TabsTrigger>
-          <TabsTrigger value="cover-letters">Cover Letters</TabsTrigger>
+          <TabsTrigger value="ats-score">Job Match Score</TabsTrigger>
+          <TabsTrigger value="cover-letters">Cover Letter</TabsTrigger>
         </TabsList>
 
         {/* CV Editor: two-column layout, no suggestions here */}
@@ -259,17 +259,9 @@ const ResultsSection = ({
           </div>
         </TabsContent>
 
-        {/* ATS Score tab — now includes AI Suggestions */}
+        {/* Job Match Score tab — AI Suggestions first, then score details */}
         <TabsContent value="ats-score" className="mt-4 space-y-6">
-          <AtsScoreTab
-            atsAnalysis={liveAtsAnalysis}
-            currentCv={cvPlainText}
-            jobDescription={jobDescription}
-            onCvChange={() => {}}
-            addedKeywords={addedKeywords}
-          />
-
-          {/* AI Suggestions panel */}
+          {/* AI Suggestions panel — shown first */}
           {result.cvSuggestions.length > 0 && (
             <div className="space-y-4">
               <div className="flex items-center justify-between flex-wrap gap-2">
@@ -322,6 +314,16 @@ const ResultsSection = ({
               )}
             </div>
           )}
+
+          <AtsScoreTab
+            atsAnalysis={liveAtsAnalysis}
+            currentCv={cvPlainText}
+            jobDescription={jobDescription}
+            onCvChange={() => {}}
+            addedKeywords={addedKeywords}
+          />
+
+          {/* Score details (Keywords, Formatting, Quick Wins) */}
         </TabsContent>
 
         {/* Cover Letters tab */}
@@ -437,7 +439,7 @@ function JdRequirementsPanel({
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
             <Target className="h-4 w-4 text-primary" />
-            ATS Score
+            Job Match Score
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">

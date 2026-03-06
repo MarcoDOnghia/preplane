@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   CheckCircle2,
   XCircle,
@@ -13,6 +14,7 @@ import {
   TrendingUp,
   Wrench,
   ScrollText,
+  Info,
 } from "lucide-react";
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -121,13 +123,16 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, added
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Target className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-medium">ATS Compatibility Score</p>
-                  <p className="text-xs text-muted-foreground">
-                    {animatedScore >= TARGET_SCORE
-                      ? "Your CV is ATS-optimized!"
-                      : `Add ${Math.max(0, keywordsNeeded)} more keywords to reach ${TARGET_SCORE}%`}
-                  </p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-sm font-medium">Job Match Score</p>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-[280px]">
+                      <p className="text-xs">ATS = software companies use to filter CVs automatically. Score below 60% means you may never reach a human recruiter.</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
               </div>
               <div className="text-right">
@@ -143,37 +148,18 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, added
               </div>
             </div>
 
-            {/* Current score bar */}
+            {/* Score bar */}
             <div className="space-y-1">
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Current</span>
-                <span>{animatedScore}%</span>
-              </div>
               <Progress value={animatedScore} className={`h-2.5 transition-all duration-700 ${scoreBarColor}`} />
-            </div>
-
-            {/* Target score bar */}
-            {animatedScore < TARGET_SCORE && (
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Sparkles className="h-3 w-3" /> Target
-                  </span>
-                  <span>{TARGET_SCORE}%</span>
-                </div>
-                <div className="relative">
-                  <Progress value={TARGET_SCORE} className="h-2.5 [&>div]:bg-muted-foreground/20 opacity-40" />
-                  <div
-                    className="absolute top-0 h-2.5 border-r-2 border-dashed border-foreground/40"
-                    style={{ left: `${TARGET_SCORE}%` }}
-                  />
-                </div>
+              {animatedScore < TARGET_SCORE && (
                 <p className="text-xs text-muted-foreground">
-                  Reach {TARGET_SCORE}% ATS by adding {keywordsNeeded} keyword{keywordsNeeded !== 1 ? "s" : ""} →
-                  each adds ~{projectedScorePerKeyword}%
+                  {Math.max(0, keywordsNeeded)} keyword{keywordsNeeded !== 1 ? "s" : ""} away from {TARGET_SCORE}%
                 </p>
-              </div>
-            )}
+              )}
+              {animatedScore >= TARGET_SCORE && (
+                <p className="text-xs text-success font-medium">Your CV is optimized for this role!</p>
+              )}
+            </div>
 
             {/* Summary badges */}
             <div className="flex gap-3 pt-1 flex-wrap">
@@ -233,7 +219,7 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, added
             </CardTitle>
             {effectiveMissing.length > 0 && (
               <p className="text-xs text-muted-foreground">
-                Address these via the AI Suggestions below to improve your ATS score.
+                Address these via the AI Suggestions above to improve your score.
               </p>
             )}
           </CardHeader>
