@@ -184,6 +184,9 @@ const Onboarding = () => {
               <p className="text-muted-foreground text-base md:text-lg leading-relaxed max-w-[540px] mx-auto">
                 PrepLane is being built in public by a 20-year-old who faced the exact same problem. If you have ideas, frustrations, or features you wish existed — I genuinely want to hear from you. Early users are shaping what this becomes.
               </p>
+              <p className="text-muted-foreground text-base md:text-lg leading-relaxed max-w-[540px] mx-auto">
+                Oh, and PrepLane is completely free. No credit card, no trial, no catch. Just a tool I wish existed when I started applying.
+              </p>
 
               <div className="flex items-center justify-center gap-3">
                 <Button
