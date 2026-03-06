@@ -385,17 +385,26 @@ const Index = () => {
       }
     }
 
-    // BUG 3 FIX: Duplicate phrase detection helper (>5 word phrases)
+    // BUG 3 FIX: Duplicate phrase detection helper (4-word window + number/percentage check)
     const findDuplicatePhrase = (newBullet: string, existingBullets: string[]): string | null => {
       const newWords = newBullet.toLowerCase().split(/\s+/);
       for (const existing of existingBullets) {
         const existingWords = existing.toLowerCase().split(/\s+/);
-        // Check all 6-word windows in the new bullet against existing
-        for (let i = 0; i <= newWords.length - 6; i++) {
-          const phrase = newWords.slice(i, i + 6).join(' ');
-          const existingText = existingWords.join(' ');
+        const existingText = existingWords.join(' ');
+        // Check all 4-word windows in the new bullet against existing
+        for (let i = 0; i <= newWords.length - 4; i++) {
+          const phrase = newWords.slice(i, i + 4).join(' ');
           if (existingText.includes(phrase)) {
             return phrase;
+          }
+        }
+      }
+      // Check for repeated numbers/percentages (e.g. "47%", "$95k", "200+")
+      const newMetrics = newBullet.match(/\$?\d[\d,.]*[%kKmMbB+]?/g) || [];
+      for (const metric of newMetrics) {
+        for (const existing of existingBullets) {
+          if (existing.includes(metric)) {
+            return metric;
           }
         }
       }

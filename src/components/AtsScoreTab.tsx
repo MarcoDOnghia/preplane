@@ -7,19 +7,15 @@ import {
   XCircle,
   AlertTriangle,
   Zap,
-  Check,
-  Plus,
   Loader2,
-  Eye,
   Sparkles,
   Target,
   TrendingUp,
   Wrench,
   ScrollText,
 } from "lucide-react";
-import { useState, useMemo, useCallback, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { calculateAtsScore } from "@/lib/atsScore";
 import type { AtsAnalysis } from "@/lib/types";
 
@@ -28,79 +24,16 @@ interface AtsScoreTabProps {
   currentCv?: string;
   jobDescription?: string;
   onCvChange?: (html: string) => void;
-  onAddKeywordBullet?: (keyword: string, bullet: string, sectionHint: string) => void;
   addedKeywords?: Set<string>;
-  cvModelBullets?: string[][]; // all experience entry bullets for dedup
-}
-
-interface GeneratedBullet {
-  bullet: string;
-  section: string;
-  isRephrase: boolean;
-  confidence: string;
-  sourceBulletKey?: string; // tracks which source bullet this suggestion targets
 }
 
 const TARGET_SCORE = 90;
-const SCORE_DEBOUNCE_MS = 500;
 
-/**
- * Identify which existing CV bullet a generated suggestion is most likely rephrasing.
- * Returns a stable key like "expIdx:bulletIdx:first50chars" or null.
- */
-function findSourceBullet(generatedBullet: string, cvText: string): string | null {
-  // Extract bullets from plain text CV (lines starting with •)
-  const lines = cvText.split('\n');
-  const bullets: { key: string; text: string }[] = [];
-  let expIdx = 0;
-  let bulletIdx = 0;
-  let inExperience = false;
-
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (/^PROFESSIONAL EXPERIENCE$/i.test(trimmed)) { inExperience = true; expIdx = 0; bulletIdx = 0; continue; }
-    if (/^(EDUCATION|SKILLS|PROJECTS|CERTIFICATIONS|AWARDS|PROFILE SUMMARY)$/i.test(trimmed)) { inExperience = false; continue; }
-    if (inExperience && trimmed.startsWith('•')) {
-      const text = trimmed.replace(/^•\s*/, '');
-      bullets.push({ key: `${expIdx}:${bulletIdx}:${text.slice(0, 50)}`, text });
-      bulletIdx++;
-    } else if (inExperience && !trimmed.startsWith('•') && trimmed.length > 0 && !trimmed.startsWith('—')) {
-      // New experience entry
-      expIdx++;
-      bulletIdx = 0;
-    }
-  }
-
-  if (bullets.length === 0) return null;
-
-  // Score each bullet for overlap with the generated one
-  const genWords = new Set(generatedBullet.toLowerCase().split(/\s+/).filter(w => w.length > 3));
-  let bestKey: string | null = null;
-  let bestScore = -1;
-
-  for (const b of bullets) {
-    const bWords = b.text.toLowerCase().split(/\s+/).filter(w => w.length > 3);
-    if (bWords.length === 0) continue;
-    const overlap = bWords.filter(w => genWords.has(w)).length / bWords.length;
-    if (overlap > bestScore && overlap > 0.2) {
-      bestScore = overlap;
-      bestKey = b.key;
-    }
-  }
-
-  return bestKey;
-}
-
-const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, onAddKeywordBullet, addedKeywords: parentAddedKeywords, cvModelBullets }: AtsScoreTabProps) => {
+const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, addedKeywords: parentAddedKeywords }: AtsScoreTabProps) => {
   const { score, keywordsFound, keywordsMissing, formattingIssues, quickWins } = atsAnalysis;
-  const [loadingKeyword, setLoadingKeyword] = useState<string | null>(null);
-  const [previews, setPreviews] = useState<Record<string, GeneratedBullet>>({});
-  // Use parent-provided addedKeywords (persistent across tab switches), fallback to empty set
   const addedKeywords = parentAddedKeywords || new Set<string>();
   const [fixingFormat, setFixingFormat] = useState(false);
   const [animatedScore, setAnimatedScore] = useState(score);
-  const [highlightedSection, setHighlightedSection] = useState<string | null>(null);
-  const scoreTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { toast } = useToast();
 
   // Animate score changes smoothly
@@ -146,7 +79,7 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, onAdd
 
   const projectedScorePerKeyword = useMemo(() => {
     if (totalKeywords === 0) return 0;
-    return Math.round(70 / totalKeywords); // each keyword is worth ~70/total points
+    return Math.round(70 / totalKeywords);
   }, [totalKeywords]);
 
   const scoreColor =
@@ -154,219 +87,23 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, onAdd
   const scoreBarColor =
     animatedScore >= 80 ? "[&>div]:bg-success" : animatedScore >= 60 ? "[&>div]:bg-yellow-500" : "[&>div]:bg-destructive";
 
-  // Check if keyword already exists in CV (duplicate detection)
-  const keywordExistsInCv = useCallback(
-    (keyword: string): boolean => {
-      if (!currentCv) return false;
-      const cvLower = currentCv.toLowerCase();
-      return cvLower.includes(keyword.toLowerCase());
-    },
-    [currentCv]
-  );
-
-  // Find best matching section in CV for a keyword
-  const findBestSection = useCallback(
-    (sectionHint: string): { position: number; sectionName: string } | null => {
-      if (!currentCv) return null;
-
-      const sectionMap: Record<string, string[]> = {
-        skills: ["skills", "technical skills", "core competencies", "competenze", "abilità"],
-        experience: ["experience", "work experience", "professional experience", "esperienza", "esperienze"],
-        education: ["education", "academic", "istruzione", "formazione"],
-        summary: ["summary", "profile", "about", "objective", "profilo", "riepilogo"],
-        certifications: ["certifications", "certificates", "certificazioni"],
-      };
-
-      const hint = sectionHint.toLowerCase();
-      const sectionKeys = Object.entries(sectionMap);
-
-      // Find matching section category
-      let targetPatterns: string[] = [];
-      for (const [key, patterns] of sectionKeys) {
-        if (hint.includes(key) || patterns.some((p) => hint.includes(p))) {
-          targetPatterns = patterns;
-          break;
-        }
-      }
-
-      if (targetPatterns.length === 0) {
-        // Default to experience
-        targetPatterns = sectionMap.experience;
-      }
-
-      // Search CV for section heading
-      for (const pattern of targetPatterns) {
-        const regex = new RegExp(`<h[12][^>]*>[^<]*${pattern}[^<]*</h[12]>`, "i");
-        const match = currentCv.match(regex);
-        if (match && match.index !== undefined) {
-          return { position: match.index + match[0].length, sectionName: pattern };
-        }
-        // Try bold/strong headings
-        const boldRegex = new RegExp(`<(?:strong|b)>[^<]*${pattern}[^<]*</(?:strong|b)>`, "i");
-        const boldMatch = currentCv.match(boldRegex);
-        if (boldMatch && boldMatch.index !== undefined) {
-          return { position: boldMatch.index + boldMatch[0].length, sectionName: pattern };
-        }
-      }
-
-      return null;
-    },
-    [currentCv]
-  );
-
-  const handleGenerateBullet = async (keyword: string) => {
-    if (!currentCv) {
-      toast({ title: "No CV loaded", description: "Please analyze a CV first.", variant: "destructive" });
-      return;
-    }
-
-    // Check for duplicates
-    if (keywordExistsInCv(keyword)) {
-      toast({
-        title: "Keyword already in CV",
-        description: `"${keyword}" already appears in your CV. Consider enhancing the existing bullet instead.`,
-      });
-    }
-
-    setLoadingKeyword(keyword);
-    try {
-      const { data, error } = await supabase.functions.invoke("generate-keyword-bullet", {
-        body: { keyword, cvContent: currentCv, jobDescription, existingBullets: cvModelBullets ? cvModelBullets.flat() : [] },
-      });
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
-      // Track which source bullet this suggestion targets
-      const sourceBulletKey = currentCv ? findSourceBullet(data.bullet, currentCv) : null;
-      const enrichedData: GeneratedBullet = { ...data, sourceBulletKey: sourceBulletKey || undefined };
-
-      setPreviews((prev) => {
-        const next = { ...prev };
-        // If another preview already targets the same source bullet, keep the higher-confidence one
-        if (sourceBulletKey) {
-          for (const [existingKw, existingPreview] of Object.entries(next)) {
-            if (existingKw !== keyword && existingPreview.sourceBulletKey === sourceBulletKey) {
-              const confOrder = { high: 3, medium: 2, low: 1 };
-              const existingConf = confOrder[existingPreview.confidence as keyof typeof confOrder] || 0;
-              const newConf = confOrder[enrichedData.confidence as keyof typeof confOrder] || 0;
-              if (newConf >= existingConf) {
-                delete next[existingKw]; // remove the lower-confidence duplicate
-              } else {
-                // Existing is better; discard the new one
-                toast({ title: `"${keyword}" targets the same bullet as "${existingKw}"`, description: "Keeping the higher-quality suggestion." });
-                return next;
-              }
-            }
-          }
-        }
-        next[keyword] = enrichedData;
-        return next;
-      });
-    } catch (err: any) {
-      toast({
-        title: "Failed to generate",
-        description: err.message || "Try again",
-        variant: "destructive",
-      });
-    } finally {
-      setLoadingKeyword(null);
-    }
-  };
-
-  const handleApplyBullet = (keyword: string) => {
-    const preview = previews[keyword];
-    if (!preview) return;
-
-    // Use CvDataModel callback if available (preferred)
-    if (onAddKeywordBullet) {
-      onAddKeywordBullet(keyword, preview.bullet, preview.section);
-    } else if (onCvChange && currentCv) {
-      // Fallback to HTML insertion
-      const bulletHtml = `<ul><li>${preview.bullet}</li></ul>`;
-      const section = findBestSection(preview.section);
-      let newCv: string;
-      if (section) {
-        const afterSection = currentCv.slice(section.position);
-        const nextSectionMatch = afterSection.match(/<h[12][^>]*>/i);
-        if (nextSectionMatch && nextSectionMatch.index !== undefined) {
-          const insertAt = section.position + nextSectionMatch.index;
-          newCv = currentCv.slice(0, insertAt) + bulletHtml + currentCv.slice(insertAt);
-        } else {
-          newCv = currentCv.slice(0, section.position) + bulletHtml + currentCv.slice(section.position);
-        }
-      } else {
-        newCv = currentCv + bulletHtml;
-      }
-      onCvChange(newCv);
-    }
-
-    // addedKeywords is now managed by parent via onAddKeywordBullet
-
-    // Clear this preview AND any other previews targeting the same source bullet
-    setPreviews((prev) => {
-      const next = { ...prev };
-      const sourceBulletKey = preview.sourceBulletKey;
-      delete next[keyword];
-      // Remove other previews targeting the same source bullet
-      if (sourceBulletKey) {
-        for (const [otherKw, otherPreview] of Object.entries(next)) {
-          if (otherPreview.sourceBulletKey === sourceBulletKey) {
-            delete next[otherKw];
-          }
-        }
-      }
-      return next;
-    });
-
-    // Highlight the section briefly
-    setHighlightedSection(preview.section);
-    setTimeout(() => setHighlightedSection(null), 3000);
-
-    toast({
-      title: `✓ Added "${keyword}"`,
-      description: `Inserted in ${preview.section} section`,
-    });
-  };
-
-  const handleDismissPreview = (keyword: string) => {
-    setPreviews((prev) => {
-      const next = { ...prev };
-      delete next[keyword];
-      return next;
-    });
-  };
-
   // Auto-fix formatting issues
   const handleAutoFixFormatting = () => {
     if (!currentCv || !onCvChange) return;
     setFixingFormat(true);
 
     let fixed = currentCv;
-
-    // Strip hyperlinks but keep text
     fixed = fixed.replace(/<a[^>]*>(.*?)<\/a>/gi, "$1");
-
-    // Remove images
     fixed = fixed.replace(/<img[^>]*>/gi, "");
-
-    // Strip inline styles that ATS can't read
     fixed = fixed.replace(/\s*style="[^"]*"/gi, "");
-
-    // Remove problematic special characters
     fixed = fixed.replace(/[★☆►▶●○◆◇■□▪▫–—]/g, "");
-    fixed = fixed.replace(/\u00A0/g, " "); // non-breaking spaces
-
-    // Normalize whitespace
+    fixed = fixed.replace(/\u00A0/g, " ");
     fixed = fixed.replace(/\s{2,}/g, " ");
-
-    // Clean empty tags
     fixed = fixed.replace(/<(p|li|div|span)>\s*<\/\1>/gi, "");
 
     onCvChange(fixed);
 
     const issuesFixed = formattingIssues.length;
-    console.log(`[ATS] Auto-fixed formatting: ${issuesFixed} issues addressed`);
-    console.log(`[ATS] Predicted score boost: +${Math.min(5, issuesFixed * 2)}%`);
-
     toast({
       title: `✓ Formatting fixed`,
       description: `${issuesFixed} issue${issuesFixed !== 1 ? "s" : ""} addressed • Expected +3-5% score boost`,
@@ -473,7 +210,6 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, onAdd
                   ✓ {kw}
                 </Badge>
               ))}
-              {/* Show newly added keywords with special styling */}
               {Array.from(addedKeywords)
                 .filter((kw) => !keywordsFound.map((k) => k.toLowerCase()).includes(kw))
                 .map((kw) => (
@@ -488,7 +224,7 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, onAdd
           </CardContent>
         </Card>
 
-        {/* Missing Keywords */}
+        {/* Missing Keywords — read-only chips */}
         <Card className="border-destructive/20">
           <CardHeader className="pb-3">
             <CardTitle className="text-base font-bold flex items-center gap-2">
@@ -497,52 +233,21 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, onAdd
             </CardTitle>
             {effectiveMissing.length > 0 && (
               <p className="text-xs text-muted-foreground">
-                {currentCv
-                  ? "If a keyword matches your experience, click ADD to generate a tailored bullet."
-                  : "Click a keyword to copy it, then add it to your CV in the Edit tab."}
+                Address these via the AI Suggestions below to improve your ATS score.
               </p>
             )}
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent>
             <div className="flex flex-wrap gap-2">
-              {effectiveMissing.map((kw) => {
-                const isDuplicate = keywordExistsInCv(kw);
-                return (
-                  <div key={kw} className="inline-flex">
-                    {currentCv ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-auto px-2.5 py-1 gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10 text-xs font-normal rounded-full"
-                        onClick={() => handleGenerateBullet(kw)}
-                        disabled={loadingKeyword === kw}
-                      >
-                        {loadingKeyword === kw ? (
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                        ) : (
-                          <Plus className="h-3 w-3" />
-                        )}
-                        {kw}
-                        {isDuplicate && (
-                          <span className="text-[10px] opacity-60 ml-0.5">(enhance)</span>
-                        )}
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-auto px-2.5 py-1 gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10 text-xs font-normal rounded-full"
-                        onClick={async () => {
-                          await navigator.clipboard.writeText(kw);
-                          toast({ title: `"${kw}" copied`, description: "Paste it into your CV in the Edit tab." });
-                        }}
-                      >
-                        ✗ {kw}
-                      </Button>
-                    )}
-                  </div>
-                );
-              })}
+              {effectiveMissing.map((kw) => (
+                <Badge
+                  key={kw}
+                  variant="outline"
+                  className="text-destructive border-destructive/30 text-xs"
+                >
+                  ✗ {kw}
+                </Badge>
+              ))}
               {effectiveMissing.length === 0 && (
                 <p className="text-sm text-success font-medium">🎉 All keywords covered!</p>
               )}
@@ -550,66 +255,6 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, onAdd
           </CardContent>
         </Card>
       </div>
-
-      {/* AI-Generated Bullet Previews */}
-      {Object.entries(previews).map(([keyword, preview]) => {
-        return (
-          <Card key={keyword} className="border-primary/30 bg-primary/5 animate-in fade-in-0 slide-in-from-top-2 duration-300">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2 flex-wrap">
-                <Sparkles className="h-4 w-4 text-primary" />
-                AI-generated for "{keyword}"
-                <Badge variant="outline" className="text-[10px] ml-1">
-                  → {preview.section}
-                </Badge>
-                {preview.isRephrase && (
-                  <Badge variant="outline" className="text-[10px] bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
-                    Rephrase suggestion
-                  </Badge>
-                )}
-                <Badge
-                  variant="outline"
-                  className={`text-[10px] ${
-                    preview.confidence === "high"
-                      ? "bg-success/10 text-success border-success/20"
-                      : preview.confidence === "medium"
-                      ? "bg-yellow-500/10 text-yellow-600 border-yellow-500/20"
-                      : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  {preview.confidence} match
-                </Badge>
-                <span className="text-[10px] text-muted-foreground ml-auto">
-                  +~{projectedScorePerKeyword}% score
-                </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="rounded-lg border bg-card p-3 text-sm mb-3">
-                <Eye className="h-3.5 w-3.5 text-muted-foreground inline mr-2" />
-                {preview.bullet}
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  className="bg-success hover:bg-success/90 text-success-foreground"
-                  onClick={() => handleApplyBullet(keyword)}
-                >
-                  <Check className="h-3.5 w-3.5 mr-1" /> Add to CV
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="text-muted-foreground"
-                  onClick={() => handleDismissPreview(keyword)}
-                >
-                  Dismiss
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })}
 
       {/* Formatting Issues with Auto-Fix */}
       {formattingIssues.length > 0 && (
@@ -676,14 +321,6 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, onAdd
             </ol>
           </CardContent>
         </Card>
-      )}
-
-      {/* Section highlight indicator */}
-      {highlightedSection && (
-        <div className="fixed bottom-6 right-6 bg-success text-success-foreground px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 animate-in fade-in-0 slide-in-from-bottom-4 duration-300 z-50">
-          <ScrollText className="h-4 w-4" />
-          Bullet added to {highlightedSection} — switch to CV Editor tab to review
-        </div>
       )}
     </div>
   );
