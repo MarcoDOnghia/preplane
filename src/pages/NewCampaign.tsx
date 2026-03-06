@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import InputSection from "@/components/InputSection";
 import ResultsSection from "@/components/ResultsSection";
 import CampaignBanner from "@/components/CampaignBanner";
+import AlignmentBanner from "@/components/AlignmentBanner";
 import ApplicationTrackingModal from "@/components/ApplicationTrackingModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -30,6 +31,7 @@ const Index = () => {
   const [onboardingChecked, setOnboardingChecked] = useState(false);
   const [targetRole, setTargetRole] = useState<string | null>(null);
   const [targetLocation, setTargetLocation] = useState<string | null>(null);
+  const [alignmentData, setAlignmentData] = useState<{ alignment: "strong" | "partial" | "weak"; reason: string; targetRole: string } | null>(null);
 
   // Check onboarding status and save any pending target from onboarding
   useEffect(() => {
