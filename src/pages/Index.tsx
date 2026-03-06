@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/Header";
 import InputSection from "@/components/InputSection";
@@ -22,6 +22,25 @@ const LOADING_STEPS = [
 
 const Index = () => {
   const { user, loading: authLoading } = useAuth();
+  const nav = useNavigate();
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
+
+  // Check onboarding status
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("onboarding_completed")
+      .eq("user_id", user.id)
+      .single()
+      .then(({ data }) => {
+        if (data && !(data as any).onboarding_completed) {
+          nav("/onboarding", { replace: true });
+        } else {
+          setOnboardingChecked(true);
+        }
+      });
+  }, [user, nav]);
   const [result, setResult] = useState<TailorResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("");
