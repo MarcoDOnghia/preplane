@@ -50,6 +50,8 @@ import {
   ArrowLeft,
   Flag,
   Archive,
+  Info,
+  X,
 } from "lucide-react";
 
 interface CampaignData {
@@ -76,21 +78,24 @@ interface CampaignData {
 }
 
 const STATUS_OPTIONS = [
-  { value: "targeting", label: "Targeting", color: "bg-blue-500/10 text-blue-600 border-blue-500/20" },
-  { value: "applied", label: "Applied", color: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20" },
-  { value: "followed_up", label: "Followed Up", color: "bg-purple-500/10 text-purple-600 border-purple-500/20" },
-  { value: "response_received", label: "Response Received", color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" },
-  { value: "rejected", label: "Rejected", color: "bg-destructive/10 text-destructive border-destructive/20" },
+  { value: "targeting", label: "Researching", color: "bg-blue-500/10 text-blue-600 border-blue-500/20" },
+  { value: "applied", label: "Formally Applied", color: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20" },
+  { value: "followed_up", label: "Following Up", color: "bg-purple-500/10 text-purple-600 border-purple-500/20" },
+  { value: "response_received", label: "In Conversation", color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" },
+  { value: "rejected", label: "Not This Time", color: "bg-destructive/10 text-destructive border-destructive/20" },
 ];
 
+// Reordered: CV → Find contact → Proof of work → Send outreach → Cover letter → Follow-up
 const STEPS = [
-  { key: "step_cv_done", label: "CV tailored", weight: 20, icon: FileText },
-  { key: "step_connection_done", label: "Connection identified", weight: 15, icon: Users },
-  { key: "step_outreach_done", label: "Outreach sent", weight: 20, icon: Send },
-  { key: "step_proof_done", label: "Proof of work created", weight: 20, icon: Lightbulb },
-  { key: "step_cover_letter_done", label: "Cover letter ready", weight: 10, icon: Mail },
-  { key: "step_followup_done", label: "Follow-up scheduled", weight: 15, icon: Clock },
+  { key: "step_cv_done", label: "CV tailored", weight: 20, icon: FileText, subtext: "" },
+  { key: "step_connection_done", label: "Find your contact", weight: 15, icon: Users, subtext: "Do this before you apply. A name beats a contact form every time." },
+  { key: "step_proof_done", label: "Build proof of work", weight: 20, icon: Lightbulb, subtext: "Do this before you reach out. It gives you something real to say." },
+  { key: "step_outreach_done", label: "Send outreach", weight: 20, icon: Send, subtext: "Do this before you submit your CV. Let the proof of work open the door." },
+  { key: "step_cover_letter_done", label: "Cover letter ready", weight: 10, icon: Mail, subtext: "Have this ready for when they ask. Not before." },
+  { key: "step_followup_done", label: "Follow up", weight: 15, icon: Clock, subtext: "Most people follow up zero times. You follow up three times." },
 ] as const;
+
+const BANNER_DISMISS_PREFIX = "preplane_campaign_banner_dismissed_";
 
 const Campaign = () => {
   const { id } = useParams<{ id: string }>();
@@ -102,6 +107,9 @@ const Campaign = () => {
   const [loading, setLoading] = useState(true);
   const [openSteps, setOpenSteps] = useState<Set<number>>(new Set());
   const [generating, setGenerating] = useState<string | null>(null);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+  const [showApplyWarning, setShowApplyWarning] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState<string | null>(null);
 
   // Local editable state
   const [connectionName, setConnectionName] = useState("");
@@ -112,6 +120,12 @@ const Campaign = () => {
   const [followups, setFollowups] = useState<{ day3: string; day7: string; day14: string }>({ day3: "", day7: "", day14: "" });
   const [followupSent, setFollowupSent] = useState<{ day3: boolean; day7: boolean; day14: boolean }>({ day3: false, day7: false, day14: false });
   const [notes, setNotes] = useState("");
+
+  useEffect(() => {
+    if (id) {
+      setBannerDismissed(localStorage.getItem(BANNER_DISMISS_PREFIX + id) === "1");
+    }
+  }, [id]);
 
   useEffect(() => {
     if (authLoading || !user || !id) return;
@@ -163,6 +177,25 @@ const Campaign = () => {
 
   const statusInfo = STATUS_OPTIONS.find((s) => s.value === campaign?.status) || STATUS_OPTIONS[0];
 
+  const handleStatusChange = (val: string) => {
+    if (!campaign) return;
+    // Warn if trying to set "applied" before steps 2, 3, 4 are done
+    if (val === "applied" && (!campaign.step_connection_done || !campaign.step_proof_done || !campaign.step_outreach_done)) {
+      setPendingStatus(val);
+      setShowApplyWarning(true);
+      return;
+    }
+    updateCampaign({ status: val });
+  };
+
+  const confirmApplyAnyway = () => {
+    if (pendingStatus) {
+      updateCampaign({ status: pendingStatus });
+    }
+    setShowApplyWarning(false);
+    setPendingStatus(null);
+  };
+
   // AI generation
   const generateContent = async (contentType: string) => {
     if (!campaign) return;
@@ -176,6 +209,7 @@ const Campaign = () => {
           jdText: campaign.jd_text,
           cvSummary: campaign.cv_version?.slice(0, 2000),
           connectionName: connectionName || undefined,
+          proofOfWorkTitle: contentType === "outreach" ? getProofTitle() : undefined,
         },
       });
       if (error) throw error;
@@ -202,11 +236,26 @@ const Campaign = () => {
     }
   };
 
+  const getProofTitle = (): string | undefined => {
+    if (!proofSuggestion) return undefined;
+    try {
+      const parsed = JSON.parse(proofSuggestion);
+      return parsed?.title;
+    } catch {
+      return proofSuggestion.split("\n")[0];
+    }
+  };
+
   const handleArchive = async () => {
     if (!id) return;
     await supabase.from("campaigns").update({ archived: true } as any).eq("id", id);
     toast({ title: "Campaign archived" });
     navigate("/app");
+  };
+
+  const dismissBanner = () => {
+    if (id) localStorage.setItem(BANNER_DISMISS_PREFIX + id, "1");
+    setBannerDismissed(true);
   };
 
   const toggleStep = (idx: number) => {
@@ -256,7 +305,7 @@ const Campaign = () => {
           <div className="flex items-center gap-2">
             <Select
               value={campaign.status}
-              onValueChange={(val) => updateCampaign({ status: val })}
+              onValueChange={handleStatusChange}
             >
               <SelectTrigger className="w-auto">
                 <Badge variant="outline" className={statusInfo.color}>
@@ -292,6 +341,37 @@ const Campaign = () => {
           </div>
         </div>
 
+        {/* Apply warning dialog */}
+        <AlertDialog open={showApplyWarning} onOpenChange={setShowApplyWarning}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Pre-application steps incomplete</AlertDialogTitle>
+              <AlertDialogDescription>
+                You haven't completed your pre-application steps yet. Students who reach out with a proof of work before applying get significantly more responses. Are you sure you want to mark this as formally applied?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => { setShowApplyWarning(false); setPendingStatus(null); }}>
+                Go back and complete steps
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={confirmApplyAnyway}>Apply anyway</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Pre-apply banner */}
+        {!bannerDismissed && (
+          <div className="relative rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 px-4 py-3 flex items-start gap-3">
+            <Info className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
+            <p className="text-sm text-blue-800 dark:text-blue-200 flex-1">
+              These steps are designed to be completed before you formally apply. A warm introduction and a proof of work will make your application 10x more memorable than a cold CV submission.
+            </p>
+            <button onClick={dismissBanner} className="text-blue-400 hover:text-blue-600 shrink-0">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+
         {/* Campaign Strength Score */}
         <Card>
           <CardContent className="pt-6">
@@ -306,7 +386,7 @@ const Campaign = () => {
             </div>
             <Progress value={strengthScore} className="h-3" />
             <div className="flex flex-wrap gap-2 mt-3">
-              {STEPS.map((s, i) => (
+              {STEPS.map((s) => (
                 <Badge key={s.key} variant="outline" className={`text-xs ${campaign[s.key] ? "bg-success/10 text-success border-success/20" : "text-muted-foreground"}`}>
                   {campaign[s.key] ? <Check className="h-3 w-3 mr-1" /> : null}
                   {s.label} ({s.weight}%)
@@ -398,63 +478,21 @@ const Campaign = () => {
                   className="mt-1"
                 />
               </div>
-              <Button
-                size="sm"
-                onClick={() => generateContent("outreach")}
-                disabled={!!generating}
-              >
-                {generating === "outreach" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
-                Generate outreach message
-              </Button>
-              {outreachMessage && (
-                <div className="space-y-2">
-                  <Textarea
-                    value={outreachMessage}
-                    onChange={(e) => setOutreachMessage(e.target.value)}
-                    onBlur={() => updateCampaign({ outreach_message: outreachMessage })}
-                    rows={5}
-                    className="text-sm"
-                  />
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      navigator.clipboard.writeText(outreachMessage);
-                      toast({ title: "Copied to clipboard!" });
-                    }}
-                  >
-                    Copy message
-                  </Button>
-                </div>
-              )}
-              <Button
-                size="sm"
-                variant="default"
-                className="bg-success hover:bg-success/90"
-                disabled={!connectionName}
-                onClick={async () => {
-                  const followDate = new Date();
-                  followDate.setDate(followDate.getDate() + 7);
-                  await updateCampaign({
-                    step_connection_done: true,
-                    step_outreach_done: true,
-                    connection_name: connectionName,
-                    connection_url: connectionUrl || null,
-                    outreach_message: outreachMessage || null,
-                    followup_date: followDate.toISOString(),
-                  });
-                  toast({ title: "Marked as sent! Follow-up set for 7 days." });
-                }}
-              >
-                <Check className="h-4 w-4 mr-1" /> Mark as sent
-              </Button>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="connection-done"
+                  checked={campaign.step_connection_done}
+                  onCheckedChange={(checked) => updateCampaign({ step_connection_done: !!checked, connection_name: connectionName || null, connection_url: connectionUrl || null })}
+                />
+                <label htmlFor="connection-done" className="text-sm">I've found my contact</label>
+              </div>
             </div>
           </StepCard>
 
           {/* Step 3: Proof of work */}
           <StepCard
             index={2}
-            step={STEPS[3]}
+            step={STEPS[2]}
             done={campaign.step_proof_done}
             open={openSteps.has(2)}
             onToggle={() => toggleStep(2)}
@@ -543,13 +581,74 @@ const Campaign = () => {
             </div>
           </StepCard>
 
-          {/* Step 4: Cover letter */}
+          {/* Step 4: Send outreach */}
           <StepCard
             index={3}
-            step={STEPS[4]}
-            done={campaign.step_cover_letter_done}
+            step={STEPS[3]}
+            done={campaign.step_outreach_done}
             open={openSteps.has(3)}
             onToggle={() => toggleStep(3)}
+          >
+            <div className="space-y-3">
+              <Button
+                size="sm"
+                onClick={() => generateContent("outreach")}
+                disabled={!!generating}
+              >
+                {generating === "outreach" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
+                Generate outreach message
+              </Button>
+              {outreachMessage && (
+                <div className="space-y-2">
+                  <Textarea
+                    value={outreachMessage}
+                    onChange={(e) => setOutreachMessage(e.target.value)}
+                    onBlur={() => updateCampaign({ outreach_message: outreachMessage })}
+                    rows={5}
+                    className="text-sm"
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      navigator.clipboard.writeText(outreachMessage);
+                      toast({ title: "Copied to clipboard!" });
+                    }}
+                  >
+                    Copy message
+                  </Button>
+                </div>
+              )}
+              <Button
+                size="sm"
+                variant="default"
+                className="bg-success hover:bg-success/90"
+                disabled={!connectionName}
+                onClick={async () => {
+                  const followDate = new Date();
+                  followDate.setDate(followDate.getDate() + 7);
+                  await updateCampaign({
+                    step_outreach_done: true,
+                    connection_name: connectionName,
+                    connection_url: connectionUrl || null,
+                    outreach_message: outreachMessage || null,
+                    followup_date: followDate.toISOString(),
+                  });
+                  toast({ title: "Marked as sent! Follow-up set for 7 days." });
+                }}
+              >
+                <Check className="h-4 w-4 mr-1" /> Mark as sent
+              </Button>
+            </div>
+          </StepCard>
+
+          {/* Step 5: Cover letter */}
+          <StepCard
+            index={4}
+            step={STEPS[4]}
+            done={campaign.step_cover_letter_done}
+            open={openSteps.has(4)}
+            onToggle={() => toggleStep(4)}
           >
             <div className="space-y-3">
               {!coverLetter && (
@@ -582,13 +681,13 @@ const Campaign = () => {
             </div>
           </StepCard>
 
-          {/* Step 5: Follow-up */}
+          {/* Step 6: Follow-up */}
           <StepCard
-            index={4}
+            index={5}
             step={STEPS[5]}
             done={campaign.step_followup_done}
-            open={openSteps.has(4)}
-            onToggle={() => toggleStep(4)}
+            open={openSteps.has(5)}
+            onToggle={() => toggleStep(5)}
           >
             <div className="space-y-3">
               {campaign.followup_date && (
@@ -641,13 +740,13 @@ const Campaign = () => {
             </div>
           </StepCard>
 
-          {/* Step 6: Outcome */}
+          {/* Outcome */}
           <StepCard
-            index={5}
-            step={{ label: "Outcome", weight: 0, icon: Flag }}
+            index={6}
+            step={{ label: "Outcome", weight: 0, icon: Flag, subtext: "" }}
             done={campaign.status === "response_received" || campaign.status === "rejected"}
-            open={openSteps.has(5)}
-            onToggle={() => toggleStep(5)}
+            open={openSteps.has(6)}
+            onToggle={() => toggleStep(6)}
             isOutcome
           >
             <div className="space-y-3">
@@ -655,7 +754,7 @@ const Campaign = () => {
                 <label className="text-sm font-medium">Update status</label>
                 <Select
                   value={campaign.status}
-                  onValueChange={(val) => updateCampaign({ status: val })}
+                  onValueChange={handleStatusChange}
                 >
                   <SelectTrigger className="mt-1">
                     <SelectValue />
@@ -697,7 +796,7 @@ function StepCard({
   isOutcome,
 }: {
   index: number;
-  step: { label: string; weight: number; icon: any };
+  step: { label: string; weight: number; icon: any; subtext: string };
   done: boolean;
   open: boolean;
   onToggle: () => void;
@@ -716,7 +815,12 @@ function StepCard({
             {done ? <Check className="h-3.5 w-3.5" /> : index + 1}
           </span>
           <Icon className="h-4 w-4 text-muted-foreground" />
-          <span className="flex-1">{step.label}</span>
+          <span className="flex-1">
+            {step.label}
+            {step.subtext && (
+              <span className="block text-xs font-normal text-muted-foreground mt-0.5">{step.subtext}</span>
+            )}
+          </span>
           {!isOutcome && (
             <span className="text-xs text-muted-foreground font-normal">{step.weight}%</span>
           )}
