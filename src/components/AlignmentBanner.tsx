@@ -11,7 +11,7 @@ const config = {
   strong: {
     bg: "bg-success/10 border-success/30",
     icon: <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />,
-    text: (role: string) => `This role is a strong step toward ${role}.`,
+    text: (role: string, _reason?: string) => `This role is a strong step toward ${role}.`,
   },
   partial: {
     bg: "bg-yellow-500/10 border-yellow-500/30",
