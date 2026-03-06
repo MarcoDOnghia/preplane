@@ -37,7 +37,7 @@ const AlignmentBanner = ({ alignment, reason, targetRole }: AlignmentBannerProps
     <div className={`rounded-lg border p-3 flex items-start gap-3 ${c.bg}`}>
       {c.icon}
       <p className="text-sm flex-1">
-        {alignment === "strong" ? c.text(targetRole) : c.text(targetRole, reason)}
+        {c.text(targetRole, reason)}
       </p>
       <button onClick={() => setDismissed(true)} className="shrink-0 text-muted-foreground hover:text-foreground">
         <X className="h-4 w-4" />
