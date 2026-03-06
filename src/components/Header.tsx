@@ -1,6 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Compass, LogOut, Home, FileText } from "lucide-react";
+import { Compass, LogOut, Home, FileText, Target } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 const Header = () => {
@@ -38,6 +38,13 @@ const Header = () => {
             }}>
               <FileText className="h-4 w-4 mr-1" />
               CV Library
+            </Button>
+            <Button
+            variant={location.pathname === "/onboarding" ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => navigate("/onboarding")}>
+              <Target className="h-4 w-4 mr-1" />
+              My Target
             </Button>
             <Button variant="ghost" size="sm" onClick={signOut}>
               <LogOut className="h-4 w-4 mr-1" />
