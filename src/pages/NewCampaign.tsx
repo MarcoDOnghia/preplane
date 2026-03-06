@@ -593,6 +593,7 @@ const Index = () => {
   const handleSubmit = async (cvContent: string, jobDescription: string) => {
     setLoading(true);
     setResult(null);
+    setAlignmentData(null);
     downloadCountRef.current = 0;
     lastAppIdRef.current = null;
     setAppliedSuggestions([]);
