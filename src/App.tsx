@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import Onboarding from "./pages/Onboarding";
+import Campaign from "./pages/Campaign";
 import ResetPassword from "./pages/ResetPassword";
 import VerifyEmail from "./pages/VerifyEmail";
 import NotFound from "./pages/NotFound";
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/" element={<RootRedirect />} />
           <Route path="/app" element={<Index />} />
           <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/campaign/:id" element={<Campaign />} />
           <Route path="/auth" element={<Navigate to="/onboarding?step=4" replace />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
