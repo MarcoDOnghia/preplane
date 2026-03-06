@@ -1,12 +1,29 @@
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Compass, LogOut, Home, FileText, Target } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 const Header = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [targetRole, setTargetRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("target_role")
+      .eq("user_id", user.id)
+      .single()
+      .then(({ data }) => {
+        if (data && (data as any).target_role) {
+          setTargetRole((data as any).target_role);
+        }
+      });
+  }, [user]);
 
   return (
     <header className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-50">
@@ -20,6 +37,11 @@ const Header = () => {
 
         {user &&
         <div className="flex items-center gap-2">
+            {targetRole && (
+              <span className="hidden md:inline text-xs text-muted-foreground mr-2 max-w-[180px] truncate">
+                🎯 {targetRole}
+              </span>
+            )}
             <Button
             variant={location.pathname === "/app" ? "secondary" : "ghost"}
             size="sm"
