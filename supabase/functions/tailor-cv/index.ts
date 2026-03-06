@@ -133,7 +133,8 @@ Only extract keywords from sections relevant to candidate requirements.
    - keywordsMissing: job requirement keywords (English) that are NOT in the CV
    - Identify formatting issues (tables, columns, special characters, images, headers that ATS can't parse)
    - Provide 3 "quick wins" - easiest improvements for better ATS score
-3. Suggest specific CV modifications with original text, suggested replacement, reasoning, priority (high/medium/low), and impact score (1-10)
+3. Suggest specific CV modifications with original text, suggested replacement, reasoning, priority (high/medium/low), and impact score (1-10).
+   CRITICAL for experience bullet suggestions: Do NOT prefix the suggested bullet text with the job title, role name, or company name (e.g. never start with "Head of VC & Startups:" or "Sales Manager —"). Start the bullet directly with an action verb.
 4. Generate 3 cover letter versions following these STRICT rules:
 
    TONE RULES:

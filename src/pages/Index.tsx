@@ -185,10 +185,30 @@ const Index = () => {
       return clone;
     }
 
-    // STEP 5: If section hint targets skills, replace directly
+    // STEP 5: If section hint targets skills, replace only the matching subsection
     if (hint.includes('skill')) {
       console.log("MATCH FOUND in skills (hint bypass):", clone.skills?.slice(0, 60));
-      clone.skills = suggested;
+      // Split skills into lines and find which line the original matches
+      const skillLines = clone.skills.split('\n');
+      const origLower = original.replace(/\.{3,}$/, '').toLowerCase().trim();
+      const origPrefix = origLower.slice(0, 30);
+      let matchedLineIdx = -1;
+      for (let li = 0; li < skillLines.length; li++) {
+        const lineLower = skillLines[li].toLowerCase().trim();
+        if (lineLower && (lineLower.includes(origPrefix) || origLower.includes(lineLower.slice(0, 30)))) {
+          matchedLineIdx = li;
+          break;
+        }
+      }
+      if (matchedLineIdx >= 0 && skillLines.length > 1) {
+        // Replace only the matched line, preserve all others
+        console.log("SKILLS: replacing line", matchedLineIdx, "only:", skillLines[matchedLineIdx].slice(0, 60));
+        skillLines[matchedLineIdx] = suggested;
+        clone.skills = skillLines.join('\n');
+      } else {
+        // Single line or no match — replace entirely
+        clone.skills = suggested;
+      }
       return clone;
     }
 
