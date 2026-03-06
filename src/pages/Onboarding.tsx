@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Compass, ArrowRight, Linkedin, Mail, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+
+const ONBOARDING_KEY = "preplane_onboarding_done";
+const TARGET_KEY = "preplane_onboarding_target";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const passwordRules = [
@@ -18,7 +21,9 @@ const passwordRules = [
 ];
 
 const Onboarding = () => {
-  const [step, setStep] = useState(1);
+  const [searchParams] = useSearchParams();
+  const initialStep = searchParams.get("step") === "4" ? 4 : 1;
+  const [step, setStep] = useState(initialStep);
   const [targetRole, setTargetRole] = useState("");
   const [targetLocation, setTargetLocation] = useState("");
   const [targetStart, setTargetStart] = useState("");
@@ -49,6 +54,16 @@ const Onboarding = () => {
   useEffect(() => {
     if (sessionLoading) return;
     if (!user) {
+      // Load target from localStorage if available (pre-auth returning)
+      const saved = localStorage.getItem(TARGET_KEY);
+      if (saved) {
+        try {
+          const t = JSON.parse(saved);
+          if (t.target_role) setTargetRole(t.target_role);
+          if (t.target_location) setTargetLocation(t.target_location);
+          if (t.target_start) setTargetStart(t.target_start);
+        } catch {}
+      }
       setReady(true);
       return;
     }
@@ -89,15 +104,22 @@ const Onboarding = () => {
   const saveProfileAndComplete = async () => {
     if (!user) return;
     setSaving(true);
+    // Load from localStorage if component state is empty
+    const role = targetRole || (() => { try { return JSON.parse(localStorage.getItem(TARGET_KEY) || "{}").target_role; } catch { return null; } })();
+    const loc = targetLocation || (() => { try { return JSON.parse(localStorage.getItem(TARGET_KEY) || "{}").target_location; } catch { return null; } })();
+    const start = targetStart || (() => { try { return JSON.parse(localStorage.getItem(TARGET_KEY) || "{}").target_start; } catch { return null; } })();
     await supabase
       .from("profiles")
       .update({
-        target_role: targetRole || null,
-        target_location: targetLocation || null,
-        target_start: targetStart || null,
+        target_role: role || null,
+        target_location: loc || null,
+        target_start: start || null,
         onboarding_completed: true,
       } as any)
       .eq("user_id", user.id);
+    // Clean up localStorage
+    localStorage.removeItem(TARGET_KEY);
+    localStorage.removeItem(ONBOARDING_KEY);
     setSaving(false);
     navigate("/app");
   };
@@ -126,7 +148,12 @@ const Onboarding = () => {
         setStep(3);
       }
     } else {
-      // Not logged in — just advance, save later
+      // Not logged in — save to localStorage, advance
+      localStorage.setItem(TARGET_KEY, JSON.stringify({
+        target_role: targetRole,
+        target_location: targetLocation,
+        target_start: targetStart,
+      }));
       setStep(3);
     }
   };
@@ -166,7 +193,7 @@ const Onboarding = () => {
         });
         if (error) throw error;
         // Store target data in localStorage so we can save after email verification
-        localStorage.setItem("preplane_onboarding_target", JSON.stringify({
+        localStorage.setItem(TARGET_KEY, JSON.stringify({
           target_role: targetRole,
           target_location: targetLocation,
           target_start: targetStart,
@@ -346,6 +373,7 @@ const Onboarding = () => {
                       // Already logged in (came via "My Target") — complete
                       saveProfileAndComplete();
                     } else {
+                      localStorage.setItem(ONBOARDING_KEY, "true");
                       setStep(4);
                     }
                   }}
@@ -377,7 +405,7 @@ const Onboarding = () => {
                   disabled={authLoading}
                   onClick={async () => {
                     // Store target in localStorage before OAuth redirect
-                    localStorage.setItem("preplane_onboarding_target", JSON.stringify({
+                    localStorage.setItem(TARGET_KEY, JSON.stringify({
                       target_role: targetRole,
                       target_location: targetLocation,
                       target_start: targetStart,
