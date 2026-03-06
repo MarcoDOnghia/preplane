@@ -267,7 +267,10 @@ const Onboarding = () => {
                 Start owning your shot.
               </h1>
               <p className="text-muted-foreground text-base md:text-lg leading-relaxed max-w-[540px] mx-auto">
-                Most students send 30+ applications and hear nothing back. Not because their CV is bad — because they never stopped to ask: <em>what do I actually want, and am I building toward it?</em>
+                Most students send 30+ applications and hear nothing back.
+              </p>
+              <p className="text-muted-foreground text-base md:text-lg leading-relaxed max-w-[540px] mx-auto">
+                Not because their CV is bad — because they never stopped to ask: <em>what do I actually want, and am I building toward it?</em>
               </p>
               <p className="text-muted-foreground text-base md:text-lg leading-relaxed max-w-[540px] mx-auto">
                 PrepLane is being built to change that. Not a tool that helps you apply faster — one that helps you apply smarter, to fewer roles, with a genuinely compelling case for each one.
