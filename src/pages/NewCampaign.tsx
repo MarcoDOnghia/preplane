@@ -626,10 +626,41 @@ const Index = () => {
       // Store result with suggestions — but do NOT apply them to the model
       setResult(data);
 
-      const firstLine = jobDescription.split(/\n/)[0]?.trim() || "";
-      const dashMatch = firstLine.match(/^(.+?)\s*[—–]\s*(.+)$/);
-      const jobTitle = (dashMatch?.[1]?.trim() || firstLine).slice(0, 100) || "Untitled Position";
-      const company = dashMatch?.[2]?.trim().slice(0, 100) || "Unknown Company";
+      // Extract company and role from AI result or JD text
+      const stripMd = (s: string) => s.replace(/\*+/g, '').trim();
+      let jobTitle = "Untitled Position";
+      let company = "Unknown Company";
+
+      // Try AI result fields first
+      if (data.company) company = stripMd(data.company);
+      if (data.jobTitle || data.role) jobTitle = stripMd(data.jobTitle || data.role);
+
+      // Fallback: parse from JD text lines
+      if (company === "Unknown Company" || jobTitle === "Untitled Position") {
+        const lines = jobDescription.split(/\n/).map(l => l.trim()).filter(Boolean);
+        for (const line of lines) {
+          const companyMatch = line.match(/^(?:\*{0,2})Company[:\s]+\*{0,2}\s*(.+)/i);
+          if (companyMatch && company === "Unknown Company") {
+            company = stripMd(companyMatch[1]);
+          }
+          const roleMatch = line.match(/^(?:\*{0,2})(?:Role|Title|Position)[:\s]+\*{0,2}\s*(.+)/i);
+          if (roleMatch && jobTitle === "Untitled Position") {
+            jobTitle = stripMd(roleMatch[1]);
+          }
+        }
+        // Last fallback: first line dash pattern
+        if (jobTitle === "Untitled Position" || company === "Unknown Company") {
+          const firstLine = lines[0] || "";
+          const dashMatch = firstLine.match(/^(.+?)\s*[—–-]\s*(.+)$/);
+          if (dashMatch) {
+            if (jobTitle === "Untitled Position") jobTitle = stripMd(dashMatch[1]).slice(0, 100);
+            if (company === "Unknown Company") company = stripMd(dashMatch[2]).slice(0, 100);
+          } else if (jobTitle === "Untitled Position") {
+            jobTitle = stripMd(firstLine).slice(0, 100) || "Untitled Position";
+          }
+        }
+      }
+
       setLastJobTitle(jobTitle);
       setLastCompany(company);
       setLastJobDescription(jobDescription);
@@ -667,15 +698,16 @@ const Index = () => {
       <Header />
       <main className="mx-auto px-4 py-8 max-w-[1200px] space-y-10">
         {/* Target context */}
-        {targetRole && (
-          <div className="text-center space-y-1">
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Start a new application</h1>
-            <p className="text-muted-foreground text-sm">
-              Working toward: <span className="font-medium text-foreground">{targetRole}</span>
-              {targetLocation && <> in <span className="font-medium text-foreground">{targetLocation}</span></>}
-            </p>
-          </div>
-        )}
+        <div className="text-center space-y-2">
+          <h1 className="text-[32px] font-bold tracking-tight text-foreground">
+            {targetRole
+              ? `Build your case for ${targetRole}${targetLocation ? ` in ${targetLocation}` : ''}`
+              : 'Build your case'}
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            Paste a role you're genuinely excited about. One application, done properly.
+          </p>
+        </div>
         <InputSection
           onSubmit={handleSubmit}
           onClear={() => { setResult(null); downloadCountRef.current = 0; }}

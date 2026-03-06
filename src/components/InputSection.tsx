@@ -301,14 +301,9 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage }
 
   return (
     <div className="space-y-8">
-      {/* Hero */}
+      {/* Hero — copy is overridden by parent via targetRole/targetLocation context */}
       <div className="text-center space-y-2">
-        <h1 className="text-[32px] font-bold tracking-tight text-foreground">
-          Tailor your CV to any job in 60 seconds
-        </h1>
-        <p className="text-muted-foreground text-sm">
-          Upload your CV, paste a job description, get instant improvements
-        </p>
+        {/* Intentionally left empty — heading is provided by NewCampaign parent */}
       </div>
 
       {/* Two-column: CV Library (40%) | JD (60%) */}
