@@ -739,6 +739,13 @@ const Index = () => {
         )}
         {result && cvModel && (
           <>
+            {alignmentData && (
+              <AlignmentBanner
+                alignment={alignmentData.alignment}
+                reason={alignmentData.reason}
+                targetRole={alignmentData.targetRole}
+              />
+            )}
             <CampaignBanner
               company={lastCompany}
               role={lastJobTitle}
