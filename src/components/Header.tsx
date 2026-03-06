@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Compass, LogOut, Home, FileText, Target } from "lucide-react";
+import { Compass, LogOut, FileText, Target, LayoutDashboard } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -29,42 +29,45 @@ const Header = () => {
     <header className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-50">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <button
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/app")}
           className="flex items-center gap-2 text-primary hover:opacity-80 transition-opacity">
           <Compass className="h-6 w-6" />
           <span className="text-xl font-bold tracking-tight">PrepLane</span>
         </button>
 
-        {user &&
-        <div className="flex items-center gap-2">
+        {user && (
+          <div className="flex items-center gap-2">
             {targetRole && (
               <span className="hidden md:inline text-xs text-muted-foreground mr-2 max-w-[180px] truncate">
                 🎯 {targetRole}
               </span>
             )}
             <Button
-            variant={location.pathname === "/app" ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => navigate("/app")}>
-              <Home className="h-4 w-4 mr-1" />
-              New
+              variant={location.pathname === "/app" ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => navigate("/app")}
+            >
+              <LayoutDashboard className="h-4 w-4 mr-1" />
+              Dashboard
             </Button>
             <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              navigate("/app");
-              setTimeout(() => {
-                document.querySelector('[data-cv-library]')?.scrollIntoView({ behavior: 'smooth' });
-              }, 100);
-            }}>
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                navigate("/app/new");
+                setTimeout(() => {
+                  document.querySelector('[data-cv-library]')?.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+              }}
+            >
               <FileText className="h-4 w-4 mr-1" />
               CV Library
             </Button>
             <Button
-            variant={location.pathname === "/onboarding" ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => navigate("/onboarding")}>
+              variant={location.pathname === "/onboarding" ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => navigate("/onboarding")}
+            >
               <Target className="h-4 w-4 mr-1" />
               My Target
             </Button>
@@ -73,9 +76,10 @@ const Header = () => {
               Sign Out
             </Button>
           </div>
-        }
+        )}
       </div>
-    </header>);
+    </header>
+  );
 };
 
 export default Header;
