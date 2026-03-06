@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import InputSection from "@/components/InputSection";
 import ResultsSection from "@/components/ResultsSection";
 import CampaignBanner from "@/components/CampaignBanner";
+import AlignmentBanner from "@/components/AlignmentBanner";
 import ApplicationTrackingModal from "@/components/ApplicationTrackingModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -30,6 +31,7 @@ const Index = () => {
   const [onboardingChecked, setOnboardingChecked] = useState(false);
   const [targetRole, setTargetRole] = useState<string | null>(null);
   const [targetLocation, setTargetLocation] = useState<string | null>(null);
+  const [alignmentData, setAlignmentData] = useState<{ alignment: "strong" | "partial" | "weak"; reason: string; targetRole: string } | null>(null);
 
   // Check onboarding status and save any pending target from onboarding
   useEffect(() => {
@@ -591,6 +593,7 @@ const Index = () => {
   const handleSubmit = async (cvContent: string, jobDescription: string) => {
     setLoading(true);
     setResult(null);
+    setAlignmentData(null);
     downloadCountRef.current = 0;
     lastAppIdRef.current = null;
     setAppliedSuggestions([]);
@@ -617,6 +620,17 @@ const Index = () => {
     }, 4000);
 
     try {
+      // Fire alignment check in parallel (non-blocking)
+      if (targetRole) {
+        supabase.functions.invoke("check-alignment", {
+          body: { targetRole, jobDescription },
+        }).then(({ data: alignData }) => {
+          if (alignData && !alignData.skipped && alignData.alignment) {
+            setAlignmentData(alignData);
+          }
+        }).catch(() => {});
+      }
+
       const { data, error } = await supabase.functions.invoke("tailor-cv", {
         body: { cvContent, jobDescription, tone: "professional" },
       });
@@ -725,6 +739,13 @@ const Index = () => {
         )}
         {result && cvModel && (
           <>
+            {alignmentData && (
+              <AlignmentBanner
+                alignment={alignmentData.alignment}
+                reason={alignmentData.reason}
+                targetRole={alignmentData.targetRole}
+              />
+            )}
             <CampaignBanner
               company={lastCompany}
               role={lastJobTitle}
