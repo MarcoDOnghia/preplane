@@ -245,6 +245,81 @@ export type Database = {
         }
         Relationships: []
       }
+      campaigns: {
+        Row: {
+          company: string
+          connection_name: string | null
+          connection_url: string | null
+          cover_letter: string | null
+          created_at: string
+          cv_version: string
+          followup_date: string | null
+          id: string
+          jd_text: string
+          match_score: number
+          notes: string | null
+          outreach_message: string | null
+          proof_suggestion: string | null
+          role: string
+          status: string
+          step_connection_done: boolean
+          step_cover_letter_done: boolean
+          step_cv_done: boolean
+          step_followup_done: boolean
+          step_outreach_done: boolean
+          step_proof_done: boolean
+          user_id: string
+        }
+        Insert: {
+          company: string
+          connection_name?: string | null
+          connection_url?: string | null
+          cover_letter?: string | null
+          created_at?: string
+          cv_version?: string
+          followup_date?: string | null
+          id?: string
+          jd_text?: string
+          match_score?: number
+          notes?: string | null
+          outreach_message?: string | null
+          proof_suggestion?: string | null
+          role: string
+          status?: string
+          step_connection_done?: boolean
+          step_cover_letter_done?: boolean
+          step_cv_done?: boolean
+          step_followup_done?: boolean
+          step_outreach_done?: boolean
+          step_proof_done?: boolean
+          user_id: string
+        }
+        Update: {
+          company?: string
+          connection_name?: string | null
+          connection_url?: string | null
+          cover_letter?: string | null
+          created_at?: string
+          cv_version?: string
+          followup_date?: string | null
+          id?: string
+          jd_text?: string
+          match_score?: number
+          notes?: string | null
+          outreach_message?: string | null
+          proof_suggestion?: string | null
+          role?: string
+          status?: string
+          step_connection_done?: boolean
+          step_cover_letter_done?: boolean
+          step_cv_done?: boolean
+          step_followup_done?: boolean
+          step_outreach_done?: boolean
+          step_proof_done?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       cvs: {
         Row: {
           created_at: string
