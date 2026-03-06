@@ -40,19 +40,21 @@ Instructions:
 
 Example: "Hi [Name], I came across [Company]'s work on [specific thing] and found it really interesting. I'm exploring roles in [field] and would love to learn more about your experience there. Would be great to connect!"`,
 
-  proof_of_work: `You are a career strategist. Suggest ONE specific, achievable proof-of-work project that a candidate could complete in 2-5 hours to demonstrate fit for this role.
+  proof_of_work: `You are a career strategist and mentor. Suggest ONE specific, achievable proof-of-work project that a candidate could complete to demonstrate fit for this role.
 
 Instructions:
 - Be ultra-specific — not "do a project" but exactly what to create
 - Match the industry: VC → investment memo, Marketing → content teardown, Ops → process map, Engineering → small prototype
 - It should be impressive but achievable for a motivated student
-- Include a one-sentence explanation of WHY this demonstrates fit
-- Format: Title of the project, then 2-3 sentences describing what to do and how it helps
+- Tone: practical, encouraging, like a mentor giving a real brief
 
-Examples:
-- For VC: "Write a 1-page investment memo on an Italian startup in their portfolio, analyzing market opportunity and competitive landscape"
-- For Operations: "Build a simple process map for their onboarding flow based on public info, with 3 improvement suggestions"
-- For Marketing: "Do a content teardown of their last 10 LinkedIn posts — what's working, what's not, and 3 specific recommendations"`,
+You MUST return structured JSON with these fields:
+- title: A punchy project title
+- why_this_works: One sentence explaining why this project demonstrates fit for this specific role
+- what_to_build: Array of 3-4 bullet points describing exactly what the deliverable should include (specific, not vague)
+- tools_to_use: Array of 3-5 specific tools relevant to the project (e.g. Google Sheets, Notion, Canva, ChatGPT, LinkedIn Sales Navigator)
+- time_estimate: Realistic time estimate string (e.g. "2-3 hours")
+- ai_prompt: A complete, ready-to-use prompt the student can paste into ChatGPT or Claude to get started. The prompt should reference their background and the specific role/company.`,
 
   follow_up: `You are a career coach helping craft follow-up messages. Generate THREE follow-up templates:
 
@@ -153,10 +155,14 @@ ${connectionName ? `\nConnection/Recipient: ${connectionName}` : ""}
       },
       proof_of_work: {
         properties: {
-          title: { type: "string", description: "Title of the proof-of-work project" },
-          description: { type: "string", description: "Full description of what to do and why" },
+          title: { type: "string", description: "Punchy project title" },
+          why_this_works: { type: "string", description: "One sentence on why this demonstrates fit" },
+          what_to_build: { type: "array", items: { type: "string" }, description: "3-4 bullet points of what the deliverable should include" },
+          tools_to_use: { type: "array", items: { type: "string" }, description: "3-5 specific tools" },
+          time_estimate: { type: "string", description: "Realistic time estimate" },
+          ai_prompt: { type: "string", description: "Ready-to-use AI prompt for ChatGPT/Claude" },
         },
-        required: ["title", "description"],
+        required: ["title", "why_this_works", "what_to_build", "tools_to_use", "time_estimate", "ai_prompt"],
       },
       follow_up: {
         properties: {
