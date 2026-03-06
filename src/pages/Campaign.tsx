@@ -185,9 +185,9 @@ const Campaign = () => {
         setOutreachMessage(data.message);
         await updateCampaign({ outreach_message: data.message });
       } else if (contentType === "proof_of_work" && data.title) {
-        const full = `${data.title}\n\n${data.description}`;
-        setProofSuggestion(full);
-        await updateCampaign({ proof_suggestion: full });
+        const structured = JSON.stringify(data);
+        setProofSuggestion(structured);
+        await updateCampaign({ proof_suggestion: structured });
       } else if (contentType === "follow_up") {
         setFollowups({ day3: data.day3 || "", day7: data.day7 || "", day14: data.day14 || "" });
       } else if (contentType === "cover_letter" && data.content) {
@@ -468,15 +468,70 @@ const Campaign = () => {
                 {generating === "proof_of_work" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
                 Generate proof of work idea
               </Button>
-              {proofSuggestion && (
-                <Textarea
-                  value={proofSuggestion}
-                  onChange={(e) => setProofSuggestion(e.target.value)}
-                  onBlur={() => updateCampaign({ proof_suggestion: proofSuggestion })}
-                  rows={5}
-                  className="text-sm"
-                />
-              )}
+              {proofSuggestion && (() => {
+                let parsed: any = null;
+                try { parsed = JSON.parse(proofSuggestion); } catch { /* legacy plain text */ }
+                if (parsed && parsed.title && parsed.what_to_build) {
+                  return (
+                    <div className="space-y-4 rounded-lg border p-4 bg-muted/30">
+                      <h4 className="font-semibold text-base">{parsed.title}</h4>
+
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Why this works</p>
+                        <p className="text-sm">{parsed.why_this_works}</p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">What to build</p>
+                        <ul className="list-disc pl-5 space-y-1">
+                          {(parsed.what_to_build as string[]).map((b: string, i: number) => (
+                            <li key={i} className="text-sm">{b}</li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Tools to use</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {(parsed.tools_to_use as string[]).map((t: string, i: number) => (
+                            <span key={i} className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">{t}</span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Time estimate</p>
+                        <p className="text-sm">{parsed.time_estimate}</p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Ready-to-use AI prompt</p>
+                        <div className="relative">
+                          <pre className="text-xs bg-muted rounded-md p-3 whitespace-pre-wrap font-sans">{parsed.ai_prompt}</pre>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="absolute top-1 right-1 h-7 text-xs"
+                            onClick={() => { navigator.clipboard.writeText(parsed.ai_prompt); toast({ title: "Prompt copied!" }); }}
+                          >
+                            Copy
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+                // Legacy fallback: plain text
+                return (
+                  <Textarea
+                    value={proofSuggestion}
+                    onChange={(e) => setProofSuggestion(e.target.value)}
+                    onBlur={() => updateCampaign({ proof_suggestion: proofSuggestion })}
+                    rows={5}
+                    className="text-sm"
+                  />
+                );
+              })()}
               <div className="flex items-center gap-2">
                 <Checkbox
                   id="proof-done"
