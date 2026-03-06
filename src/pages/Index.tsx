@@ -20,22 +20,32 @@ const LOADING_STEPS = [
   { message: "Polishing results...", progress: 95 },
 ];
 
+const TARGET_KEY = "preplane_onboarding_target";
+const ONBOARDING_KEY = "preplane_onboarding_done";
+
 const Index = () => {
   const { user, loading: authLoading } = useAuth();
   const nav = useNavigate();
   const [onboardingChecked, setOnboardingChecked] = useState(false);
+  const [targetRole, setTargetRole] = useState<string | null>(null);
+  const [targetLocation, setTargetLocation] = useState<string | null>(null);
 
   // Check onboarding status and save any pending target from onboarding
   useEffect(() => {
-    if (!user) return;
-    const savedTarget = localStorage.getItem("preplane_onboarding_target");
+    if (authLoading) return;
+    if (!user) {
+      nav("/", { replace: true });
+      return;
+    }
+    const savedTarget = localStorage.getItem(TARGET_KEY);
 
     supabase
       .from("profiles")
-      .select("onboarding_completed")
+      .select("onboarding_completed, target_role, target_location")
       .eq("user_id", user.id)
       .single()
       .then(async ({ data }) => {
+        const d = data as any;
         // Save pending onboarding target if exists
         if (savedTarget) {
           try {
@@ -49,18 +59,24 @@ const Index = () => {
                 onboarding_completed: true,
               } as any)
               .eq("user_id", user.id);
-            localStorage.removeItem("preplane_onboarding_target");
+            localStorage.removeItem(TARGET_KEY);
+            localStorage.removeItem(ONBOARDING_KEY);
+            setTargetRole(target.target_role || null);
+            setTargetLocation(target.target_location || null);
             setOnboardingChecked(true);
           } catch {
-            localStorage.removeItem("preplane_onboarding_target");
+            localStorage.removeItem(TARGET_KEY);
+            setOnboardingChecked(true);
           }
-        } else if (data && !(data as any).onboarding_completed) {
+        } else if (d && !d.onboarding_completed) {
           nav("/onboarding", { replace: true });
         } else {
+          if (d?.target_role) setTargetRole(d.target_role);
+          if (d?.target_location) setTargetLocation(d.target_location);
           setOnboardingChecked(true);
         }
       });
-  }, [user, nav]);
+  }, [user, authLoading, nav]);
   const [result, setResult] = useState<TailorResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("");
@@ -649,6 +665,16 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="mx-auto px-4 py-8 max-w-[1200px] space-y-10">
+        {/* Target context */}
+        {targetRole && (
+          <div className="text-center space-y-1">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Start a new application</h1>
+            <p className="text-muted-foreground text-sm">
+              Working toward: <span className="font-medium text-foreground">{targetRole}</span>
+              {targetLocation && <> in <span className="font-medium text-foreground">{targetLocation}</span></>}
+            </p>
+          </div>
+        )}
         <InputSection
           onSubmit={handleSubmit}
           onClear={() => { setResult(null); downloadCountRef.current = 0; }}
