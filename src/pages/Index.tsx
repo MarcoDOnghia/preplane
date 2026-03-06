@@ -34,7 +34,7 @@ const Index = () => {
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
-      nav("/", { replace: true });
+      nav("/onboarding", { replace: true });
       return;
     }
     const savedTarget = localStorage.getItem(TARGET_KEY);
