@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/Header";
 import InputSection from "@/components/InputSection";
 import ResultsSection from "@/components/ResultsSection";
+import CampaignBanner from "@/components/CampaignBanner";
 import ApplicationTrackingModal from "@/components/ApplicationTrackingModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -691,27 +692,37 @@ const Index = () => {
           </div>
         )}
         {result && cvModel && (
-          <ResultsSection
-            result={result}
-            jobTitle={lastJobTitle}
-            jobDescription={lastJobDescription}
-            onDownload={handleDownload}
-            cvModel={cvModel}
-            onCvModelChange={handleCvModelChange}
-            onResetCv={handleResetCv}
-            onUndo={handleUndo}
-            canUndo={undoStackRef.current.length > 0}
-            saveStatus={saveStatus}
-            appliedSuggestions={appliedSuggestions}
-            dismissedSuggestions={dismissedSuggestions}
-            onApplySuggestion={handleApplySuggestion}
-            onDismissSuggestion={handleDismissSuggestion}
-            onUndoSuggestion={handleUndoSuggestion}
-            onApplyHighPriority={handleApplyHighPriority}
-            onAddKeywordBullet={handleAddKeywordBullet}
-            appliedKeywordBullets={appliedKeywordBulletsRef.current}
-            addedKeywords={addedKeywords}
-          />
+          <>
+            <CampaignBanner
+              company={lastCompany}
+              role={lastJobTitle}
+              jdText={lastJobDescription}
+              cvPlainText={cvModelToPlainText(cvModel)}
+              matchScore={result.atsAnalysis?.score || 0}
+              coverLetter={result.coverLetterVersions?.[0]?.content || result.coverLetter}
+            />
+            <ResultsSection
+              result={result}
+              jobTitle={lastJobTitle}
+              jobDescription={lastJobDescription}
+              onDownload={handleDownload}
+              cvModel={cvModel}
+              onCvModelChange={handleCvModelChange}
+              onResetCv={handleResetCv}
+              onUndo={handleUndo}
+              canUndo={undoStackRef.current.length > 0}
+              saveStatus={saveStatus}
+              appliedSuggestions={appliedSuggestions}
+              dismissedSuggestions={dismissedSuggestions}
+              onApplySuggestion={handleApplySuggestion}
+              onDismissSuggestion={handleDismissSuggestion}
+              onUndoSuggestion={handleUndoSuggestion}
+              onApplyHighPriority={handleApplyHighPriority}
+              onAddKeywordBullet={handleAddKeywordBullet}
+              appliedKeywordBullets={appliedKeywordBulletsRef.current}
+              addedKeywords={addedKeywords}
+            />
+          </>
         )}
       </main>
 
