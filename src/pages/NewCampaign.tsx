@@ -228,23 +228,16 @@ const Index = () => {
       return lower.includes(matchPrefix) || lower.includes(shortPrefix) || lower.includes(veryShortPrefix);
     };
 
-    console.log("APPLY called — original:", original.slice(0, 80));
-    console.log("APPLY called — suggested:", suggested.slice(0, 80));
-    console.log("APPLY called — sectionHint:", sectionHint);
-    console.log("APPLY called — model summary:", model?.summary?.slice(0, 80));
-    console.log("APPLY called — experience count:", model?.experience?.length);
-    console.log("APPLY called — first exp bullets:", model?.experience?.[0]?.bullets);
 
     // STEP 5: If section hint targets summary/profile, bypass fuzzy match
     if (hint.includes('summary') || hint.includes('profile')) {
-      console.log("MATCH FOUND in summary (hint bypass):", clone.summary?.slice(0, 60));
       clone.summary = suggested;
       return clone;
     }
 
     // STEP 5: If section hint targets skills, replace only the matching subsection
     if (hint.includes('skill')) {
-      console.log("MATCH FOUND in skills (hint bypass):", clone.skills?.slice(0, 60));
+      
       // Split skills into lines and find which line the original matches
       const skillLines = clone.skills.split('\n');
       const origLower = original.replace(/\.{3,}$/, '').toLowerCase().trim();
@@ -259,7 +252,7 @@ const Index = () => {
       }
       if (matchedLineIdx >= 0 && skillLines.length > 1) {
         // Replace only the matched line, preserve all others
-        console.log("SKILLS: replacing line", matchedLineIdx, "only:", skillLines[matchedLineIdx].slice(0, 60));
+        
         skillLines[matchedLineIdx] = suggested;
         clone.skills = skillLines.join('\n');
       } else {
@@ -273,30 +266,30 @@ const Index = () => {
     if (hint.includes('education') || hint.includes('coursework') || hint.includes('degree')) {
       for (const edu of clone.education) {
         if (hint.includes('coursework') || hint.includes('relevant')) {
-          console.log("MATCH FOUND in education coursework (hint bypass):", edu.coursework?.slice(0, 60));
+          
           edu.coursework = suggested;
           return clone;
         }
         if (hint.includes('degree')) {
-          console.log("MATCH FOUND in education degree (hint bypass):", edu.degree?.slice(0, 60));
+          
           edu.degree = suggested;
           return clone;
         }
         // Generic education hint — try coursework first, then degree
         if (edu.coursework && fuzzyMatch(edu.coursework)) {
-          console.log("MATCH FOUND in education coursework (fuzzy):", edu.coursework.slice(0, 60));
+          
           edu.coursework = suggested;
           return clone;
         }
         if (edu.degree && fuzzyMatch(edu.degree)) {
-          console.log("MATCH FOUND in education degree (fuzzy):", edu.degree.slice(0, 60));
+          
           edu.degree = suggested;
           return clone;
         }
       }
       // If we have education hint but couldn't match specific field, replace first education's coursework
       if (clone.education.length > 0) {
-        console.log("MATCH FOUND in education (fallback first entry)");
+        
         clone.education[0].coursework = suggested;
         return clone;
       }
