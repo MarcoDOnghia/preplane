@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -40,6 +40,28 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { target_role, target_location, experience_level, categories } = await req.json();
 
     if (!target_role) {
@@ -51,25 +73,19 @@ Deno.serve(async (req) => {
 
     const inferredCategories = inferCategories(target_role, categories);
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
-
-    // Build query: filter by hiring_juniors, overlap on categories
-    let query = supabase
+    // Use the authenticated client (with user's auth header + ANON_KEY) instead of SERVICE_ROLE_KEY
+    // The companies table has a SELECT policy for authenticated users
+    let query = supabaseClient
       .from("companies")
       .select("*")
       .eq("hiring_juniors", true)
       .overlaps("categories", inferredCategories)
-      .order("prestige_level", { ascending: true }) // hidden gems first
+      .order("prestige_level", { ascending: true })
       .limit(8);
 
     // Location matching: try country first, then city
     if (target_location) {
       const loc = target_location.trim();
-      // We'll do a broad ilike match on both country and city
-      // First try exact country match, fallback to city
       const { data: byCountry, error: err1 } = await query.ilike("country", `%${loc}%`);
 
       if (!err1 && byCountry && byCountry.length > 0) {
@@ -79,7 +95,7 @@ Deno.serve(async (req) => {
       }
 
       // Try city match
-      const { data: byCity, error: err2 } = await supabase
+      const { data: byCity, error: err2 } = await supabaseClient
         .from("companies")
         .select("*")
         .eq("hiring_juniors", true)
@@ -95,7 +111,7 @@ Deno.serve(async (req) => {
       }
 
       // Fallback: return without location filter
-      const { data: fallback, error: err3 } = await supabase
+      const { data: fallback, error: err3 } = await supabaseClient
         .from("companies")
         .select("*")
         .eq("hiring_juniors", true)
