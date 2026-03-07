@@ -297,7 +297,6 @@ const Index = () => {
 
     // Check summary (fuzzy fallback)
     if (clone.summary && fuzzyMatch(clone.summary)) {
-      console.log("MATCH FOUND in summary (fuzzy):", clone.summary.slice(0, 60));
       clone.summary = suggested;
       return clone;
     }
@@ -306,7 +305,7 @@ const Index = () => {
     for (const exp of clone.experience) {
       for (let j = 0; j < exp.bullets.length; j++) {
         if (fuzzyMatch(exp.bullets[j])) {
-          console.log("MATCH FOUND in experience bullet:", exp.bullets[j].slice(0, 60));
+          
           exp.bullets.splice(j, 1, suggested);
           return clone;
         }
@@ -315,7 +314,7 @@ const Index = () => {
       const roleOnly = exp.role.replace(/\s*\(.*$/, '').toLowerCase();
       const origRoleOnly = original.replace(/\s*\(.*$/, '').slice(0, 60).toLowerCase();
       if (roleOnly.includes(origRoleOnly) || exp.role.toLowerCase().includes(matchPrefix)) {
-        console.log("MATCH FOUND in experience role:", exp.role.slice(0, 60));
+        
         const datePattern = /\s+(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+\d{4}\s*[-–—].*$/i;
         const datePattern2 = /\s+\d{4}\s*[-–—]\s*(?:present|\d{4}).*$/i;
         let cleanRole = suggested.replace(datePattern, '').replace(datePattern2, '').trim();
@@ -333,7 +332,7 @@ const Index = () => {
 
     // Check skills — replace entirely (fuzzy fallback)
     if (clone.skills && fuzzyMatch(clone.skills)) {
-      console.log("MATCH FOUND in skills (fuzzy):", clone.skills.slice(0, 60));
+      
       clone.skills = suggested;
       return clone;
     }
@@ -341,19 +340,19 @@ const Index = () => {
     // Check education (fuzzy fallback)
     for (const edu of clone.education) {
       if (edu.degree && fuzzyMatch(edu.degree)) {
-        console.log("MATCH FOUND in education degree (fuzzy fallback):", edu.degree.slice(0, 60));
+        
         edu.degree = suggested;
         return clone;
       }
       if (edu.coursework && fuzzyMatch(edu.coursework)) {
-        console.log("MATCH FOUND in education coursework (fuzzy fallback):", edu.coursework.slice(0, 60));
+        
         edu.coursework = suggested;
         return clone;
       }
     }
 
     // Fallback: no match found — do not mutate
-    console.warn("NO MATCH — original prefix was:", original.slice(0, 60));
+    
     return clone;
   };
 
