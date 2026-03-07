@@ -654,6 +654,13 @@ const Campaign = () => {
               </Button>
             </div>
           </StepCard>
+        </div>
+
+        {/* Group: Have these ready */}
+        <div className="space-y-3">
+          <div className="rounded-lg bg-muted/50 border px-4 py-2">
+            <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Have these ready</p>
+          </div>
 
           {/* Step 5: Cover letter */}
           <StepCard
