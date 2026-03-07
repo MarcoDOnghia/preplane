@@ -111,7 +111,7 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage }
 
   // Upload new CV: extract text → call parse-cv → upload to storage → save to DB
   const handleUploadNewCv = async (file: File) => {
-    console.log("File upload triggered:", file.name);
+    // File upload triggered
     if (savedCvs.length >= MAX_CVS) {
       toast({ title: "CV limit reached", description: `Remove a CV before adding new ones (${MAX_CVS} max).`, variant: "destructive" });
       return;
@@ -129,7 +129,7 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage }
     setUploading(true);
     try {
       // 1. Extract raw text client-side
-      console.log("Extraction function is being called...");
+      
       let rawText: string;
       try {
         rawText = await extractTextFromFile(file);
@@ -286,8 +286,6 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage }
       toast({ title: "Missing input", description: "Select a CV and provide a job description.", variant: "destructive" });
       return;
     }
-    console.log("Full CV text length:", cvText.length);
-    console.log("Full CV text:", cvText);
     onSubmit(cvText, effectiveJd);
   };
 
