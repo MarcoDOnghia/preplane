@@ -320,7 +320,6 @@ const ResultsSection = ({
             currentCv={cvPlainText}
             jobDescription={jobDescription}
             onCvChange={() => {}}
-            addedKeywords={addedKeywords}
           />
 
           {/* Score details (Keywords, Formatting, Quick Wins) */}
