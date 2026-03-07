@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Sparkles, ArrowRight, Target, Clock, RotateCcw } from "lucide-react";
+import { Plus, Sparkles, ArrowRight, Target, Clock, RotateCcw, Zap } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 const TARGET_KEY = "preplane_onboarding_target";
@@ -200,6 +200,32 @@ const Index = () => {
           </Card>
         ) : (
           <>
+            {/* Nudge: CV done but missing key steps */}
+            {(() => {
+              const nudgeCampaign = activeCampaigns.find(
+                (c) => c.step_cv_done && !c.step_connection_done && !c.step_proof_done && c.status !== "rejected"
+              );
+              if (!nudgeCampaign) return null;
+              return (
+                <Card
+                  className="border-[hsl(30,80%,85%)] bg-[hsl(30,100%,97%)] cursor-pointer hover:border-[hsl(30,80%,75%)] transition-colors"
+                  onClick={() => nav(`/campaign/${nudgeCampaign.id}`)}
+                >
+                  <CardContent className="pt-5 pb-5 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Zap className="h-5 w-5 text-primary shrink-0" />
+                      <p className="text-sm text-foreground">
+                        <span className="font-medium">Don't stop at the CV</span> — {nudgeCampaign.company} campaign is missing the steps that actually get responses.
+                      </p>
+                    </div>
+                    <Button size="sm" variant="outline" className="shrink-0">
+                      Continue building <ArrowRight className="h-3 w-3 ml-1" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })()}
+
             {/* Today's focus */}
             {focusCampaign && (
               <Card className="border-primary/30 bg-primary/5">

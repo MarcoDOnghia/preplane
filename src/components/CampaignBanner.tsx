@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Loader2, ArrowRight, ChevronDown } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface CampaignBannerProps {
   company: string;
@@ -29,6 +29,7 @@ const CampaignBanner = ({
   const { toast } = useToast();
   const [creating, setCreating] = useState(false);
   const [created, setCreated] = useState(false);
+  const [explainerOpen, setExplainerOpen] = useState(false);
 
   const handleCreate = async () => {
     if (!user) return;
@@ -52,7 +53,6 @@ const CampaignBanner = ({
         .single();
 
       if (error) {
-        // Check for 10-campaign limit
         if (error.message?.includes("10 active campaigns")) {
           toast({
             title: "Campaign limit reached",
@@ -78,21 +78,66 @@ const CampaignBanner = ({
   if (created) return null;
 
   return (
-    <Card className="border-primary/30 bg-primary/5">
-      <CardContent className="pt-6 flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-primary" />
-          <p className="text-sm">
-            Your CV is ready. Turn this into a full campaign for{" "}
-            <span className="font-semibold text-foreground">{company}</span>?
-          </p>
+    <div className="space-y-0">
+      {/* Main campaign CTA */}
+      <div className="rounded-xl bg-[hsl(30,100%,97%)] border border-[hsl(30,80%,85%)] p-6 md:p-8">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div className="space-y-2 flex-1">
+            <h3 className="text-lg md:text-xl font-bold text-foreground leading-tight">
+              Your CV is ready. But a CV alone won't get you the interview.
+            </h3>
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-xl">
+              Students who reach out with a proof of work before applying get 3× more responses.
+              Build your full campaign for <span className="font-semibold text-foreground">{company}</span> — it takes 20 minutes and changes everything.
+            </p>
+          </div>
+          <div className="flex flex-col items-start md:items-end gap-2 shrink-0">
+            <Button
+              onClick={handleCreate}
+              disabled={creating}
+              size="lg"
+              className="bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary)/0.9)] text-primary-foreground font-semibold text-base px-6"
+            >
+              {creating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+              Build my campaign <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              Already applied? You can still build the outreach and follow-up steps.
+            </p>
+          </div>
         </div>
-        <Button onClick={handleCreate} disabled={creating} size="sm">
-          {creating ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
-          Build my campaign →
-        </Button>
-      </CardContent>
-    </Card>
+      </div>
+
+      {/* Why not just apply now? — collapsible explainer */}
+      <Collapsible open={explainerOpen} onOpenChange={setExplainerOpen}>
+        <CollapsibleTrigger className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors pt-3 pb-1 cursor-pointer">
+          <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${explainerOpen ? "rotate-180" : ""}`} />
+          Why not just apply now?
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="rounded-lg border bg-muted/30 p-4 mt-1 space-y-3">
+            <div className="flex items-start gap-3">
+              <span className="text-lg">👤</span>
+              <p className="text-sm text-foreground">
+                <span className="font-medium">Find one person at {company}</span> — a name beats a contact form every time
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="text-lg">🛠️</span>
+              <p className="text-sm text-foreground">
+                <span className="font-medium">Build one proof of work</span> — something specific that shows you understand their problem
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="text-lg">📩</span>
+              <p className="text-sm text-foreground">
+                <span className="font-medium">Reach out before you apply</span> — let your work open the door, not your CV
+              </p>
+            </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+    </div>
   );
 };
 

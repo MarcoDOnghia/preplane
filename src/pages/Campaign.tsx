@@ -425,9 +425,8 @@ const Campaign = () => {
           </Card>
         )}
 
-        {/* 6 Steps */}
+        {/* Step 1: CV — stands alone */}
         <div className="space-y-3">
-          {/* Step 1: CV */}
           <StepCard
             index={0}
             step={STEPS[0]}
@@ -455,6 +454,13 @@ const Campaign = () => {
               </Collapsible>
             </div>
           </StepCard>
+        </div>
+
+        {/* Group: Do these BEFORE applying */}
+        <div className="space-y-3">
+          <div className="rounded-lg bg-[hsl(30,100%,97%)] border border-[hsl(30,80%,90%)] px-4 py-2">
+            <p className="text-xs font-bold uppercase tracking-wide text-[hsl(30,60%,40%)]">Do these BEFORE applying</p>
+          </div>
 
           {/* Step 2: Find a connection */}
           <StepCard
@@ -648,6 +654,13 @@ const Campaign = () => {
               </Button>
             </div>
           </StepCard>
+        </div>
+
+        {/* Group: Have these ready */}
+        <div className="space-y-3">
+          <div className="rounded-lg bg-muted/50 border px-4 py-2">
+            <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Have these ready</p>
+          </div>
 
           {/* Step 5: Cover letter */}
           <StepCard
