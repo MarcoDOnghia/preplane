@@ -208,7 +208,11 @@ const Campaign = () => {
     if (!campaign) return;
     setGenerating(contentType);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
       const { data, error } = await supabase.functions.invoke("generate-campaign-content", {
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`,
+        },
         body: {
           contentType,
           company: campaign.company,
