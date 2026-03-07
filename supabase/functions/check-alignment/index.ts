@@ -6,6 +6,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+function sanitizeInput(text: string): string {
+  return text
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "")
+    .replace(/ignore\s+(all\s+)?(previous|prior|above)\s+(instructions?|prompts?|context)/gi, "[filtered]")
+    .replace(/you\s+are\s+now\s+/gi, "[filtered]")
+    .replace(/system\s*:\s*/gi, "[filtered]")
+    .replace(/\bact\s+as\b/gi, "[filtered]")
+    .trim();
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -30,12 +40,15 @@ serve(async (req) => {
       });
     }
 
-    const { targetRole, jobDescription } = await req.json();
-    if (!targetRole || !jobDescription) {
+    const { targetRole: rawTargetRole, jobDescription: rawJobDescription } = await req.json();
+    if (!rawTargetRole || !rawJobDescription) {
       return new Response(JSON.stringify({ skipped: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const targetRole = sanitizeInput(String(rawTargetRole)).slice(0, 200);
+    const jobDescription = sanitizeInput(String(rawJobDescription));
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
@@ -53,7 +66,7 @@ serve(async (req) => {
         messages: [
           {
             role: "user",
-            content: `The user's long-term career target is: ${targetRole}. The job description is: ${jdSnippet}. Assess whether this role is a strong, partial, or weak stepping stone toward that target. Consider that roles in adjacent fields, smaller firms, or different locations can still be valid stepping stones. Rate as strong if directly relevant, partial if it builds transferable skills or is a logical stepping stone, weak only if there is genuinely no career logic connecting this role to the target. Return JSON only: { "alignment": "strong"|"partial"|"weak", "reason": "one sentence explanation, focus on career logic not location" }`,
+            content: `The user's long-term career target is: <USER_DATA>${targetRole}</USER_DATA>. The job description is: <USER_DATA>${jdSnippet}</USER_DATA>. Assess whether this role is a strong, partial, or weak stepping stone toward that target. Consider that roles in adjacent fields, smaller firms, or different locations can still be valid stepping stones. Rate as strong if directly relevant, partial if it builds transferable skills or is a logical stepping stone, weak only if there is genuinely no career logic connecting this role to the target. Return JSON only: { "alignment": "strong"|"partial"|"weak", "reason": "one sentence explanation, focus on career logic not location" }`,
           },
         ],
       }),
