@@ -747,45 +747,24 @@ const Campaign = () => {
             </div>
           </StepCard>
 
-          {/* Outcome */}
-          <StepCard
-            index={6}
-            step={{ label: "Outcome", weight: 0, icon: Flag, subtext: "" }}
-            done={campaign.status === "response_received" || campaign.status === "rejected"}
-            open={openSteps.has(6)}
-            onToggle={() => toggleStep(6)}
-            isOutcome
-          >
-            <div className="space-y-3">
-              <div>
-                <label className="text-sm font-medium">Update status</label>
-                <Select
-                  value={campaign.status}
-                  onValueChange={handleStatusChange}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {STATUS_OPTIONS.map((s) => (
-                      <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Notes — what worked, what didn't</label>
-                <Textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  onBlur={() => updateCampaign({ notes: notes || null })}
-                  rows={4}
-                  placeholder="Reflect on this campaign..."
-                  className="mt-1 text-sm"
-                />
-              </div>
-            </div>
-          </StepCard>
+        </div>
+
+        {/* Notes */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm">Notes — what worked, what didn't</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              onBlur={() => updateCampaign({ notes: notes || null })}
+              rows={4}
+              placeholder="Reflect on this campaign..."
+              className="text-sm"
+            />
+          </CardContent>
+        </Card>
         </div>
       </main>
     </div>
