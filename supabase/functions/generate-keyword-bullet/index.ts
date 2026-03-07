@@ -7,6 +7,16 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+function sanitizeInput(text: string): string {
+  return text
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "")
+    .replace(/ignore\s+(all\s+)?(previous|prior|above)\s+(instructions?|prompts?|context)/gi, "[filtered]")
+    .replace(/you\s+are\s+now\s+/gi, "[filtered]")
+    .replace(/system\s*:\s*/gi, "[filtered]")
+    .replace(/\bact\s+as\b/gi, "[filtered]")
+    .trim();
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -35,7 +45,11 @@ serve(async (req) => {
       });
     }
 
-    const { keyword, cvContent, jobDescription, existingBullets } = await req.json();
+    const { keyword: rawKeyword, cvContent: rawCvContent, jobDescription: rawJobDescription, existingBullets } = await req.json();
+
+    const keyword = sanitizeInput(String(rawKeyword || ""));
+    const cvContent = sanitizeInput(String(rawCvContent || ""));
+    const jobDescription = rawJobDescription ? sanitizeInput(String(rawJobDescription)) : "";
 
     if (!keyword || !cvContent) {
       return new Response(JSON.stringify({ error: "keyword and cvContent are required" }), {
@@ -73,10 +87,10 @@ You MUST call the generate_bullet function with your result.`;
     const userPrompt = `Missing keyword: "${keyword}"
 
 Job Description context:
-${(jobDescription || "").slice(0, 3000)}
+<USER_DATA>${jobDescription.slice(0, 3000)}</USER_DATA>
 
 User's CV:
-${cvContent.slice(0, 8000)}${existingBulletsText}
+<USER_CV>${cvContent.slice(0, 8000)}</USER_CV>${existingBulletsText}
 
 First classify "${keyword}" as a tool/software (Type A) or skill/competency (Type B), then generate the appropriate suggestion.`;
 

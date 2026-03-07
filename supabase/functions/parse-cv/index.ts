@@ -7,6 +7,18 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const MAX_CV_TEXT = 50000;
+
+function sanitizeInput(text: string): string {
+  return text
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "")
+    .replace(/ignore\s+(all\s+)?(previous|prior|above)\s+(instructions?|prompts?|context)/gi, "[filtered]")
+    .replace(/you\s+are\s+now\s+/gi, "[filtered]")
+    .replace(/system\s*:\s*/gi, "[filtered]")
+    .replace(/\bact\s+as\b/gi, "[filtered]")
+    .trim();
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -37,13 +49,20 @@ serve(async (req) => {
       });
     }
 
-    const { rawText } = await req.json();
-    if (!rawText || typeof rawText !== "string") {
+    const { rawText: rawTextInput } = await req.json();
+    if (!rawTextInput || typeof rawTextInput !== "string") {
       return new Response(JSON.stringify({ error: "rawText is required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    if (rawTextInput.length > MAX_CV_TEXT) {
+      return new Response(JSON.stringify({ error: "CV text exceeds maximum length" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const rawText = sanitizeInput(rawTextInput);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -80,7 +99,7 @@ If a field is missing from the CV, use empty string or empty array. Do NOT fabri
           },
           {
             role: "user",
-            content: `Parse this CV:\n\n${rawText}`,
+            content: `Parse this CV:\n\n<USER_CV>\n${rawText}\n</USER_CV>`,
           },
         ],
         tools: [
