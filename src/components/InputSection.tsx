@@ -165,7 +165,7 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage }
       // 2b. If AI failed or returned empty, use local parser as fallback
       if (!aiModel) {
         aiModel = parseCvToModel(rawText);
-        console.log("Local parsed model:", { name: aiModel.name, expCount: aiModel.experience.length, eduCount: aiModel.education.length, skillsLen: aiModel.skills.length });
+        aiModel = parseCvToModel(rawText);
       }
 
       // 3. Upload original file to storage bucket
