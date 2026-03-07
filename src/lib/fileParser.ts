@@ -16,7 +16,7 @@ export async function extractTextFromFile(file: File): Promise<string> {
     throw new Error("Could not read your CV - please make sure it is not a scanned image");
   }
 
-  console.log("CV extracted text (first 500 chars):", text.substring(0, 500));
+  
 
   return text;
 }

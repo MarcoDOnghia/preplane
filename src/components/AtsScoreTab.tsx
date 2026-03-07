@@ -9,16 +9,12 @@ import {
   AlertTriangle,
   Zap,
   Loader2,
-  Sparkles,
   Target,
-  TrendingUp,
   Wrench,
-  ScrollText,
   Info,
 } from "lucide-react";
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { calculateAtsScore } from "@/lib/atsScore";
 import type { AtsAnalysis } from "@/lib/types";
 
 interface AtsScoreTabProps {
@@ -26,14 +22,12 @@ interface AtsScoreTabProps {
   currentCv?: string;
   jobDescription?: string;
   onCvChange?: (html: string) => void;
-  addedKeywords?: Set<string>;
 }
 
 const TARGET_SCORE = 90;
 
-const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, addedKeywords: parentAddedKeywords }: AtsScoreTabProps) => {
+const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange }: AtsScoreTabProps) => {
   const { score, keywordsFound, keywordsMissing, formattingIssues, quickWins } = atsAnalysis;
-  const addedKeywords = parentAddedKeywords || new Set<string>();
   const [fixingFormat, setFixingFormat] = useState(false);
   const [animatedScore, setAnimatedScore] = useState(score);
   const { toast } = useToast();
@@ -56,33 +50,15 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, added
     return () => clearInterval(timer);
   }, [score]);
 
-  // Effective missing: from live props minus added keywords not yet picked up by live scoring
-  const effectiveMissing = useMemo(
-    () => keywordsMissing.filter((kw) => !addedKeywords.has(kw.toLowerCase())),
-    [keywordsMissing, addedKeywords]
-  );
-
-  // Effective found: from live props plus added ones
-  const effectiveFound = useMemo(() => {
-    const fromProps = new Set(keywordsFound.map((k) => k.toLowerCase()));
-    addedKeywords.forEach((k) => fromProps.add(k));
-    return Array.from(fromProps);
-  }, [keywordsFound, addedKeywords]);
-
   const totalKeywords = keywordsFound.length + keywordsMissing.length;
 
   const keywordsNeeded = useMemo(() => {
     if (totalKeywords === 0) return 0;
-    const currentMatchRate = effectiveFound.length / totalKeywords;
+    const currentMatchRate = keywordsFound.length / totalKeywords;
     const targetMatchRate = TARGET_SCORE / 100;
     if (currentMatchRate >= targetMatchRate) return 0;
-    return Math.ceil(targetMatchRate * totalKeywords) - effectiveFound.length;
-  }, [effectiveFound.length, totalKeywords]);
-
-  const projectedScorePerKeyword = useMemo(() => {
-    if (totalKeywords === 0) return 0;
-    return Math.round(70 / totalKeywords);
-  }, [totalKeywords]);
+    return Math.ceil(targetMatchRate * totalKeywords) - keywordsFound.length;
+  }, [keywordsFound.length, totalKeywords]);
 
   const scoreColor =
     animatedScore >= 80 ? "text-success" : animatedScore >= 60 ? "text-yellow-500" : "text-destructive";
@@ -139,12 +115,6 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, added
                 <div className={`text-4xl font-bold tabular-nums transition-colors duration-300 ${scoreColor}`}>
                   {animatedScore}
                 </div>
-                {addedKeywords.size > 0 && (
-                  <div className="flex items-center gap-1 text-success text-sm font-medium">
-                    <TrendingUp className="h-3.5 w-3.5" />
-                    +{addedKeywords.size * projectedScorePerKeyword} from additions
-                  </div>
-                )}
               </div>
             </div>
 
@@ -164,16 +134,11 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, added
             {/* Summary badges */}
             <div className="flex gap-3 pt-1 flex-wrap">
               <Badge variant="outline" className="bg-success/10 text-success border-success/20">
-                ✓ {effectiveFound.length} matched
+                ✓ {keywordsFound.length} matched
               </Badge>
               <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20">
-                ✗ {effectiveMissing.length} missing
+                ✗ {keywordsMissing.length} missing
               </Badge>
-              {addedKeywords.size > 0 && (
-                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-                  + {addedKeywords.size} added this session
-                </Badge>
-              )}
             </div>
           </div>
         </CardContent>
@@ -186,7 +151,7 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, added
           <CardHeader className="pb-3">
             <CardTitle className="text-base font-bold flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-success" />
-              Keywords Found ({effectiveFound.length})
+              Keywords Found ({keywordsFound.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -196,14 +161,7 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, added
                   ✓ {kw}
                 </Badge>
               ))}
-              {Array.from(addedKeywords)
-                .filter((kw) => !keywordsFound.map((k) => k.toLowerCase()).includes(kw))
-                .map((kw) => (
-                  <Badge key={`added-${kw}`} className="bg-primary/10 text-primary border-primary/20 animate-in fade-in-0 slide-in-from-bottom-2 duration-300">
-                    ✓ {kw} <span className="text-[10px] ml-1 opacity-60">new</span>
-                  </Badge>
-                ))}
-              {effectiveFound.length === 0 && (
+              {keywordsFound.length === 0 && (
                 <p className="text-sm text-muted-foreground">No matching keywords found</p>
               )}
             </div>
@@ -215,9 +173,9 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, added
           <CardHeader className="pb-3">
             <CardTitle className="text-base font-bold flex items-center gap-2">
               <XCircle className="h-4 w-4 text-destructive" />
-              Missing Keywords ({effectiveMissing.length})
+              Missing Keywords ({keywordsMissing.length})
             </CardTitle>
-            {effectiveMissing.length > 0 && (
+            {keywordsMissing.length > 0 && (
               <p className="text-xs text-muted-foreground">
                 Address these via the AI Suggestions above to improve your score.
               </p>
@@ -225,7 +183,7 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, added
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {effectiveMissing.map((kw) => (
+              {keywordsMissing.map((kw) => (
                 <Badge
                   key={kw}
                   variant="outline"
@@ -234,7 +192,7 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange, added
                   ✗ {kw}
                 </Badge>
               ))}
-              {effectiveMissing.length === 0 && (
+              {keywordsMissing.length === 0 && (
                 <p className="text-sm text-success font-medium">🎉 All keywords covered!</p>
               )}
             </div>

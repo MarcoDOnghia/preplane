@@ -111,7 +111,7 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage }
 
   // Upload new CV: extract text → call parse-cv → upload to storage → save to DB
   const handleUploadNewCv = async (file: File) => {
-    console.log("File upload triggered:", file.name);
+    // File upload triggered
     if (savedCvs.length >= MAX_CVS) {
       toast({ title: "CV limit reached", description: `Remove a CV before adding new ones (${MAX_CVS} max).`, variant: "destructive" });
       return;
@@ -129,7 +129,7 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage }
     setUploading(true);
     try {
       // 1. Extract raw text client-side
-      console.log("Extraction function is being called...");
+      
       let rawText: string;
       try {
         rawText = await extractTextFromFile(file);
@@ -154,10 +154,7 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage }
           // Validate the AI model actually has content — if not, discard it
           const hasContent = aiModel.name.length > 0 || aiModel.experience.length > 0 || aiModel.education.length > 0 || aiModel.skills.length > 0;
           if (!hasContent) {
-            console.warn("AI parse returned empty model, falling back to local parser");
             aiModel = null;
-          } else {
-            console.log("AI parsed model:", { name: aiModel.name, expCount: aiModel.experience.length, eduCount: aiModel.education.length, skillsLen: aiModel.skills.length });
           }
         }
       } catch (err) {
@@ -168,7 +165,7 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage }
       // 2b. If AI failed or returned empty, use local parser as fallback
       if (!aiModel) {
         aiModel = parseCvToModel(rawText);
-        console.log("Local parsed model:", { name: aiModel.name, expCount: aiModel.experience.length, eduCount: aiModel.education.length, skillsLen: aiModel.skills.length });
+        aiModel = parseCvToModel(rawText);
       }
 
       // 3. Upload original file to storage bucket
@@ -286,8 +283,6 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage }
       toast({ title: "Missing input", description: "Select a CV and provide a job description.", variant: "destructive" });
       return;
     }
-    console.log("Full CV text length:", cvText.length);
-    console.log("Full CV text:", cvText);
     onSubmit(cvText, effectiveJd);
   };
 

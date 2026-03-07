@@ -48,7 +48,7 @@ import {
   Sparkles,
   Target,
   ArrowLeft,
-  Flag,
+  
   Archive,
   Info,
   X,
@@ -146,6 +146,13 @@ const Campaign = () => {
       return;
     }
     const c = data as any as CampaignData;
+    
+    // Auto-mark cover letter done if a cover letter exists but step is unchecked
+    if (c.cover_letter && !c.step_cover_letter_done) {
+      await supabase.from("campaigns").update({ step_cover_letter_done: true } as any).eq("id", id);
+      c.step_cover_letter_done = true;
+    }
+    
     setCampaign(c);
     setConnectionName(c.connection_name || "");
     setConnectionUrl(c.connection_url || "");
@@ -740,46 +747,24 @@ const Campaign = () => {
             </div>
           </StepCard>
 
-          {/* Outcome */}
-          <StepCard
-            index={6}
-            step={{ label: "Outcome", weight: 0, icon: Flag, subtext: "" }}
-            done={campaign.status === "response_received" || campaign.status === "rejected"}
-            open={openSteps.has(6)}
-            onToggle={() => toggleStep(6)}
-            isOutcome
-          >
-            <div className="space-y-3">
-              <div>
-                <label className="text-sm font-medium">Update status</label>
-                <Select
-                  value={campaign.status}
-                  onValueChange={handleStatusChange}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {STATUS_OPTIONS.map((s) => (
-                      <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Notes — what worked, what didn't</label>
-                <Textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  onBlur={() => updateCampaign({ notes: notes || null })}
-                  rows={4}
-                  placeholder="Reflect on this campaign..."
-                  className="mt-1 text-sm"
-                />
-              </div>
-            </div>
-          </StepCard>
         </div>
+
+        {/* Notes */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm">Notes — what worked, what didn't</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              onBlur={() => updateCampaign({ notes: notes || null })}
+              rows={4}
+              placeholder="Reflect on this campaign..."
+              className="text-sm"
+            />
+          </CardContent>
+        </Card>
       </main>
     </div>
   );
