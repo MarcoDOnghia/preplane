@@ -765,7 +765,6 @@ const Campaign = () => {
             />
           </CardContent>
         </Card>
-        </div>
       </main>
     </div>
   );
