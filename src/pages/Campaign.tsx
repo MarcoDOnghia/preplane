@@ -146,6 +146,13 @@ const Campaign = () => {
       return;
     }
     const c = data as any as CampaignData;
+    
+    // Auto-mark cover letter done if a cover letter exists but step is unchecked
+    if (c.cover_letter && !c.step_cover_letter_done) {
+      await supabase.from("campaigns").update({ step_cover_letter_done: true } as any).eq("id", id);
+      c.step_cover_letter_done = true;
+    }
+    
     setCampaign(c);
     setConnectionName(c.connection_name || "");
     setConnectionUrl(c.connection_url || "");
