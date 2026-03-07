@@ -154,10 +154,7 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage }
           // Validate the AI model actually has content — if not, discard it
           const hasContent = aiModel.name.length > 0 || aiModel.experience.length > 0 || aiModel.education.length > 0 || aiModel.skills.length > 0;
           if (!hasContent) {
-            console.warn("AI parse returned empty model, falling back to local parser");
             aiModel = null;
-          } else {
-            console.log("AI parsed model:", { name: aiModel.name, expCount: aiModel.experience.length, eduCount: aiModel.education.length, skillsLen: aiModel.skills.length });
           }
         }
       } catch (err) {
