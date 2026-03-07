@@ -48,7 +48,7 @@ import {
   Sparkles,
   Target,
   ArrowLeft,
-  Flag,
+  
   Archive,
   Info,
   X,
