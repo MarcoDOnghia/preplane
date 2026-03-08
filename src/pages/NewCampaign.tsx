@@ -45,6 +45,7 @@ const Index = () => {
   const [setupJd, setSetupJd] = useState("");
   const [proofBrief, setProofBrief] = useState<any>(null);
   const [generatingBrief, setGeneratingBrief] = useState(false);
+  const [jdExtractingUrl, setJdExtractingUrl] = useState(false);
 
   // Check onboarding status and save any pending target from onboarding
   useEffect(() => {
