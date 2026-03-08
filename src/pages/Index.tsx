@@ -41,6 +41,7 @@ interface CampaignRow {
   step_connection_done: boolean;
   step_outreach_done: boolean;
   step_proof_done: boolean;
+  step_linkedin_done: boolean;
   step_cover_letter_done: boolean;
   step_followup_done: boolean;
   created_at: string;
