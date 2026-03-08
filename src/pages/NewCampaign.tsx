@@ -140,6 +140,68 @@ const Index = () => {
   const cvModelRef = useRef<CvDataModel | null>(null);
   useEffect(() => { cvModelRef.current = cvModel; }, [cvModel]);
 
+  // Pre-fill setup role from profile target
+  useEffect(() => {
+    if (targetRole && !setupRole) setSetupRole(targetRole);
+  }, [targetRole]);
+
+  const generateProofBrief = async () => {
+    if (!setupRole.trim()) {
+      toast({ title: "Please enter a target role", variant: "destructive" });
+      return;
+    }
+    setGeneratingBrief(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const { data, error } = await supabase.functions.invoke("generate-campaign-content", {
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+        body: {
+          contentType: "proof_of_work",
+          company: setupCompany.trim() || "a company in this space",
+          role: setupRole.trim(),
+          jdText: setupJd.trim() || undefined,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setProofBrief(data);
+      setSetupPhase('brief');
+    } catch (e: any) {
+      toast({ title: "Generation failed", description: e.message, variant: "destructive" });
+    } finally {
+      setGeneratingBrief(false);
+    }
+  };
+
+  const handleStartBuilding = async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from("campaigns")
+        .insert({
+          user_id: user.id,
+          company: setupCompany.trim() || "General",
+          role: setupRole.trim(),
+          jd_text: setupJd.trim() || "",
+          proof_suggestion: JSON.stringify(proofBrief),
+          proof_in_progress: true,
+          status: "targeting",
+        } as any)
+        .select("id")
+        .single();
+      if (error) {
+        if (error.message?.includes("10 active campaigns")) {
+          toast({ title: "Campaign limit reached", description: "Complete or archive one first.", variant: "destructive" });
+        } else throw error;
+        return;
+      }
+      toast({ title: "Campaign created! Start building your proof of work." });
+      nav("/app");
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    }
+  };
+
   // --- Autosave ---
   const saveCvToDb = useCallback(async (model: CvDataModel, applied: number[]) => {
     if (!lastAppIdRef.current) return;
