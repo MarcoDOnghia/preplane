@@ -269,7 +269,7 @@ const Onboarding = () => {
           <div className="max-w-[720px] text-center space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Icon badge */}
             <div className="mx-auto w-fit p-4 rounded-full bg-[#F97316]/10">
-              <Compass className="w-12 h-12 text-[#F97316]" />
+              <Rocket className="w-12 h-12 text-[#F97316]" />
             </div>
 
             {/* Heading */}
