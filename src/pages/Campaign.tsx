@@ -3,6 +3,7 @@ import { useParams, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/Header";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthHeader } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -211,11 +212,9 @@ const Campaign = () => {
     if (!campaign) return;
     setGenerating(contentType);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const headers = await getAuthHeader();
       const { data, error } = await supabase.functions.invoke("generate-campaign-content", {
-        headers: {
-          Authorization: `Bearer ${session?.access_token}`,
-        },
+        headers,
         body: {
           contentType,
           company: campaign.company,

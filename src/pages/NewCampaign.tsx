@@ -8,6 +8,7 @@ import CampaignBanner from "@/components/CampaignBanner";
 import AlignmentBanner from "@/components/AlignmentBanner";
 import ApplicationTrackingModal from "@/components/ApplicationTrackingModal";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthHeader } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
@@ -179,9 +180,9 @@ const Index = () => {
     }
     setGeneratingBrief(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const headers = await getAuthHeader();
       const { data, error } = await supabase.functions.invoke("generate-campaign-content", {
-        headers: { Authorization: `Bearer ${session?.access_token}` },
+        headers,
         body: {
           contentType: "proof_of_work",
           company: setupCompany.trim() || "a company in this space",
