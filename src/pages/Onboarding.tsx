@@ -266,7 +266,7 @@ const Onboarding = () => {
           <div className="max-w-[720px] text-center space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Icon badge */}
             <div className="mx-auto w-fit p-4 rounded-full bg-[hsl(var(--primary))]/10">
-              <span className="material-symbols-outlined text-[hsl(var(--primary))] text-5xl">explore</span>
+              <Compass className="w-12 h-12 text-[hsl(var(--primary))]" />
             </div>
 
             {/* Heading */}
