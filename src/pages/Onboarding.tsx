@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Compass, ArrowRight, Linkedin, Mail, Check, X, Briefcase, MapPin, Calendar, Search, Heart, BadgeCheck, Link as LinkIcon, MessageSquare, User, Lock, Eye, EyeOff, GraduationCap } from "lucide-react";
+import { Rocket, ArrowRight, Linkedin, Mail, Check, X, Briefcase, MapPin, Calendar, Search, Heart, BadgeCheck, Link as LinkIcon, MessageSquare, User, Lock, Eye, EyeOff, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -251,9 +251,11 @@ const Onboarding = () => {
         {/* Header */}
         <header className="w-full border-b border-[#F97316]/10 px-6 md:px-20 py-4 flex items-center justify-between">
            <div className="flex items-center gap-2">
-              <Compass className="w-6 h-6 text-[#F97316]" />
-              <span className="text-xl font-extrabold text-slate-900 tracking-tight">PrepLane</span>
-          </div>
+              <div className="bg-[#F97316] p-2 rounded-xl flex items-center justify-center">
+                <Rocket className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-xl font-bold tracking-tight text-slate-900">PrepLane</span>
+           </div>
           <div className="flex items-center gap-3">
             <button className="p-2 rounded-full bg-[#F97316]/10 text-slate-600 hover:bg-[#F97316]/20 transition-colors">
               <Search className="w-5 h-5" />
@@ -267,7 +269,7 @@ const Onboarding = () => {
           <div className="max-w-[720px] text-center space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Icon badge */}
             <div className="mx-auto w-fit p-4 rounded-full bg-[#F97316]/10">
-              <Compass className="w-12 h-12 text-[#F97316]" />
+              <Rocket className="w-12 h-12 text-[#F97316]" />
             </div>
 
             {/* Heading */}
@@ -333,12 +335,12 @@ const Onboarding = () => {
               <div className="w-full max-w-lg mx-auto bg-white rounded-xl shadow-sm border border-slate-100 p-8 md:p-12 space-y-8">
                 {/* Header */}
                 <div className="space-y-4 text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-[#F97316] flex items-center justify-center">
-                      <Compass className="h-4 w-4 text-white" />
-                    </div>
-                    <span className="text-lg font-bold text-slate-900 tracking-tight">PrepLane</span>
-                  </div>
+                   <div className="flex items-center justify-center gap-2">
+                     <div className="bg-[#F97316] p-2 rounded-xl flex items-center justify-center">
+                       <Rocket className="w-5 h-5 text-white" />
+                     </div>
+                     <span className="text-xl font-bold tracking-tight text-slate-900">PrepLane</span>
+                   </div>
                   <div>
                     <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
                       What are you working toward?
@@ -515,10 +517,10 @@ const Onboarding = () => {
               {/* Full-width header bar */}
               <div className="fixed top-0 left-0 right-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur-sm px-6 md:px-20 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-[#F97316] flex items-center justify-center">
-                    <GraduationCap className="h-4 w-4 text-white" />
+                  <div className="bg-[#F97316] p-2 rounded-xl flex items-center justify-center">
+                    <Rocket className="w-5 h-5 text-white" />
                   </div>
-                  <span className="text-lg font-extrabold text-slate-900 tracking-tight">PrepLane</span>
+                  <span className="text-xl font-bold tracking-tight text-slate-900">PrepLane</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-slate-500 hidden sm:inline">Already have an account?</span>

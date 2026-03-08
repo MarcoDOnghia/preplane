@@ -643,10 +643,10 @@ const CvWorkspace = () => {
       <footer className="border-t border-slate-200 py-12 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 opacity-40">
-            <div className="bg-[#F97316] p-1 rounded">
-              <Rocket className="w-3.5 h-3.5 text-white" />
+            <div className="bg-slate-400 p-1.5 rounded-lg flex items-center justify-center">
+              <Rocket className="w-4 h-4 text-white" />
             </div>
-            <span className="text-sm font-semibold text-slate-500">PrepLane</span>
+            <span className="text-sm font-bold tracking-tight text-slate-500">PrepLane</span>
           </div>
           <div className="flex items-center gap-6">
             <span className="text-xs text-slate-400 hover:text-slate-600 cursor-pointer">Privacy Policy</span>
