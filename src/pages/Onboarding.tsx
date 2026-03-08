@@ -333,7 +333,7 @@ const Onboarding = () => {
                 {/* Header */}
                 <div className="space-y-4 text-center">
                   <div className="flex items-center justify-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-[hsl(var(--primary))] flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-lg bg-[#F97316] flex items-center justify-center">
                       <Compass className="h-4 w-4 text-white" />
                     </div>
                     <span className="text-lg font-bold text-slate-900 tracking-tight">PrepLane</span>
