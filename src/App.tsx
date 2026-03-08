@@ -28,6 +28,7 @@ const App = () => (
             <Route path="/" element={<RootRedirect />} />
             <Route path="/app" element={<Index />} />
             <Route path="/app/new" element={<NewCampaign />} />
+            <Route path="/cv-workspace" element={<CvWorkspace />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/campaign/:id" element={<Campaign />} />
             <Route path="/auth" element={<Navigate to="/onboarding?step=4" replace />} />

@@ -51,17 +51,12 @@ const Header = () => {
               Dashboard
             </Button>
             <Button
-              variant="ghost"
+              variant={location.pathname === "/cv-workspace" ? "secondary" : "ghost"}
               size="sm"
-              onClick={() => {
-                navigate("/app/new");
-                setTimeout(() => {
-                  document.querySelector('[data-cv-library]')?.scrollIntoView({ behavior: 'smooth' });
-                }, 100);
-              }}
+              onClick={() => navigate("/cv-workspace")}
             >
               <FileText className="h-4 w-4 mr-1" />
-              CV Library
+              CV Workspace
             </Button>
             <Button
               variant={location.pathname === "/onboarding" ? "secondary" : "ghost"}
