@@ -985,6 +985,7 @@ const Index = () => {
               onCvParsed={(model) => setPreParsedModel(model)}
               loading={loading}
               loadingMessage={loadingMessage}
+              initialJd={setupJd}
             />
             {loading && loadingProgress > 0 && (
               <div className="space-y-2">

@@ -198,6 +198,12 @@ const Index = () => {
             <Plus className="h-4 w-4 mr-1" />
             New Campaign
           </Button>
+          <button
+            onClick={() => nav("/app/new?phase=cv_tailoring")}
+            className="text-xs text-primary hover:text-primary/80 transition-colors underline underline-offset-2"
+          >
+            Just need to tailor a CV? Start here →
+          </button>
         </div>
 
         {atLimit && (
