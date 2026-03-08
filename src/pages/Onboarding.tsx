@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Compass, ArrowRight, Linkedin, Mail, Check, X } from "lucide-react";
+import { Compass, ArrowRight, Linkedin, Mail, Check, X, Briefcase, MapPin, Calendar, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -249,13 +249,13 @@ const Onboarding = () => {
 
         {/* Header */}
         <header className="w-full border-b border-[hsl(var(--primary))]/10 px-6 md:px-20 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-[hsl(var(--primary))] text-2xl">explore</span>
-            <span className="text-xl font-extrabold text-slate-900 tracking-tight">PrepLane</span>
+           <div className="flex items-center gap-2">
+              <Compass className="w-6 h-6 text-[hsl(var(--primary))]" />
+              <span className="text-xl font-extrabold text-slate-900 tracking-tight">PrepLane</span>
           </div>
           <div className="flex items-center gap-3">
             <button className="p-2 rounded-full bg-[hsl(var(--primary))]/10 text-slate-600 hover:bg-[hsl(var(--primary))]/20 transition-colors">
-              <span className="material-symbols-outlined text-xl">search</span>
+              <Search className="w-5 h-5" />
             </button>
             <div className="w-9 h-9 rounded-full bg-slate-200" />
           </div>
@@ -266,7 +266,7 @@ const Onboarding = () => {
           <div className="max-w-[720px] text-center space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Icon badge */}
             <div className="mx-auto w-fit p-4 rounded-full bg-[hsl(var(--primary))]/10">
-              <span className="material-symbols-outlined text-[hsl(var(--primary))] text-5xl">explore</span>
+              <Compass className="w-12 h-12 text-[hsl(var(--primary))]" />
             </div>
 
             {/* Heading */}
@@ -293,7 +293,7 @@ const Onboarding = () => {
                 className="group inline-flex items-center gap-2 rounded-xl h-14 px-8 bg-[hsl(var(--primary))] text-white text-lg font-bold shadow-lg shadow-[hsl(var(--primary))]/25 hover:-translate-y-0.5 transition-all active:translate-y-0"
               >
                 I'm in
-                <span className="material-symbols-outlined text-xl transition-transform group-hover:translate-x-1">arrow_forward</span>
+                <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
               </button>
             </div>
           </div>
@@ -351,7 +351,7 @@ const Onboarding = () => {
                 {/* Form fields */}
                 <div className="space-y-4">
                   <div className="relative">
-                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">work</span>
+                    <Briefcase className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
                       placeholder="e.g. Product Designer"
@@ -361,7 +361,7 @@ const Onboarding = () => {
                     />
                   </div>
                   <div className="relative">
-                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">location_on</span>
+                    <MapPin className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
                       placeholder="e.g. San Francisco, Remote"
@@ -371,7 +371,7 @@ const Onboarding = () => {
                     />
                   </div>
                   <div className="relative">
-                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">calendar_today</span>
+                    <Calendar className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
                     <select
                       value={targetStart}
                       onChange={(e) => setTargetStart(e.target.value)}
@@ -422,7 +422,7 @@ const Onboarding = () => {
                   className="w-full flex items-center justify-center gap-2 bg-[hsl(var(--primary))] hover:bg-orange-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-orange-200 transition-colors disabled:opacity-60"
                 >
                   {saving ? "Saving..." : "Continue"}
-                  <span className="material-symbols-outlined text-xl">arrow_forward</span>
+                  <ArrowRight className="w-5 h-5" />
                 </button>
 
                 {/* Footer */}
