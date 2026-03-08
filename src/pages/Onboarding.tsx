@@ -375,7 +375,7 @@ const Onboarding = () => {
                     <select
                       value={targetStart}
                       onChange={(e) => setTargetStart(e.target.value)}
-                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-[hsl(var(--primary))] transition-colors"
+                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316] transition-colors"
                     >
                       <option value="" disabled>When do you want to start?</option>
                       <option value="Immediately">Immediately</option>
