@@ -8,6 +8,7 @@ import RootRedirect from "./pages/RootRedirect";
 
 const Index = lazy(() => import("./pages/Index"));
 const NewCampaign = lazy(() => import("./pages/NewCampaign"));
+const CvWorkspace = lazy(() => import("./pages/CvWorkspace"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 const Campaign = lazy(() => import("./pages/Campaign"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
