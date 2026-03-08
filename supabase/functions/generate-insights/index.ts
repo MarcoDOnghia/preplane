@@ -96,6 +96,15 @@ You MUST call the provide_insights function with your analysis.`;
 
     const safeSummaryStr = sanitizeString(JSON.stringify(safeSummary, null, 2));
 
+    // Injection check on the serialised summary
+    if (containsInjection(safeSummaryStr)) {
+      console.warn(`Prompt injection attempt detected from user ${user.id}`);
+      return new Response(
+        JSON.stringify({ error: "Invalid input" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
