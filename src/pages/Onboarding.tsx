@@ -240,6 +240,73 @@ const Onboarding = () => {
   const totalSteps = user ? 3 : 4;
   const progressSteps = Array.from({ length: totalSteps }, (_, i) => i + 1);
 
+  if (step === 1) {
+    return (
+      <div className="relative min-h-screen overflow-hidden flex flex-col" style={{ background: "#FAF9F6", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        {/* Background orbs */}
+        <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-[hsl(var(--primary))]/5 blur-3xl -z-10" />
+        <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-[hsl(var(--primary))]/5 blur-3xl -z-10" />
+
+        {/* Header */}
+        <header className="w-full border-b border-[hsl(var(--primary))]/10 px-6 md:px-20 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-[hsl(var(--primary))] text-2xl">explore</span>
+            <span className="text-xl font-extrabold text-slate-900 tracking-tight">PrepLane</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <button className="p-2 rounded-full bg-[hsl(var(--primary))]/10 text-slate-600 hover:bg-[hsl(var(--primary))]/20 transition-colors">
+              <span className="material-symbols-outlined text-xl">search</span>
+            </button>
+            <div className="w-9 h-9 rounded-full bg-slate-200" />
+          </div>
+        </header>
+
+        {/* Main content */}
+        <main className="flex-1 flex flex-col items-center justify-center px-6 py-12">
+          <div className="max-w-[720px] text-center space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {/* Icon badge */}
+            <div className="mx-auto w-fit p-4 rounded-full bg-[hsl(var(--primary))]/10">
+              <span className="material-symbols-outlined text-[hsl(var(--primary))] text-5xl">explore</span>
+            </div>
+
+            {/* Heading */}
+            <h1 className="text-4xl md:text-6xl font-extrabold leading-[1.1] tracking-tight text-slate-900">
+              Stop applying to everything.
+              <br />
+              <span className="text-[hsl(var(--primary))]">Start owning your shot.</span>
+            </h1>
+
+            {/* Body */}
+            <p className="text-lg md:text-xl font-medium text-slate-800 max-w-[640px] mx-auto leading-relaxed">
+              Most students send 30+ applications and hear nothing back. Not because their CV is bad — because they never stopped to ask:{" "}
+              <em className="font-bold">what do I actually want, and am I building toward it?</em>
+            </p>
+            <p className="text-base md:text-lg text-slate-800/70 max-w-[600px] mx-auto leading-relaxed">
+              PrepLane is being built to change that. Not a tool that helps you apply faster — one that helps you apply smarter, to fewer roles, with a genuinely compelling case for each one.
+            </p>
+
+            {/* CTA */}
+            <div>
+              <button
+                type="button"
+                onClick={() => setStep(2)}
+                className="group inline-flex items-center gap-2 rounded-xl h-14 px-8 bg-[hsl(var(--primary))] text-white text-lg font-bold shadow-lg shadow-[hsl(var(--primary))]/25 hover:-translate-y-0.5 transition-all active:translate-y-0"
+              >
+                I'm in
+                <span className="material-symbols-outlined text-xl transition-transform group-hover:translate-x-1">arrow_forward</span>
+              </button>
+            </div>
+          </div>
+        </main>
+
+        {/* Footer */}
+        <footer className="py-6 text-center text-sm uppercase tracking-widest text-slate-800/40">
+          Build Smarter • Apply Better • PrepLane 2026
+        </footer>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Progress indicator */}
@@ -258,32 +325,7 @@ const Onboarding = () => {
 
       <div className="flex-1 flex items-center justify-center px-4">
         <div className="w-full max-w-[600px]">
-          {/* Step 1 — The vision */}
-          {step === 1 && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8 text-center">
-              <Compass className="h-10 w-10 text-primary mx-auto" />
-              <h1 className="text-3xl md:text-4xl font-bold tracking-tight leading-tight">
-                Stop applying to everything.
-                <br />
-                Start owning your shot.
-              </h1>
-              <p className="text-muted-foreground text-base md:text-lg leading-relaxed max-w-[540px] mx-auto">
-                Most students send 30+ applications and hear nothing back.
-              </p>
-              <p className="text-muted-foreground text-base md:text-lg leading-relaxed max-w-[540px] mx-auto">
-                Not because their CV is bad — because they never stopped to ask: <em>what do I actually want, and am I building toward it?</em>
-              </p>
-              <p className="text-muted-foreground text-base md:text-lg leading-relaxed max-w-[540px] mx-auto">
-                PrepLane is being built to change that. Not a tool that helps you apply faster — one that helps you apply smarter, to fewer roles, with a genuinely compelling case for each one.
-              </p>
-              <p className="text-muted-foreground text-base md:text-lg leading-relaxed max-w-[540px] mx-auto">
-                We are just getting started. And we want to build this with you.
-              </p>
-              <Button size="lg" onClick={() => setStep(2)} className="mt-4 text-base px-8">
-                I'm in <ArrowRight className="ml-1 h-4 w-4" />
-              </Button>
-            </div>
-          )}
+
 
           {step === 2 && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
