@@ -558,12 +558,42 @@ export type Database = {
         }
         Relationships: []
       }
+      usage_limits: {
+        Row: {
+          count: number
+          created_at: string
+          feature: string
+          id: string
+          usage_date: string
+          user_id: string
+        }
+        Insert: {
+          count?: number
+          created_at?: string
+          feature: string
+          id?: string
+          usage_date?: string
+          user_id: string
+        }
+        Update: {
+          count?: number
+          created_at?: string
+          feature?: string
+          id?: string
+          usage_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_and_increment_usage: {
+        Args: { _feature: string; _max_count: number; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

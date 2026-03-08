@@ -49,6 +49,23 @@ serve(async (req) => {
       );
     }
 
+    // Rate limiting: max 5 cover letter generations per day
+    const adminClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+    const { data: allowed, error: rpcError } = await adminClient.rpc("check_and_increment_usage", {
+      _user_id: user.id,
+      _feature: "cover_letter",
+      _max_count: 5,
+    });
+    if (rpcError || allowed === false) {
+      return new Response(
+        JSON.stringify({ error: "You've used your daily limit for this feature. Come back tomorrow — limits reset at midnight." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { cvContent, jobDescription, tone } = await req.json();
 
     const MAX_CV_LENGTH = 50000;
