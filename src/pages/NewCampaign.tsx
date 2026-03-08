@@ -844,10 +844,25 @@ const Index = () => {
                 <Textarea
                   value={setupJd}
                   onChange={(e) => setSetupJd(e.target.value)}
-                  placeholder="Paste the full job description here..."
+                  placeholder="Paste the full job description or a job posting URL..."
                   rows={6}
                   className="mt-1"
                 />
+                {jdLooksLikeUrl && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 text-xs"
+                    onClick={handleExtractJdUrl}
+                    disabled={jdExtractingUrl}
+                  >
+                    {jdExtractingUrl ? (
+                      <><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Extracting...</>
+                    ) : (
+                      <><Link2 className="h-3 w-3 mr-1" /> Extract job description from URL</>
+                    )}
+                  </Button>
+                )}
               </div>
               <Button
                 onClick={generateProofBrief}

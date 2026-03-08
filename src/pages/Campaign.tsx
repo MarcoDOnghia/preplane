@@ -454,23 +454,29 @@ const Campaign = () => {
             onToggle={() => toggleStep(0)}
           >
             <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-muted-foreground">Match Score:</span>
-                <span className={`text-lg font-bold ${campaign.match_score >= 80 ? "text-success" : campaign.match_score >= 60 ? "text-yellow-500" : "text-destructive"}`}>
-                  {campaign.match_score}%
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground">Your CV has been tailored for this role. You can view the full tailored version below.</p>
-              <Collapsible>
-                <CollapsibleTrigger asChild>
-                  <Button variant="outline" size="sm">View tailored CV</Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="mt-3">
-                  <div className="bg-muted rounded-lg p-4 text-xs whitespace-pre-wrap max-h-[300px] overflow-auto">
-                    {campaign.cv_version || "No CV content saved."}
+              {campaign.step_cv_done ? (
+                <>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-muted-foreground">Match Score:</span>
+                    <span className={`text-lg font-bold ${campaign.match_score >= 80 ? "text-success" : campaign.match_score >= 60 ? "text-yellow-500" : "text-destructive"}`}>
+                      {campaign.match_score}%
+                    </span>
                   </div>
-                </CollapsibleContent>
-              </Collapsible>
+                  <p className="text-xs text-muted-foreground">Your CV has been tailored for this role. You can view the full tailored version below.</p>
+                  <Collapsible>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="outline" size="sm">View tailored CV</Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-3">
+                      <div className="bg-muted rounded-lg p-4 text-xs whitespace-pre-wrap max-h-[300px] overflow-auto">
+                        {campaign.cv_version || "No CV content saved."}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">No CV tailored yet. Continue setting up your campaign to tailor your CV.</p>
+              )}
             </div>
           </StepCard>
         </div>
