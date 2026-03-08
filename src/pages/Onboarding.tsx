@@ -331,7 +331,166 @@ const Onboarding = () => {
         <div className="w-full max-w-[600px]">
 
 
-          {step === 2 && (
+          {step === 2 && isReturning && (
+            <div className="animate-in fade-in duration-500 fixed inset-0 flex flex-col" style={{ background: "#F8F7F5", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              {/* Header/Nav */}
+              <header className="bg-white border-b border-slate-200 sticky top-0 z-50 backdrop-blur-md px-6 md:px-10 py-3 flex items-center justify-between">
+                <button onClick={() => navigate("/app")} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                  <div className="bg-[#F97316] p-2 rounded-xl flex items-center justify-center">
+                    <Rocket className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-xl font-extrabold tracking-tight text-slate-900">PrepLane</span>
+                </button>
+                <nav className="hidden md:flex items-center gap-6">
+                  <button onClick={() => navigate("/app")} className="text-sm font-semibold text-slate-600 hover:text-[#F97316] transition-colors">Dashboard</button>
+                  <button onClick={() => navigate("/cv-workspace")} className="text-sm font-semibold text-slate-600 hover:text-[#F97316] transition-colors">CV Workspace</button>
+                  <button className="text-sm font-bold text-[#F97316] border-b-2 border-[#F97316] pb-1">My Target</button>
+                  <button onClick={async () => { await supabaseClient.auth.signOut(); navigate("/onboarding"); }} className="text-sm font-semibold text-slate-600 hover:text-[#F97316] transition-colors">Sign Out</button>
+                </nav>
+                <div className="size-10 rounded-full ring-2 ring-[#F97316]/20 bg-[#F97316]/10 flex items-center justify-center">
+                  <span className="text-sm font-semibold text-[#F97316]">{user?.email?.charAt(0).toUpperCase() || "U"}</span>
+                </div>
+              </header>
+
+              {/* Scrollable content */}
+              <div className="flex-1 overflow-y-auto">
+                <div className="max-w-6xl mx-auto px-6 md:px-10 py-10">
+                  {/* Page hero */}
+                  <div className="mb-10">
+                    <h1 className="text-4xl md:text-5xl font-black text-slate-900 leading-tight tracking-tight">Set Your Target</h1>
+                    <p className="text-slate-600 text-lg max-w-2xl mt-3">Define your dream role and company to generate a tailored proof of work brief that makes you stand out.</p>
+                  </div>
+
+                  {/* Main grid */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Left column — form cards */}
+                    <div className="lg:col-span-2 flex flex-col gap-6">
+                      {/* Card 1 — Target Role */}
+                      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                        <div className="flex items-center gap-3 mb-1">
+                          <div className="size-12 rounded-lg bg-[#F97316]/10 flex items-center justify-center">
+                            <Briefcase className="w-6 h-6 text-[#F97316]" />
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-bold text-slate-900">Target Role</h3>
+                            <p className="text-slate-500 text-sm">What job title are you aiming for?</p>
+                          </div>
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="e.g. Senior Frontend Developer or Product Designer"
+                          value={targetRole}
+                          onChange={(e) => setTargetRole(e.target.value)}
+                          className="w-full h-14 px-4 rounded-xl border border-slate-200 bg-[#F8F7F5] focus:border-[#F97316] focus:ring-[#F97316] focus:ring-2 focus:outline-none text-slate-900 placeholder:text-slate-400 mt-6"
+                        />
+                      </div>
+
+                      {/* Card 2 — Location / Company */}
+                      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                        <div className="flex items-center gap-3 mb-1">
+                          <div className="size-12 rounded-lg bg-blue-100 flex items-center justify-center">
+                            <Building2 className="w-6 h-6 text-blue-600" />
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-bold text-slate-900">Company Name <span className="text-slate-400 font-normal text-sm ml-1">(Optional)</span></h3>
+                            <p className="text-slate-500 text-sm">Is there a specific company you're targeting?</p>
+                          </div>
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="e.g. Stripe, Airbnb, or Vercel"
+                          value={targetLocation}
+                          onChange={(e) => setTargetLocation(e.target.value)}
+                          className="w-full h-14 px-4 rounded-xl border border-slate-200 bg-[#F8F7F5] focus:border-[#F97316] focus:ring-[#F97316] focus:ring-2 focus:outline-none text-slate-900 placeholder:text-slate-400 mt-6"
+                        />
+                      </div>
+
+                      {/* Card 3 — Job Description / Timeline */}
+                      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                        <div className="flex items-center gap-3 mb-1">
+                          <div className="size-12 rounded-lg bg-green-100 flex items-center justify-center">
+                            <FileText className="w-6 h-6 text-green-600" />
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-bold text-slate-900">Job Description</h3>
+                            <p className="text-slate-500 text-sm">Paste the JD to help us personalize your project brief.</p>
+                          </div>
+                        </div>
+                        <textarea
+                          placeholder="Paste the requirements, responsibilities, and company values here..."
+                          value={targetStart}
+                          onChange={(e) => setTargetStart(e.target.value)}
+                          rows={6}
+                          className="w-full p-4 rounded-xl border border-slate-200 bg-[#F8F7F5] focus:border-[#F97316] focus:ring-[#F97316] focus:ring-2 focus:outline-none resize-none text-slate-900 placeholder:text-slate-400 mt-6"
+                        />
+                      </div>
+
+                      {/* CTA */}
+                      <button
+                        type="button"
+                        onClick={saveTargetAndAdvance}
+                        disabled={saving}
+                        className="w-fit px-8 py-4 bg-[#F97316] hover:bg-orange-600 text-white font-bold rounded-xl shadow-lg shadow-[#F97316]/20 flex items-center gap-2 transition-all disabled:opacity-60"
+                      >
+                        {saving ? "Saving..." : "Generate my proof of work brief"}
+                        <Sparkles className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    {/* Right sidebar */}
+                    <div className="flex flex-col gap-6">
+                      {/* Pro-tip card */}
+                      <div className="bg-[#F97316]/5 border border-[#F97316]/20 p-6 rounded-xl relative overflow-hidden">
+                        <Lightbulb className="w-24 h-24 text-[#F97316]/10 absolute -right-4 -top-4" />
+                        <div className="flex items-center gap-2 mb-3">
+                          <Lightbulb className="w-5 h-5 text-[#F97316]" />
+                          <span className="text-[#F97316] font-bold text-lg">Pro-tip</span>
+                        </div>
+                        <p className="text-slate-700 text-sm leading-relaxed mb-4">Defining a target helps our AI tailor your portfolio projects to exactly what recruiters are looking for.</p>
+                        <div className="space-y-2.5">
+                          <div className="flex items-start gap-2">
+                            <CheckCircle2 className="w-4 h-4 text-[#F97316] mt-0.5 shrink-0" />
+                            <span className="text-xs text-slate-600 font-medium">Matches technical stack requirements</span>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <CheckCircle2 className="w-4 h-4 text-[#F97316] mt-0.5 shrink-0" />
+                            <span className="text-xs text-slate-600 font-medium">Aligns with company industry & tone</span>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <CheckCircle2 className="w-4 h-4 text-[#F97316] mt-0.5 shrink-0" />
+                            <span className="text-xs text-slate-600 font-medium">Solves real-world problems relevant to the role</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Previous Targets card */}
+                      <div className="p-6 rounded-xl border border-dashed border-slate-300 flex flex-col items-center text-center gap-3">
+                        <div className="w-full h-32 rounded-lg flex items-center justify-center" style={{ background: "linear-gradient(135deg, rgba(249,116,22,0.1) 0%, rgba(249,116,22,0.05) 100%)" }}>
+                          <Archive className="w-10 h-10 text-slate-400" />
+                        </div>
+                        <span className="font-bold text-slate-900">Previous Targets</span>
+                        <p className="text-slate-500 text-xs">No previous targets found. Your first brief will appear here once generated.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <footer className="border-t border-slate-200 py-8 px-10 mt-auto">
+                  <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+                    <span className="text-slate-500 text-sm">© 2024 PrepLane AI. All rights reserved.</span>
+                    <div className="flex items-center gap-6">
+                      <a href="#" className="text-slate-400 hover:text-[#F97316] text-sm transition-colors">Privacy Policy</a>
+                      <a href="#" className="text-slate-400 hover:text-[#F97316] text-sm transition-colors">Terms of Service</a>
+                      <a href="#" className="text-slate-400 hover:text-[#F97316] text-sm transition-colors">Help Center</a>
+                    </div>
+                  </div>
+                </footer>
+              </div>
+            </div>
+          )}
+
+          {step === 2 && !isReturning && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
               <div className="w-full max-w-lg mx-auto bg-white rounded-xl shadow-sm border border-slate-100 p-8 md:p-12 space-y-8">
                 {/* Header */}
