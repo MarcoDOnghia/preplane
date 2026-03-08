@@ -7,8 +7,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Sparkles, ArrowRight, Target, Clock, RotateCcw, Zap, Check, Lightbulb, Loader2 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { Plus, Sparkles, ArrowRight, Target, Clock, RotateCcw, Zap, Check, Lightbulb, Loader2, X, AlertTriangle } from "lucide-react";
+import { formatDistanceToNow, differenceInDays } from "date-fns";
 
 const TARGET_KEY = "preplane_onboarding_target";
 const ONBOARDING_KEY = "preplane_onboarding_done";
