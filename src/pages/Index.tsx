@@ -14,10 +14,11 @@ const TARGET_KEY = "preplane_onboarding_target";
 const ONBOARDING_KEY = "preplane_onboarding_done";
 
 const STEPS = [
-  { key: "step_cv_done", label: "Tailor CV", weight: 20 },
-  { key: "step_connection_done", label: "Find contact", weight: 15 },
+  { key: "step_cv_done", label: "Tailor CV", weight: 18 },
+  { key: "step_connection_done", label: "Find contact", weight: 13 },
   { key: "step_proof_done", label: "Build proof of work", weight: 20 },
-  { key: "step_outreach_done", label: "Send outreach", weight: 20 },
+  { key: "step_outreach_done", label: "Send outreach", weight: 19 },
+  { key: "step_linkedin_done", label: "Share on LinkedIn", weight: 5 },
   { key: "step_cover_letter_done", label: "Cover letter", weight: 10 },
   { key: "step_followup_done", label: "Follow up", weight: 15 },
 ] as const;
