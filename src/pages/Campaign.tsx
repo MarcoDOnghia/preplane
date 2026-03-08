@@ -426,13 +426,20 @@ const Campaign = () => {
               <p className="text-sm text-foreground">
                 {STEPS[nextStep].label} — complete this step to strengthen your campaign.
               </p>
-              <Button
-                size="sm"
-                className="mt-3"
-                onClick={() => { setOpenSteps(new Set([nextStep])); }}
+              <a
+                href={`#step-${nextStep}`}
+                className="inline-block mt-3"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setOpenSteps((prev) => new Set(prev).add(nextStep));
+                  setTimeout(() => {
+                    const el = document.getElementById(`step-${nextStep}`);
+                    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }, 100);
+                }}
               >
-                Go to step →
-              </Button>
+                <Button size="sm" asChild><span>Go to step →</span></Button>
+              </a>
             </CardContent>
           </Card>
         )}
@@ -447,23 +454,29 @@ const Campaign = () => {
             onToggle={() => toggleStep(0)}
           >
             <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-muted-foreground">Match Score:</span>
-                <span className={`text-lg font-bold ${campaign.match_score >= 80 ? "text-success" : campaign.match_score >= 60 ? "text-yellow-500" : "text-destructive"}`}>
-                  {campaign.match_score}%
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground">Your CV has been tailored for this role. You can view the full tailored version below.</p>
-              <Collapsible>
-                <CollapsibleTrigger asChild>
-                  <Button variant="outline" size="sm">View tailored CV</Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="mt-3">
-                  <div className="bg-muted rounded-lg p-4 text-xs whitespace-pre-wrap max-h-[300px] overflow-auto">
-                    {campaign.cv_version || "No CV content saved."}
+              {campaign.step_cv_done ? (
+                <>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-muted-foreground">Match Score:</span>
+                    <span className={`text-lg font-bold ${campaign.match_score >= 80 ? "text-success" : campaign.match_score >= 60 ? "text-yellow-500" : "text-destructive"}`}>
+                      {campaign.match_score}%
+                    </span>
                   </div>
-                </CollapsibleContent>
-              </Collapsible>
+                  <p className="text-xs text-muted-foreground">Your CV has been tailored for this role. You can view the full tailored version below.</p>
+                  <Collapsible>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="outline" size="sm">View tailored CV</Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-3">
+                      <div className="bg-muted rounded-lg p-4 text-xs whitespace-pre-wrap max-h-[300px] overflow-auto">
+                        {campaign.cv_version || "No CV content saved."}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">No CV tailored yet. Continue setting up your campaign to tailor your CV.</p>
+              )}
             </div>
           </StepCard>
         </div>
@@ -890,7 +903,7 @@ function StepCard({
 }) {
   const Icon = step.icon;
   return (
-    <Card className={done ? "border-success/30" : ""}>
+    <Card id={`step-${index}`} className={done ? "border-success/30" : ""}>
       <CardHeader
         className="pb-0 cursor-pointer select-none"
         onClick={onToggle}

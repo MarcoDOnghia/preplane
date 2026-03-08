@@ -14,7 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Sparkles, ArrowRight, Lightbulb } from "lucide-react";
+import { Loader2, Sparkles, ArrowRight, Lightbulb, Link2 } from "lucide-react";
 import type { TailorResult } from "@/lib/types";
 import { parseCvToModel, cvModelToPlainText, aiParsedCvToModel } from "@/lib/cvDataModel";
 import type { CvDataModel } from "@/lib/cvDataModel";
@@ -45,6 +45,7 @@ const Index = () => {
   const [setupJd, setSetupJd] = useState("");
   const [proofBrief, setProofBrief] = useState<any>(null);
   const [generatingBrief, setGeneratingBrief] = useState(false);
+  const [jdExtractingUrl, setJdExtractingUrl] = useState(false);
 
   // Check onboarding status and save any pending target from onboarding
   useEffect(() => {
@@ -144,6 +145,30 @@ const Index = () => {
   useEffect(() => {
     if (targetRole && !setupRole) setSetupRole(targetRole);
   }, [targetRole]);
+
+  // Detect if JD text looks like a URL
+  const jdLooksLikeUrl = /^https?:\/\/\S+$/i.test(setupJd.trim());
+
+  const handleExtractJdUrl = async () => {
+    if (!setupJd.trim()) return;
+    setJdExtractingUrl(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("extract-jd-from-url", {
+        body: { url: setupJd.trim() },
+      });
+      if (error) throw error;
+      if (data?.jobDescription) {
+        setSetupJd(data.jobDescription);
+        toast({ title: "Job description extracted!" });
+      } else {
+        toast({ title: "Couldn't extract", description: "Try pasting the JD manually.", variant: "destructive" });
+      }
+    } catch (err: any) {
+      toast({ title: "Extraction failed", description: err.message, variant: "destructive" });
+    } finally {
+      setJdExtractingUrl(false);
+    }
+  };
 
   const generateProofBrief = async () => {
     if (!setupRole.trim()) {
@@ -819,10 +844,25 @@ const Index = () => {
                 <Textarea
                   value={setupJd}
                   onChange={(e) => setSetupJd(e.target.value)}
-                  placeholder="Paste the full job description here..."
+                  placeholder="Paste the full job description or a job posting URL..."
                   rows={6}
                   className="mt-1"
                 />
+                {jdLooksLikeUrl && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 text-xs"
+                    onClick={handleExtractJdUrl}
+                    disabled={jdExtractingUrl}
+                  >
+                    {jdExtractingUrl ? (
+                      <><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Extracting...</>
+                    ) : (
+                      <><Link2 className="h-3 w-3 mr-1" /> Extract job description from URL</>
+                    )}
+                  </Button>
+                )}
               </div>
               <Button
                 onClick={generateProofBrief}
