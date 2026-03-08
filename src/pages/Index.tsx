@@ -63,19 +63,26 @@ function getNextStep(c: CampaignRow) {
   if (c.proof_in_progress && !c.step_proof_done) {
     return "Finish your proof of work — this is what gets responses";
   }
-  // Priority 3: Proof done but outreach not sent
-  if (c.step_proof_done && !c.step_outreach_done) {
+  // Priority 3: Proof done, LinkedIn not posted
+  if (c.step_proof_done && !c.step_linkedin_done) {
+    return "Post about your proof of work on LinkedIn";
+  }
+  // Priority 4: LinkedIn posted, contact not found
+  if (c.step_linkedin_done && !c.step_connection_done) {
+    return "Find your contact — they may have seen your post";
+  }
+  // Priority 5: Contact found, outreach not sent
+  if (c.step_connection_done && !c.step_outreach_done) {
     return "Your proof of work is ready. Time to reach out.";
   }
-  // Priority 4: Outreach sent but no follow up
+  // Priority 6: Outreach sent, no follow up
   if (c.step_outreach_done && !c.step_followup_done) {
     return "Follow up on your outreach";
   }
-  // Priority 5: CV not tailored
+  // Priority 7: CV not tailored
   if (!c.step_cv_done) {
-    return "Tailor your CV";
+    return "Tailor your CV for this role";
   }
-  if (!c.step_connection_done) return "Find your contact";
   if (!c.step_cover_letter_done) return "Prepare cover letter";
   return null;
 }

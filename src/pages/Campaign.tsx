@@ -487,53 +487,13 @@ const Campaign = () => {
             <p className="text-xs font-bold uppercase tracking-wide text-[hsl(30,60%,40%)]">Do these BEFORE applying</p>
           </div>
 
-          {/* Step 2: Find a connection */}
+          {/* Step 2: Build proof of work */}
           <StepCard
             index={1}
             step={STEPS[1]}
-            done={campaign.step_connection_done}
+            done={campaign.step_proof_done}
             open={openSteps.has(1)}
             onToggle={() => toggleStep(1)}
-          >
-            <div className="space-y-3">
-              <div>
-                <label className="text-sm font-medium">Name of someone at {campaign.company}</label>
-                <Input
-                  value={connectionName}
-                  onChange={(e) => setConnectionName(e.target.value)}
-                  onBlur={() => updateCampaign({ connection_name: connectionName || null })}
-                  placeholder="e.g. Sarah Chen"
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Their LinkedIn URL (optional)</label>
-                <Input
-                  value={connectionUrl}
-                  onChange={(e) => setConnectionUrl(e.target.value)}
-                  onBlur={() => updateCampaign({ connection_url: connectionUrl || null })}
-                  placeholder="https://linkedin.com/in/..."
-                  className="mt-1"
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="connection-done"
-                  checked={campaign.step_connection_done}
-                  onCheckedChange={(checked) => updateCampaign({ step_connection_done: !!checked, connection_name: connectionName || null, connection_url: connectionUrl || null })}
-                />
-                <label htmlFor="connection-done" className="text-sm">I've found my contact</label>
-              </div>
-            </div>
-          </StepCard>
-
-          {/* Step 3: Proof of work */}
-          <StepCard
-            index={2}
-            step={STEPS[2]}
-            done={campaign.step_proof_done}
-            open={openSteps.has(2)}
-            onToggle={() => toggleStep(2)}
           >
             <div className="space-y-3">
               <Button
@@ -619,79 +579,25 @@ const Campaign = () => {
             </div>
           </StepCard>
 
-          {/* Step 4: Send outreach */}
+          {/* Step 3: LinkedIn Strategy */}
           <StepCard
-            index={3}
-            step={STEPS[3]}
-            done={campaign.step_outreach_done}
-            open={openSteps.has(3)}
-            onToggle={() => toggleStep(3)}
-          >
-            <div className="space-y-3">
-              <Button
-                size="sm"
-                onClick={() => generateContent("outreach")}
-                disabled={!!generating}
-              >
-                {generating === "outreach" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
-                Generate outreach message
-              </Button>
-              {outreachMessage && (
-                <div className="space-y-2">
-                  <Textarea
-                    value={outreachMessage}
-                    onChange={(e) => setOutreachMessage(e.target.value)}
-                    onBlur={() => updateCampaign({ outreach_message: outreachMessage })}
-                    rows={5}
-                    className="text-sm"
-                  />
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      navigator.clipboard.writeText(outreachMessage);
-                      toast({ title: "Copied to clipboard!" });
-                    }}
-                  >
-                    Copy message
-                  </Button>
-                </div>
-              )}
-              <Button
-                size="sm"
-                variant="default"
-                className="bg-success hover:bg-success/90"
-                disabled={!connectionName}
-                onClick={async () => {
-                  const followDate = new Date();
-                  followDate.setDate(followDate.getDate() + 7);
-                  await updateCampaign({
-                    step_outreach_done: true,
-                    connection_name: connectionName,
-                    connection_url: connectionUrl || null,
-                    outreach_message: outreachMessage || null,
-                    followup_date: followDate.toISOString(),
-                  });
-                  toast({ title: "Marked as sent! Follow-up set for 7 days." });
-                }}
-              >
-                <Check className="h-4 w-4 mr-1" /> Mark as sent
-              </Button>
-            </div>
-          </StepCard>
-
-          {/* Step 4.5: LinkedIn Strategy */}
-          <StepCard
-            index={4}
-            step={STEPS[4]}
+            index={2}
+            step={STEPS[2]}
             done={campaign.step_linkedin_done}
-            open={openSteps.has(4)}
-            onToggle={() => toggleStep(4)}
+            open={openSteps.has(2)}
+            onToggle={() => toggleStep(2)}
           >
             <div className="space-y-5">
               <p className="text-sm italic text-muted-foreground">
                 We could write this for you. We won't. Your story told in your words is 10× more powerful than anything we generate.
               </p>
+
+              {/* Tip */}
+              <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
+                <p className="text-sm text-foreground">
+                  💡 <strong>Tip:</strong> Tag someone in the role you're targeting — e.g. "Curious what @[Name] thinks about this, given their work at @[Company]." This turns a cold outreach into a warm one before you've sent a single DM.
+                </p>
+              </div>
 
               {/* AI-generated angles */}
               <div className="space-y-3">
@@ -751,6 +657,107 @@ const Campaign = () => {
                 onClick={() => updateCampaign({ step_linkedin_done: true } as any)}
               >
                 <Check className="h-4 w-4 mr-1" /> I've posted it →
+              </Button>
+            </div>
+          </StepCard>
+
+          {/* Step 4: Find your contact */}
+          <StepCard
+            index={3}
+            step={STEPS[3]}
+            done={campaign.step_connection_done}
+            open={openSteps.has(3)}
+            onToggle={() => toggleStep(3)}
+          >
+            <div className="space-y-3">
+              <div>
+                <label className="text-sm font-medium">Name of someone at {campaign.company}</label>
+                <Input
+                  value={connectionName}
+                  onChange={(e) => setConnectionName(e.target.value)}
+                  onBlur={() => updateCampaign({ connection_name: connectionName || null })}
+                  placeholder="e.g. Sarah Chen"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Their LinkedIn URL (optional)</label>
+                <Input
+                  value={connectionUrl}
+                  onChange={(e) => setConnectionUrl(e.target.value)}
+                  onBlur={() => updateCampaign({ connection_url: connectionUrl || null })}
+                  placeholder="https://linkedin.com/in/..."
+                  className="mt-1"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="connection-done"
+                  checked={campaign.step_connection_done}
+                  onCheckedChange={(checked) => updateCampaign({ step_connection_done: !!checked, connection_name: connectionName || null, connection_url: connectionUrl || null })}
+                />
+                <label htmlFor="connection-done" className="text-sm">I've found my contact</label>
+              </div>
+            </div>
+          </StepCard>
+
+          {/* Step 5: Send outreach */}
+          <StepCard
+            index={4}
+            step={STEPS[4]}
+            done={campaign.step_outreach_done}
+            open={openSteps.has(4)}
+            onToggle={() => toggleStep(4)}
+          >
+            <div className="space-y-3">
+              <Button
+                size="sm"
+                onClick={() => generateContent("outreach")}
+                disabled={!!generating}
+              >
+                {generating === "outreach" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
+                Generate outreach message
+              </Button>
+              {outreachMessage && (
+                <div className="space-y-2">
+                  <Textarea
+                    value={outreachMessage}
+                    onChange={(e) => setOutreachMessage(e.target.value)}
+                    onBlur={() => updateCampaign({ outreach_message: outreachMessage })}
+                    rows={5}
+                    className="text-sm"
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      navigator.clipboard.writeText(outreachMessage);
+                      toast({ title: "Copied to clipboard!" });
+                    }}
+                  >
+                    Copy message
+                  </Button>
+                </div>
+              )}
+              <Button
+                size="sm"
+                variant="default"
+                className="bg-success hover:bg-success/90"
+                disabled={!connectionName}
+                onClick={async () => {
+                  const followDate = new Date();
+                  followDate.setDate(followDate.getDate() + 7);
+                  await updateCampaign({
+                    step_outreach_done: true,
+                    connection_name: connectionName,
+                    connection_url: connectionUrl || null,
+                    outreach_message: outreachMessage || null,
+                    followup_date: followDate.toISOString(),
+                  });
+                  toast({ title: "Marked as sent! Follow-up set for 7 days." });
+                }}
+              >
+                <Check className="h-4 w-4 mr-1" /> Mark as sent
               </Button>
             </div>
           </StepCard>
