@@ -613,23 +613,16 @@ const Onboarding = () => {
                 </p>
 
                 {/* Action buttons */}
-                <div className="flex items-center justify-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => window.open("https://www.linkedin.com/in/marcodonghiaa/", "_blank")}
-                    className="flex items-center gap-2 px-6 py-3.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-medium text-sm hover:border-slate-300 transition-colors"
+                <div className="flex items-center justify-center">
+                  <a
+                    href="https://www.linkedin.com/in/marcodonghiaa/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-6 py-3.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-medium text-sm hover:border-[#F97316] hover:text-[#F97316] transition-colors"
                   >
-                    <LinkIcon className="w-4 h-4 text-slate-500" />
-                    Connect on LinkedIn
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => window.open("mailto:marco.dgh06@gmail.com", "_blank")}
-                    className="flex items-center gap-2 px-6 py-3.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-medium text-sm hover:border-slate-300 transition-colors"
-                  >
-                    <MessageSquare className="w-4 h-4 text-slate-500" />
-                    Send feedback
-                  </button>
+                    <LinkIcon className="w-4 h-4" />
+                    Connect on LinkedIn →
+                  </a>
                 </div>
 
                 {/* CTA */}
