@@ -51,7 +51,8 @@ serve(async (req) => {
       });
     }
 
-    const { url } = await req.json();
+    const { url: rawUrl } = await req.json();
+    const url = typeof rawUrl === "string" ? rawUrl.replace(/<[^>]+>/g, "").trim().slice(0, 2000) : "";
     if (!url || !isValidUrl(url)) throw new Error("A valid HTTPS URL is required");
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
