@@ -44,6 +44,8 @@ interface CampaignRow {
   step_followup_done: boolean;
   created_at: string;
   archived: boolean;
+  proof_suggestion: string | null;
+  proof_in_progress: boolean;
 }
 
 function getStrength(c: CampaignRow) {
