@@ -293,7 +293,7 @@ const Onboarding = () => {
                 className="group inline-flex items-center gap-2 rounded-xl h-14 px-8 bg-[hsl(var(--primary))] text-white text-lg font-bold shadow-lg shadow-[hsl(var(--primary))]/25 hover:-translate-y-0.5 transition-all active:translate-y-0"
               >
                 I'm in
-                <span className="material-symbols-outlined text-xl transition-transform group-hover:translate-x-1">arrow_forward</span>
+                <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
               </button>
             </div>
           </div>
