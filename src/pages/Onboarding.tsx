@@ -403,7 +403,7 @@ const Onboarding = () => {
                           }
                           className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                             selected
-                              ? "border border-[hsl(var(--primary))] text-[hsl(var(--primary))] bg-orange-50"
+                              ? "border border-[#F97316] text-[#F97316] bg-orange-50"
                               : "border border-slate-200 text-slate-600 bg-white hover:border-slate-300"
                           }`}
                         >
