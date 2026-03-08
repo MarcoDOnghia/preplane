@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Compass, ArrowRight, Linkedin, Mail, Check, X, Briefcase, MapPin, Calendar, Search, Heart, BadgeCheck, Link as LinkIcon, MessageSquare } from "lucide-react";
+import { Compass, ArrowRight, Linkedin, Mail, Check, X, Briefcase, MapPin, Calendar, Search, Heart, BadgeCheck, Link as LinkIcon, MessageSquare, User, Lock, Eye, EyeOff, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,6 +42,7 @@ const Onboarding = () => {
   const [touched, setTouched] = useState<{ email?: boolean; password?: boolean }>({});
   const [forgotMode, setForgotMode] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const { user, loading: sessionLoading } = useAuth();
   const navigate = useNavigate();
@@ -510,23 +511,45 @@ const Onboarding = () => {
 
           {/* Step 4 — Sign up / Login (only for unauthenticated users) */}
           {step === 4 && !user && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6 text-center">
-              <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
-                Save your profile and get started
-              </h1>
-              <p className="text-muted-foreground text-base md:text-lg max-w-[480px] mx-auto">
-                Create a free account to save your target, your CV, and your applications. Takes 10 seconds.
-              </p>
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              {/* Full-width header bar */}
+              <div className="fixed top-0 left-0 right-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur-sm px-6 md:px-20 py-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-[#F97316] flex items-center justify-center">
+                    <GraduationCap className="h-4 w-4 text-white" />
+                  </div>
+                  <span className="text-lg font-extrabold text-slate-900 tracking-tight">PrepLane</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-slate-500 hidden sm:inline">Already have an account?</span>
+                  <button
+                    type="button"
+                    onClick={() => { setIsLogin(true); setAuthError(null); setForgotMode(false); setTouched({}); }}
+                    className="px-4 py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                  >
+                    Sign in
+                  </button>
+                </div>
+              </div>
 
-              {/* Google OAuth */}
-              <div className="max-w-[400px] mx-auto space-y-3">
-                <Button
-                  variant="outline"
-                  className="w-full h-12 text-base"
+              {/* Card */}
+              <div className="w-full max-w-lg mx-auto bg-white rounded-xl shadow-sm border border-slate-100 p-8 md:p-12 space-y-6 mt-16">
+                <div className="text-center space-y-2">
+                  <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">
+                    {isLogin ? "Welcome back" : "Save your profile and get started"}
+                  </h1>
+                  <p className="text-slate-500 text-sm md:text-base">
+                    {isLogin
+                      ? "Sign in to access your tailored applications"
+                      : "Create a free account to save your target, your CV, and your applications. Takes 10 seconds."}
+                  </p>
+                </div>
+
+                {/* Google OAuth */}
+                <button
                   type="button"
                   disabled={authLoading}
                   onClick={async () => {
-                    // Store target in localStorage before OAuth redirect
                     localStorage.setItem(TARGET_KEY, JSON.stringify({
                       target_role: targetRole,
                       target_location: targetLocation,
@@ -539,93 +562,137 @@ const Onboarding = () => {
                       setAuthLoading(false);
                     }
                   }}
+                  className="w-full flex items-center justify-center gap-3 h-13 py-3.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-medium text-sm hover:bg-slate-50 transition-colors disabled:opacity-60"
                 >
-                  <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
+                  <svg className="h-5 w-5" viewBox="0 0 24 24">
                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
                     <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
                     <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
                     <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
                   </svg>
                   Continue with Google
-                </Button>
+                </button>
 
+                {/* Divider */}
                 <div className="relative">
-                  <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">or with email</span>
+                  <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-slate-200" /></div>
+                  <div className="relative flex justify-center text-xs uppercase tracking-wider">
+                    <span className="bg-white px-3 text-slate-400 font-medium">or with email</span>
                   </div>
                 </div>
 
                 {forgotMode ? (
                   resetSent ? (
-                    <div className="space-y-4 text-left">
-                      <div className="rounded-md bg-primary/10 border border-primary/20 p-3 text-sm text-primary">
+                    <div className="space-y-4">
+                      <div className="rounded-xl bg-[#F97316]/10 border border-[#F97316]/20 p-4 text-sm text-[#F97316]">
                         Check your email for a password reset link.
                       </div>
                       <button
                         type="button"
-                        className="text-sm text-primary hover:underline font-medium"
+                        className="text-sm text-[#F97316] hover:underline font-medium"
                         onClick={() => { setForgotMode(false); setResetSent(false); setAuthError(null); }}
                       >
                         ← Back
                       </button>
                     </div>
                   ) : (
-                    <form onSubmit={handleForgotPassword} className="space-y-4 text-left">
+                    <form onSubmit={handleForgotPassword} className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required />
+                        <label className="text-sm font-medium text-slate-700">Email address</label>
+                        <div className="relative">
+                          <Mail className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                          <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="jane@example.com"
+                            required
+                            className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316] transition-colors"
+                          />
+                        </div>
                       </div>
-                      {authError && <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">{authError}</div>}
-                      <Button type="submit" className="w-full" disabled={authLoading}>{authLoading ? "Sending..." : "Send Reset Link"}</Button>
-                      <button type="button" className="text-sm text-primary hover:underline font-medium w-full text-center" onClick={() => { setForgotMode(false); setAuthError(null); }}>← Back</button>
+                      {authError && <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-600">{authError}</div>}
+                      <button
+                        type="submit"
+                        disabled={authLoading}
+                        className="w-full flex items-center justify-center gap-2 bg-[#F97316] hover:bg-orange-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-orange-200 transition-colors disabled:opacity-60"
+                      >
+                        {authLoading ? "Sending..." : "Send Reset Link"}
+                      </button>
+                      <button type="button" className="text-sm text-[#F97316] hover:underline font-medium w-full text-center" onClick={() => { setForgotMode(false); setAuthError(null); }}>← Back</button>
                     </form>
                   )
                 ) : (
-                  <form onSubmit={handleAuth} className="space-y-4 text-left">
+                  <form onSubmit={handleAuth} className="space-y-4">
                     {!isLogin && (
                       <div className="space-y-2">
-                        <Label htmlFor="displayName">Your name</Label>
-                        <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Your name" required={!isLogin} />
+                        <label className="text-sm font-medium text-slate-700">Your name</label>
+                        <div className="relative">
+                          <User className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                          <input
+                            type="text"
+                            value={displayName}
+                            onChange={(e) => setDisplayName(e.target.value)}
+                            placeholder="Jane Doe"
+                            required={!isLogin}
+                            className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316] transition-colors"
+                          />
+                        </div>
                       </div>
                     )}
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        onBlur={() => setTouched((t) => ({ ...t, email: true }))}
-                        placeholder="you@example.com"
-                        required
-                        className={emailInputClass()}
-                      />
+                      <label className="text-sm font-medium text-slate-700">Email address</label>
+                      <div className="relative">
+                        <Mail className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          onBlur={() => setTouched((t) => ({ ...t, email: true }))}
+                          placeholder="jane@example.com"
+                          required
+                          className={`w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 border text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316] transition-colors ${
+                            touched.email && email
+                              ? isEmailValid ? "border-green-400" : "border-red-400"
+                              : "border-slate-200"
+                          }`}
+                        />
+                      </div>
                       {touched.email && email && !isEmailValid && (
-                        <p className="text-xs text-destructive">Please enter a valid email address</p>
+                        <p className="text-xs text-red-500">Please enter a valid email address</p>
                       )}
                     </div>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <Label htmlFor="password">Password</Label>
+                        <label className="text-sm font-medium text-slate-700">Password</label>
                         {isLogin && (
-                          <button type="button" className="text-xs text-primary hover:underline" onClick={() => { setForgotMode(true); setAuthError(null); }}>Forgot password?</button>
+                          <button type="button" className="text-xs text-[#F97316] hover:underline font-medium" onClick={() => { setForgotMode(true); setAuthError(null); }}>Forgot password?</button>
                         )}
                       </div>
-                      <Input
-                        id="password"
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        onBlur={() => setTouched((t) => ({ ...t, password: true }))}
-                        placeholder="••••••••"
-                        required
-                        minLength={isLogin ? 6 : 8}
-                      />
+                      <div className="relative">
+                        <Lock className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          onBlur={() => setTouched((t) => ({ ...t, password: true }))}
+                          placeholder={isLogin ? "••••••••" : "Create a strong password"}
+                          required
+                          minLength={isLogin ? 6 : 8}
+                          className="w-full pl-12 pr-12 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316] transition-colors"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                        >
+                          {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
                       {!isLogin && (touched.password || password.length > 0) && (
                         <ul className="space-y-1 mt-2">
                           {passwordChecks.map((check, i) => (
-                            <li key={i} className={`flex items-center gap-1.5 text-xs ${check.met ? "text-green-600" : "text-destructive"}`}>
+                            <li key={i} className={`flex items-center gap-1.5 text-xs ${check.met ? "text-green-600" : "text-red-400"}`}>
                               {check.met ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
                               {check.label}
                             </li>
@@ -633,24 +700,37 @@ const Onboarding = () => {
                         </ul>
                       )}
                     </div>
-                    {authError && <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">{authError}</div>}
-                    <Button type="submit" className="w-full text-base h-11" disabled={authLoading}>
-                      {authLoading ? "Please wait..." : isLogin ? "Sign In" : <>Create my free account <ArrowRight className="ml-1 h-4 w-4" /></>}
-                    </Button>
+                    {authError && <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-600">{authError}</div>}
+                    <button
+                      type="submit"
+                      disabled={authLoading}
+                      className="w-full flex items-center justify-center gap-2 bg-[#F97316] hover:bg-orange-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-orange-200 transition-colors disabled:opacity-60"
+                    >
+                      {authLoading ? "Please wait..." : isLogin ? "Sign In" : "Create my free account"}
+                      <ArrowRight className="w-5 h-5" />
+                    </button>
                   </form>
                 )}
 
-                <div className="text-sm text-muted-foreground">
+                {/* Toggle login/signup */}
+                <div className="text-center text-sm text-slate-500">
                   {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
                   <button
                     type="button"
-                    className="text-primary hover:underline font-medium"
+                    className="text-[#F97316] hover:underline font-semibold"
                     onClick={() => { setIsLogin(!isLogin); setAuthError(null); setForgotMode(false); setTouched({}); }}
                   >
                     {isLogin ? "Sign up" : "Sign in"}
                   </button>
                 </div>
               </div>
+
+              {/* Footer */}
+              <p className="text-center text-xs text-slate-400 mt-6">
+                By creating an account, you agree to PrepLane's{" "}
+                <a href="#" className="underline hover:text-slate-600">Terms of Service</a> and{" "}
+                <a href="#" className="underline hover:text-slate-600">Privacy Policy</a>.
+              </p>
             </div>
           )}
         </div>
