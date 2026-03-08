@@ -143,7 +143,7 @@ const Index = () => {
         // Load campaigns
         const { data: campData } = await supabase
           .from("campaigns")
-          .select("id, company, role, match_score, status, step_cv_done, step_connection_done, step_outreach_done, step_proof_done, step_linkedin_done, step_cover_letter_done, step_followup_done, created_at, archived, proof_suggestion, proof_in_progress")
+          .select("id, company, role, match_score, status, step_cv_done, step_connection_done, step_outreach_done, step_proof_done, step_linkedin_done, step_cover_letter_done, step_followup_done, created_at, archived, proof_suggestion, proof_in_progress, followup_date")
           .order("created_at", { ascending: false });
         setCampaigns((campData as any as CampaignRow[]) || []);
         setLoading(false);
