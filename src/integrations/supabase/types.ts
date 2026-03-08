@@ -260,6 +260,7 @@ export type Database = {
           match_score: number
           notes: string | null
           outreach_message: string | null
+          proof_in_progress: boolean
           proof_suggestion: string | null
           role: string
           status: string
@@ -285,6 +286,7 @@ export type Database = {
           match_score?: number
           notes?: string | null
           outreach_message?: string | null
+          proof_in_progress?: boolean
           proof_suggestion?: string | null
           role: string
           status?: string
@@ -310,6 +312,7 @@ export type Database = {
           match_score?: number
           notes?: string | null
           outreach_message?: string | null
+          proof_in_progress?: boolean
           proof_suggestion?: string | null
           role?: string
           status?: string

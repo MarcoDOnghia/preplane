@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Sparkles, ArrowRight, Target, Clock, RotateCcw, Zap } from "lucide-react";
+import { Plus, Sparkles, ArrowRight, Target, Clock, RotateCcw, Zap, Check, Lightbulb, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 const TARGET_KEY = "preplane_onboarding_target";
@@ -44,6 +44,8 @@ interface CampaignRow {
   step_followup_done: boolean;
   created_at: string;
   archived: boolean;
+  proof_suggestion: string | null;
+  proof_in_progress: boolean;
 }
 
 function getStrength(c: CampaignRow) {
@@ -51,12 +53,29 @@ function getStrength(c: CampaignRow) {
 }
 
 function getNextStep(c: CampaignRow) {
-  // Prioritize Step 3 (proof of work) if Step 2 (connection) done but Step 3 not
-  if (c.step_connection_done && !c.step_proof_done) {
-    return "Build proof of work";
+  // Priority 1: Proof brief exists but not started
+  if (c.proof_suggestion && !c.proof_in_progress && !c.step_proof_done) {
+    return "Start building your proof of work";
   }
-  const idx = STEPS.findIndex((s) => !(c as any)[s.key]);
-  return idx >= 0 ? STEPS[idx].label : null;
+  // Priority 2: Proof in progress
+  if (c.proof_in_progress && !c.step_proof_done) {
+    return "Finish your proof of work — this is what gets responses";
+  }
+  // Priority 3: Proof done but outreach not sent
+  if (c.step_proof_done && !c.step_outreach_done) {
+    return "Your proof of work is ready. Time to reach out.";
+  }
+  // Priority 4: Outreach sent but no follow up
+  if (c.step_outreach_done && !c.step_followup_done) {
+    return "Follow up on your outreach";
+  }
+  // Priority 5: CV not tailored
+  if (!c.step_cv_done) {
+    return "Tailor your CV";
+  }
+  if (!c.step_connection_done) return "Find your contact";
+  if (!c.step_cover_letter_done) return "Prepare cover letter";
+  return null;
 }
 
 const Index = () => {
@@ -114,7 +133,7 @@ const Index = () => {
         // Load campaigns
         const { data: campData } = await supabase
           .from("campaigns")
-          .select("id, company, role, match_score, status, step_cv_done, step_connection_done, step_outreach_done, step_proof_done, step_cover_letter_done, step_followup_done, created_at, archived")
+          .select("id, company, role, match_score, status, step_cv_done, step_connection_done, step_outreach_done, step_proof_done, step_cover_letter_done, step_followup_done, created_at, archived, proof_suggestion, proof_in_progress")
           .order("created_at", { ascending: false });
         setCampaigns((campData as any as CampaignRow[]) || []);
         setLoading(false);
@@ -271,7 +290,28 @@ const Index = () => {
                         </Badge>
                       </div>
 
-                      {/* Strength bar */}
+                      {/* Proof of work status — primary indicator */}
+                      <div className="flex items-center gap-1.5 text-xs font-medium">
+                        {c.step_proof_done ? (
+                          <span className="flex items-center gap-1.5 text-success">
+                            <Check className="h-3.5 w-3.5" /> Proof of work done
+                          </span>
+                        ) : c.proof_in_progress ? (
+                          <span className="flex items-center gap-1.5 text-yellow-600">
+                            <Loader2 className="h-3.5 w-3.5" /> Building in progress
+                          </span>
+                        ) : c.proof_suggestion ? (
+                          <span className="flex items-center gap-1.5 text-primary">
+                            <Lightbulb className="h-3.5 w-3.5" /> Brief ready — start building
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1.5 text-muted-foreground">
+                            <Lightbulb className="h-3.5 w-3.5" /> No proof of work yet
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Strength bar — secondary */}
                       <div className="space-y-1">
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-muted-foreground">Campaign strength</span>

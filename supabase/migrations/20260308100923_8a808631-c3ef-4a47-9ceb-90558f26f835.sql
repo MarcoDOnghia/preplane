@@ -1,0 +1,1 @@
+ALTER TABLE public.campaigns ADD COLUMN IF NOT EXISTS proof_in_progress boolean NOT NULL DEFAULT false;
