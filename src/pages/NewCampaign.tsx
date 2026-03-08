@@ -38,6 +38,14 @@ const Index = () => {
   const [targetLocation, setTargetLocation] = useState<string | null>(null);
   const [alignmentData, setAlignmentData] = useState<{ alignment: "strong" | "partial" | "weak"; reason: string; targetRole: string } | null>(null);
 
+  // --- Setup phase state ---
+  const [setupPhase, setSetupPhase] = useState<'input' | 'brief' | 'cv_tailoring'>('input');
+  const [setupRole, setSetupRole] = useState("");
+  const [setupCompany, setSetupCompany] = useState("");
+  const [setupJd, setSetupJd] = useState("");
+  const [proofBrief, setProofBrief] = useState<any>(null);
+  const [generatingBrief, setGeneratingBrief] = useState(false);
+
   // Check onboarding status and save any pending target from onboarding
   useEffect(() => {
     if (authLoading) return;
