@@ -7,7 +7,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const VALID_TYPES = ["outreach", "proof_of_work", "follow_up", "cover_letter"] as const;
+const VALID_TYPES = ["outreach", "proof_of_work", "follow_up", "cover_letter", "linkedin_angles"] as const;
 
 function sanitizeInput(text: string): string {
   return text
