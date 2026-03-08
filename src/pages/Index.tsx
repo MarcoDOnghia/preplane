@@ -190,14 +190,22 @@ const Index = () => {
             )}
             <h1 className="text-2xl font-bold tracking-tight">Your campaigns</h1>
           </div>
-          <Button
-            onClick={() => nav("/app/new")}
-            disabled={atLimit}
-            title={atLimit ? "You have 10 active campaigns. Complete or archive one first." : undefined}
-          >
-            <Plus className="h-4 w-4 mr-1" />
-            New Campaign
-          </Button>
+          <div className="flex flex-col items-end gap-1">
+            <Button
+              onClick={() => nav("/app/new")}
+              disabled={atLimit}
+              title={atLimit ? "You have 10 active campaigns. Complete or archive one first." : undefined}
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              New Campaign
+            </Button>
+            <button
+              onClick={() => nav("/app/new?phase=cv_tailoring")}
+              className="text-xs text-primary hover:text-primary/80 transition-colors underline underline-offset-2"
+            >
+              Just need to tailor a CV? Start here →
+            </button>
+          </div>
         </div>
 
         {atLimit && (

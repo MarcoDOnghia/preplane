@@ -18,6 +18,7 @@ interface InputSectionProps {
   onCvParsed?: (model: CvDataModel) => void;
   loading: boolean;
   loadingMessage: string;
+  initialJd?: string;
 }
 
 interface SavedCv {
@@ -30,7 +31,7 @@ interface SavedCv {
 const MAX_SIZE = 2 * 1024 * 1024;
 const MAX_CVS = 5;
 
-const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage }: InputSectionProps) => {
+const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage, initialJd }: InputSectionProps) => {
   const { user } = useAuth();
   const [savedCvs, setSavedCvs] = useState<SavedCv[]>([]);
   const [selectedCvId, setSelectedCvId] = useState<string>("");
@@ -38,7 +39,7 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage }
   const [cvName, setCvName] = useState("");
   const [uploading, setUploading] = useState(false);
 
-  const [jdText, setJdText] = useState("");
+  const [jdText, setJdText] = useState(initialJd || "");
   const [jdFile, setJdFile] = useState<{ text: string; name: string; error: string }>({ text: "", name: "", error: "" });
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [extracting, setExtracting] = useState(false);

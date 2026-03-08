@@ -465,7 +465,7 @@ const Campaign = () => {
                   <p className="text-xs text-muted-foreground">Your CV has been tailored for this role. You can view the full tailored version below.</p>
                   <Collapsible>
                     <CollapsibleTrigger asChild>
-                      <Button variant="outline" size="sm">View tailored CV</Button>
+                      <Button variant="outline" size="sm">View / Edit tailored CV</Button>
                     </CollapsibleTrigger>
                     <CollapsibleContent className="mt-3">
                       <div className="bg-muted rounded-lg p-4 text-xs whitespace-pre-wrap max-h-[300px] overflow-auto">
@@ -475,7 +475,22 @@ const Campaign = () => {
                   </Collapsible>
                 </>
               ) : (
-                <p className="text-sm text-muted-foreground">No CV tailored yet. Continue setting up your campaign to tailor your CV.</p>
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">No CV tailored yet. Tailor your CV to match this role's requirements.</p>
+                  <Button
+                    onClick={() => {
+                      const params = new URLSearchParams();
+                      params.set("phase", "cv_tailoring");
+                      params.set("role", campaign.role);
+                      params.set("company", campaign.company);
+                      if (campaign.jd_text) params.set("jd", campaign.jd_text);
+                      navigate(`/app/new?${params.toString()}`);
+                    }}
+                  >
+                    <FileText className="h-4 w-4 mr-1" />
+                    Tailor my CV for this role →
+                  </Button>
+                </div>
               )}
             </div>
           </StepCard>

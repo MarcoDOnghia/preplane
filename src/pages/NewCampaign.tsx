@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/Header";
 import InputSection from "@/components/InputSection";
@@ -33,16 +33,18 @@ const ONBOARDING_KEY = "preplane_onboarding_done";
 const Index = () => {
   const { user, loading: authLoading } = useAuth();
   const nav = useNavigate();
+  const [searchParams] = useSearchParams();
   const [onboardingChecked, setOnboardingChecked] = useState(false);
   const [targetRole, setTargetRole] = useState<string | null>(null);
   const [targetLocation, setTargetLocation] = useState<string | null>(null);
   const [alignmentData, setAlignmentData] = useState<{ alignment: "strong" | "partial" | "weak"; reason: string; targetRole: string } | null>(null);
 
   // --- Setup phase state ---
-  const [setupPhase, setSetupPhase] = useState<'input' | 'brief' | 'cv_tailoring'>('input');
-  const [setupRole, setSetupRole] = useState("");
-  const [setupCompany, setSetupCompany] = useState("");
-  const [setupJd, setSetupJd] = useState("");
+  const initialPhase = searchParams.get("phase") === "cv_tailoring" ? "cv_tailoring" as const : "input" as const;
+  const [setupPhase, setSetupPhase] = useState<'input' | 'brief' | 'cv_tailoring'>(initialPhase);
+  const [setupRole, setSetupRole] = useState(searchParams.get("role") || "");
+  const [setupCompany, setSetupCompany] = useState(searchParams.get("company") || "");
+  const [setupJd, setSetupJd] = useState(searchParams.get("jd") || "");
   const [proofBrief, setProofBrief] = useState<any>(null);
   const [generatingBrief, setGeneratingBrief] = useState(false);
   const [jdExtractingUrl, setJdExtractingUrl] = useState(false);
@@ -983,6 +985,7 @@ const Index = () => {
               onCvParsed={(model) => setPreParsedModel(model)}
               loading={loading}
               loadingMessage={loadingMessage}
+              initialJd={setupJd}
             />
             {loading && loadingProgress > 0 && (
               <div className="space-y-2">
