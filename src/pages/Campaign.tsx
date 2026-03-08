@@ -66,12 +66,14 @@ interface CampaignData {
   step_connection_done: boolean;
   step_outreach_done: boolean;
   step_proof_done: boolean;
+  step_linkedin_done: boolean;
   step_cover_letter_done: boolean;
   step_followup_done: boolean;
   connection_name: string | null;
   connection_url: string | null;
   outreach_message: string | null;
   proof_suggestion: string | null;
+  linkedin_angles: string | null;
   cover_letter: string | null;
   followup_date: string | null;
   notes: string | null;
@@ -85,12 +87,13 @@ const STATUS_OPTIONS = [
   { value: "rejected", label: "Not This Time", color: "bg-destructive/10 text-destructive border-destructive/20" },
 ];
 
-// Reordered: CV → Find contact → Proof of work → Send outreach → Cover letter → Follow-up
+// Reordered: CV → Find contact → Proof of work → Send outreach → LinkedIn → Cover letter → Follow-up
 const STEPS = [
-  { key: "step_cv_done", label: "CV tailored", weight: 20, icon: FileText, subtext: "" },
-  { key: "step_connection_done", label: "Find your contact", weight: 15, icon: Users, subtext: "Do this before you apply. A name beats a contact form every time." },
+  { key: "step_cv_done", label: "CV tailored", weight: 18, icon: FileText, subtext: "" },
+  { key: "step_connection_done", label: "Find your contact", weight: 13, icon: Users, subtext: "Do this before you apply. A name beats a contact form every time." },
   { key: "step_proof_done", label: "Build proof of work", weight: 20, icon: Lightbulb, subtext: "Do this before you reach out. It gives you something real to say." },
-  { key: "step_outreach_done", label: "Send outreach", weight: 20, icon: Send, subtext: "Do this before you submit your CV. Let the proof of work open the door." },
+  { key: "step_outreach_done", label: "Send outreach", weight: 19, icon: Send, subtext: "Do this before you submit your CV. Let the proof of work open the door." },
+  { key: "step_linkedin_done", label: "Share your proof of work on LinkedIn", weight: 5, icon: Users, subtext: "A human-written post about what you built will do more for your career than 10 cold applications. Here's how to make it land." },
   { key: "step_cover_letter_done", label: "Cover letter ready", weight: 10, icon: Mail, subtext: "Have this ready for when they ask. Not before." },
   { key: "step_followup_done", label: "Follow up", weight: 15, icon: Clock, subtext: "Most people follow up zero times. You follow up three times." },
 ] as const;
@@ -220,7 +223,8 @@ const Campaign = () => {
           jdText: campaign.jd_text,
           cvSummary: campaign.cv_version?.slice(0, 2000),
           connectionName: connectionName || undefined,
-          proofOfWorkTitle: contentType === "outreach" ? getProofTitle() : undefined,
+          proofOfWorkTitle: (contentType === "outreach" || contentType === "linkedin_angles") ? getProofTitle() : undefined,
+          proofOfWorkDetails: contentType === "linkedin_angles" ? proofSuggestion : undefined,
         },
       });
       if (error) throw error;
@@ -233,6 +237,10 @@ const Campaign = () => {
         const structured = JSON.stringify(data);
         setProofSuggestion(structured);
         await updateCampaign({ proof_suggestion: structured });
+      } else if (contentType === "linkedin_angles" && data.angles) {
+        const anglesJson = JSON.stringify(data.angles);
+        await updateCampaign({ linkedin_angles: anglesJson } as any);
+        setCampaign((prev) => prev ? { ...prev, linkedin_angles: anglesJson } : prev);
       } else if (contentType === "follow_up") {
         setFollowups({ day3: data.day3 || "", day7: data.day7 || "", day14: data.day14 || "" });
       } else if (contentType === "cover_letter" && data.content) {
@@ -658,6 +666,81 @@ const Campaign = () => {
               </Button>
             </div>
           </StepCard>
+
+          {/* Step 4.5: LinkedIn Strategy */}
+          <StepCard
+            index={4}
+            step={STEPS[4]}
+            done={campaign.step_linkedin_done}
+            open={openSteps.has(4)}
+            onToggle={() => toggleStep(4)}
+          >
+            <div className="space-y-5">
+              <p className="text-sm italic text-muted-foreground">
+                We could write this for you. We won't. Your story told in your words is 10× more powerful than anything we generate.
+              </p>
+
+              {/* AI-generated angles */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">What to write about</p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => generateContent("linkedin_angles")}
+                    disabled={!!generating || !proofSuggestion}
+                  >
+                    {generating === "linkedin_angles" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
+                    {(() => {
+                      try { return JSON.parse(campaign.linkedin_angles || "null") ? "Regenerate angles" : "Generate angles"; } catch { return "Generate angles"; }
+                    })()}
+                  </Button>
+                </div>
+                {!proofSuggestion && (
+                  <p className="text-xs text-muted-foreground">Complete your proof of work first — we need it to suggest specific angles.</p>
+                )}
+                {(() => {
+                  let angles: string[] | null = null;
+                  try { angles = JSON.parse(campaign.linkedin_angles || "null"); } catch {}
+                  if (!angles) return null;
+                  return (
+                    <ul className="space-y-2">
+                      {angles.map((angle: string, i: number) => (
+                        <li key={i} className="flex items-start gap-2 text-sm">
+                          <span className="mt-0.5 h-5 w-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">{i + 1}</span>
+                          {angle}
+                        </li>
+                      ))}
+                    </ul>
+                  );
+                })()}
+              </div>
+
+              {/* Fixed playbook */}
+              <div className="space-y-3">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">PrepLane's LinkedIn playbook</p>
+                <div className="rounded-lg border bg-muted/30 p-4 space-y-3 text-sm">
+                  <p>✍️ <strong>Write it yourself</strong> — authenticity is detectable. AI-written posts get ignored.</p>
+                  <p>🕐 <strong>Post in real time, never schedule</strong> — scheduled posts get less reach</p>
+                  <p>💬 <strong>Answer every comment within the first hour</strong> — early interaction is gold for the algorithm</p>
+                  <p>🔗 <strong>Put links in the comments, never in the post</strong> — LinkedIn suppresses posts with external links</p>
+                  <p>🏷️ <strong>Use 3–5 relevant hashtags</strong> — no more, no less</p>
+                  <p>👥 <strong>Tag people mentioned in your work</strong> — but only if it adds value, not just for reach</p>
+                  <p>📅 <strong>Post consistently</strong> — once a week minimum, same days if possible</p>
+                  <p>💡 <strong>Leave genuine comments on others' posts daily</strong> — this increases your own reach significantly</p>
+                </div>
+              </div>
+
+              <Button
+                size="sm"
+                variant="default"
+                className="bg-success hover:bg-success/90"
+                onClick={() => updateCampaign({ step_linkedin_done: true } as any)}
+              >
+                <Check className="h-4 w-4 mr-1" /> I've posted it →
+              </Button>
+            </div>
+          </StepCard>
         </div>
 
         {/* Group: Have these ready */}
@@ -666,13 +749,13 @@ const Campaign = () => {
             <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Have these ready</p>
           </div>
 
-          {/* Step 5: Cover letter */}
+          {/* Step 6: Cover letter */}
           <StepCard
-            index={4}
-            step={STEPS[4]}
+            index={5}
+            step={STEPS[5]}
             done={campaign.step_cover_letter_done}
-            open={openSteps.has(4)}
-            onToggle={() => toggleStep(4)}
+            open={openSteps.has(5)}
+            onToggle={() => toggleStep(5)}
           >
             <div className="space-y-3">
               {!coverLetter && (
@@ -705,13 +788,13 @@ const Campaign = () => {
             </div>
           </StepCard>
 
-          {/* Step 6: Follow-up */}
+          {/* Step 7: Follow-up */}
           <StepCard
-            index={5}
-            step={STEPS[5]}
+            index={6}
+            step={STEPS[6]}
             done={campaign.step_followup_done}
-            open={openSteps.has(5)}
-            onToggle={() => toggleStep(5)}
+            open={openSteps.has(6)}
+            onToggle={() => toggleStep(6)}
           >
             <div className="space-y-3">
               {campaign.followup_date && (

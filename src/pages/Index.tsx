@@ -14,10 +14,11 @@ const TARGET_KEY = "preplane_onboarding_target";
 const ONBOARDING_KEY = "preplane_onboarding_done";
 
 const STEPS = [
-  { key: "step_cv_done", label: "Tailor CV", weight: 20 },
-  { key: "step_connection_done", label: "Find contact", weight: 15 },
+  { key: "step_cv_done", label: "Tailor CV", weight: 18 },
+  { key: "step_connection_done", label: "Find contact", weight: 13 },
   { key: "step_proof_done", label: "Build proof of work", weight: 20 },
-  { key: "step_outreach_done", label: "Send outreach", weight: 20 },
+  { key: "step_outreach_done", label: "Send outreach", weight: 19 },
+  { key: "step_linkedin_done", label: "Share on LinkedIn", weight: 5 },
   { key: "step_cover_letter_done", label: "Cover letter", weight: 10 },
   { key: "step_followup_done", label: "Follow up", weight: 15 },
 ] as const;
@@ -40,6 +41,7 @@ interface CampaignRow {
   step_connection_done: boolean;
   step_outreach_done: boolean;
   step_proof_done: boolean;
+  step_linkedin_done: boolean;
   step_cover_letter_done: boolean;
   step_followup_done: boolean;
   created_at: string;
@@ -133,7 +135,7 @@ const Index = () => {
         // Load campaigns
         const { data: campData } = await supabase
           .from("campaigns")
-          .select("id, company, role, match_score, status, step_cv_done, step_connection_done, step_outreach_done, step_proof_done, step_cover_letter_done, step_followup_done, created_at, archived, proof_suggestion, proof_in_progress")
+          .select("id, company, role, match_score, status, step_cv_done, step_connection_done, step_outreach_done, step_proof_done, step_linkedin_done, step_cover_letter_done, step_followup_done, created_at, archived, proof_suggestion, proof_in_progress")
           .order("created_at", { ascending: false });
         setCampaigns((campData as any as CampaignRow[]) || []);
         setLoading(false);
