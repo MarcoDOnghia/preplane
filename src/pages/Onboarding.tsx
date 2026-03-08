@@ -302,10 +302,7 @@ const Onboarding = () => {
           </div>
         </main>
 
-        {/* Footer */}
-        <footer className="py-6 text-center text-sm uppercase tracking-widest text-slate-800/40">
-          Build Smarter • Apply Better • PrepLane 2026
-        </footer>
+        <AppFooter />
       </div>
     );
   }
