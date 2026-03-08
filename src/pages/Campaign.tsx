@@ -426,13 +426,20 @@ const Campaign = () => {
               <p className="text-sm text-foreground">
                 {STEPS[nextStep].label} — complete this step to strengthen your campaign.
               </p>
-              <Button
-                size="sm"
-                className="mt-3"
-                onClick={() => { setOpenSteps(new Set([nextStep])); }}
+              <a
+                href={`#step-${nextStep}`}
+                className="inline-block mt-3"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setOpenSteps((prev) => new Set(prev).add(nextStep));
+                  setTimeout(() => {
+                    const el = document.getElementById(`step-${nextStep}`);
+                    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }, 100);
+                }}
               >
-                Go to step →
-              </Button>
+                <Button size="sm" asChild><span>Go to step →</span></Button>
+              </a>
             </CardContent>
           </Card>
         )}
