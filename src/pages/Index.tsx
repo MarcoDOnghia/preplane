@@ -48,6 +48,7 @@ interface CampaignRow {
   archived: boolean;
   proof_suggestion: string | null;
   proof_in_progress: boolean;
+  followup_date: string | null;
 }
 
 function getStrength(c: CampaignRow) {
