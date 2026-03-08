@@ -195,6 +195,12 @@ ${proofOfWorkDetails ? `\nProof of Work Details:\n${proofOfWorkDetails}` : ""}
         },
         required: ["content"],
       },
+      linkedin_angles: {
+        properties: {
+          angles: { type: "array", items: { type: "string" }, description: "Exactly 3 specific LinkedIn post angle suggestions" },
+        },
+        required: ["angles"],
+      },
     };
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
