@@ -42,6 +42,7 @@ const Onboarding = () => {
   const [touched, setTouched] = useState<{ email?: boolean; password?: boolean }>({});
   const [forgotMode, setForgotMode] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const { user, loading: sessionLoading } = useAuth();
   const navigate = useNavigate();
