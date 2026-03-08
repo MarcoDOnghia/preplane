@@ -265,8 +265,8 @@ const Onboarding = () => {
         <main className="flex-1 flex flex-col items-center justify-center px-6 py-12">
           <div className="max-w-[720px] text-center space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Icon badge */}
-            <div className="mx-auto w-fit p-4 rounded-full bg-[hsl(var(--primary))]/10">
-              <Compass className="w-12 h-12 text-[hsl(var(--primary))]" />
+            <div className="mx-auto w-fit p-4 rounded-full bg-[#F97316]/10">
+              <Compass className="w-12 h-12 text-[#F97316]" />
             </div>
 
             {/* Heading */}
