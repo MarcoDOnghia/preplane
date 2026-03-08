@@ -665,14 +665,30 @@ const Campaign = () => {
                 </div>
               </div>
 
-              <Button
-                size="sm"
-                variant="default"
-                className="bg-success hover:bg-success/90"
-                onClick={() => updateCampaign({ step_linkedin_done: true } as any)}
-              >
-                <Check className="h-4 w-4 mr-1" /> I've posted it →
-              </Button>
+              {campaign.step_linkedin_done ? (
+                <div className="flex items-center gap-2 text-success font-medium text-sm">
+                  <Check className="h-5 w-5" />
+                  <span>Posted ✓ — nice work. Now find your contact, they may have already seen it.</span>
+                </div>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="default"
+                  className="bg-success hover:bg-success/90"
+                  onClick={() => {
+                    updateCampaign({ step_linkedin_done: true } as any);
+                    setTimeout(() => {
+                      setOpenSteps((prev) => {
+                        const next = new Set(prev);
+                        next.delete(2);
+                        return next;
+                      });
+                    }, 1500);
+                  }}
+                >
+                  <Check className="h-4 w-4 mr-1" /> I've posted it →
+                </Button>
+              )}
             </div>
           </StepCard>
 
@@ -733,6 +749,24 @@ const Campaign = () => {
                 {generating === "outreach" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
                 Generate outreach message
               </Button>
+              {!connectionName && !campaign.step_connection_done && (
+                <div className="rounded-lg border border-yellow-300 bg-yellow-50 dark:bg-yellow-950/20 dark:border-yellow-800 px-3 py-2 text-sm text-yellow-800 dark:text-yellow-200 space-y-1">
+                  <p>⚠️ You haven't added a contact yet. Head to Step 4 to add a name and LinkedIn URL — it makes your outreach significantly more personal and effective.</p>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenSteps((prev) => new Set(prev).add(3));
+                      setTimeout(() => {
+                        const el = document.getElementById("step-3");
+                        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }, 100);
+                    }}
+                    className="text-xs text-primary hover:text-primary/80 underline underline-offset-2 font-medium"
+                  >
+                    Go to Step 4 →
+                  </button>
+                </div>
+              )}
               {outreachMessage && (
                 <div className="space-y-2">
                   <Textarea
