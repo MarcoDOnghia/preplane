@@ -3,11 +3,12 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/Header";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Sparkles, ArrowRight, Target, Clock, RotateCcw, Zap, Check, Lightbulb, Loader2, X, AlertTriangle } from "lucide-react";
+import {
+  PlusCircle, ArrowRight, Target, Clock, RotateCcw, Zap, Check, Lightbulb,
+  Loader2, X, AlertTriangle, CalendarDays, FileEdit, CheckCircle2, Circle, Rocket
+} from "lucide-react";
 import { formatDistanceToNow, differenceInDays } from "date-fns";
 
 const TARGET_KEY = "preplane_onboarding_target";
@@ -23,12 +24,12 @@ const STEPS = [
   { key: "step_followup_done", label: "Follow up", weight: 15 },
 ] as const;
 
-const STATUS_BADGES: Record<string, { label: string; color: string }> = {
-  targeting: { label: "Researching", color: "bg-blue-500/10 text-blue-600 border-blue-500/20" },
-  applied: { label: "Formally Applied", color: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20" },
-  followed_up: { label: "Following Up", color: "bg-purple-500/10 text-purple-600 border-purple-500/20" },
-  response_received: { label: "In Conversation", color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" },
-  rejected: { label: "Not This Time", color: "bg-destructive/10 text-destructive border-destructive/20" },
+const STATUS_BADGES: Record<string, { label: string; classes: string }> = {
+  targeting: { label: "RESEARCHING", classes: "bg-blue-100 text-blue-700" },
+  applied: { label: "APPLIED", classes: "bg-amber-100 text-amber-700" },
+  followed_up: { label: "FOLLOWING UP", classes: "bg-purple-100 text-purple-700" },
+  response_received: { label: "INTERVIEW", classes: "bg-green-100 text-green-700" },
+  rejected: { label: "CLOSED", classes: "bg-red-100 text-red-700" },
 };
 
 interface CampaignRow {
@@ -56,36 +57,28 @@ function getStrength(c: CampaignRow) {
 }
 
 function getNextStep(c: CampaignRow) {
-  // Priority 1: Proof brief exists but not started
-  if (c.proof_suggestion && !c.proof_in_progress && !c.step_proof_done) {
-    return "Start building your proof of work";
-  }
-  // Priority 2: Proof in progress
-  if (c.proof_in_progress && !c.step_proof_done) {
-    return "Finish your proof of work — this is what gets responses";
-  }
-  // Priority 3: Proof done, LinkedIn not posted
-  if (c.step_proof_done && !c.step_linkedin_done) {
-    return "Post about your proof of work on LinkedIn";
-  }
-  // Priority 4: LinkedIn posted, contact not found
-  if (c.step_linkedin_done && !c.step_connection_done) {
-    return "Find your contact — they may have seen your post";
-  }
-  // Priority 5: Contact found, outreach not sent
-  if (c.step_connection_done && !c.step_outreach_done) {
-    return "Your proof of work is ready. Time to reach out.";
-  }
-  // Priority 6: Outreach sent, no follow up
-  if (c.step_outreach_done && !c.step_followup_done) {
-    return "Follow up on your outreach";
-  }
-  // Priority 7: CV not tailored
-  if (!c.step_cv_done) {
-    return "Tailor your CV for this role";
-  }
+  if (c.proof_suggestion && !c.proof_in_progress && !c.step_proof_done) return "Start building your proof of work";
+  if (c.proof_in_progress && !c.step_proof_done) return "Finish your proof of work — this is what gets responses";
+  if (c.step_proof_done && !c.step_linkedin_done) return "Post about your proof of work on LinkedIn";
+  if (c.step_linkedin_done && !c.step_connection_done) return "Find your contact — they may have seen your post";
+  if (c.step_connection_done && !c.step_outreach_done) return "Your proof of work is ready. Time to reach out.";
+  if (c.step_outreach_done && !c.step_followup_done) return "Follow up on your outreach";
+  if (!c.step_cv_done) return "Tailor your CV for this role";
   if (!c.step_cover_letter_done) return "Prepare cover letter";
   return null;
+}
+
+function getChecklist(c: CampaignRow) {
+  const items: { label: string; done: boolean }[] = [];
+  if (c.step_cv_done) items.push({ label: "CV tailored", done: true });
+  if (c.step_proof_done) items.push({ label: "Proof of work done", done: true });
+  else if (c.proof_in_progress) items.push({ label: "Proof of work in progress", done: false });
+  if (c.step_connection_done) items.push({ label: "Company research complete", done: true });
+  if (c.step_outreach_done) items.push({ label: "Application submitted", done: true });
+  if (items.length === 0) {
+    items.push({ label: "Getting started", done: false });
+  }
+  return items.slice(0, 2);
 }
 
 const Index = () => {
@@ -141,7 +134,6 @@ const Index = () => {
           if (d?.target_location) setTargetLocation(d.target_location);
         }
 
-        // Load campaigns
         const { data: campData } = await supabase
           .from("campaigns")
           .select("id, company, role, match_score, status, step_cv_done, step_connection_done, step_outreach_done, step_proof_done, step_linkedin_done, step_cover_letter_done, step_followup_done, created_at, archived, proof_suggestion, proof_in_progress, followup_date")
@@ -153,8 +145,8 @@ const Index = () => {
 
   if (authLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      <div className="flex min-h-screen items-center justify-center bg-[#FAF9F7]">
+        <div className="animate-spin h-8 w-8 border-4 border-[#F97316] border-t-transparent rounded-full" />
       </div>
     );
   }
@@ -163,7 +155,6 @@ const Index = () => {
   const activeCampaigns = campaigns.filter((c) => !c.archived);
   const archivedCampaigns = campaigns.filter((c) => c.archived);
 
-  // Find best focus campaign: highest strength with incomplete steps (active only)
   const focusCampaign = activeCampaigns
     .filter((c) => getNextStep(c) !== null && c.status !== "rejected")
     .sort((a, b) => getStrength(b) - getStrength(a))[0] || null;
@@ -176,66 +167,54 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#FAF9F7] flex flex-col">
       <Header />
-      <main className="mx-auto px-4 py-8 max-w-[1000px] space-y-8">
-        {/* Top: Target context + New Campaign button */}
-        <div className="flex items-start justify-between flex-wrap gap-3">
-          <div className="space-y-1">
-            {targetRole && (
-              <>
-                <p className="text-muted-foreground text-sm">
-                  Working toward: <span className="font-medium text-foreground">{targetRole}</span>
-                  {targetLocation && <> in <span className="font-medium text-foreground">{targetLocation}</span></>}
-                </p>
-              </>
-            )}
-            <h1 className="text-2xl font-bold tracking-tight">Your campaigns</h1>
+
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* Page title row */}
+        <div className="flex items-start justify-between flex-wrap gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">Your campaigns</h1>
+            <p className="text-slate-500 mt-1">Manage and track your job applications</p>
           </div>
-          <div className="flex flex-col items-end gap-1">
-            <Button
-              onClick={() => nav("/app/new")}
-              disabled={atLimit}
-              title={atLimit ? "You have 10 active campaigns. Complete or archive one first." : undefined}
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              New Campaign
-            </Button>
-            <button
-              onClick={() => nav("/cv-workspace")}
-              className="text-xs text-primary hover:text-primary/80 transition-colors underline underline-offset-2"
-            >
-              Just need to tailor a CV? Start here →
-            </button>
-          </div>
+          <button
+            onClick={() => nav("/app/new")}
+            disabled={atLimit}
+            className="bg-[#F97316] hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-[#F97316]/20 flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            title={atLimit ? "You have 10 active campaigns. Complete or archive one first." : undefined}
+          >
+            <PlusCircle className="w-5 h-5" />
+            New Campaign
+          </button>
         </div>
 
         {atLimit && (
-          <p className="text-xs text-muted-foreground bg-muted rounded-lg px-3 py-2">
+          <p className="text-xs text-slate-500 bg-slate-100 rounded-lg px-3 py-2">
             You have 10 active campaigns. PrepLane is built for focus — complete or archive one before adding a new one.
           </p>
         )}
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+            <div className="animate-spin h-8 w-8 border-4 border-[#F97316] border-t-transparent rounded-full" />
           </div>
         ) : activeCampaigns.length === 0 && archivedCampaigns.length === 0 ? (
           /* Empty state */
-          <Card className="border-dashed">
-            <CardContent className="pt-8 pb-8 text-center space-y-4">
-              <Target className="h-10 w-10 text-muted-foreground mx-auto" />
-              <div>
-                <h3 className="font-semibold text-lg">No campaigns yet</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Start by tailoring your CV to a role you actually want.
-                </p>
-              </div>
-              <Button onClick={() => nav("/app/new")}>
-                Start my first campaign <ArrowRight className="h-4 w-4 ml-1" />
-              </Button>
-            </CardContent>
-          </Card>
+          <div className="bg-white rounded-2xl border border-dashed border-slate-300 p-12 text-center space-y-4">
+            <Target className="h-10 w-10 text-slate-400 mx-auto" />
+            <div>
+              <h3 className="font-bold text-lg text-slate-900">No campaigns yet</h3>
+              <p className="text-sm text-slate-500 mt-1">
+                Start by tailoring your CV to a role you actually want.
+              </p>
+            </div>
+            <button
+              onClick={() => nav("/app/new")}
+              className="bg-[#F97316] hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-[#F97316]/20 inline-flex items-center gap-2 transition-colors"
+            >
+              Start my first campaign <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
         ) : (
           <>
             {/* Nudge: CV done but missing key steps */}
@@ -245,22 +224,23 @@ const Index = () => {
               );
               if (!nudgeCampaign) return null;
               return (
-                <Card
-                  className="border-[hsl(30,80%,85%)] bg-[hsl(30,100%,97%)] cursor-pointer hover:border-[hsl(30,80%,75%)] transition-colors"
+                <div
+                  className="bg-white border border-[#F97316]/20 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 cursor-pointer hover:shadow-md transition-shadow"
                   onClick={() => nav(`/campaign/${nudgeCampaign.id}`)}
                 >
-                  <CardContent className="pt-5 pb-5 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Zap className="h-5 w-5 text-primary shrink-0" />
-                      <p className="text-sm text-foreground">
-                        <span className="font-medium">Don't stop at the CV</span> — {nudgeCampaign.company} campaign is missing the steps that actually get responses.
-                      </p>
+                  <div className="flex items-center gap-4">
+                    <div className="bg-[#F97316]/10 p-3 rounded-full shrink-0">
+                      <Lightbulb className="w-5 h-5 text-[#F97316]" />
                     </div>
-                    <Button size="sm" variant="outline" className="shrink-0">
-                      Continue building <ArrowRight className="h-3 w-3 ml-1" />
-                    </Button>
-                  </CardContent>
-                </Card>
+                    <div>
+                      <p className="font-bold text-slate-900">Don't stop at the CV</p>
+                      <p className="text-sm text-slate-600">{nudgeCampaign.company} campaign is missing the steps that actually get responses.</p>
+                    </div>
+                  </div>
+                  <button className="bg-[#F97316] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-orange-600 transition-colors shrink-0">
+                    Continue building
+                  </button>
+                </div>
               );
             })()}
 
@@ -283,144 +263,145 @@ const Index = () => {
 
               let bgClass: string, borderClass: string, textClass: string, message: string, buttonLabel: string;
               if (daysSince >= 14) {
-                bgClass = "bg-destructive/10"; borderClass = "border-destructive/30"; textClass = "text-destructive";
+                bgClass = "bg-red-50"; borderClass = "border-red-200"; textClass = "text-red-700";
                 message = `📬 It's been ${daysSince} days since you reached out to ${c.company}. Send one final follow-up today — then move on with your head high.`;
                 buttonLabel = "Send final follow-up →";
               } else if (daysSince >= 7) {
-                bgClass = "bg-orange-500/10"; borderClass = "border-orange-500/30"; textClass = "text-orange-600";
+                bgClass = "bg-orange-50"; borderClass = "border-orange-200"; textClass = "text-orange-700";
                 message = `🔥 ${c.company} hasn't responded yet — that's normal. Day 7 follow-ups get 3x more responses than day 1. Send yours now.`;
                 buttonLabel = "Write my follow-up →";
               } else {
-                bgClass = "bg-yellow-500/10"; borderClass = "border-yellow-500/30"; textClass = "text-yellow-700";
+                bgClass = "bg-yellow-50"; borderClass = "border-yellow-200"; textClass = "text-yellow-800";
                 message = `⏰ You reached out to ${c.company} ${daysSince} days ago. Most people give up here — don't. A short follow-up today keeps you top of mind.`;
                 buttonLabel = "Write my follow-up →";
               }
 
               return (
-                <Card
-                  className={`${borderClass} ${bgClass} cursor-pointer hover:opacity-90 transition-opacity`}
+                <div
+                  className={`${bgClass} border ${borderClass} rounded-2xl p-6 shadow-sm flex items-center justify-between gap-4 cursor-pointer hover:shadow-md transition-shadow`}
                   onClick={() => nav(`/campaign/${c.id}`)}
                 >
-                  <CardContent className="pt-5 pb-5 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 min-w-0 flex-1">
-                      {daysSince >= 14 ? (
-                        <AlertTriangle className={`h-5 w-5 ${textClass} shrink-0`} />
-                      ) : (
-                        <Clock className={`h-5 w-5 ${textClass} shrink-0`} />
-                      )}
-                      <p className={`text-sm ${textClass}`}>{message}</p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Button size="sm" variant="outline" className="shrink-0">
-                        {buttonLabel}
-                      </Button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          localStorage.setItem(dismissKey, today);
-                          setFollowupNudgeDismissed(true);
-                        }}
-                        className="text-muted-foreground hover:text-foreground"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </CardContent>
-                </Card>
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    {daysSince >= 14 ? (
+                      <AlertTriangle className={`h-5 w-5 ${textClass} shrink-0`} />
+                    ) : (
+                      <Clock className={`h-5 w-5 ${textClass} shrink-0`} />
+                    )}
+                    <p className={`text-sm ${textClass}`}>{message}</p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button className="bg-white border border-slate-200 text-slate-900 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-50 transition-colors">
+                      {buttonLabel}
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        localStorage.setItem(dismissKey, today);
+                        setFollowupNudgeDismissed(true);
+                      }}
+                      className="text-slate-400 hover:text-slate-600"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
               );
             })()}
 
             {/* Today's focus */}
             {focusCampaign && (
-              <Card className="border-primary/30 bg-primary/5">
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Sparkles className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-semibold text-primary">Today's focus</span>
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <CalendarDays className="w-5 h-5 text-[#F97316]" />
+                  <h2 className="text-xl font-bold text-slate-900">Today's focus</h2>
+                </div>
+                <div className="bg-[#F97316]/5 border border-[#F97316]/20 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">
+                      <FileEdit className="w-5 h-5 text-[#F97316]" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-[#F97316] uppercase tracking-wider">{focusCampaign.company}</p>
+                      <p className="text-lg font-bold text-slate-900">{getNextStep(focusCampaign)}</p>
+                    </div>
                   </div>
-                  <p className="text-foreground font-medium">
-                    {focusCampaign.company} — {getNextStep(focusCampaign)}
-                  </p>
-                  <Button
-                    size="sm"
-                    className="mt-3"
+                  <button
                     onClick={() => nav(`/campaign/${focusCampaign.id}`)}
+                    className="bg-white border border-slate-200 text-slate-900 px-6 py-2 rounded-lg font-semibold hover:bg-slate-50 transition-colors flex items-center gap-2 shrink-0"
                   >
-                    Go to campaign →
-                  </Button>
-                </CardContent>
-              </Card>
+                    Go to campaign <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
             )}
 
-            {/* Campaign grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Campaign cards grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {activeCampaigns.map((c) => {
                 const strength = getStrength(c);
                 const next = getNextStep(c);
                 const status = STATUS_BADGES[c.status] || STATUS_BADGES.targeting;
+                const checklist = getChecklist(c);
                 return (
-                  <Card
+                  <div
                     key={c.id}
-                    className="cursor-pointer hover:border-primary/40 transition-colors"
+                    className="bg-white rounded-2xl border border-slate-200 p-6 flex flex-col hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
                     onClick={() => nav(`/campaign/${c.id}`)}
                   >
-                    <CardContent className="pt-5 pb-5 space-y-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <h3 className="font-semibold text-sm truncate">{c.role}</h3>
-                          <p className="text-xs text-muted-foreground truncate">{c.company}</p>
+                    {/* Top: role + status */}
+                    <div className="flex items-start justify-between gap-2 mb-4">
+                      <div className="min-w-0">
+                        <h3 className="text-lg font-bold text-slate-900 group-hover:text-[#F97316] transition-colors truncate">{c.role}</h3>
+                        <p className="text-slate-500 text-sm truncate">{c.company}</p>
+                      </div>
+                      <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase shrink-0 ${status.classes}`}>
+                        {status.label}
+                      </span>
+                    </div>
+
+                    {/* Checklist */}
+                    <div className="space-y-2 mb-4">
+                      {checklist.map((item, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          {item.done ? (
+                            <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
+                          ) : (
+                            <Circle className="w-4 h-4 text-slate-300 shrink-0" />
+                          )}
+                          <span className={`text-sm ${item.done ? "text-slate-600" : "text-slate-400"}`}>{item.label}</span>
                         </div>
-                        <Badge variant="outline" className={`text-xs shrink-0 ${status.color}`}>
-                          {status.label}
-                        </Badge>
-                      </div>
+                      ))}
+                    </div>
 
-                      {/* Proof of work status — primary indicator */}
-                      <div className="flex items-center gap-1.5 text-xs font-medium">
-                        {c.step_proof_done ? (
-                          <span className="flex items-center gap-1.5 text-success">
-                            <Check className="h-3.5 w-3.5" /> Proof of work done
-                          </span>
-                        ) : c.proof_in_progress ? (
-                          <span className="flex items-center gap-1.5 text-yellow-600">
-                            <Loader2 className="h-3.5 w-3.5" /> Building in progress
-                          </span>
-                        ) : c.proof_suggestion ? (
-                          <span className="flex items-center gap-1.5 text-primary">
-                            <Lightbulb className="h-3.5 w-3.5" /> Brief ready — start building
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-1.5 text-muted-foreground">
-                            <Lightbulb className="h-3.5 w-3.5" /> No proof of work yet
-                          </span>
-                        )}
+                    {/* Campaign strength */}
+                    <div className="mb-4">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-bold text-slate-500 uppercase tracking-tight">Campaign strength</span>
+                        <span className="text-xs font-bold text-[#F97316]">{strength}%</span>
                       </div>
+                      <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-[#F97316] rounded-full transition-all duration-500"
+                          style={{ width: `${strength}%` }}
+                        />
+                      </div>
+                    </div>
 
-                      {/* Strength bar — secondary */}
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-muted-foreground">Campaign strength</span>
-                          <span className="font-semibold text-primary">{strength}%</span>
-                        </div>
-                        <Progress value={strength} className="h-2" />
-                      </div>
-
-                      {/* Next step + date */}
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        {next ? (
-                          <span className="flex items-center gap-1">
-                            <ArrowRight className="h-3 w-3" /> Next: {next}
-                          </span>
-                        ) : (
-                          <span className="text-success font-medium">All steps complete ✓</span>
-                        )}
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
+                    {/* Next step */}
+                    <div className="border-t border-slate-100 pt-4 mt-auto">
+                      {next ? (
+                        <>
+                          <p className="text-xs text-slate-400 mb-1 uppercase">Next step</p>
+                          <p className="text-sm font-semibold text-slate-800">{next}</p>
+                        </>
+                      ) : (
+                        <p className="text-sm font-semibold text-green-600">All steps complete ✓</p>
+                      )}
+                      <p className="text-[10px] text-slate-400 mt-3">
+                        Updated {formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
+                      </p>
+                    </div>
+                  </div>
                 );
               })}
             </div>
@@ -430,7 +411,7 @@ const Index = () => {
               <div className="pt-4">
                 <button
                   onClick={() => setShowArchived(!showArchived)}
-                  className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
+                  className="text-xs text-slate-400 hover:text-slate-600 transition-colors underline underline-offset-2"
                 >
                   {showArchived ? "Hide archived" : `View archived (${archivedCampaigns.length})`}
                 </button>
@@ -440,27 +421,23 @@ const Index = () => {
                     {archivedCampaigns.map((c) => {
                       const status = STATUS_BADGES[c.status] || STATUS_BADGES.targeting;
                       return (
-                        <Card key={c.id} className="opacity-60 hover:opacity-80 transition-opacity">
-                          <CardContent className="py-3 flex items-center justify-between gap-3">
-                            <div className="min-w-0 flex items-center gap-3">
-                              <div className="min-w-0">
-                                <span className="text-sm font-medium truncate block">{c.role}</span>
-                                <span className="text-xs text-muted-foreground truncate block">{c.company}</span>
-                              </div>
-                              <Badge variant="outline" className={`text-xs shrink-0 ${status.color}`}>
-                                {status.label}
-                              </Badge>
+                        <div key={c.id} className="bg-white rounded-2xl border border-slate-200 p-4 opacity-60 hover:opacity-80 transition-opacity flex items-center justify-between gap-3">
+                          <div className="min-w-0 flex items-center gap-3">
+                            <div className="min-w-0">
+                              <span className="text-sm font-medium text-slate-900 truncate block">{c.role}</span>
+                              <span className="text-xs text-slate-500 truncate block">{c.company}</span>
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-xs text-muted-foreground shrink-0"
-                              onClick={(e) => { e.stopPropagation(); handleUnarchive(c.id); }}
-                            >
-                              <RotateCcw className="h-3 w-3 mr-1" /> Unarchive
-                            </Button>
-                          </CardContent>
-                        </Card>
+                            <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase shrink-0 ${status.classes}`}>
+                              {status.label}
+                            </span>
+                          </div>
+                          <button
+                            className="text-xs text-slate-400 hover:text-slate-600 flex items-center gap-1 shrink-0"
+                            onClick={(e) => { e.stopPropagation(); handleUnarchive(c.id); }}
+                          >
+                            <RotateCcw className="h-3 w-3" /> Unarchive
+                          </button>
+                        </div>
                       );
                     })}
                   </div>
@@ -470,6 +447,24 @@ const Index = () => {
           </>
         )}
       </main>
+
+      {/* Footer */}
+      <footer className="border-t border-slate-200 py-12 mt-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2 opacity-40">
+            <div className="bg-[#F97316] p-1 rounded">
+              <Rocket className="w-3.5 h-3.5 text-white" />
+            </div>
+            <span className="text-sm font-semibold text-slate-500">PrepLane</span>
+          </div>
+          <div className="flex items-center gap-6">
+            <span className="text-xs text-slate-400 hover:text-slate-600 cursor-pointer">Privacy Policy</span>
+            <span className="text-xs text-slate-400 hover:text-slate-600 cursor-pointer">Terms of Service</span>
+            <span className="text-xs text-slate-400 hover:text-slate-600 cursor-pointer">Help Center</span>
+          </div>
+          <p className="text-xs text-slate-400">© 2024 PrepLane Inc. All rights reserved.</p>
+        </div>
+      </footer>
     </div>
   );
 };
