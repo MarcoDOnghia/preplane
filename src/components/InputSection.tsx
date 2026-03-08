@@ -18,6 +18,7 @@ interface InputSectionProps {
   onCvParsed?: (model: CvDataModel) => void;
   loading: boolean;
   loadingMessage: string;
+  initialJd?: string;
 }
 
 interface SavedCv {
