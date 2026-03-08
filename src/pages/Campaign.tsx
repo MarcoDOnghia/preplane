@@ -66,12 +66,14 @@ interface CampaignData {
   step_connection_done: boolean;
   step_outreach_done: boolean;
   step_proof_done: boolean;
+  step_linkedin_done: boolean;
   step_cover_letter_done: boolean;
   step_followup_done: boolean;
   connection_name: string | null;
   connection_url: string | null;
   outreach_message: string | null;
   proof_suggestion: string | null;
+  linkedin_angles: string | null;
   cover_letter: string | null;
   followup_date: string | null;
   notes: string | null;
