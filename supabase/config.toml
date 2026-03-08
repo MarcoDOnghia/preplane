@@ -20,3 +20,9 @@ verify_jwt = false
 
 [functions.check-alignment]
 verify_jwt = false
+
+[functions.generate-outreach]
+verify_jwt = false
+
+[functions.generate-insights]
+verify_jwt = false
