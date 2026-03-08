@@ -9,13 +9,12 @@ import AlignmentBanner from "@/components/AlignmentBanner";
 import ApplicationTrackingModal from "@/components/ApplicationTrackingModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
-import { FileText } from "lucide-react";
+import { Rocket } from "lucide-react";
 import type { TailorResult } from "@/lib/types";
 import { parseCvToModel, cvModelToPlainText, aiParsedCvToModel } from "@/lib/cvDataModel";
 import type { CvDataModel } from "@/lib/cvDataModel";
 
+// LOADING_STEPS constant
 const LOADING_STEPS = [
   { message: "Analyzing job requirements...", progress: 15 },
   { message: "Checking job match compatibility...", progress: 35 },
@@ -30,16 +29,13 @@ const CvWorkspace = () => {
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
 
-  // URL params for pre-fill from campaign page
   const initialRole = searchParams.get("role") || "";
   const initialCompany = searchParams.get("company") || "";
   const initialJd = searchParams.get("jd") || "";
 
-  // Profile target
   const [targetRole, setTargetRole] = useState<string | null>(null);
   const [targetLocation, setTargetLocation] = useState<string | null>(null);
 
-  // CV tailoring state
   const [result, setResult] = useState<TailorResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("");
@@ -51,7 +47,6 @@ const CvWorkspace = () => {
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [alignmentData, setAlignmentData] = useState<{ alignment: "strong" | "partial" | "weak"; reason: string; targetRole: string } | null>(null);
 
-  // CV data model state
   const [cvModel, setCvModel] = useState<CvDataModel | null>(null);
   const [originalCvModel, setOriginalCvModel] = useState<CvDataModel | null>(null);
   const [preParsedModel, setPreParsedModel] = useState<CvDataModel | null>(null);
@@ -65,7 +60,6 @@ const CvWorkspace = () => {
     }
   }, [preParsedModel]);
 
-  // Suggestion tracking
   const [appliedSuggestions, setAppliedSuggestions] = useState<number[]>([]);
   const [dismissedSuggestions, setDismissedSuggestions] = useState<number[]>([]);
   const appliedKeywordBulletsRef = useRef<string[]>([]);
@@ -79,7 +73,11 @@ const CvWorkspace = () => {
   const cvModelRef = useRef<CvDataModel | null>(null);
   useEffect(() => { cvModelRef.current = cvModel; }, [cvModel]);
 
-  // Load profile
+  // Stats state
+  const [totalCvs, setTotalCvs] = useState(0);
+  const [totalTailored, setTotalTailored] = useState(0);
+  const [avgScore, setAvgScore] = useState(0);
+
   useEffect(() => {
     if (authLoading || !user) return;
     supabase
@@ -92,9 +90,20 @@ const CvWorkspace = () => {
         if (d?.target_role) setTargetRole(d.target_role);
         if (d?.target_location) setTargetLocation(d.target_location);
       });
+
+    // Fetch stats
+    supabase.from("cvs").select("id", { count: "exact", head: true }).eq("user_id", user.id).then(({ count }) => {
+      setTotalCvs(count || 0);
+    });
+    supabase.from("applications").select("ats_score").eq("user_id", user.id).then(({ data }) => {
+      if (data) {
+        setTotalTailored(data.length);
+        const scores = data.map((a: any) => a.ats_score || 0).filter((s: number) => s > 0);
+        setAvgScore(scores.length > 0 ? Math.round(scores.reduce((a: number, b: number) => a + b, 0) / scores.length) : 0);
+      }
+    });
   }, [user, authLoading]);
 
-  // Scroll to tailor section if pre-filled from campaign
   useEffect(() => {
     if (initialJd) {
       setTimeout(() => {
@@ -103,7 +112,6 @@ const CvWorkspace = () => {
     }
   }, [initialJd]);
 
-  // Autosave
   const saveCvToDb = useCallback(async (model: CvDataModel, applied: number[]) => {
     if (!lastAppIdRef.current) return;
     setSaveStatus("saving");
@@ -130,14 +138,13 @@ const CvWorkspace = () => {
 
   if (authLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      <div className="flex min-h-screen items-center justify-center bg-[#FAF9F7]">
+        <div className="animate-spin h-8 w-8 border-4 border-[#F97316] border-t-transparent rounded-full" />
       </div>
     );
   }
   if (!user) return <Navigate to="/onboarding" replace />;
 
-  // --- Handlers ---
   const handleDownload = () => {
     downloadCountRef.current += 1;
     if (downloadCountRef.current === 1) setShowTrackingModal(true);
@@ -191,7 +198,6 @@ const CvWorkspace = () => {
     }
   };
 
-  // --- Suggestion apply logic ---
   const applySuggestionToModel = (model: CvDataModel, original: string, suggested: string, sectionHint?: string): CvDataModel => {
     const clone: CvDataModel = JSON.parse(JSON.stringify(model));
     const hint = (sectionHint || '').toLowerCase();
@@ -203,10 +209,7 @@ const CvWorkspace = () => {
       return lower.includes(matchPrefix) || lower.includes(shortPrefix) || lower.includes(veryShortPrefix);
     };
 
-    if (hint.includes('summary') || hint.includes('profile')) {
-      clone.summary = suggested;
-      return clone;
-    }
+    if (hint.includes('summary') || hint.includes('profile')) { clone.summary = suggested; return clone; }
 
     if (hint.includes('skill')) {
       const skillLines = clone.skills.split('\n');
@@ -215,17 +218,10 @@ const CvWorkspace = () => {
       let matchedLineIdx = -1;
       for (let li = 0; li < skillLines.length; li++) {
         const lineLower = skillLines[li].toLowerCase().trim();
-        if (lineLower && (lineLower.includes(origPrefix) || origLower.includes(lineLower.slice(0, 30)))) {
-          matchedLineIdx = li;
-          break;
-        }
+        if (lineLower && (lineLower.includes(origPrefix) || origLower.includes(lineLower.slice(0, 30)))) { matchedLineIdx = li; break; }
       }
-      if (matchedLineIdx >= 0 && skillLines.length > 1) {
-        skillLines[matchedLineIdx] = suggested;
-        clone.skills = skillLines.join('\n');
-      } else {
-        clone.skills = suggested;
-      }
+      if (matchedLineIdx >= 0 && skillLines.length > 1) { skillLines[matchedLineIdx] = suggested; clone.skills = skillLines.join('\n'); }
+      else { clone.skills = suggested; }
       return clone;
     }
 
@@ -283,9 +279,7 @@ const CvWorkspace = () => {
     toast({ title: "✓ Applied", description: `Updated "${s.section}"` });
   };
 
-  const handleDismissSuggestion = (index: number) => {
-    setDismissedSuggestions((prev) => [...prev, index]);
-  };
+  const handleDismissSuggestion = (index: number) => { setDismissedSuggestions((prev) => [...prev, index]); };
 
   const handleUndoSuggestion = (index: number) => {
     const currentModel = cvModelRef.current;
@@ -322,7 +316,6 @@ const CvWorkspace = () => {
     toast({ title: `Applied ${count} high-priority suggestion${count !== 1 ? "s" : ""}` });
   };
 
-  // --- Add keyword bullet ---
   const handleAddKeywordBullet = (keyword: string, bullet: string, sectionHint: string) => {
     if (!cvModel) return;
     undoStackRef.current = [...undoStackRef.current.slice(-19), cvModel];
@@ -358,7 +351,6 @@ const CvWorkspace = () => {
       return null;
     };
 
-    // Match experience entry by hint
     let hintMatchedExpIdx = -1;
     for (let ei = 0; ei < clone.experience.length; ei++) {
       const exp = clone.experience[ei];
@@ -441,7 +433,6 @@ const CvWorkspace = () => {
     debouncedSave(clone, appliedSuggestions);
   };
 
-  // --- Submit ---
   const handleSubmit = async (cvContent: string, jobDescription: string) => {
     setLoading(true);
     setResult(null);
@@ -551,28 +542,18 @@ const CvWorkspace = () => {
       : 'Tailor your CV';
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#FAF9F7] flex flex-col">
       <Header />
-      <main className="mx-auto px-4 py-8 max-w-[1200px] space-y-10">
+
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Page title */}
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <FileText className="h-6 w-6 text-primary" />
-            CV Workspace
-          </h1>
-          <p className="text-sm text-muted-foreground">Manage your CVs and tailor them for specific roles.</p>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-900">CV Workspace</h1>
+          <p className="text-slate-500 mt-1">Manage your CVs and tailor them for specific roles.</p>
         </div>
 
-        <Separator />
-
-        {/* Tailor a CV section */}
+        {/* Tailor section */}
         <div id="tailor-section" className="space-y-6">
-          <div className="text-center space-y-2">
-            <h2 className="text-[28px] font-bold tracking-tight text-foreground">{headingText}</h2>
-            <p className="text-muted-foreground text-sm">
-              Select a CV from your library, paste a job description, and get tailored suggestions.
-            </p>
-          </div>
           <InputSection
             onSubmit={handleSubmit}
             onClear={() => { setResult(null); downloadCountRef.current = 0; }}
@@ -583,10 +564,10 @@ const CvWorkspace = () => {
           />
           {loading && loadingProgress > 0 && (
             <div className="space-y-2">
-              <Progress value={loadingProgress} className="h-2" />
-              <p className="text-xs text-muted-foreground text-center">
-                Step {Math.ceil(loadingProgress / 20)} of 5
-              </p>
+              <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-full bg-[#F97316] rounded-full transition-all duration-500" style={{ width: `${loadingProgress}%` }} />
+              </div>
+              <p className="text-xs text-slate-500 text-center">Step {Math.ceil(loadingProgress / 20)} of 5</p>
             </div>
           )}
           {result && cvModel && (
@@ -630,7 +611,51 @@ const CvWorkspace = () => {
             </>
           )}
         </div>
+
+        {/* Stats row */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12">
+          <div className="p-4 rounded-xl bg-white border border-[#F97316]/5 shadow-sm">
+            <p className="text-xs text-slate-500 font-medium mb-1">CVs in Library</p>
+            <p className="text-xl font-bold text-slate-900">{totalCvs}</p>
+            <div className="mt-2">
+              <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-full bg-[#F97316] rounded-full" style={{ width: `${(totalCvs / 5) * 100}%` }} />
+              </div>
+              <p className="text-[10px] text-slate-400 mt-1">{totalCvs}/5 used</p>
+            </div>
+          </div>
+          <div className="p-4 rounded-xl bg-white border border-[#F97316]/5 shadow-sm">
+            <p className="text-xs text-slate-500 font-medium mb-1">CVs Tailored</p>
+            <p className="text-xl font-bold text-slate-900">{totalTailored}</p>
+          </div>
+          <div className="p-4 rounded-xl bg-white border border-[#F97316]/5 shadow-sm">
+            <p className="text-xs text-slate-500 font-medium mb-1">Avg Match Score</p>
+            <p className="text-xl font-bold text-slate-900">{avgScore > 0 ? `${avgScore}%` : "—"}</p>
+          </div>
+          <div className="p-4 rounded-xl bg-white border border-[#F97316]/5 shadow-sm">
+            <p className="text-xs text-slate-500 font-medium mb-1">Last Activity</p>
+            <p className="text-xl font-bold text-slate-900">{totalTailored > 0 ? "Today" : "—"}</p>
+          </div>
+        </div>
       </main>
+
+      {/* Footer */}
+      <footer className="border-t border-slate-200 py-12 mt-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2 opacity-40">
+            <div className="bg-[#F97316] p-1 rounded">
+              <Rocket className="w-3.5 h-3.5 text-white" />
+            </div>
+            <span className="text-sm font-semibold text-slate-500">PrepLane</span>
+          </div>
+          <div className="flex items-center gap-6">
+            <span className="text-xs text-slate-400 hover:text-slate-600 cursor-pointer">Privacy Policy</span>
+            <span className="text-xs text-slate-400 hover:text-slate-600 cursor-pointer">Terms of Service</span>
+            <span className="text-xs text-slate-400 hover:text-slate-600 cursor-pointer">Help Center</span>
+          </div>
+          <p className="text-xs text-slate-400">© 2024 PrepLane Inc. All rights reserved.</p>
+        </div>
+      </footer>
 
       <ApplicationTrackingModal
         open={showTrackingModal}
