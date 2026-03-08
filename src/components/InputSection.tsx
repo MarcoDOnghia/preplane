@@ -135,7 +135,6 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage, 
       try {
         rawText = await extractTextFromFile(file);
       } catch (err) {
-        console.error("Extraction failed:", err);
         throw err;
       }
 
