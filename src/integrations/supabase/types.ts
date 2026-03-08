@@ -257,6 +257,7 @@ export type Database = {
           followup_date: string | null
           id: string
           jd_text: string
+          linkedin_angles: string | null
           match_score: number
           notes: string | null
           outreach_message: string | null
@@ -268,6 +269,7 @@ export type Database = {
           step_cover_letter_done: boolean
           step_cv_done: boolean
           step_followup_done: boolean
+          step_linkedin_done: boolean
           step_outreach_done: boolean
           step_proof_done: boolean
           user_id: string
@@ -283,6 +285,7 @@ export type Database = {
           followup_date?: string | null
           id?: string
           jd_text?: string
+          linkedin_angles?: string | null
           match_score?: number
           notes?: string | null
           outreach_message?: string | null
@@ -294,6 +297,7 @@ export type Database = {
           step_cover_letter_done?: boolean
           step_cv_done?: boolean
           step_followup_done?: boolean
+          step_linkedin_done?: boolean
           step_outreach_done?: boolean
           step_proof_done?: boolean
           user_id: string
@@ -309,6 +313,7 @@ export type Database = {
           followup_date?: string | null
           id?: string
           jd_text?: string
+          linkedin_angles?: string | null
           match_score?: number
           notes?: string | null
           outreach_message?: string | null
@@ -320,6 +325,7 @@ export type Database = {
           step_cover_letter_done?: boolean
           step_cv_done?: boolean
           step_followup_done?: boolean
+          step_linkedin_done?: boolean
           step_outreach_done?: boolean
           step_proof_done?: boolean
           user_id?: string

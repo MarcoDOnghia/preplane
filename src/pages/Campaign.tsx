@@ -744,13 +744,13 @@ const Campaign = () => {
             <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Have these ready</p>
           </div>
 
-          {/* Step 5: Cover letter */}
+          {/* Step 6: Cover letter */}
           <StepCard
-            index={4}
-            step={STEPS[4]}
+            index={5}
+            step={STEPS[5]}
             done={campaign.step_cover_letter_done}
-            open={openSteps.has(4)}
-            onToggle={() => toggleStep(4)}
+            open={openSteps.has(5)}
+            onToggle={() => toggleStep(5)}
           >
             <div className="space-y-3">
               {!coverLetter && (
@@ -783,13 +783,13 @@ const Campaign = () => {
             </div>
           </StepCard>
 
-          {/* Step 6: Follow-up */}
+          {/* Step 7: Follow-up */}
           <StepCard
-            index={5}
-            step={STEPS[5]}
+            index={6}
+            step={STEPS[6]}
             done={campaign.step_followup_done}
-            open={openSteps.has(5)}
-            onToggle={() => toggleStep(5)}
+            open={openSteps.has(6)}
+            onToggle={() => toggleStep(6)}
           >
             <div className="space-y-3">
               {campaign.followup_date && (
