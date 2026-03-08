@@ -244,8 +244,8 @@ const Onboarding = () => {
     return (
       <div className="relative min-h-screen overflow-hidden flex flex-col" style={{ background: "#FAF9F6", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
         {/* Background orbs */}
-        <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-[hsl(var(--primary))]/5 blur-3xl -z-10" />
-        <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-[hsl(var(--primary))]/5 blur-3xl -z-10" />
+        <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-[#F97316]/5 blur-3xl -z-10" />
+        <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-[#F97316]/5 blur-3xl -z-10" />
 
         {/* Header */}
         <header className="w-full border-b border-[hsl(var(--primary))]/10 px-6 md:px-20 py-4 flex items-center justify-between">
