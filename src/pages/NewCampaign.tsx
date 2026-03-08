@@ -778,70 +778,220 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="mx-auto px-4 py-8 max-w-[1200px] space-y-10">
-        {/* Target context */}
-        <div className="text-center space-y-2">
-          <h1 className="text-[32px] font-bold tracking-tight text-foreground">
-            {targetRole
-              ? `Build your case for ${targetRole}${targetLocation ? ` in ${targetLocation}` : ''}`
-              : 'Build your case'}
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            Paste a role you're genuinely excited about. One application, done properly.
-          </p>
-        </div>
-        <InputSection
-          onSubmit={handleSubmit}
-          onClear={() => { setResult(null); downloadCountRef.current = 0; }}
-          onCvParsed={(model) => setPreParsedModel(model)}
-          loading={loading}
-          loadingMessage={loadingMessage}
-        />
-        {loading && loadingProgress > 0 && (
-          <div className="space-y-2">
-            <Progress value={loadingProgress} className="h-2" />
-            <p className="text-xs text-muted-foreground text-center">
-              Step {Math.ceil(loadingProgress / 20)} of 5
+
+        {/* Phase 1: Setup — role, company, JD */}
+        {setupPhase === 'input' && (
+          <div className="max-w-[600px] mx-auto space-y-8">
+            <div className="text-center space-y-2">
+              <Lightbulb className="h-10 w-10 text-primary mx-auto" />
+              <h1 className="text-[28px] font-bold tracking-tight">What role are you going after?</h1>
+              <p className="text-muted-foreground text-sm">
+                We'll generate a proof-of-work brief — a specific mini-project that shows you're the real deal.
+              </p>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Which role are you targeting?</label>
+                <Input
+                  value={setupRole}
+                  onChange={(e) => setSetupRole(e.target.value)}
+                  placeholder="e.g. VC Analyst Internship"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">
+                  Company name{" "}
+                  <span className="text-muted-foreground font-normal">(optional — leave blank for a general brief)</span>
+                </label>
+                <Input
+                  value={setupCompany}
+                  onChange={(e) => setSetupCompany(e.target.value)}
+                  placeholder="e.g. Sequoia Capital"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">
+                  Job description{" "}
+                  <span className="text-muted-foreground font-normal">(optional but recommended)</span>
+                </label>
+                <Textarea
+                  value={setupJd}
+                  onChange={(e) => setSetupJd(e.target.value)}
+                  placeholder="Paste the full job description here..."
+                  rows={6}
+                  className="mt-1"
+                />
+              </div>
+              <Button
+                onClick={generateProofBrief}
+                disabled={generatingBrief || !setupRole.trim()}
+                size="lg"
+                className="w-full font-semibold"
+              >
+                {generatingBrief ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4 mr-2" />
+                )}
+                Generate my proof of work brief →
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Phase 2: Proof of work brief — the hero moment */}
+        {setupPhase === 'brief' && proofBrief && (
+          <div className="max-w-[700px] mx-auto space-y-8">
+            <div className="text-center space-y-2">
+              <h1 className="text-[28px] font-bold tracking-tight">Your proof-of-work brief</h1>
+              <p className="text-muted-foreground text-sm">
+                This is what will set you apart from every other applicant
+                {setupCompany ? ` at ${setupCompany}` : ""}.
+              </p>
+            </div>
+
+            <Card className="border-primary/30 bg-primary/5">
+              <CardContent className="pt-6 space-y-5">
+                <h3 className="text-xl font-bold">{proofBrief.title}</h3>
+
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Why this works</p>
+                  <p className="text-sm">{proofBrief.why_this_works}</p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">What to build</p>
+                  <ul className="list-disc pl-5 space-y-1">
+                    {(proofBrief.what_to_build as string[]).map((b: string, i: number) => (
+                      <li key={i} className="text-sm">{b}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Tools to use</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {(proofBrief.tools_to_use as string[]).map((t: string, i: number) => (
+                      <span key={i} className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Time estimate</p>
+                  <p className="text-sm">{proofBrief.time_estimate}</p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Ready-to-use AI prompt</p>
+                  <div className="relative">
+                    <pre className="text-xs bg-muted rounded-md p-3 whitespace-pre-wrap font-sans">{proofBrief.ai_prompt}</pre>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="absolute top-1 right-1 h-7 text-xs"
+                      onClick={() => {
+                        navigator.clipboard.writeText(proofBrief.ai_prompt);
+                        toast({ title: "Prompt copied!" });
+                      }}
+                    >
+                      Copy
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button onClick={handleStartBuilding} variant="outline" size="lg" className="flex-1">
+                Start building — I'll be back when it's done
+              </Button>
+              <Button onClick={() => setSetupPhase('cv_tailoring')} size="lg" className="flex-1">
+                Continue setting up my campaign →
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+            <p className="text-xs text-center text-muted-foreground">
+              "Start building" creates your campaign and takes you back to the dashboard. Come back when your proof of work is ready.
             </p>
           </div>
         )}
-        {result && cvModel && (
+
+        {/* Phase 3: CV tailoring — existing flow */}
+        {setupPhase === 'cv_tailoring' && (
           <>
-            {alignmentData && (
-              <AlignmentBanner
-                alignment={alignmentData.alignment}
-                reason={alignmentData.reason}
-                targetRole={alignmentData.targetRole}
-              />
+            {/* Target context */}
+            <div className="text-center space-y-2">
+              <h1 className="text-[32px] font-bold tracking-tight text-foreground">
+                {setupRole
+                  ? `Build your case for ${setupRole}${setupCompany ? ` at ${setupCompany}` : ''}`
+                  : targetRole
+                    ? `Build your case for ${targetRole}${targetLocation ? ` in ${targetLocation}` : ''}`
+                    : 'Build your case'}
+              </h1>
+              <p className="text-muted-foreground text-sm">
+                Paste a role you're genuinely excited about. One application, done properly.
+              </p>
+            </div>
+            <InputSection
+              onSubmit={handleSubmit}
+              onClear={() => { setResult(null); downloadCountRef.current = 0; }}
+              onCvParsed={(model) => setPreParsedModel(model)}
+              loading={loading}
+              loadingMessage={loadingMessage}
+            />
+            {loading && loadingProgress > 0 && (
+              <div className="space-y-2">
+                <Progress value={loadingProgress} className="h-2" />
+                <p className="text-xs text-muted-foreground text-center">
+                  Step {Math.ceil(loadingProgress / 20)} of 5
+                </p>
+              </div>
             )}
-            <CampaignBanner
-              company={lastCompany}
-              role={lastJobTitle}
-              jdText={lastJobDescription}
-              cvPlainText={cvModelToPlainText(cvModel)}
-              matchScore={result.atsAnalysis?.score || 0}
-              coverLetter={result.coverLetterVersions?.[0]?.content || result.coverLetter}
-            />
-            <ResultsSection
-              result={result}
-              jobTitle={lastJobTitle}
-              jobDescription={lastJobDescription}
-              onDownload={handleDownload}
-              cvModel={cvModel}
-              onCvModelChange={handleCvModelChange}
-              onResetCv={handleResetCv}
-              onUndo={handleUndo}
-              canUndo={undoStackRef.current.length > 0}
-              saveStatus={saveStatus}
-              appliedSuggestions={appliedSuggestions}
-              dismissedSuggestions={dismissedSuggestions}
-              onApplySuggestion={handleApplySuggestion}
-              onDismissSuggestion={handleDismissSuggestion}
-              onUndoSuggestion={handleUndoSuggestion}
-              onApplyHighPriority={handleApplyHighPriority}
-              onAddKeywordBullet={handleAddKeywordBullet}
-              appliedKeywordBullets={appliedKeywordBulletsRef.current}
-              addedKeywords={addedKeywords}
-            />
+            {result && cvModel && (
+              <>
+                {alignmentData && (
+                  <AlignmentBanner
+                    alignment={alignmentData.alignment}
+                    reason={alignmentData.reason}
+                    targetRole={alignmentData.targetRole}
+                  />
+                )}
+                <CampaignBanner
+                  company={lastCompany}
+                  role={lastJobTitle}
+                  jdText={lastJobDescription}
+                  cvPlainText={cvModelToPlainText(cvModel)}
+                  matchScore={result.atsAnalysis?.score || 0}
+                  coverLetter={result.coverLetterVersions?.[0]?.content || result.coverLetter}
+                />
+                <ResultsSection
+                  result={result}
+                  jobTitle={lastJobTitle}
+                  jobDescription={lastJobDescription}
+                  onDownload={handleDownload}
+                  cvModel={cvModel}
+                  onCvModelChange={handleCvModelChange}
+                  onResetCv={handleResetCv}
+                  onUndo={handleUndo}
+                  canUndo={undoStackRef.current.length > 0}
+                  saveStatus={saveStatus}
+                  appliedSuggestions={appliedSuggestions}
+                  dismissedSuggestions={dismissedSuggestions}
+                  onApplySuggestion={handleApplySuggestion}
+                  onDismissSuggestion={handleDismissSuggestion}
+                  onUndoSuggestion={handleUndoSuggestion}
+                  onApplyHighPriority={handleApplyHighPriority}
+                  onAddKeywordBullet={handleAddKeywordBullet}
+                  appliedKeywordBullets={appliedKeywordBulletsRef.current}
+                  addedKeywords={addedKeywords}
+                />
+              </>
+            )}
           </>
         )}
       </main>

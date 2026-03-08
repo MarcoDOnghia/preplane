@@ -290,7 +290,28 @@ const Index = () => {
                         </Badge>
                       </div>
 
-                      {/* Strength bar */}
+                      {/* Proof of work status — primary indicator */}
+                      <div className="flex items-center gap-1.5 text-xs font-medium">
+                        {c.step_proof_done ? (
+                          <span className="flex items-center gap-1.5 text-success">
+                            <Check className="h-3.5 w-3.5" /> Proof of work done
+                          </span>
+                        ) : c.proof_in_progress ? (
+                          <span className="flex items-center gap-1.5 text-yellow-600">
+                            <Loader2 className="h-3.5 w-3.5" /> Building in progress
+                          </span>
+                        ) : c.proof_suggestion ? (
+                          <span className="flex items-center gap-1.5 text-primary">
+                            <Lightbulb className="h-3.5 w-3.5" /> Brief ready — start building
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1.5 text-muted-foreground">
+                            <Lightbulb className="h-3.5 w-3.5" /> No proof of work yet
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Strength bar — secondary */}
                       <div className="space-y-1">
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-muted-foreground">Campaign strength</span>
