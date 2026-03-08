@@ -255,7 +255,7 @@ const Onboarding = () => {
           </div>
           <div className="flex items-center gap-3">
             <button className="p-2 rounded-full bg-[hsl(var(--primary))]/10 text-slate-600 hover:bg-[hsl(var(--primary))]/20 transition-colors">
-              <span className="material-symbols-outlined text-xl">search</span>
+              <Search className="w-5 h-5" />
             </button>
             <div className="w-9 h-9 rounded-full bg-slate-200" />
           </div>
