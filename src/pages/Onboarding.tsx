@@ -335,12 +335,12 @@ const Onboarding = () => {
               <div className="w-full max-w-lg mx-auto bg-white rounded-xl shadow-sm border border-slate-100 p-8 md:p-12 space-y-8">
                 {/* Header */}
                 <div className="space-y-4 text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-[#F97316] flex items-center justify-center">
-                      <Compass className="h-4 w-4 text-white" />
-                    </div>
-                    <span className="text-lg font-bold text-slate-900 tracking-tight">PrepLane</span>
-                  </div>
+                   <div className="flex items-center justify-center gap-2">
+                     <div className="bg-[#F97316] p-2 rounded-xl flex items-center justify-center">
+                       <Rocket className="w-5 h-5 text-white" />
+                     </div>
+                     <span className="text-xl font-bold tracking-tight text-slate-900">PrepLane</span>
+                   </div>
                   <div>
                     <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
                       What are you working toward?
