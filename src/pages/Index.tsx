@@ -7,8 +7,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Sparkles, ArrowRight, Target, Clock, RotateCcw, Zap, Check, Lightbulb, Loader2 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { Plus, Sparkles, ArrowRight, Target, Clock, RotateCcw, Zap, Check, Lightbulb, Loader2, X, AlertTriangle } from "lucide-react";
+import { formatDistanceToNow, differenceInDays } from "date-fns";
 
 const TARGET_KEY = "preplane_onboarding_target";
 const ONBOARDING_KEY = "preplane_onboarding_done";
@@ -48,6 +48,7 @@ interface CampaignRow {
   archived: boolean;
   proof_suggestion: string | null;
   proof_in_progress: boolean;
+  followup_date: string | null;
 }
 
 function getStrength(c: CampaignRow) {
@@ -95,6 +96,7 @@ const Index = () => {
   const [campaigns, setCampaigns] = useState<CampaignRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [showArchived, setShowArchived] = useState(false);
+  const [followupNudgeDismissed, setFollowupNudgeDismissed] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -142,7 +144,7 @@ const Index = () => {
         // Load campaigns
         const { data: campData } = await supabase
           .from("campaigns")
-          .select("id, company, role, match_score, status, step_cv_done, step_connection_done, step_outreach_done, step_proof_done, step_linkedin_done, step_cover_letter_done, step_followup_done, created_at, archived, proof_suggestion, proof_in_progress")
+          .select("id, company, role, match_score, status, step_cv_done, step_connection_done, step_outreach_done, step_proof_done, step_linkedin_done, step_cover_letter_done, step_followup_done, created_at, archived, proof_suggestion, proof_in_progress, followup_date")
           .order("created_at", { ascending: false });
         setCampaigns((campData as any as CampaignRow[]) || []);
         setLoading(false);
@@ -257,6 +259,72 @@ const Index = () => {
                     <Button size="sm" variant="outline" className="shrink-0">
                       Continue building <ArrowRight className="h-3 w-3 ml-1" />
                     </Button>
+                  </CardContent>
+                </Card>
+              );
+            })()}
+
+            {/* Follow-up urgency nudge */}
+            {(() => {
+              const today = new Date().toISOString().slice(0, 10);
+              const dismissKey = "preplane_followup_nudge_dismissed";
+              const dismissed = followupNudgeDismissed || localStorage.getItem(dismissKey) === today;
+              if (dismissed) return null;
+
+              const needsFollowup = activeCampaigns
+                .filter((c) => c.step_outreach_done && !c.step_followup_done && c.followup_date && c.status !== "rejected")
+                .sort((a, b) => new Date(a.followup_date!).getTime() - new Date(b.followup_date!).getTime());
+
+              if (needsFollowup.length === 0) return null;
+              const c = needsFollowup[0];
+              const outreachDate = new Date(new Date(c.followup_date!).getTime() - 7 * 24 * 60 * 60 * 1000);
+              const daysSince = differenceInDays(new Date(), outreachDate);
+              if (daysSince < 3) return null;
+
+              let bgClass: string, borderClass: string, textClass: string, message: string, buttonLabel: string;
+              if (daysSince >= 14) {
+                bgClass = "bg-destructive/10"; borderClass = "border-destructive/30"; textClass = "text-destructive";
+                message = `📬 It's been ${daysSince} days since you reached out to ${c.company}. Send one final follow-up today — then move on with your head high.`;
+                buttonLabel = "Send final follow-up →";
+              } else if (daysSince >= 7) {
+                bgClass = "bg-orange-500/10"; borderClass = "border-orange-500/30"; textClass = "text-orange-600";
+                message = `🔥 ${c.company} hasn't responded yet — that's normal. Day 7 follow-ups get 3x more responses than day 1. Send yours now.`;
+                buttonLabel = "Write my follow-up →";
+              } else {
+                bgClass = "bg-yellow-500/10"; borderClass = "border-yellow-500/30"; textClass = "text-yellow-700";
+                message = `⏰ You reached out to ${c.company} ${daysSince} days ago. Most people give up here — don't. A short follow-up today keeps you top of mind.`;
+                buttonLabel = "Write my follow-up →";
+              }
+
+              return (
+                <Card
+                  className={`${borderClass} ${bgClass} cursor-pointer hover:opacity-90 transition-opacity`}
+                  onClick={() => nav(`/campaign/${c.id}`)}
+                >
+                  <CardContent className="pt-5 pb-5 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      {daysSince >= 14 ? (
+                        <AlertTriangle className={`h-5 w-5 ${textClass} shrink-0`} />
+                      ) : (
+                        <Clock className={`h-5 w-5 ${textClass} shrink-0`} />
+                      )}
+                      <p className={`text-sm ${textClass}`}>{message}</p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Button size="sm" variant="outline" className="shrink-0">
+                        {buttonLabel}
+                      </Button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          localStorage.setItem(dismissKey, today);
+                          setFollowupNudgeDismissed(true);
+                        }}
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
                   </CardContent>
                 </Card>
               );
