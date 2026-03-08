@@ -38,12 +38,12 @@ const Header = () => {
         {/* Logo */}
         <button
           onClick={() => navigate("/app")}
-          className="flex items-center gap-2.5 hover:opacity-80 transition-opacity"
+          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
         >
-          <div className="bg-[#F97316] p-1.5 rounded-lg">
+          <div className="bg-[#F97316] p-2 rounded-xl flex items-center justify-center">
             <Rocket className="w-5 h-5 text-white" />
           </div>
-          <span className="text-xl font-bold text-slate-900">PrepLane</span>
+          <span className="text-xl font-bold tracking-tight text-slate-900">PrepLane</span>
         </button>
 
         {/* Center nav */}

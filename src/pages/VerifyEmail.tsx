@@ -53,9 +53,11 @@ const VerifyEmail = () => {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center space-y-2">
-          <div className="flex items-center justify-center gap-2 text-primary">
-            <Compass className="h-8 w-8" />
-            <h1 className="text-3xl font-bold tracking-tight">PrepLane</h1>
+          <div className="flex items-center justify-center gap-2">
+            <div className="bg-[#F97316] p-2 rounded-xl flex items-center justify-center">
+              <Rocket className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-xl font-bold tracking-tight text-slate-900">PrepLane</span>
           </div>
         </div>
 

@@ -517,10 +517,10 @@ const Onboarding = () => {
               {/* Full-width header bar */}
               <div className="fixed top-0 left-0 right-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur-sm px-6 md:px-20 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-[#F97316] flex items-center justify-center">
-                    <GraduationCap className="h-4 w-4 text-white" />
+                  <div className="bg-[#F97316] p-2 rounded-xl flex items-center justify-center">
+                    <Rocket className="w-5 h-5 text-white" />
                   </div>
-                  <span className="text-lg font-extrabold text-slate-900 tracking-tight">PrepLane</span>
+                  <span className="text-xl font-bold tracking-tight text-slate-900">PrepLane</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-slate-500 hidden sm:inline">Already have an account?</span>
