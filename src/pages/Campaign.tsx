@@ -480,11 +480,10 @@ const Campaign = () => {
                   <Button
                     onClick={() => {
                       const params = new URLSearchParams();
-                      params.set("phase", "cv_tailoring");
                       params.set("role", campaign.role);
                       params.set("company", campaign.company);
                       if (campaign.jd_text) params.set("jd", campaign.jd_text);
-                      navigate(`/app/new?${params.toString()}`);
+                      navigate(`/cv-workspace?${params.toString()}`);
                     }}
                   >
                     <FileText className="h-4 w-4 mr-1" />

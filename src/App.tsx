@@ -8,6 +8,7 @@ import RootRedirect from "./pages/RootRedirect";
 
 const Index = lazy(() => import("./pages/Index"));
 const NewCampaign = lazy(() => import("./pages/NewCampaign"));
+const CvWorkspace = lazy(() => import("./pages/CvWorkspace"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 const Campaign = lazy(() => import("./pages/Campaign"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/" element={<RootRedirect />} />
             <Route path="/app" element={<Index />} />
             <Route path="/app/new" element={<NewCampaign />} />
+            <Route path="/cv-workspace" element={<CvWorkspace />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/campaign/:id" element={<Campaign />} />
             <Route path="/auth" element={<Navigate to="/onboarding?step=4" replace />} />
