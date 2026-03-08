@@ -419,7 +419,7 @@ const Onboarding = () => {
                   type="button"
                   onClick={saveTargetAndAdvance}
                   disabled={saving}
-                  className="w-full flex items-center justify-center gap-2 bg-[hsl(var(--primary))] hover:bg-orange-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-orange-200 transition-colors disabled:opacity-60"
+                  className="w-full flex items-center justify-center gap-2 bg-[#F97316] hover:bg-orange-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-orange-200 transition-colors disabled:opacity-60"
                 >
                   {saving ? "Saving..." : "Continue"}
                   <ArrowRight className="w-5 h-5" />
