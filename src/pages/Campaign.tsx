@@ -87,14 +87,14 @@ const STATUS_OPTIONS = [
   { value: "rejected", label: "Not This Time", color: "bg-destructive/10 text-destructive border-destructive/20" },
 ];
 
-// Reordered: CV → Find contact → Proof of work → Send outreach → LinkedIn → Cover letter → Follow-up
+// Step order: CV → Proof → LinkedIn → Contact → Outreach → Cover letter → Follow-up
 const STEPS = [
   { key: "step_cv_done", label: "CV tailored", weight: 18, icon: FileText, subtext: "" },
-  { key: "step_connection_done", label: "Find your contact", weight: 13, icon: Users, subtext: "Do this before you apply. A name beats a contact form every time." },
-  { key: "step_proof_done", label: "Build proof of work", weight: 20, icon: Lightbulb, subtext: "Do this before you reach out. It gives you something real to say." },
-  { key: "step_outreach_done", label: "Send outreach", weight: 19, icon: Send, subtext: "Do this before you submit your CV. Let the proof of work open the door." },
-  { key: "step_linkedin_done", label: "Share your proof of work on LinkedIn", weight: 5, icon: Users, subtext: "A human-written post about what you built will do more for your career than 10 cold applications. Here's how to make it land." },
-  { key: "step_cover_letter_done", label: "Cover letter ready", weight: 10, icon: Mail, subtext: "Have this ready for when they ask. Not before." },
+  { key: "step_proof_done", label: "Build your proof of work", weight: 20, icon: Lightbulb, subtext: "Do this first. It gives you something real to say and something worth posting about." },
+  { key: "step_linkedin_done", label: "Post about it on LinkedIn", weight: 5, icon: Users, subtext: "Post before you reach out. Tag the company, mention the space, ask a genuine question. Warm is better than cold." },
+  { key: "step_connection_done", label: "Find your contact", weight: 13, icon: Users, subtext: "They may have already seen your post. Now find the right person to reach out to directly." },
+  { key: "step_outreach_done", label: "Send outreach", weight: 19, icon: Send, subtext: "Lead with what you built and your LinkedIn post. Ask for feedback or a 15-minute coffee chat — not a job." },
+  { key: "step_cover_letter_done", label: "Cover letter", weight: 10, icon: Mail, subtext: "Have this ready for when they ask. Not before." },
   { key: "step_followup_done", label: "Follow up", weight: 15, icon: Clock, subtext: "Most people follow up zero times. You follow up three times." },
 ] as const;
 
