@@ -62,7 +62,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { target_role, target_location, experience_level, categories } = await req.json();
+    const { target_role: rawRole, target_location: rawLocation, experience_level, categories } = await req.json();
+
+    // Strip HTML and validate
+    const target_role = rawRole ? String(rawRole).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 200) : "";
+    const target_location = rawLocation ? String(rawLocation).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 200) : "";
 
     if (!target_role) {
       return new Response(JSON.stringify({ error: "target_role is required" }), {
