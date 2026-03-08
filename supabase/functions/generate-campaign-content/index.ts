@@ -133,6 +133,33 @@ serve(async (req) => {
       );
     }
 
+    // Rate limiting per content type
+    const FEATURE_LIMITS: Record<string, { feature: string; max: number }> = {
+      proof_of_work: { feature: "proof_of_work", max: 5 },
+      outreach: { feature: "outreach_campaign", max: 10 },
+      cover_letter: { feature: "cover_letter", max: 5 },
+      follow_up: { feature: "outreach_campaign", max: 10 },
+      linkedin_angles: { feature: "linkedin_angles", max: 5 },
+    };
+    const limitConfig = FEATURE_LIMITS[contentType];
+    if (limitConfig) {
+      const adminClient = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      );
+      const { data: allowed, error: rpcError } = await adminClient.rpc("check_and_increment_usage", {
+        _user_id: user.id,
+        _feature: limitConfig.feature,
+        _max_count: limitConfig.max,
+      });
+      if (rpcError || allowed === false) {
+        return new Response(
+          JSON.stringify({ error: "You've used your daily limit for this feature. Come back tomorrow — limits reset at midnight." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     const company = validateString(body.company, "company", 200);
     const role = validateString(body.role, "role", 200);
     const jdText = validateString(body.jdText, "jdText", 10000);
