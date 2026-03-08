@@ -146,6 +146,30 @@ const Index = () => {
     if (targetRole && !setupRole) setSetupRole(targetRole);
   }, [targetRole]);
 
+  // Detect if JD text looks like a URL
+  const jdLooksLikeUrl = /^https?:\/\/\S+$/i.test(setupJd.trim());
+
+  const handleExtractJdUrl = async () => {
+    if (!setupJd.trim()) return;
+    setJdExtractingUrl(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("extract-jd-from-url", {
+        body: { url: setupJd.trim() },
+      });
+      if (error) throw error;
+      if (data?.jobDescription) {
+        setSetupJd(data.jobDescription);
+        toast({ title: "Job description extracted!" });
+      } else {
+        toast({ title: "Couldn't extract", description: "Try pasting the JD manually.", variant: "destructive" });
+      }
+    } catch (err: any) {
+      toast({ title: "Extraction failed", description: err.message, variant: "destructive" });
+    } finally {
+      setJdExtractingUrl(false);
+    }
+  };
+
   const generateProofBrief = async () => {
     if (!setupRole.trim()) {
       toast({ title: "Please enter a target role", variant: "destructive" });
