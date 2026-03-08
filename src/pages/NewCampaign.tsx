@@ -180,9 +180,9 @@ const Index = () => {
     }
     setGeneratingBrief(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const headers = await getAuthHeader();
       const { data, error } = await supabase.functions.invoke("generate-campaign-content", {
-        headers: { Authorization: `Bearer ${session?.access_token}` },
+        headers,
         body: {
           contentType: "proof_of_work",
           company: setupCompany.trim() || "a company in this space",
