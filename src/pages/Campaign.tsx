@@ -223,7 +223,8 @@ const Campaign = () => {
           jdText: campaign.jd_text,
           cvSummary: campaign.cv_version?.slice(0, 2000),
           connectionName: connectionName || undefined,
-          proofOfWorkTitle: contentType === "outreach" ? getProofTitle() : undefined,
+          proofOfWorkTitle: (contentType === "outreach" || contentType === "linkedin_angles") ? getProofTitle() : undefined,
+          proofOfWorkDetails: contentType === "linkedin_angles" ? proofSuggestion : undefined,
         },
       });
       if (error) throw error;
