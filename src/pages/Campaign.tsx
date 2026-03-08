@@ -591,7 +591,7 @@ const Campaign = () => {
                 <Checkbox
                   id="proof-done"
                   checked={campaign.step_proof_done}
-                  onCheckedChange={(checked) => updateCampaign({ step_proof_done: !!checked, proof_suggestion: proofSuggestion || null })}
+                  onCheckedChange={(checked) => updateCampaign({ step_proof_done: !!checked, proof_in_progress: false, proof_suggestion: proofSuggestion || null } as any)}
                 />
                 <label htmlFor="proof-done" className="text-sm">I've completed this</label>
               </div>
