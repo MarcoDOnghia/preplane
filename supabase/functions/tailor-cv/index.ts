@@ -115,14 +115,23 @@ serve(async (req) => {
       );
     }
 
+    // Injection check
+    if (containsInjection(cvContent) || containsInjection(jobDescription)) {
+      console.warn(`Prompt injection attempt detected from user ${user.id}`);
+      return new Response(
+        JSON.stringify({ error: "Invalid input" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    // Sanitize user inputs before passing to AI
-    const safeCv = sanitizeInput(cvContent);
-    const safeJobDesc = sanitizeInput(jobDescription);
+    // Sanitize and truncate user inputs before passing to AI
+    const safeCv = sanitizeInput(cvContent).slice(0, 3000);
+    const safeJobDesc = sanitizeInput(jobDescription).slice(0, 5000);
 
     const systemPrompt = `You are an expert career coach, CV tailoring specialist, and interview preparation expert. Analyze the CV and job description provided, then return a comprehensive analysis.
 
