@@ -502,7 +502,7 @@ const Onboarding = () => {
 
                 {/* Footer */}
                 <p className="text-center text-xs text-slate-400">
-                  Step 3 of 4 · <span className="text-[hsl(var(--primary))]">Community & Vision</span>
+                  Step 3 of 4 · <span className="text-[#F97316]">Community & Vision</span>
                 </p>
               </div>
             </div>
