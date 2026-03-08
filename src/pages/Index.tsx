@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/Header";
+import AppFooter from "@/components/AppFooter";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -448,23 +449,7 @@ const Index = () => {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-200 py-12 mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2 opacity-40">
-            <div className="bg-slate-400 p-1.5 rounded-lg flex items-center justify-center">
-              <Rocket className="w-4 h-4 text-white" />
-            </div>
-            <span className="text-sm font-bold tracking-tight text-slate-500">PrepLane</span>
-          </div>
-          <div className="flex items-center gap-6">
-            <span className="text-xs text-slate-400 hover:text-slate-600 cursor-pointer">Privacy Policy</span>
-            <span className="text-xs text-slate-400 hover:text-slate-600 cursor-pointer">Terms of Service</span>
-            <span className="text-xs text-slate-400 hover:text-slate-600 cursor-pointer">Help Center</span>
-          </div>
-          <p className="text-xs text-slate-400">© 2024 PrepLane Inc. All rights reserved.</p>
-        </div>
-      </footer>
+      <AppFooter />
     </div>
   );
 };

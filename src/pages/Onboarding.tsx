@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import AppFooter from "@/components/AppFooter";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Rocket, ArrowRight, Linkedin, Mail, Check, X, Briefcase, Building2, FileText, MapPin, Calendar, Search, Heart, BadgeCheck, Link as LinkIcon, MessageSquare, User, Lock, Eye, EyeOff, GraduationCap, Sparkles, Lightbulb, CheckCircle2, Archive, LogOut, Target, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -302,10 +303,7 @@ const Onboarding = () => {
           </div>
         </main>
 
-        {/* Footer */}
-        <footer className="py-6 text-center text-sm uppercase tracking-widest text-slate-800/40">
-          Build Smarter • Apply Better • PrepLane 2026
-        </footer>
+        <AppFooter />
       </div>
     );
   }
@@ -474,17 +472,7 @@ const Onboarding = () => {
                   </div>
                 </div>
 
-                {/* Footer */}
-                <footer className="border-t border-slate-200 py-8 px-10 mt-auto">
-                  <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-                    <span className="text-slate-500 text-sm">© 2024 PrepLane AI. All rights reserved.</span>
-                    <div className="flex items-center gap-6">
-                      <a href="#" className="text-slate-400 hover:text-[#F97316] text-sm transition-colors">Privacy Policy</a>
-                      <a href="#" className="text-slate-400 hover:text-[#F97316] text-sm transition-colors">Terms of Service</a>
-                      <a href="#" className="text-slate-400 hover:text-[#F97316] text-sm transition-colors">Help Center</a>
-                    </div>
-                  </div>
-                </footer>
+                <AppFooter />
               </div>
             </div>
           )}
