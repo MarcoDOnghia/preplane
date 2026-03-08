@@ -543,20 +543,8 @@ const CvWorkspace = () => {
       : 'Tailor your CV';
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] flex flex-col font-plus-jakarta-sans">
-      <header className="bg-white border-b border-[#F97316]/10 px-6 lg:px-20 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <FolderOpen className="hidden" />
-          <Diamond className="w-7 h-7 text-[#F97316] fill-[#F97316]" />
-          <span className="text-xl font-bold text-slate-900">PrepLane</span>
-        </div>
-        <nav className="flex gap-8">
-          <a href="/cv-workspace" className="text-[#F97316] font-semibold border-b-2 border-[#F97316] pb-1 text-sm">CV Workspace</a>
-          <a href="/history" className="text-slate-600 hover:text-[#F97316] text-sm font-semibold">History</a>
-          <a href="/settings" className="text-slate-600 hover:text-[#F97316] text-sm font-semibold">Settings</a>
-        </nav>
-        <div className="w-9 h-9 rounded-full bg-[#F97316]/10 border-2 border-[#F97316]/20" />
-      </header>
+    <div className="min-h-screen bg-[#FAF9F7] flex flex-col">
+      <Header />
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Page title */}
@@ -565,95 +553,68 @@ const CvWorkspace = () => {
           <p className="text-slate-500 mt-1">Manage your CVs and tailor them for specific roles.</p>
         </div>
 
-        {/* Main grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left column */}
-          <div className="lg:col-span-4 space-y-6">
-            {/* CV Library card */}
-            <div className="bg-white rounded-xl border border-[#F97316]/5 shadow-sm overflow-hidden">
-              {/* Header */}
-              <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <FolderOpen className="w-5 h-5 text-[#F97316]" />
-                  <span className="font-bold text-slate-900">CV Library</span>
-                </div>
-                <button
-                  onClick={() => document.getElementById("cv-upload-input")?.click()}
-                  className="text-[#F97316] hover:text-orange-600 transition-colors"
-                  aria-label="Upload new CV"
-                >
-                  <PlusCircle className="w-5 h-5" />
-                </button>
+        {/* Tailor section */}
+        <div id="tailor-section" className="space-y-6">
+          <InputSection
+            onSubmit={handleSubmit}
+            onClear={() => { setResult(null); downloadCountRef.current = 0; }}
+            onCvParsed={(model) => setPreParsedModel(model)}
+            loading={loading}
+            loadingMessage={loadingMessage}
+            initialJd={initialJd}
+          />
+          {loading && loadingProgress > 0 && (
+            <div className="space-y-2">
+              <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-full bg-[#F97316] rounded-full transition-all duration-500" style={{ width: `${loadingProgress}%` }} />
               </div>
-
-              <div className="p-4 space-y-3">
-                {/* Upload area */}
-                <div
-                  onClick={() => document.getElementById("cv-upload-input")?.click()}
-                  className="border-2 border-dashed border-[#F97316]/20 rounded-xl p-6 text-center hover:bg-[#F97316]/5 transition-colors cursor-pointer group"
-                >
-                  <input
-                    id="cv-upload-input"
-                    type="file"
-                    accept=".pdf,.docx"
-                    onChange={(e) => {
-                      const f = e.target.files?.[0];
-                      if (f) {
-                        // Trigger upload logic in InputSection component
-                      }
-                    }}
-                    className="hidden"
-                  />
-                  <CloudUpload className="w-8 h-8 text-[#F97316] mx-auto mb-2 group-hover:scale-110 transition-transform" />
-                  <p className="text-sm font-medium text-slate-700">Upload New CV</p>
-                  <p className="text-xs text-slate-400 mt-1">PDF, DOCX up to 5MB</p>
-                </div>
-
-                {/* CV list items */}
-                {/* This will be rendered inside InputSection component */}
-              </div>
+              <p className="text-xs text-slate-500 text-center">Step {Math.ceil(loadingProgress / 20)} of 5</p>
             </div>
-
-            {/* Pro Tip card */}
-            <div className="bg-[#F97316] rounded-xl p-6 text-white shadow-lg shadow-[#F97316]/20 relative overflow-hidden mt-6">
-              <p className="font-bold mb-2">Pro Tip</p>
-              <p className="text-sm text-white/90">
-                Tailor your CV for each role — generic applications get filtered out. Even small changes to your summary and skills section can dramatically improve your match score.
-              </p>
-              <Lightbulb className="w-24 h-24 text-white/10 absolute -bottom-4 -right-4 rotate-12" />
-            </div>
-          </div>
-
-          {/* Right column */}
-          <div className="lg:col-span-8">
-            <div className="bg-white rounded-xl border border-[#F97316]/5 shadow-sm h-full flex flex-col">
-              {/* Header */}
-              <div className="p-8 border-b border-slate-100">
-                <div className="flex items-center gap-3">
-                  <div className="bg-[#F97316]/10 p-2 rounded-lg">
-                    <Wand2 className="w-5 h-5 text-[#F97316]" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-slate-900">Tailor your CV</h2>
-                </div>
-                <p className="text-slate-500 mt-1 text-sm">Paste a job description and get AI-powered suggestions to improve your match.</p>
-              </div>
-
-              {/* Body */}
-              <div className="p-8 flex-1 flex flex-col gap-6">
-                <label className="text-sm font-semibold text-slate-700 mb-2 block">Job Description or URL</label>
-                {/* Textarea and input handled inside InputSection component */}
-              </div>
-
-              {/* Bottom row */}
-              <div className="pt-4 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-4 px-8 pb-8">
-                {/* Left side info and right side button handled inside InputSection component */}
-              </div>
-            </div>
-          </div>
+          )}
+          {result && cvModel && (
+            <>
+              {alignmentData && (
+                <AlignmentBanner
+                  alignment={alignmentData.alignment}
+                  reason={alignmentData.reason}
+                  targetRole={alignmentData.targetRole}
+                />
+              )}
+              <CampaignBanner
+                company={lastCompany}
+                role={lastJobTitle}
+                jdText={lastJobDescription}
+                cvPlainText={cvModelToPlainText(cvModel)}
+                matchScore={result.atsAnalysis?.score || 0}
+                coverLetter={result.coverLetterVersions?.[0]?.content || result.coverLetter}
+              />
+              <ResultsSection
+                result={result}
+                jobTitle={lastJobTitle}
+                jobDescription={lastJobDescription}
+                onDownload={handleDownload}
+                cvModel={cvModel}
+                onCvModelChange={handleCvModelChange}
+                onResetCv={handleResetCv}
+                onUndo={handleUndo}
+                canUndo={undoStackRef.current.length > 0}
+                saveStatus={saveStatus}
+                appliedSuggestions={appliedSuggestions}
+                dismissedSuggestions={dismissedSuggestions}
+                onApplySuggestion={handleApplySuggestion}
+                onDismissSuggestion={handleDismissSuggestion}
+                onUndoSuggestion={handleUndoSuggestion}
+                onApplyHighPriority={handleApplyHighPriority}
+                onAddKeywordBullet={handleAddKeywordBullet}
+                appliedKeywordBullets={appliedKeywordBulletsRef.current}
+                addedKeywords={addedKeywords}
+              />
+            </>
+          )}
         </div>
 
         {/* Stats row */}
-        <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12">
           <div className="p-4 rounded-xl bg-white border border-[#F97316]/5 shadow-sm">
             <p className="text-xs text-slate-500 font-medium mb-1">CVs in Library</p>
             <p className="text-xl font-bold text-slate-900">{totalCvs}</p>
