@@ -344,7 +344,7 @@ const Onboarding = () => {
                   <button onClick={() => navigate("/app")} className="text-sm font-semibold text-slate-600 hover:text-[#F97316] transition-colors">Dashboard</button>
                   <button onClick={() => navigate("/cv-workspace")} className="text-sm font-semibold text-slate-600 hover:text-[#F97316] transition-colors">CV Workspace</button>
                   <button className="text-sm font-bold text-[#F97316] border-b-2 border-[#F97316] pb-1">My Target</button>
-                  <button onClick={async () => { await supabaseClient.auth.signOut(); navigate("/onboarding"); }} className="text-sm font-semibold text-slate-600 hover:text-[#F97316] transition-colors">Sign Out</button>
+                  <button onClick={async () => { await supabase.auth.signOut(); navigate("/onboarding"); }} className="text-sm font-semibold text-slate-600 hover:text-[#F97316] transition-colors">Sign Out</button>
                 </nav>
                 <div className="size-10 rounded-full ring-2 ring-[#F97316]/20 bg-[#F97316]/10 flex items-center justify-center">
                   <span className="text-sm font-semibold text-[#F97316]">{user?.email?.charAt(0).toUpperCase() || "U"}</span>
