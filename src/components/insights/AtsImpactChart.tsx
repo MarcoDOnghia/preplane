@@ -12,7 +12,7 @@ interface AtsImpactChartProps {
   data: AtsRange[];
 }
 
-const RANGE_COLORS = ["hsl(var(--destructive))", "hsl(var(--warm))", "hsl(var(--success))"];
+const RANGE_COLORS = ["#EF4444", "#F59E0B", "#22C55E"];
 
 const AtsImpactChart = ({ data }: AtsImpactChartProps) => {
   const highRange = data.find((d) => d.range === "80-100");
