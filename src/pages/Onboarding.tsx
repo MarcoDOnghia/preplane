@@ -27,6 +27,7 @@ const Onboarding = () => {
   const [targetRole, setTargetRole] = useState("");
   const [targetLocation, setTargetLocation] = useState("");
   const [targetStart, setTargetStart] = useState("");
+  const [companySizes, setCompanySizes] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [isReturning, setIsReturning] = useState(false);
   const [ready, setReady] = useState(false);
