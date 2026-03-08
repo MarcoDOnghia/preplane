@@ -665,14 +665,30 @@ const Campaign = () => {
                 </div>
               </div>
 
-              <Button
-                size="sm"
-                variant="default"
-                className="bg-success hover:bg-success/90"
-                onClick={() => updateCampaign({ step_linkedin_done: true } as any)}
-              >
-                <Check className="h-4 w-4 mr-1" /> I've posted it →
-              </Button>
+              {campaign.step_linkedin_done ? (
+                <div className="flex items-center gap-2 text-success font-medium text-sm">
+                  <Check className="h-5 w-5" />
+                  <span>Posted ✓ — nice work. Now find your contact, they may have already seen it.</span>
+                </div>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="default"
+                  className="bg-success hover:bg-success/90"
+                  onClick={() => {
+                    updateCampaign({ step_linkedin_done: true } as any);
+                    setTimeout(() => {
+                      setOpenSteps((prev) => {
+                        const next = new Set(prev);
+                        next.delete(2);
+                        return next;
+                      });
+                    }, 1500);
+                  }}
+                >
+                  <Check className="h-4 w-4 mr-1" /> I've posted it →
+                </Button>
+              )}
             </div>
           </StepCard>
 
