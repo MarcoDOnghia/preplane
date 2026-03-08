@@ -251,9 +251,11 @@ const Onboarding = () => {
         {/* Header */}
         <header className="w-full border-b border-[#F97316]/10 px-6 md:px-20 py-4 flex items-center justify-between">
            <div className="flex items-center gap-2">
-              <Compass className="w-6 h-6 text-[#F97316]" />
-              <span className="text-xl font-extrabold text-slate-900 tracking-tight">PrepLane</span>
-          </div>
+              <div className="bg-[#F97316] p-2 rounded-xl flex items-center justify-center">
+                <Rocket className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-xl font-bold tracking-tight text-slate-900">PrepLane</span>
+           </div>
           <div className="flex items-center gap-3">
             <button className="p-2 rounded-full bg-[#F97316]/10 text-slate-600 hover:bg-[#F97316]/20 transition-colors">
               <Search className="w-5 h-5" />
