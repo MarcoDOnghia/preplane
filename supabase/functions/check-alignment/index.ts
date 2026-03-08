@@ -6,13 +6,30 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-function sanitizeInput(text: string): string {
+const INJECTION_PATTERNS = [
+  /ignore\s+(all\s+)?(previous|prior|above)\s+(instructions?|prompts?|context)/i,
+  /you\s+are\s+now\s+/i,
+  /disregard\s+(your|all|previous|any)/i,
+  /\bact\s+as\b/i,
+  /\bpretend\s+(to\s+be|you('re| are))\b/i,
+];
+
+function stripHtml(text: string): string {
   return text
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ");
+}
+
+function containsInjection(text: string): boolean {
+  return INJECTION_PATTERNS.some((p) => p.test(text));
+}
+
+function sanitizeInput(text: string): string {
+  return stripHtml(text)
     .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "")
-    .replace(/ignore\s+(all\s+)?(previous|prior|above)\s+(instructions?|prompts?|context)/gi, "[filtered]")
-    .replace(/you\s+are\s+now\s+/gi, "[filtered]")
-    .replace(/system\s*:\s*/gi, "[filtered]")
-    .replace(/\bact\s+as\b/gi, "[filtered]")
+    .replace(/system\s*:\s*/gi, "")
     .trim();
 }
 
@@ -64,8 +81,17 @@ serve(async (req) => {
       });
     }
 
+    // Injection check
+    if (containsInjection(String(rawTargetRole)) || containsInjection(String(rawJobDescription))) {
+      console.warn(`Prompt injection attempt detected from user ${user.id}`);
+      return new Response(
+        JSON.stringify({ error: "Invalid input" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const targetRole = sanitizeInput(String(rawTargetRole)).slice(0, 200);
-    const jobDescription = sanitizeInput(String(rawJobDescription));
+    const jobDescription = sanitizeInput(String(rawJobDescription)).slice(0, 5000);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");

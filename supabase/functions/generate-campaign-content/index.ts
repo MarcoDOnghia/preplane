@@ -9,21 +9,38 @@ const corsHeaders = {
 
 const VALID_TYPES = ["outreach", "proof_of_work", "follow_up", "cover_letter", "linkedin_angles"] as const;
 
-function sanitizeInput(text: string): string {
+const INJECTION_PATTERNS = [
+  /ignore\s+(all\s+)?(previous|prior|above)\s+(instructions?|prompts?|context)/i,
+  /you\s+are\s+now\s+/i,
+  /disregard\s+(your|all|previous|any)/i,
+  /\bact\s+as\b/i,
+  /\bpretend\s+(to\s+be|you('re| are))\b/i,
+];
+
+function stripHtml(text: string): string {
   return text
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ");
+}
+
+function containsInjection(text: string): boolean {
+  return INJECTION_PATTERNS.some((p) => p.test(text));
+}
+
+function sanitizeInput(text: string): string {
+  return stripHtml(text)
     .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "")
-    .replace(/ignore\s+(all\s+)?(previous|prior|above)\s+(instructions?|prompts?|context)/gi, "[filtered]")
-    .replace(/you\s+are\s+now\s+/gi, "[filtered]")
-    .replace(/system\s*:\s*/gi, "[filtered]")
-    .replace(/\bact\s+as\b/gi, "[filtered]")
+    .replace(/system\s*:\s*/gi, "")
     .trim();
 }
 
 function validateString(value: unknown, name: string, maxLen: number): string | undefined {
   if (value === undefined || value === null || value === "") return undefined;
   if (typeof value !== "string") throw new Error(`${name} must be a string`);
-  if (value.length > maxLen) throw new Error(`${name} exceeds max length of ${maxLen}`);
-  return sanitizeInput(value);
+  const cleaned = sanitizeInput(value).slice(0, maxLen);
+  return cleaned || undefined;
 }
 
 const PROMPTS: Record<string, string> = {
@@ -133,6 +150,18 @@ serve(async (req) => {
       );
     }
 
+    // Check all text inputs for injection attempts
+    const allInputs = [body.company, body.role, body.jdText, body.cvSummary, body.connectionName, body.proofOfWorkTitle, body.proofOfWorkDetails].filter(Boolean);
+    for (const input of allInputs) {
+      if (typeof input === "string" && containsInjection(input)) {
+        console.warn(`Prompt injection attempt detected from user ${user.id}`);
+        return new Response(
+          JSON.stringify({ error: "Invalid input" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     // Rate limiting per content type
     const FEATURE_LIMITS: Record<string, { feature: string; max: number }> = {
       proof_of_work: { feature: "proof_of_work", max: 5 },
@@ -162,8 +191,8 @@ serve(async (req) => {
 
     const company = validateString(body.company, "company", 200);
     const role = validateString(body.role, "role", 200);
-    const jdText = validateString(body.jdText, "jdText", 10000);
-    const cvSummary = validateString(body.cvSummary, "cvSummary", 5000);
+    const jdText = validateString(body.jdText, "jdText", 5000);
+    const cvSummary = validateString(body.cvSummary, "cvSummary", 3000);
     const connectionName = validateString(body.connectionName, "connectionName", 200);
     const proofOfWorkTitle = validateString(body.proofOfWorkTitle, "proofOfWorkTitle", 500);
     const proofOfWorkDetails = validateString(body.proofOfWorkDetails, "proofOfWorkDetails", 5000);
@@ -185,8 +214,8 @@ You MUST call the generate_content function with your output.`;
 
     const userPrompt = `<USER_CONTEXT>
 Role: ${role} at ${company}
-${jdText ? `\nJob Description:\n${jdText.slice(0, 3000)}` : ""}
-${cvSummary ? `\nCandidate Background:\n${cvSummary.slice(0, 2000)}` : ""}
+${jdText ? `\nJob Description:\n${jdText}` : ""}
+${cvSummary ? `\nCandidate Background:\n${cvSummary}` : ""}
 ${connectionName ? `\nConnection/Recipient: ${connectionName}` : ""}
 ${proofOfWorkTitle ? `\nProof of Work Completed: ${proofOfWorkTitle}` : ""}
 ${proofOfWorkDetails ? `\nProof of Work Details:\n${proofOfWorkDetails}` : ""}
@@ -274,7 +303,7 @@ ${proofOfWorkDetails ? `\nProof of Work Details:\n${proofOfWorkDetails}` : ""}
       }
       const errorText = await response.text();
       console.error("AI gateway error:", response.status, errorText);
-      throw new Error(`AI gateway error: ${response.status}`);
+      throw new Error("Content generation failed. Please try again.");
     }
 
     const data = await response.json();
@@ -292,7 +321,7 @@ ${proofOfWorkDetails ? `\nProof of Work Details:\n${proofOfWorkDetails}` : ""}
   } catch (error) {
     console.error("generate-campaign-content error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ error: error instanceof Error ? error.message : "Something went wrong. Please try again." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

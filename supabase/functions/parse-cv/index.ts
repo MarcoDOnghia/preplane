@@ -9,13 +9,30 @@ const corsHeaders = {
 
 const MAX_CV_TEXT = 50000;
 
-function sanitizeInput(text: string): string {
+const INJECTION_PATTERNS = [
+  /ignore\s+(all\s+)?(previous|prior|above)\s+(instructions?|prompts?|context)/i,
+  /you\s+are\s+now\s+/i,
+  /disregard\s+(your|all|previous|any)/i,
+  /\bact\s+as\b/i,
+  /\bpretend\s+(to\s+be|you('re| are))\b/i,
+];
+
+function stripHtml(text: string): string {
   return text
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ");
+}
+
+function containsInjection(text: string): boolean {
+  return INJECTION_PATTERNS.some((p) => p.test(text));
+}
+
+function sanitizeInput(text: string): string {
+  return stripHtml(text)
     .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "")
-    .replace(/ignore\s+(all\s+)?(previous|prior|above)\s+(instructions?|prompts?|context)/gi, "[filtered]")
-    .replace(/you\s+are\s+now\s+/gi, "[filtered]")
-    .replace(/system\s*:\s*/gi, "[filtered]")
-    .replace(/\bact\s+as\b/gi, "[filtered]")
+    .replace(/system\s*:\s*/gi, "")
     .trim();
 }
 
@@ -62,7 +79,24 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Injection check
+    if (containsInjection(rawTextInput)) {
+      console.warn(`Prompt injection attempt detected from user ${userData.user.id}`);
+      return new Response(JSON.stringify({ error: "Invalid input" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const rawText = sanitizeInput(rawTextInput);
+
+    if (!rawText) {
+      return new Response(JSON.stringify({ error: "rawText is required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -208,7 +242,7 @@ If a field is missing from the CV, use empty string or empty array. Do NOT fabri
   } catch (e) {
     console.error("parse-cv error:", e);
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
+      JSON.stringify({ error: e instanceof Error ? e.message : "Something went wrong. Please try again." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

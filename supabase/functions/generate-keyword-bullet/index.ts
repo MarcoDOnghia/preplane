@@ -7,13 +7,30 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-function sanitizeInput(text: string): string {
+const INJECTION_PATTERNS = [
+  /ignore\s+(all\s+)?(previous|prior|above)\s+(instructions?|prompts?|context)/i,
+  /you\s+are\s+now\s+/i,
+  /disregard\s+(your|all|previous|any)/i,
+  /\bact\s+as\b/i,
+  /\bpretend\s+(to\s+be|you('re| are))\b/i,
+];
+
+function stripHtml(text: string): string {
   return text
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ");
+}
+
+function containsInjection(text: string): boolean {
+  return INJECTION_PATTERNS.some((p) => p.test(text));
+}
+
+function sanitizeInput(text: string): string {
+  return stripHtml(text)
     .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "")
-    .replace(/ignore\s+(all\s+)?(previous|prior|above)\s+(instructions?|prompts?|context)/gi, "[filtered]")
-    .replace(/you\s+are\s+now\s+/gi, "[filtered]")
-    .replace(/system\s*:\s*/gi, "[filtered]")
-    .replace(/\bact\s+as\b/gi, "[filtered]")
+    .replace(/system\s*:\s*/gi, "")
     .trim();
 }
 
@@ -47,9 +64,21 @@ serve(async (req) => {
 
     const { keyword: rawKeyword, cvContent: rawCvContent, jobDescription: rawJobDescription, existingBullets } = await req.json();
 
-    const keyword = sanitizeInput(String(rawKeyword || ""));
-    const cvContent = sanitizeInput(String(rawCvContent || ""));
-    const jobDescription = rawJobDescription ? sanitizeInput(String(rawJobDescription)) : "";
+    // Injection check
+    const allInputs = [rawKeyword, rawCvContent, rawJobDescription].filter(Boolean);
+    for (const input of allInputs) {
+      if (typeof input === "string" && containsInjection(input)) {
+        console.warn(`Prompt injection attempt detected from user ${user.id}`);
+        return new Response(JSON.stringify({ error: "Invalid input" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    const keyword = sanitizeInput(String(rawKeyword || "")).slice(0, 200);
+    const cvContent = sanitizeInput(String(rawCvContent || "")).slice(0, 3000);
+    const jobDescription = rawJobDescription ? sanitizeInput(String(rawJobDescription)).slice(0, 5000) : "";
 
     if (!keyword || !cvContent) {
       return new Response(JSON.stringify({ error: "keyword and cvContent are required" }), {
@@ -87,10 +116,10 @@ You MUST call the generate_bullet function with your result.`;
     const userPrompt = `Missing keyword: "${keyword}"
 
 Job Description context:
-<USER_DATA>${jobDescription.slice(0, 3000)}</USER_DATA>
+<USER_DATA>${jobDescription}</USER_DATA>
 
 User's CV:
-<USER_CV>${cvContent.slice(0, 8000)}</USER_CV>${existingBulletsText}
+<USER_CV>${cvContent}</USER_CV>${existingBulletsText}
 
 First classify "${keyword}" as a tool/software (Type A) or skill/competency (Type B), then generate the appropriate suggestion.`;
 
@@ -158,7 +187,7 @@ First classify "${keyword}" as a tool/software (Type A) or skill/competency (Typ
       }
       const errorText = await response.text();
       console.error("AI gateway error:", response.status, errorText);
-      throw new Error(`AI gateway error: ${response.status}`);
+      throw new Error("Bullet generation failed. Please try again.");
     }
 
     const data = await response.json();
@@ -176,7 +205,7 @@ First classify "${keyword}" as a tool/software (Type A) or skill/competency (Typ
   } catch (error) {
     console.error("generate-keyword-bullet error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ error: error instanceof Error ? error.message : "Something went wrong. Please try again." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

@@ -118,7 +118,7 @@ AVOID:
 - Apologetic language
 
 USE confident, data-driven language.
-Example: "I'm really excited about joining {Company} as {Role}. Based on {reason}, I'd like to discuss a salary of ${target}. {If competing offer: I have another offer at $X.} {If other considerations: I'm also interested in discussing {equity/remote/benefits}.} Would love to find a package that works for both of us."
+Example: "I'm really excited about joining {Company} as {Role}. Based on {reason}, I'd like to discuss a salary of \${target}. {If competing offer: I have another offer at $X.} {If other considerations: I'm also interested in discussing {equity/remote/benefits}.} Would love to find a package that works for both of us."
 
 Remember: Negotiating is normal and expected. Sound professional and collaborative.
 
@@ -141,27 +141,39 @@ CRITICAL TONE GUIDELINES (apply to ALL messages):
 
 You are helping a real person communicate authentically, not generating corporate boilerplate.`;
 
-/** Strip common prompt-injection patterns and control characters. */
-function sanitizeInput(text: string): string {
+const INJECTION_PATTERNS = [
+  /ignore\s+(all\s+)?(previous|prior|above)\s+(instructions?|prompts?|context)/i,
+  /you\s+are\s+now\s+/i,
+  /disregard\s+(your|all|previous|any)/i,
+  /\bact\s+as\b/i,
+  /\bpretend\s+(to\s+be|you('re| are))\b/i,
+];
+
+function stripHtml(text: string): string {
   return text
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ");
+}
+
+function containsInjection(text: string): boolean {
+  return INJECTION_PATTERNS.some((p) => p.test(text));
+}
+
+function sanitizeInput(text: string): string {
+  return stripHtml(text)
     .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "")
-    .replace(/ignore\s+(all\s+)?(previous|prior|above)\s+(instructions?|prompts?|context)/gi, "[filtered]")
-    .replace(/you\s+are\s+now\s+/gi, "[filtered]")
-    .replace(/system\s*:\s*/gi, "[filtered]")
-    .replace(/\bact\s+as\b/gi, "[filtered]")
+    .replace(/system\s*:\s*/gi, "")
     .trim();
 }
 
-/** Validate a string field: must be string, max length, then sanitize. */
 function validateStringField(value: unknown, name: string, maxLength: number): string | undefined {
   if (value === undefined || value === null || value === "") return undefined;
   if (typeof value !== "string") {
     throw new Error(`${name} must be a string`);
   }
-  if (value.length > maxLength) {
-    throw new Error(`${name} exceeds maximum length of ${maxLength} characters`);
-  }
-  return sanitizeInput(value);
+  return sanitizeInput(value).slice(0, maxLength) || undefined;
 }
 
 serve(async (req) => {
@@ -219,6 +231,18 @@ serve(async (req) => {
       );
     }
 
+    // Check all text inputs for injection attempts
+    const allInputs = [body.jobTitle, body.company, body.cvSummary, body.recipientName, body.additionalContext, body.roleInterest, body.strongestFit, body.interviewTopics, body.referralRelationship, body.referralQualification, body.negotiationReason, body.otherConsiderations].filter(Boolean);
+    for (const input of allInputs) {
+      if (typeof input === "string" && containsInjection(input)) {
+        console.warn(`Prompt injection attempt detected from user ${user.id}`);
+        return new Response(
+          JSON.stringify({ error: "Invalid input" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     const jobTitle = validateStringField(body.jobTitle, "jobTitle", 200);
     const company = validateStringField(body.company, "company", 200);
 
@@ -229,7 +253,7 @@ serve(async (req) => {
       );
     }
 
-    const cvSummary = validateStringField(body.cvSummary, "cvSummary", 5000);
+    const cvSummary = validateStringField(body.cvSummary, "cvSummary", 3000);
     const recipientName = validateStringField(body.recipientName, "recipientName", 200);
     const additionalContext = validateStringField(body.additionalContext, "additionalContext", 2000);
     const roleInterest = validateStringField(body.roleInterest, "roleInterest", 100);
@@ -335,7 +359,7 @@ ${additionalContext ? `\nAdditional context: ${additionalContext}` : ""}
       }
       const errorText = await response.text();
       console.error("AI gateway error:", response.status, errorText);
-      throw new Error(`AI gateway error: ${response.status}`);
+      throw new Error("Message generation failed. Please try again.");
     }
 
     const data = await response.json();
@@ -353,7 +377,7 @@ ${additionalContext ? `\nAdditional context: ${additionalContext}` : ""}
   } catch (error) {
     console.error("generate-outreach error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ error: error instanceof Error ? error.message : "Something went wrong. Please try again." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
