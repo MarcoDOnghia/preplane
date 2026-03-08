@@ -897,7 +897,7 @@ function StepCard({
 }) {
   const Icon = step.icon;
   return (
-    <Card className={done ? "border-success/30" : ""}>
+    <Card id={`step-${index}`} className={done ? "border-success/30" : ""}>
       <CardHeader
         className="pb-0 cursor-pointer select-none"
         onClick={onToggle}
