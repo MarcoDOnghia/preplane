@@ -157,8 +157,7 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage, 
             aiModel = null;
           }
         }
-      } catch (err) {
-        console.error("parse-cv edge function failed:", err);
+      } catch {
         toast({ title: "AI parsing unavailable", description: "Using local parser instead.", variant: "default" });
       }
 
