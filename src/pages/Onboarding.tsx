@@ -27,6 +27,7 @@ const Onboarding = () => {
   const [targetRole, setTargetRole] = useState("");
   const [targetLocation, setTargetLocation] = useState("");
   const [targetStart, setTargetStart] = useState("");
+  const [companySizes, setCompanySizes] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [isReturning, setIsReturning] = useState(false);
   const [ready, setReady] = useState(false);
@@ -284,52 +285,108 @@ const Onboarding = () => {
             </div>
           )}
 
-          {/* Step 2 — Define your target */}
           {step === 2 && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
-              <div className="text-center space-y-3">
-                <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
-                  What are you working toward?
-                </h1>
-                <p className="text-muted-foreground text-base md:text-lg max-w-[500px] mx-auto">
-                  This becomes your north star. Every application you work on in PrepLane will be measured against it.
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              <div className="w-full max-w-lg mx-auto bg-white rounded-xl shadow-sm border border-slate-100 p-8 md:p-12 space-y-8">
+                {/* Header */}
+                <div className="space-y-4 text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-[hsl(var(--primary))] flex items-center justify-center">
+                      <Compass className="h-4 w-4 text-white" />
+                    </div>
+                    <span className="text-lg font-bold text-slate-900 tracking-tight">PrepLane</span>
+                  </div>
+                  <div>
+                    <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                      What are you working toward?
+                    </h1>
+                    <p className="text-slate-500 mt-2 text-sm">
+                      Tell us your goals to personalize your career path.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Form fields */}
+                <div className="space-y-4">
+                  <div className="relative">
+                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">work</span>
+                    <input
+                      type="text"
+                      placeholder="e.g. Product Designer"
+                      value={targetRole}
+                      onChange={(e) => setTargetRole(e.target.value)}
+                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-[hsl(var(--primary))] transition-colors"
+                    />
+                  </div>
+                  <div className="relative">
+                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">location_on</span>
+                    <input
+                      type="text"
+                      placeholder="e.g. San Francisco, Remote"
+                      value={targetLocation}
+                      onChange={(e) => setTargetLocation(e.target.value)}
+                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-[hsl(var(--primary))] transition-colors"
+                    />
+                  </div>
+                  <div className="relative">
+                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">calendar_today</span>
+                    <select
+                      value={targetStart}
+                      onChange={(e) => setTargetStart(e.target.value)}
+                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-[hsl(var(--primary))] transition-colors"
+                    >
+                      <option value="" disabled>When do you want to start?</option>
+                      <option value="Immediately">Immediately</option>
+                      <option value="In 1–3 months">In 1–3 months</option>
+                      <option value="In 3–6 months">In 3–6 months</option>
+                      <option value="Just exploring">Just exploring</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Company size pills */}
+                <div className="space-y-3">
+                  <p className="text-sm font-medium text-slate-700">What size company interests you?</p>
+                  <div className="flex flex-wrap gap-2">
+                    {["Early-stage startup", "Scaleup", "Boutique", "Mid-size", "Big Tech"].map((size) => {
+                      const selected = companySizes.includes(size);
+                      return (
+                        <button
+                          key={size}
+                          type="button"
+                          onClick={() =>
+                            setCompanySizes((prev) =>
+                              selected ? prev.filter((s) => s !== size) : [...prev, size]
+                            )
+                          }
+                          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                            selected
+                              ? "border border-[hsl(var(--primary))] text-[hsl(var(--primary))] bg-orange-50"
+                              : "border border-slate-200 text-slate-600 bg-white hover:border-slate-300"
+                          }`}
+                        >
+                          {size}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* CTA */}
+                <button
+                  type="button"
+                  onClick={saveTargetAndAdvance}
+                  disabled={saving}
+                  className="w-full flex items-center justify-center gap-2 bg-[hsl(var(--primary))] hover:bg-orange-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-orange-200 transition-colors disabled:opacity-60"
+                >
+                  {saving ? "Saving..." : "Continue"}
+                  <span className="material-symbols-outlined text-xl">arrow_forward</span>
+                </button>
+
+                {/* Footer */}
+                <p className="text-center text-xs text-slate-400">
+                  Step 1 of 3: Professional Background
                 </p>
-              </div>
-
-              <div className="space-y-5 max-w-[480px] mx-auto">
-                <div className="space-y-2">
-                  <Label htmlFor="target-role">What kind of role are you targeting?</Label>
-                  <Input
-                    id="target-role"
-                    placeholder="e.g. VC analyst, startup operations, business development"
-                    value={targetRole}
-                    onChange={(e) => setTargetRole(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="target-location">Where?</Label>
-                  <Input
-                    id="target-location"
-                    placeholder="e.g. Italy, Remote, London"
-                    value={targetLocation}
-                    onChange={(e) => setTargetLocation(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="target-start">When are you looking to start?</Label>
-                  <Input
-                    id="target-start"
-                    placeholder="e.g. Summer 2026, ASAP"
-                    value={targetStart}
-                    onChange={(e) => setTargetStart(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="text-center">
-                <Button size="lg" onClick={saveTargetAndAdvance} disabled={saving} className="text-base px-8">
-                  {saving ? "Saving..." : "Set my target"} <ArrowRight className="ml-1 h-4 w-4" />
-                </Button>
               </div>
             </div>
           )}
