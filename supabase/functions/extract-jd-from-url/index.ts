@@ -52,6 +52,21 @@ serve(async (req) => {
     }
 
     const { url: rawUrl } = await req.json();
+    const adminClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+    const { data: allowed, error: rpcError } = await adminClient.rpc(
+      "check_and_increment_usage",
+      { _user_id: user.id, _feature: "jd_url_extract", _max_count: 10 }
+    );
+    if (rpcError || allowed === false) {
+      return new Response(
+        JSON.stringify({ error: "Daily limit reached for URL extraction. Come back tomorrow." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const url = typeof rawUrl === "string" ? rawUrl.replace(/<[^>]+>/g, "").trim().slice(0, 2000) : "";
     if (!url || !isValidUrl(url)) throw new Error("A valid HTTPS URL is required");
 
