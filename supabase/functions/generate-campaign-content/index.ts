@@ -136,6 +136,7 @@ serve(async (req) => {
     const cvSummary = validateString(body.cvSummary, "cvSummary", 5000);
     const connectionName = validateString(body.connectionName, "connectionName", 200);
     const proofOfWorkTitle = validateString(body.proofOfWorkTitle, "proofOfWorkTitle", 500);
+    const proofOfWorkDetails = validateString(body.proofOfWorkDetails, "proofOfWorkDetails", 5000);
 
     if (!company || !role) {
       return new Response(JSON.stringify({ error: "Company and role are required" }), {
@@ -158,6 +159,7 @@ ${jdText ? `\nJob Description:\n${jdText.slice(0, 3000)}` : ""}
 ${cvSummary ? `\nCandidate Background:\n${cvSummary.slice(0, 2000)}` : ""}
 ${connectionName ? `\nConnection/Recipient: ${connectionName}` : ""}
 ${proofOfWorkTitle ? `\nProof of Work Completed: ${proofOfWorkTitle}` : ""}
+${proofOfWorkDetails ? `\nProof of Work Details:\n${proofOfWorkDetails}` : ""}
 </USER_CONTEXT>`;
 
     // Define tool schema based on content type
