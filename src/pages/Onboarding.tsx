@@ -440,11 +440,11 @@ const Onboarding = () => {
                 {/* Icon badge */}
                 <div className="flex justify-center">
                   <div className="relative">
-                    <div className="w-20 h-20 rounded-full bg-[hsl(var(--primary))]/10 flex items-center justify-center">
-                      <Heart className="w-8 h-8 text-[hsl(var(--primary))]" />
+                    <div className="w-20 h-20 rounded-full bg-[#F97316]/10 flex items-center justify-center">
+                      <Heart className="w-8 h-8 text-[#F97316]" />
                     </div>
-                    <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-[hsl(var(--primary))]/15 flex items-center justify-center">
-                      <BadgeCheck className="w-4 h-4 text-[hsl(var(--primary))]" />
+                    <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-[#F97316]/15 flex items-center justify-center">
+                      <BadgeCheck className="w-4 h-4 text-[#F97316]" />
                     </div>
                   </div>
                 </div>
