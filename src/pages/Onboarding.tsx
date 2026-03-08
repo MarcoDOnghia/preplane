@@ -273,7 +273,7 @@ const Onboarding = () => {
             <h1 className="text-4xl md:text-6xl font-extrabold leading-[1.1] tracking-tight text-slate-900">
               Stop applying to everything.
               <br />
-              <span className="text-[hsl(var(--primary))]">Start owning your shot.</span>
+              <span className="text-[#F97316]">Start owning your shot.</span>
             </h1>
 
             {/* Body */}
