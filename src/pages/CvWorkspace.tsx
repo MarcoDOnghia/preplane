@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/Header";
+import AppFooter from "@/components/AppFooter";
 import InputSection from "@/components/InputSection";
 import ResultsSection from "@/components/ResultsSection";
 import CampaignBanner from "@/components/CampaignBanner";
