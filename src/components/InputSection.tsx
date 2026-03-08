@@ -1,10 +1,11 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, FileText, Sparkles, Loader2, X, CheckCircle2, Link2, Plus, Trash2 } from "lucide-react";
+import {
+  CloudUpload, FileText, Rocket, Loader2, X, CheckCircle2, Link2, PlusCircle,
+  Trash2, FolderOpen, MoreVertical, Lightbulb, Wand2, Info
+} from "lucide-react";
 import { extractTextFromFile } from "@/lib/fileParser";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -48,34 +49,21 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage, 
   const jdInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  // Parse saved CV text into model via AI (with local fallback) and pass up
   const parseAndNotify = useCallback(async (rawText: string) => {
     if (!rawText || !onCvParsed) return;
     try {
-      // Try AI parse first (same pipeline as fresh upload)
       const { data: parseData, error: parseError } = await supabase.functions.invoke("parse-cv", {
         body: { rawText },
       });
       if (!parseError && parseData?.cvData) {
         const aiModel = aiParsedCvToModel(parseData.cvData);
         const hasContent = aiModel.name.length > 0 || aiModel.experience.length > 0 || aiModel.education.length > 0 || aiModel.skills.length > 0;
-        if (hasContent) {
-          onCvParsed(aiModel);
-          return;
-        }
+        if (hasContent) { onCvParsed(aiModel); return; }
       }
-    } catch {
-      // AI parse failed — fall through to local
-    }
-    try {
-      const model = parseCvToModel(rawText);
-      onCvParsed(model);
-    } catch {
-      // Silent failure — local parse is best-effort
-    }
+    } catch {}
+    try { const model = parseCvToModel(rawText); onCvParsed(model); } catch {}
   }, [onCvParsed]);
 
-  // Fetch saved CVs
   useEffect(() => {
     if (!user) return;
     const fetchCvs = async () => {
@@ -90,7 +78,6 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage, 
           setSelectedCvId(data[0].id);
           setCvText(data[0].parsed_text);
           setCvName(data[0].name);
-          // Parse the auto-selected CV and pass model up
           parseAndNotify(data[0].parsed_text);
         }
       }
@@ -98,21 +85,17 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage, 
     fetchCvs();
   }, [user]);
 
-  // Handle CV selection
   const handleSelectCv = (cvId: string) => {
     setSelectedCvId(cvId);
     const cv = savedCvs.find((c) => c.id === cvId);
     if (cv) {
       setCvText(cv.parsed_text);
       setCvName(cv.name);
-      // Parse selected CV and pass model up
       parseAndNotify(cv.parsed_text);
     }
   };
 
-  // Upload new CV: extract text → call parse-cv → upload to storage → save to DB
   const handleUploadNewCv = async (file: File) => {
-    // File upload triggered
     if (savedCvs.length >= MAX_CVS) {
       toast({ title: "CV limit reached", description: `Remove a CV before adding new ones (${MAX_CVS} max).`, variant: "destructive" });
       return;
@@ -129,20 +112,13 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage, 
 
     setUploading(true);
     try {
-      // 1. Extract raw text client-side
-      
       let rawText: string;
-      try {
-        rawText = await extractTextFromFile(file);
-      } catch (err) {
-        throw err;
-      }
+      try { rawText = await extractTextFromFile(file); } catch (err) { throw err; }
 
       if (!rawText || rawText.trim().length < 20) {
         throw new Error("Could not extract text from file. Please try a different format.");
       }
 
-      // 2. Call parse-cv edge function for AI-structured parsing
       let aiModel: CvDataModel | null = null;
       try {
         const { data: parseData, error: parseError } = await supabase.functions.invoke("parse-cv", {
@@ -151,46 +127,30 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage, 
         if (parseError) throw parseError;
         if (parseData?.cvData) {
           aiModel = aiParsedCvToModel(parseData.cvData);
-          // Validate the AI model actually has content — if not, discard it
           const hasContent = aiModel.name.length > 0 || aiModel.experience.length > 0 || aiModel.education.length > 0 || aiModel.skills.length > 0;
-          if (!hasContent) {
-            aiModel = null;
-          }
+          if (!hasContent) aiModel = null;
         }
       } catch {
         toast({ title: "AI parsing unavailable", description: "Using local parser instead.", variant: "default" });
       }
 
-      // 2b. If AI failed or returned empty, use local parser as fallback
       if (!aiModel) {
         aiModel = parseCvToModel(rawText);
         aiModel = parseCvToModel(rawText);
       }
 
-      // 3. Upload original file to storage bucket
       let fileUrl: string | null = null;
       try {
         const storagePath = `${user!.id}/${Date.now()}_${file.name}`;
         const { error: uploadError } = await supabase.storage
           .from("cvs")
           .upload(storagePath, file, { contentType: file.type, upsert: false });
-        if (!uploadError) {
-          // Bucket is private — store the path for signed URL generation later
-          fileUrl = storagePath;
-        }
-      } catch {
-        // Storage upload is best-effort, don't block the flow
-      }
+        if (!uploadError) fileUrl = storagePath;
+      } catch {}
 
-      // 4. Insert row in cvs table
       const { data, error } = await supabase
         .from("cvs")
-        .insert({
-          user_id: user!.id,
-          name: file.name,
-          parsed_text: rawText,
-          file_url: fileUrl,
-        } as any)
+        .insert({ user_id: user!.id, name: file.name, parsed_text: rawText, file_url: fileUrl } as any)
         .select("id, name, parsed_text, created_at")
         .single();
       if (error) throw error;
@@ -200,11 +160,7 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage, 
       setCvText(data.parsed_text);
       setCvName(data.name);
 
-      // 5. Pass parsed model up to pre-fill the ATS editor
-      if (aiModel && onCvParsed) {
-        onCvParsed(aiModel);
-      }
-
+      if (aiModel && onCvParsed) onCvParsed(aiModel);
       toast({ title: "CV saved!", description: `${file.name} added to your library.` });
     } catch (err: any) {
       toast({ title: "Parsing failed, try again", description: err.message, variant: "destructive" });
@@ -230,27 +186,6 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage, 
       }
     }
     toast({ title: "CV removed" });
-  };
-
-  const handleJdFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    const ext = f.name.split(".").pop()?.toLowerCase();
-    if (!["pdf", "docx"].includes(ext || "")) {
-      setJdFile({ text: "", name: "", error: "Only .pdf and .docx" });
-      return;
-    }
-    if (f.size > MAX_SIZE) {
-      setJdFile({ text: "", name: "", error: "Max 2MB" });
-      return;
-    }
-    try {
-      const text = await extractTextFromFile(f);
-      setJdFile({ text, name: f.name, error: "" });
-      toast({ title: "JD parsed", description: `Extracted from ${f.name}` });
-    } catch (err: any) {
-      setJdFile({ text: "", name: "", error: err.message });
-    }
   };
 
   const handleExtractFromUrl = async () => {
@@ -294,151 +229,183 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage, 
   };
 
   return (
-    <div className="space-y-8">
-      {/* Hero — copy is overridden by parent via targetRole/targetLocation context */}
-      <div className="text-center space-y-2">
-        {/* Intentionally left empty — heading is provided by NewCampaign parent */}
-      </div>
-
-      {/* Two-column: CV Library (40%) | JD (60%) */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-        {/* CV Library */}
-        <div data-cv-library className="md:col-span-2 space-y-3">
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-foreground">My CV Library</label>
-            <span className="text-xs text-muted-foreground">{savedCvs.length}/{MAX_CVS} used</span>
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      {/* Left column — CV Library */}
+      <div className="lg:col-span-4 space-y-6">
+        {/* CV Library card */}
+        <div className="bg-white rounded-xl border border-[#F97316]/5 shadow-sm overflow-hidden">
+          {/* Header */}
+          <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FolderOpen className="w-5 h-5 text-[#F97316]" />
+              <span className="font-bold text-slate-900">CV Library</span>
+              <span className="text-xs text-slate-400 ml-1">{savedCvs.length}/{MAX_CVS}</span>
+            </div>
+            <input
+              ref={cvInputRef}
+              type="file"
+              accept=".pdf,.docx"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUploadNewCv(f); }}
+              className="hidden"
+            />
+            <button
+              onClick={() => cvInputRef.current?.click()}
+              disabled={uploading || savedCvs.length >= MAX_CVS}
+              className="text-[#F97316] hover:text-orange-600 disabled:opacity-40 transition-colors"
+            >
+              <PlusCircle className="w-5 h-5" />
+            </button>
           </div>
 
-          {savedCvs.length > 0 ? (
-            <div className="space-y-2">
-              <Select value={selectedCvId} onValueChange={handleSelectCv}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a CV..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {savedCvs.map((cv) => (
-                    <SelectItem key={cv.id} value={cv.id}>
-                      <span className="flex items-center gap-2">
-                        <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-                        {cv.name}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {selectedCvId && (
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-xs text-primary">
-                    <CheckCircle2 className="h-3.5 w-3.5" />
-                    <span>{cvName}</span>
-                    <span className="text-muted-foreground">· {Math.round(cvText.length / 100) / 10}k chars</span>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 text-xs text-muted-foreground hover:text-destructive"
-                    onClick={() => handleDeleteCv(selectedCvId)}
-                  >
-                    <Trash2 className="h-3 w-3 mr-1" /> Remove
-                  </Button>
-                </div>
+          <div className="p-4 space-y-3">
+            {/* Upload area */}
+            <div
+              onClick={() => cvInputRef.current?.click()}
+              className="border-2 border-dashed border-[#F97316]/20 rounded-xl p-6 text-center hover:bg-[#F97316]/5 transition-colors cursor-pointer group"
+            >
+              {uploading ? (
+                <Loader2 className="w-8 h-8 text-[#F97316] mx-auto mb-2 animate-spin" />
+              ) : (
+                <CloudUpload className="w-8 h-8 text-[#F97316] mx-auto mb-2 group-hover:scale-110 transition-transform" />
               )}
+              <p className="text-sm font-medium text-slate-700">
+                {uploading ? "Parsing with AI..." : "Upload New CV"}
+              </p>
+              <p className="text-xs text-slate-400 mt-1">PDF, DOCX up to 2MB</p>
             </div>
-          ) : (
-            <Card className="border-dashed border-2 border-muted-foreground/25">
-              <div className="flex flex-col items-center justify-center py-10 px-6 text-center">
-                <div className="mx-auto rounded-full p-3 bg-muted text-muted-foreground mb-3">
-                  <FileText className="h-6 w-6" />
-                </div>
-                <p className="text-sm font-medium">No CVs yet</p>
-                <p className="text-xs text-muted-foreground mt-1">Upload your first CV to get started</p>
-              </div>
-            </Card>
-          )}
 
-          {/* Upload new button */}
-          <input
-            ref={cvInputRef}
-            type="file"
-            accept=".pdf,.docx"
-            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUploadNewCv(f); }}
-            className="hidden"
-          />
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full text-xs"
-            onClick={() => cvInputRef.current?.click()}
-            disabled={uploading || savedCvs.length >= MAX_CVS}
-          >
-            {uploading ? (
-              <><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Parsing with AI...</>
-            ) : (
-              <><Plus className="h-3 w-3 mr-1" /> Upload New PDF/Docx</>
+            {/* CV list */}
+            {savedCvs.map((cv) => {
+              const isActive = cv.id === selectedCvId;
+              return (
+                <div
+                  key={cv.id}
+                  onClick={() => handleSelectCv(cv.id)}
+                  className={`rounded-xl p-3 flex items-center gap-3 cursor-pointer transition-colors ${
+                    isActive
+                      ? "bg-[#F97316]/5 border border-[#F97316]/10"
+                      : "hover:bg-slate-50 border border-transparent"
+                  }`}
+                >
+                  <div className={`p-2 rounded-lg shrink-0 ${isActive ? "bg-[#F97316]/20" : "bg-slate-100"}`}>
+                    <FileText className={`w-5 h-5 ${isActive ? "text-[#F97316]" : "text-slate-500"}`} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-slate-900 truncate">{cv.name}</p>
+                    <p className="text-xs text-slate-500">
+                      {new Date(cv.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                    </p>
+                  </div>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleDeleteCv(cv.id); }}
+                    className="text-slate-400 hover:text-red-500 transition-colors shrink-0"
+                  >
+                    <MoreVertical className="w-4 h-4" />
+                  </button>
+                </div>
+              );
+            })}
+
+            {savedCvs.length === 0 && (
+              <p className="text-xs text-slate-400 text-center py-2">No CVs yet — upload your first one above.</p>
             )}
-          </Button>
+          </div>
         </div>
 
-        {/* JD Column */}
-        <div className="md:col-span-3 space-y-3">
-          <label className="text-sm font-medium text-foreground">JD (Paste)</label>
+        {/* Pro Tip card */}
+        <div className="bg-[#F97316] rounded-xl p-6 text-white shadow-lg shadow-[#F97316]/20 relative overflow-hidden">
+          <p className="font-bold mb-2">Pro Tip</p>
+          <p className="text-sm text-white/90">
+            Tailor your CV for each role — generic applications get filtered out. Even small changes to your summary and skills section can dramatically improve your match score.
+          </p>
+          <Lightbulb className="w-24 h-24 text-white/10 absolute -bottom-4 -right-4 rotate-12" />
+        </div>
+      </div>
 
-          <Textarea
-            value={jdText}
-            onChange={(e) => setJdText(e.target.value)}
-            placeholder="Paste full job description here..."
-            className="min-h-[180px] text-sm resize-y"
-            disabled={loading}
-          />
+      {/* Right column — Tailor your CV */}
+      <div className="lg:col-span-8">
+        <div className="bg-white rounded-xl border border-[#F97316]/5 shadow-sm h-full flex flex-col">
+          {/* Header */}
+          <div className="p-8 border-b border-slate-100">
+            <div className="flex items-center gap-3">
+              <div className="bg-[#F97316]/10 p-2 rounded-lg">
+                <Wand2 className="w-5 h-5 text-[#F97316]" />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-900">Tailor your CV</h2>
+            </div>
+            <p className="text-slate-500 mt-1 text-sm">Paste a job description and get AI-powered suggestions to improve your match.</p>
+          </div>
 
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1">
-              <Link2 className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input
-                value={linkedinUrl}
-                onChange={(e) => setLinkedinUrl(e.target.value)}
-                placeholder="LinkedIn / job URL (optional)"
-                className="pl-8 h-8 text-xs"
-                disabled={loading || extracting}
+          {/* Body */}
+          <div className="p-8 flex-1 flex flex-col gap-6">
+            <div>
+              <label className="text-sm font-semibold text-slate-700 mb-2 block">Job Description or URL</label>
+              <Textarea
+                value={jdText}
+                onChange={(e) => setJdText(e.target.value)}
+                placeholder="Paste full job description here..."
+                className="w-full min-h-[300px] p-6 rounded-xl border-slate-200 bg-slate-50 focus:ring-2 focus:ring-[#F97316] focus:border-transparent resize-none text-slate-700 placeholder:text-slate-400"
+                disabled={loading}
               />
             </div>
-            <Button variant="outline" size="sm" onClick={handleExtractFromUrl} disabled={!linkedinUrl.trim() || extracting || loading} className="text-xs h-8">
-              {extracting ? <Loader2 className="h-3 w-3 animate-spin" /> : "Extract"}
-            </Button>
+
+            {/* URL extract */}
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  value={linkedinUrl}
+                  onChange={(e) => setLinkedinUrl(e.target.value)}
+                  placeholder="LinkedIn / job URL (optional)"
+                  className="pl-9 h-10 text-sm border-slate-200 bg-slate-50 focus:ring-2 focus:ring-[#F97316] focus:border-transparent"
+                  disabled={loading || extracting}
+                />
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExtractFromUrl}
+                disabled={!linkedinUrl.trim() || extracting || loading}
+                className="text-sm h-10 border-slate-200"
+              >
+                {extracting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Extract"}
+              </Button>
+            </div>
+
+            {/* Bottom action row */}
+            <div className="pt-4 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-2 text-sm text-slate-500">
+                {cvName ? (
+                  <>
+                    <Info className="w-4 h-4 text-[#F97316]" />
+                    <span>Using: <strong className="text-slate-900">{cvName}</strong></span>
+                  </>
+                ) : (
+                  <span className="text-slate-400">Select or upload a CV first</span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-3">
+                {(cvText || effectiveJd) && !loading && (
+                  <button onClick={handleClear} className="text-sm text-slate-400 hover:text-slate-600 flex items-center gap-1">
+                    <X className="h-4 w-4" /> Clear JD
+                  </button>
+                )}
+                <button
+                  onClick={handleSubmit}
+                  disabled={loading || !bothReady}
+                  className="px-8 py-4 bg-[#F97316] hover:bg-orange-600 text-white rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-[#F97316]/25 hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                >
+                  {loading ? (
+                    <><Loader2 className="w-5 h-5 animate-spin" />{loadingMessage}</>
+                  ) : (
+                    <><Rocket className="w-5 h-5" />Tailor My CV</>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
-
-          {!jdText && !jdFile.text && (
-            <p className="text-xs text-muted-foreground">Paste the job description or drop in the URL.</p>
-          )}
         </div>
-      </div>
-
-      {/* CTA */}
-      <div className="flex flex-col items-center gap-3">
-        <Button
-          onClick={handleSubmit}
-          disabled={loading || !bothReady}
-          size="lg"
-          className="w-full max-w-xl h-14 text-lg font-bold bg-primary hover:bg-primary/90"
-        >
-          {loading ? (
-            <><Loader2 className="h-5 w-5 mr-2 animate-spin" />{loadingMessage}</>
-          ) : (
-            <><Sparkles className="h-5 w-5 mr-2" />Tailor My CV</>
-          )}
-        </Button>
-        {!bothReady && !loading && (
-          <p className="text-sm text-muted-foreground">
-            {!cvText && !effectiveJd ? "Select a CV and provide a job description to start" :
-             !cvText ? "Select or upload a CV to continue" : "Paste or upload a job description"}
-          </p>
-        )}
-        {(cvText || effectiveJd) && !loading && (
-          <Button variant="ghost" size="sm" onClick={handleClear} className="text-muted-foreground">
-            <X className="h-4 w-4 mr-1" /> Clear JD
-          </Button>
-        )}
       </div>
     </div>
   );
