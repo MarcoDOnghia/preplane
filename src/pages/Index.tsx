@@ -53,12 +53,29 @@ function getStrength(c: CampaignRow) {
 }
 
 function getNextStep(c: CampaignRow) {
-  // Prioritize Step 3 (proof of work) if Step 2 (connection) done but Step 3 not
-  if (c.step_connection_done && !c.step_proof_done) {
-    return "Build proof of work";
+  // Priority 1: Proof brief exists but not started
+  if (c.proof_suggestion && !c.proof_in_progress && !c.step_proof_done) {
+    return "Start building your proof of work";
   }
-  const idx = STEPS.findIndex((s) => !(c as any)[s.key]);
-  return idx >= 0 ? STEPS[idx].label : null;
+  // Priority 2: Proof in progress
+  if (c.proof_in_progress && !c.step_proof_done) {
+    return "Finish your proof of work — this is what gets responses";
+  }
+  // Priority 3: Proof done but outreach not sent
+  if (c.step_proof_done && !c.step_outreach_done) {
+    return "Your proof of work is ready. Time to reach out.";
+  }
+  // Priority 4: Outreach sent but no follow up
+  if (c.step_outreach_done && !c.step_followup_done) {
+    return "Follow up on your outreach";
+  }
+  // Priority 5: CV not tailored
+  if (!c.step_cv_done) {
+    return "Tailor your CV";
+  }
+  if (!c.step_connection_done) return "Find your contact";
+  if (!c.step_cover_letter_done) return "Prepare cover letter";
+  return null;
 }
 
 const Index = () => {
