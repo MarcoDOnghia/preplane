@@ -249,9 +249,9 @@ const Onboarding = () => {
 
         {/* Header */}
         <header className="w-full border-b border-[hsl(var(--primary))]/10 px-6 md:px-20 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-[hsl(var(--primary))] text-2xl">explore</span>
-            <span className="text-xl font-extrabold text-slate-900 tracking-tight">PrepLane</span>
+           <div className="flex items-center gap-2">
+              <Compass className="w-6 h-6 text-[hsl(var(--primary))]" />
+              <span className="text-xl font-extrabold text-slate-900 tracking-tight">PrepLane</span>
           </div>
           <div className="flex items-center gap-3">
             <button className="p-2 rounded-full bg-[hsl(var(--primary))]/10 text-slate-600 hover:bg-[hsl(var(--primary))]/20 transition-colors">
