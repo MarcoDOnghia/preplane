@@ -248,13 +248,13 @@ const Onboarding = () => {
         <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-[#F97316]/5 blur-3xl -z-10" />
 
         {/* Header */}
-        <header className="w-full border-b border-[hsl(var(--primary))]/10 px-6 md:px-20 py-4 flex items-center justify-between">
+        <header className="w-full border-b border-[#F97316]/10 px-6 md:px-20 py-4 flex items-center justify-between">
            <div className="flex items-center gap-2">
-              <Compass className="w-6 h-6 text-[hsl(var(--primary))]" />
+              <Compass className="w-6 h-6 text-[#F97316]" />
               <span className="text-xl font-extrabold text-slate-900 tracking-tight">PrepLane</span>
           </div>
           <div className="flex items-center gap-3">
-            <button className="p-2 rounded-full bg-[hsl(var(--primary))]/10 text-slate-600 hover:bg-[hsl(var(--primary))]/20 transition-colors">
+            <button className="p-2 rounded-full bg-[#F97316]/10 text-slate-600 hover:bg-[#F97316]/20 transition-colors">
               <Search className="w-5 h-5" />
             </button>
             <div className="w-9 h-9 rounded-full bg-slate-200" />
