@@ -435,44 +435,58 @@ const Onboarding = () => {
 
           {/* Step 3 — The invitation */}
           {step === 3 && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8 text-center">
-              <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
-                Help me build this for you.
-              </h1>
-              <p className="text-muted-foreground text-base md:text-lg leading-relaxed max-w-[540px] mx-auto">
-                PrepLane is being built in public by a 20-year-old who faced the exact same problem. If you have ideas, frustrations, or features you wish existed — I genuinely want to hear from you. Early users are shaping what this becomes.
-              </p>
-              <p className="text-muted-foreground text-base md:text-lg leading-relaxed max-w-[540px] mx-auto">
-                Oh, and PrepLane is completely free. No credit card, no trial, no catch. Just a tool I wish existed when I started applying.
-              </p>
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              <div className="w-full max-w-lg mx-auto bg-white rounded-xl shadow-sm border border-slate-100 p-8 md:p-12 space-y-8">
+                {/* Icon badge */}
+                <div className="flex justify-center">
+                  <div className="relative">
+                    <div className="w-20 h-20 rounded-full bg-[hsl(var(--primary))]/10 flex items-center justify-center">
+                      <Heart className="w-8 h-8 text-[hsl(var(--primary))]" />
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-[hsl(var(--primary))]/15 flex items-center justify-center">
+                      <BadgeCheck className="w-4 h-4 text-[hsl(var(--primary))]" />
+                    </div>
+                  </div>
+                </div>
 
-              <div className="flex items-center justify-center gap-3">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="text-base"
-                  onClick={() => window.open("https://www.linkedin.com/in/marcodonghiaa/", "_blank")}
-                >
-                  <Linkedin className="mr-2 h-4 w-4" />
-                  Connect on LinkedIn
-                </Button>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="text-base"
-                  onClick={() => window.open("mailto:marco.dgh06@gmail.com", "_blank")}
-                >
-                  <Mail className="mr-2 h-4 w-4" />
-                  Send feedback
-                </Button>
-              </div>
+                {/* Heading */}
+                <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight text-center">
+                  Help me build this for you.
+                </h1>
 
-              <div>
-                <Button
-                  size="lg"
+                {/* Body */}
+                <p className="text-slate-500 text-base md:text-lg leading-relaxed text-center">
+                  PrepLane is being built in public by a 20-year-old who faced the exact same problem. If you have ideas, frustrations, or features you wish existed — I genuinely want to hear from you. Early users are shaping what this becomes.
+                </p>
+                <p className="text-slate-500 text-base md:text-lg leading-relaxed text-center">
+                  Oh, and PrepLane is completely free. No credit card, no trial, no catch. Just a tool I wish existed when I started applying.
+                </p>
+
+                {/* Action buttons */}
+                <div className="flex items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => window.open("https://www.linkedin.com/in/marcodonghiaa/", "_blank")}
+                    className="flex items-center gap-2 px-6 py-3.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-medium text-sm hover:border-slate-300 transition-colors"
+                  >
+                    <LinkIcon className="w-4 h-4 text-slate-500" />
+                    Connect on LinkedIn
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => window.open("mailto:marco.dgh06@gmail.com", "_blank")}
+                    className="flex items-center gap-2 px-6 py-3.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-medium text-sm hover:border-slate-300 transition-colors"
+                  >
+                    <MessageSquare className="w-4 h-4 text-slate-500" />
+                    Send feedback
+                  </button>
+                </div>
+
+                {/* CTA */}
+                <button
+                  type="button"
                   onClick={() => {
                     if (user) {
-                      // Already logged in (came via "My Target") — complete
                       saveProfileAndComplete();
                     } else {
                       localStorage.setItem(ONBOARDING_KEY, "true");
@@ -480,10 +494,16 @@ const Onboarding = () => {
                     }
                   }}
                   disabled={saving}
-                  className="text-base px-8"
+                  className="w-full flex items-center justify-center gap-2 bg-[hsl(var(--primary))] hover:bg-orange-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-orange-200 transition-colors disabled:opacity-60"
                 >
-                  {saving ? "Starting..." : "Start building my profile"} <ArrowRight className="ml-1 h-4 w-4" />
-                </Button>
+                  {saving ? "Starting..." : "Start building my profile"}
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+
+                {/* Footer */}
+                <p className="text-center text-xs text-slate-400">
+                  Step 3 of 4 · <span className="text-[hsl(var(--primary))]">Community & Vision</span>
+                </p>
               </div>
             </div>
           )}
