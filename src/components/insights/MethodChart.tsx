@@ -14,11 +14,11 @@ interface MethodChartProps {
 }
 
 const COLORS = [
-  "hsl(var(--primary))",
-  "hsl(var(--success))",
-  "hsl(var(--warm))",
-  "hsl(var(--destructive))",
-  "hsl(var(--muted-foreground))",
+  "#F97316",
+  "#22C55E",
+  "#F59E0B",
+  "#EF4444",
+  "#78716C",
 ];
 
 const MethodChart = ({ data, bestMethod }: MethodChartProps) => {

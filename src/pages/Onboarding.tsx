@@ -244,17 +244,17 @@ const Onboarding = () => {
     return (
       <div className="relative min-h-screen overflow-hidden flex flex-col" style={{ background: "#FAF9F6", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
         {/* Background orbs */}
-        <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-[hsl(var(--primary))]/5 blur-3xl -z-10" />
-        <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-[hsl(var(--primary))]/5 blur-3xl -z-10" />
+        <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-[#F97316]/5 blur-3xl -z-10" />
+        <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-[#F97316]/5 blur-3xl -z-10" />
 
         {/* Header */}
-        <header className="w-full border-b border-[hsl(var(--primary))]/10 px-6 md:px-20 py-4 flex items-center justify-between">
+        <header className="w-full border-b border-[#F97316]/10 px-6 md:px-20 py-4 flex items-center justify-between">
            <div className="flex items-center gap-2">
-              <Compass className="w-6 h-6 text-[hsl(var(--primary))]" />
+              <Compass className="w-6 h-6 text-[#F97316]" />
               <span className="text-xl font-extrabold text-slate-900 tracking-tight">PrepLane</span>
           </div>
           <div className="flex items-center gap-3">
-            <button className="p-2 rounded-full bg-[hsl(var(--primary))]/10 text-slate-600 hover:bg-[hsl(var(--primary))]/20 transition-colors">
+            <button className="p-2 rounded-full bg-[#F97316]/10 text-slate-600 hover:bg-[#F97316]/20 transition-colors">
               <Search className="w-5 h-5" />
             </button>
             <div className="w-9 h-9 rounded-full bg-slate-200" />
@@ -265,15 +265,15 @@ const Onboarding = () => {
         <main className="flex-1 flex flex-col items-center justify-center px-6 py-12">
           <div className="max-w-[720px] text-center space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Icon badge */}
-            <div className="mx-auto w-fit p-4 rounded-full bg-[hsl(var(--primary))]/10">
-              <Compass className="w-12 h-12 text-[hsl(var(--primary))]" />
+            <div className="mx-auto w-fit p-4 rounded-full bg-[#F97316]/10">
+              <Compass className="w-12 h-12 text-[#F97316]" />
             </div>
 
             {/* Heading */}
             <h1 className="text-4xl md:text-6xl font-extrabold leading-[1.1] tracking-tight text-slate-900">
               Stop applying to everything.
               <br />
-              <span className="text-[hsl(var(--primary))]">Start owning your shot.</span>
+              <span className="text-[#F97316]">Start owning your shot.</span>
             </h1>
 
             {/* Body */}
@@ -290,7 +290,7 @@ const Onboarding = () => {
               <button
                 type="button"
                 onClick={() => setStep(2)}
-                className="group inline-flex items-center gap-2 rounded-xl h-14 px-8 bg-[hsl(var(--primary))] text-white text-lg font-bold shadow-lg shadow-[hsl(var(--primary))]/25 hover:-translate-y-0.5 transition-all active:translate-y-0"
+                className="group inline-flex items-center gap-2 rounded-xl h-14 px-8 bg-[#F97316] text-white text-lg font-bold shadow-lg shadow-[#F97316]/25 hover:-translate-y-0.5 transition-all active:translate-y-0"
               >
                 I'm in
                 <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
@@ -333,7 +333,7 @@ const Onboarding = () => {
                 {/* Header */}
                 <div className="space-y-4 text-center">
                   <div className="flex items-center justify-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-[hsl(var(--primary))] flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-lg bg-[#F97316] flex items-center justify-center">
                       <Compass className="h-4 w-4 text-white" />
                     </div>
                     <span className="text-lg font-bold text-slate-900 tracking-tight">PrepLane</span>
@@ -357,7 +357,7 @@ const Onboarding = () => {
                       placeholder="e.g. Product Designer"
                       value={targetRole}
                       onChange={(e) => setTargetRole(e.target.value)}
-                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-[hsl(var(--primary))] transition-colors"
+                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316] transition-colors"
                     />
                   </div>
                   <div className="relative">
@@ -367,7 +367,7 @@ const Onboarding = () => {
                       placeholder="e.g. San Francisco, Remote"
                       value={targetLocation}
                       onChange={(e) => setTargetLocation(e.target.value)}
-                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-[hsl(var(--primary))] transition-colors"
+                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316] transition-colors"
                     />
                   </div>
                   <div className="relative">
@@ -375,7 +375,7 @@ const Onboarding = () => {
                     <select
                       value={targetStart}
                       onChange={(e) => setTargetStart(e.target.value)}
-                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-[hsl(var(--primary))] transition-colors"
+                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316] transition-colors"
                     >
                       <option value="" disabled>When do you want to start?</option>
                       <option value="Immediately">Immediately</option>
@@ -403,7 +403,7 @@ const Onboarding = () => {
                           }
                           className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                             selected
-                              ? "border border-[hsl(var(--primary))] text-[hsl(var(--primary))] bg-orange-50"
+                              ? "border border-[#F97316] text-[#F97316] bg-orange-50"
                               : "border border-slate-200 text-slate-600 bg-white hover:border-slate-300"
                           }`}
                         >
@@ -419,7 +419,7 @@ const Onboarding = () => {
                   type="button"
                   onClick={saveTargetAndAdvance}
                   disabled={saving}
-                  className="w-full flex items-center justify-center gap-2 bg-[hsl(var(--primary))] hover:bg-orange-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-orange-200 transition-colors disabled:opacity-60"
+                  className="w-full flex items-center justify-center gap-2 bg-[#F97316] hover:bg-orange-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-orange-200 transition-colors disabled:opacity-60"
                 >
                   {saving ? "Saving..." : "Continue"}
                   <ArrowRight className="w-5 h-5" />
@@ -440,11 +440,11 @@ const Onboarding = () => {
                 {/* Icon badge */}
                 <div className="flex justify-center">
                   <div className="relative">
-                    <div className="w-20 h-20 rounded-full bg-[hsl(var(--primary))]/10 flex items-center justify-center">
-                      <Heart className="w-8 h-8 text-[hsl(var(--primary))]" />
+                    <div className="w-20 h-20 rounded-full bg-[#F97316]/10 flex items-center justify-center">
+                      <Heart className="w-8 h-8 text-[#F97316]" />
                     </div>
-                    <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-[hsl(var(--primary))]/15 flex items-center justify-center">
-                      <BadgeCheck className="w-4 h-4 text-[hsl(var(--primary))]" />
+                    <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-[#F97316]/15 flex items-center justify-center">
+                      <BadgeCheck className="w-4 h-4 text-[#F97316]" />
                     </div>
                   </div>
                 </div>
@@ -494,7 +494,7 @@ const Onboarding = () => {
                     }
                   }}
                   disabled={saving}
-                  className="w-full flex items-center justify-center gap-2 bg-[hsl(var(--primary))] hover:bg-orange-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-orange-200 transition-colors disabled:opacity-60"
+                  className="w-full flex items-center justify-center gap-2 bg-[#F97316] hover:bg-orange-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-orange-200 transition-colors disabled:opacity-60"
                 >
                   {saving ? "Starting..." : "Start building my profile"}
                   <ArrowRight className="w-5 h-5" />
@@ -502,7 +502,7 @@ const Onboarding = () => {
 
                 {/* Footer */}
                 <p className="text-center text-xs text-slate-400">
-                  Step 3 of 4 · <span className="text-[hsl(var(--primary))]">Community & Vision</span>
+                  Step 3 of 4 · <span className="text-[#F97316]">Community & Vision</span>
                 </p>
               </div>
             </div>

@@ -96,7 +96,7 @@ const CampaignBanner = ({
               onClick={handleCreate}
               disabled={creating}
               size="lg"
-              className="bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary)/0.9)] text-primary-foreground font-semibold text-base px-6"
+              className="bg-[#F97316] hover:bg-[#EA6C12] text-primary-foreground font-semibold text-base px-6"
             >
               {creating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
               Build my campaign <ArrowRight className="h-4 w-4 ml-2" />
