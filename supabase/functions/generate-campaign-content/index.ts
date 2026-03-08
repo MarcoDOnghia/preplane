@@ -80,6 +80,18 @@ Instructions:
 - Close: Express genuine enthusiasm and next steps
 - Sound professional but human — no corporate boilerplate
 - Use the job description context to tailor every sentence`,
+
+  linkedin_angles: `You are a career strategist helping a student figure out what to post on LinkedIn about a proof-of-work project they completed.
+
+Instructions:
+- Suggest exactly 3 specific angles for a LinkedIn post, based on the proof of work they built
+- Each angle should be a concrete, one-sentence description of what to write about
+- Make them specific to this particular project — not generic advice
+- The angles should focus on: (1) the problem they explored and what they discovered, (2) what they learned about the industry or domain, (3) a surprising insight or finding from the work
+- Do NOT write the post for them — just suggest the angle
+- Tone: practical and encouraging
+
+You MUST call the generate_content function with your output.`,
 };
 
 serve(async (req) => {

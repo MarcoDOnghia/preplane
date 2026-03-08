@@ -236,6 +236,10 @@ const Campaign = () => {
         const structured = JSON.stringify(data);
         setProofSuggestion(structured);
         await updateCampaign({ proof_suggestion: structured });
+      } else if (contentType === "linkedin_angles" && data.angles) {
+        const anglesJson = JSON.stringify(data.angles);
+        await updateCampaign({ linkedin_angles: anglesJson } as any);
+        setCampaign((prev) => prev ? { ...prev, linkedin_angles: anglesJson } : prev);
       } else if (contentType === "follow_up") {
         setFollowups({ day3: data.day3 || "", day7: data.day7 || "", day14: data.day14 || "" });
       } else if (contentType === "cover_letter" && data.content) {
