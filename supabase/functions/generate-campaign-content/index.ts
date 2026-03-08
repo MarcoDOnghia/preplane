@@ -33,12 +33,15 @@ Instructions:
 - This is NOT a cover letter, NOT a formal email
 - It's a LinkedIn connection request or DM — max 300 characters ideally, absolutely no more than 500
 - If the student has completed a proof of work project, LEAD with that — mention the project title and what it shows
+- If the student has posted about it on LinkedIn, REFERENCE that post — e.g. "I posted about [topic] yesterday"
+- The ideal structure: "Hey [name], I posted about [topic] yesterday and got thinking about [company]. I put together [proof of work title] — would love your take as someone at [company]. Open to a quick chat?"
 - Reference something specific about the company or the person's work
 - Be human, warm, and specific — not generic
 - No buzzwords, no "passionate about leveraging synergies"
 - Sound like a real person, not a template
 
-Example (with proof of work): "Hi [Name], I came across [Company] and got excited about [specific thing]. I actually put together [proof of work title] — [one line on what it shows]. Would love to share it and hear your thoughts."
+Example (with proof of work + LinkedIn post): "Hey [Name], I posted about [topic] yesterday and got thinking about [Company]. I put together [proof of work title] — would love your take as someone at [Company]. Open to a quick chat?"
+Example (with proof of work, no post): "Hi [Name], I came across [Company] and got excited about [specific thing]. I actually put together [proof of work title] — [one line on what it shows]. Would love to share it and hear your thoughts."
 Example (without proof of work): "Hi [Name], I came across [Company]'s work on [specific thing] and found it really interesting. I'm exploring roles in [field] and would love to learn more about your experience there. Would be great to connect!"`,
 
   proof_of_work: `You are a career strategist and mentor. Suggest ONE specific, achievable proof-of-work project that a candidate could complete to demonstrate fit for this role.
