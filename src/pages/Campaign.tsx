@@ -661,6 +661,81 @@ const Campaign = () => {
               </Button>
             </div>
           </StepCard>
+
+          {/* Step 4.5: LinkedIn Strategy */}
+          <StepCard
+            index={4}
+            step={STEPS[4]}
+            done={campaign.step_linkedin_done}
+            open={openSteps.has(4)}
+            onToggle={() => toggleStep(4)}
+          >
+            <div className="space-y-5">
+              <p className="text-sm italic text-muted-foreground">
+                We could write this for you. We won't. Your story told in your words is 10× more powerful than anything we generate.
+              </p>
+
+              {/* AI-generated angles */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">What to write about</p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => generateContent("linkedin_angles")}
+                    disabled={!!generating || !proofSuggestion}
+                  >
+                    {generating === "linkedin_angles" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
+                    {(() => {
+                      try { return JSON.parse(campaign.linkedin_angles || "null") ? "Regenerate angles" : "Generate angles"; } catch { return "Generate angles"; }
+                    })()}
+                  </Button>
+                </div>
+                {!proofSuggestion && (
+                  <p className="text-xs text-muted-foreground">Complete your proof of work first — we need it to suggest specific angles.</p>
+                )}
+                {(() => {
+                  let angles: string[] | null = null;
+                  try { angles = JSON.parse(campaign.linkedin_angles || "null"); } catch {}
+                  if (!angles) return null;
+                  return (
+                    <ul className="space-y-2">
+                      {angles.map((angle: string, i: number) => (
+                        <li key={i} className="flex items-start gap-2 text-sm">
+                          <span className="mt-0.5 h-5 w-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">{i + 1}</span>
+                          {angle}
+                        </li>
+                      ))}
+                    </ul>
+                  );
+                })()}
+              </div>
+
+              {/* Fixed playbook */}
+              <div className="space-y-3">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">PrepLane's LinkedIn playbook</p>
+                <div className="rounded-lg border bg-muted/30 p-4 space-y-3 text-sm">
+                  <p>✍️ <strong>Write it yourself</strong> — authenticity is detectable. AI-written posts get ignored.</p>
+                  <p>🕐 <strong>Post in real time, never schedule</strong> — scheduled posts get less reach</p>
+                  <p>💬 <strong>Answer every comment within the first hour</strong> — early interaction is gold for the algorithm</p>
+                  <p>🔗 <strong>Put links in the comments, never in the post</strong> — LinkedIn suppresses posts with external links</p>
+                  <p>🏷️ <strong>Use 3–5 relevant hashtags</strong> — no more, no less</p>
+                  <p>👥 <strong>Tag people mentioned in your work</strong> — but only if it adds value, not just for reach</p>
+                  <p>📅 <strong>Post consistently</strong> — once a week minimum, same days if possible</p>
+                  <p>💡 <strong>Leave genuine comments on others' posts daily</strong> — this increases your own reach significantly</p>
+                </div>
+              </div>
+
+              <Button
+                size="sm"
+                variant="default"
+                className="bg-success hover:bg-success/90"
+                onClick={() => updateCampaign({ step_linkedin_done: true } as any)}
+              >
+                <Check className="h-4 w-4 mr-1" /> I've posted it →
+              </Button>
+            </div>
+          </StepCard>
         </div>
 
         {/* Group: Have these ready */}
