@@ -129,7 +129,13 @@ serve(async (req) => {
   "certifications": ["Cert 1"],
   "extras": []
 }
-If a field is missing from the CV, use empty string or empty array. Do NOT fabricate content.`,
+
+ABSOLUTE RULE: Extract ONLY what is explicitly written in the CV text. 
+- If a field is missing from the CV, use empty string or empty array.
+- NEVER fabricate, invent, or infer ANY content — no fake experience, no assumed GPA, no invented skills.
+- If there is no professional experience section, return an empty experience array.
+- If there is no summary/profile section, return an empty string for summary.
+- Copy facts exactly as stated. Do not embellish, quantify, or add context that isn't there.`,
           },
           {
             role: "user",

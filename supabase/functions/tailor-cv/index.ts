@@ -252,7 +252,7 @@ You MUST reformat the user's CV into this EXACT standardized ATS template struct
 [NAME] — Extract full name from CV
 [Contact] — Format as: City ● Email ● Phone (use ● as separator)
 
-PROFILE SUMMARY — Write a 3-line JD-tailored professional summary. Inject 3-4 keywords from the JD naturally. Focus on years of experience, core competencies, and value proposition.
+PROFILE SUMMARY — Write a 3-line JD-tailored professional summary using ONLY facts from the CV. Inject 2-3 keywords from the JD naturally where they truthfully apply. NEVER add GPA, metrics, or qualifications not explicitly stated in the CV.
 
 EDUCATION — Extract all education entries. Include:
   - Degree + Dates on same line
