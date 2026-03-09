@@ -375,7 +375,7 @@ function SuggestionCard({
   onDismiss,
   onUndo,
 }: {
-  suggestion: CvSuggestion & { originalIndex: number };
+  suggestion: CvSuggestion & { originalIndex: number; keywordWarning?: boolean };
   index: number;
   isApplied: boolean;
   onApply: () => void;
@@ -393,6 +393,12 @@ function SuggestionCard({
           {suggestion.priority && (
             <Badge variant="outline" className={`text-xs ${PRIORITY_COLORS[suggestion.priority] || ""}`}>
               {suggestion.priority}
+            </Badge>
+          )}
+          {suggestion.keywordWarning && !isApplied && (
+            <Badge variant="outline" className="text-xs border-amber-400/50 bg-amber-50 text-amber-700">
+              <AlertTriangle className="h-3 w-3 mr-1" />
+              May affect score
             </Badge>
           )}
           <div className="ml-auto flex gap-1.5">
@@ -414,6 +420,12 @@ function SuggestionCard({
         </CardTitle>
       </CardHeader>
       <CardContent>
+        {suggestion.keywordWarning && !isApplied && (
+          <div className="mb-3 rounded-md border border-amber-300/50 bg-amber-50 p-2 text-xs text-amber-800 flex items-start gap-1.5">
+            <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+            ⚠️ This change may slightly reduce your keyword score but improves readability
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className={`rounded-lg p-4 text-sm ${isApplied ? "bg-muted/50 line-through opacity-60" : "bg-muted"}`}>
             <p className="text-xs font-medium text-muted-foreground mb-2">Original</p>
