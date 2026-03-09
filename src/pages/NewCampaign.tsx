@@ -791,9 +791,21 @@ const Index = () => {
     }, 4000);
 
     try {
+      // Session check before AI calls
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({ title: "Your session expired. Please sign in again.", variant: "destructive" });
+        clearInterval(interval);
+        setLoading(false);
+        nav("/onboarding");
+        return;
+      }
+      const authHeaders = { Authorization: `Bearer ${session.access_token}` };
+
       // Fire alignment check in parallel (non-blocking)
       if (targetRole) {
         supabase.functions.invoke("check-alignment", {
+          headers: authHeaders,
           body: { targetRole, jobDescription },
         }).then(({ data: alignData }) => {
           if (alignData && !alignData.skipped && alignData.alignment) {
@@ -803,6 +815,7 @@ const Index = () => {
       }
 
       const { data, error } = await supabase.functions.invoke("tailor-cv", {
+        headers: authHeaders,
         body: { cvContent, jobDescription, tone: "professional" },
       });
       if (error) throw error;
