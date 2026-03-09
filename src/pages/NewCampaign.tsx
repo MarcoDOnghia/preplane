@@ -1046,13 +1046,13 @@ const Index = () => {
               <Button onClick={handleStartBuilding} variant="outline" size="lg" className="flex-1">
                 Start building — I'll be back when it's done
               </Button>
-              <Button onClick={() => setSetupPhase('cv_tailoring')} size="lg" className="flex-1">
+              <Button onClick={handleContinueCampaign} size="lg" className="flex-1">
                 Continue setting up my campaign →
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             </div>
             <p className="text-xs text-center text-muted-foreground">
-              "Start building" creates your campaign and takes you back to the dashboard. Come back when your proof of work is ready.
+              Both options create your campaign. "Start building" takes you to the dashboard. "Continue" takes you straight into your campaign steps.
             </p>
           </div>
         )}
