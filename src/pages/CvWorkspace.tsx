@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import type { TailorResult } from "@/lib/types";
 import { parseCvToModel, cvModelToPlainText, aiParsedCvToModel } from "@/lib/cvDataModel";
 import type { CvDataModel } from "@/lib/cvDataModel";
+import { calculateAtsScore } from "@/lib/atsScore";
 
 // LOADING_STEPS constant
 const LOADING_STEPS = [
