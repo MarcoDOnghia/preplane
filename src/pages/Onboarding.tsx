@@ -379,44 +379,118 @@ const Onboarding = () => {
                         />
                       </div>
 
-                      {/* Card 2 — Location / Company */}
+                      {/* Card 2 — Location (Europe toggle) */}
                       <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
                         <div className="flex items-center gap-3 mb-1">
                           <div className="size-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                            <Building2 className="w-6 h-6 text-blue-600" />
+                            <MapPin className="w-6 h-6 text-blue-600" />
                           </div>
                           <div>
-                            <h3 className="text-lg font-bold text-slate-900">Company Name <span className="text-slate-400 font-normal text-sm ml-1">(Optional)</span></h3>
-                            <p className="text-slate-500 text-sm">Is there a specific company you're targeting?</p>
+                            <h3 className="text-lg font-bold text-slate-900">Location</h3>
+                            <p className="text-slate-500 text-sm">Are you based in Europe?</p>
                           </div>
                         </div>
-                        <input
-                          type="text"
-                          placeholder="e.g. Stripe, Airbnb, or Vercel"
-                          value={targetLocation}
-                          onChange={(e) => setTargetLocation(e.target.value)}
-                          className="w-full h-14 px-4 rounded-xl border border-slate-200 bg-[#F8F7F5] focus:border-[#F97316] focus:ring-[#F97316] focus:ring-2 focus:outline-none text-slate-900 placeholder:text-slate-400 mt-6"
-                        />
+                        <div className="flex gap-3 mt-6">
+                          <button
+                            type="button"
+                            onClick={() => setTargetLocation("Europe")}
+                            className={`flex-1 px-4 py-3.5 rounded-xl text-sm font-medium transition-all ${
+                              targetLocation === "Europe"
+                                ? "border-2 border-[#F97316] text-[#F97316] bg-orange-50 shadow-sm"
+                                : "border border-slate-200 text-slate-600 bg-[#F8F7F5] hover:border-slate-300"
+                            }`}
+                          >
+                            🌍 Yes, I'm in Europe
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setTargetLocation("")}
+                            className={`flex-1 px-4 py-3.5 rounded-xl text-sm font-medium transition-all ${
+                              targetLocation !== "Europe" && targetLocation !== null
+                                ? "border-2 border-[#F97316] text-[#F97316] bg-orange-50 shadow-sm"
+                                : targetLocation === null
+                                  ? "border border-slate-200 text-slate-600 bg-[#F8F7F5] hover:border-slate-300"
+                                  : "border border-slate-200 text-slate-600 bg-[#F8F7F5] hover:border-slate-300"
+                            }`}
+                          >
+                            🌐 No, I'm elsewhere
+                          </button>
+                        </div>
+                        <p className="text-xs text-slate-400 mt-2">
+                          PrepLane is currently optimized for the European market. You can still use it anywhere.
+                        </p>
                       </div>
 
-                      {/* Card 3 — Job Description / Timeline */}
+                      {/* Card 3 — Preferences (optional) */}
                       <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
                         <div className="flex items-center gap-3 mb-1">
                           <div className="size-12 rounded-lg bg-green-100 flex items-center justify-center">
-                            <FileText className="w-6 h-6 text-green-600" />
+                            <Sparkles className="w-6 h-6 text-green-600" />
                           </div>
                           <div>
-                            <h3 className="text-lg font-bold text-slate-900">Job Description</h3>
-                            <p className="text-slate-500 text-sm">Paste the JD to help us personalize your project brief.</p>
+                            <h3 className="text-lg font-bold text-slate-900">Preferences <span className="text-slate-400 font-normal text-sm ml-1">(optional)</span></h3>
+                            <p className="text-slate-500 text-sm">Help us personalize your experience.</p>
                           </div>
                         </div>
-                        <textarea
-                          placeholder="Paste the requirements, responsibilities, and company values here..."
-                          value={targetStart}
-                          onChange={(e) => setTargetStart(e.target.value)}
-                          rows={6}
-                          className="w-full p-4 rounded-xl border border-slate-200 bg-[#F8F7F5] focus:border-[#F97316] focus:ring-[#F97316] focus:ring-2 focus:outline-none resize-none text-slate-900 placeholder:text-slate-400 mt-6"
-                        />
+
+                        {/* Company size preference */}
+                        <div className="mt-6 space-y-3">
+                          <label className="text-sm font-medium text-slate-700">What size company interests you?</label>
+                          <div className="flex flex-wrap gap-2">
+                            {[
+                              { label: "🚀 Early-stage startup", value: "Early-stage startup" },
+                              { label: "📈 Scaleup", value: "Scaleup" },
+                              { label: "🏦 Boutique", value: "Boutique" },
+                              { label: "🏢 Mid-size", value: "Mid-size" },
+                              { label: "🌐 Big Tech/Corporate", value: "Big Tech/Corporate" },
+                            ].map((size) => {
+                              const selected = companySizes.includes(size.value);
+                              return (
+                                <button
+                                  key={size.value}
+                                  type="button"
+                                  onClick={() =>
+                                    setCompanySizes((prev) =>
+                                      selected ? prev.filter((s) => s !== size.value) : [...prev, size.value]
+                                    )
+                                  }
+                                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                                    selected
+                                      ? "border border-[#F97316] text-[#F97316] bg-orange-50"
+                                      : "border border-slate-200 text-slate-600 bg-white hover:border-slate-300"
+                                  }`}
+                                >
+                                  {size.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Timeline preference */}
+                        <div className="mt-6 space-y-3">
+                          <label className="text-sm font-medium text-slate-700">When are you looking to start?</label>
+                          <div className="flex flex-wrap gap-2">
+                            {["Immediately", "In 1-3 months", "In 3-6 months", "Just exploring"].map((option) => (
+                              <button
+                                key={option}
+                                type="button"
+                                onClick={() => setTargetStart(option)}
+                                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                                  targetStart === option
+                                    ? "border border-[#F97316] text-[#F97316] bg-orange-50"
+                                    : "border border-slate-200 text-slate-600 bg-white hover:border-slate-300"
+                                }`}
+                              >
+                                {option}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <p className="text-xs text-slate-400 mt-4">
+                          These help us personalize suggestions in future updates.
+                        </p>
                       </div>
 
                       {/* CTA */}
@@ -426,8 +500,8 @@ const Onboarding = () => {
                         disabled={saving}
                         className="w-fit px-8 py-4 bg-[#F97316] hover:bg-orange-600 text-white font-bold rounded-xl shadow-lg shadow-[#F97316]/20 flex items-center gap-2 transition-all disabled:opacity-60"
                       >
-                        {saving ? "Saving..." : "Generate my proof of work brief"}
-                        <Sparkles className="w-5 h-5" />
+                        {saving ? "Saving..." : "Save target"}
+                        <ArrowRight className="w-5 h-5" />
                       </button>
                     </div>
 
