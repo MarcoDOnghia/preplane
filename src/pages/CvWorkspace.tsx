@@ -692,14 +692,16 @@ const CvWorkspace = () => {
                   </Button>
                 </div>
               )}
-              <CampaignBanner
-                company={lastCompany}
-                role={lastJobTitle}
-                jdText={lastJobDescription}
-                cvPlainText={cvModelToPlainText(cvModel)}
-                matchScore={result.atsAnalysis?.score || 0}
-                coverLetter={result.coverLetterVersions?.[0]?.content || result.coverLetter}
-              />
+              {!campaignId && (
+                <CampaignBanner
+                  company={lastCompany}
+                  role={lastJobTitle}
+                  jdText={lastJobDescription}
+                  cvPlainText={cvModelToPlainText(cvModel)}
+                  matchScore={result.atsAnalysis?.score || 0}
+                  coverLetter={result.coverLetterVersions?.[0]?.content || result.coverLetter}
+                />
+              )}
               <ResultsSection
                 result={result}
                 jobTitle={lastJobTitle}
