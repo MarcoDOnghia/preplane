@@ -271,7 +271,36 @@ const Index = () => {
     }
   };
 
-  // --- Autosave ---
+  const handleContinueCampaign = async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from("campaigns")
+        .insert({
+          user_id: user.id,
+          company: setupCompany.trim() || "General",
+          role: setupRole.trim(),
+          jd_text: setupJd.trim() || "",
+          proof_suggestion: JSON.stringify(proofBrief),
+          proof_in_progress: true,
+          status: "targeting",
+        } as any)
+        .select("id")
+        .single();
+      if (error) {
+        if (error.message?.includes("10 active campaigns")) {
+          toast({ title: "Campaign limit reached", description: "Complete or archive one first.", variant: "destructive" });
+        } else throw error;
+        return;
+      }
+      toast({ title: "Campaign created! Let's keep going." });
+      nav(`/campaign/${data.id}`);
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    }
+  };
+
+
   const saveCvToDb = useCallback(async (model: CvDataModel, applied: number[]) => {
     if (!lastAppIdRef.current) return;
     setSaveStatus("saving");
@@ -1046,13 +1075,13 @@ const Index = () => {
               <Button onClick={handleStartBuilding} variant="outline" size="lg" className="flex-1">
                 Start building — I'll be back when it's done
               </Button>
-              <Button onClick={() => setSetupPhase('cv_tailoring')} size="lg" className="flex-1">
+              <Button onClick={handleContinueCampaign} size="lg" className="flex-1">
                 Continue setting up my campaign →
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             </div>
             <p className="text-xs text-center text-muted-foreground">
-              "Start building" creates your campaign and takes you back to the dashboard. Come back when your proof of work is ready.
+              Both options create your campaign. "Start building" takes you to the dashboard. "Continue" takes you straight into your campaign steps.
             </p>
           </div>
         )}
