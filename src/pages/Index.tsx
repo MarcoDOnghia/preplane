@@ -202,18 +202,18 @@ const Index = () => {
         ) : activeCampaigns.length === 0 && archivedCampaigns.length === 0 ? (
           /* Empty state */
           <div className="bg-white rounded-2xl border border-dashed border-slate-300 p-12 text-center space-y-4">
-            <Target className="h-10 w-10 text-slate-400 mx-auto" />
+            <Lightbulb className="h-10 w-10 text-[#F97316] mx-auto" />
             <div>
-              <h3 className="font-bold text-lg text-slate-900">No campaigns yet</h3>
+              <h3 className="font-bold text-lg text-slate-900">Start by telling us which role you're going after.</h3>
               <p className="text-sm text-slate-500 mt-1">
-                Start by tailoring your CV to a role you actually want.
+                We'll build you a proof of work brief in 60 seconds.
               </p>
             </div>
             <button
               onClick={() => nav("/app/new")}
               className="bg-[#F97316] hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-[#F97316]/20 inline-flex items-center gap-2 transition-colors"
             >
-              Start my first campaign <ArrowRight className="h-4 w-4" />
+              Build my first proof of work <ArrowRight className="h-4 w-4" />
             </button>
           </div>
         ) : (
