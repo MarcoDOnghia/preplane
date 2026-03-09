@@ -769,13 +769,13 @@ const Campaign = () => {
             <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Have these ready</p>
           </div>
 
-          {/* Step 6: Cover letter */}
+          {/* Step 5: Cover letter */}
           <StepCard
-            index={5}
-            step={STEPS[5]}
+            index={4}
+            step={STEPS[4]}
             done={campaign.step_cover_letter_done}
-            open={openSteps.has(5)}
-            onToggle={() => toggleStep(5)}
+            open={openSteps.has(4)}
+            onToggle={() => toggleStep(4)}
           >
             <div className="space-y-3">
               {!coverLetter && (
@@ -805,6 +805,55 @@ const Campaign = () => {
                 />
                 <label htmlFor="cover-done" className="text-sm">Ready to send</label>
               </div>
+            </div>
+          </StepCard>
+
+          {/* Step 6: CV ready */}
+          <StepCard
+            index={5}
+            step={STEPS[5]}
+            done={campaign.step_cv_done}
+            open={openSteps.has(5)}
+            onToggle={() => toggleStep(5)}
+          >
+            <div className="space-y-3">
+              {campaign.step_cv_done ? (
+                <>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-muted-foreground">Match Score:</span>
+                    <span className={`text-lg font-bold ${campaign.match_score >= 80 ? "text-success" : campaign.match_score >= 60 ? "text-yellow-500" : "text-destructive"}`}>
+                      {campaign.match_score}%
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Your CV has been tailored for this role.</p>
+                  <Collapsible>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="outline" size="sm">View / Edit tailored CV</Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-3">
+                      <div className="bg-muted rounded-lg p-4 text-xs whitespace-pre-wrap max-h-[300px] overflow-auto">
+                        {campaign.cv_version || "No CV content saved."}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">Tailor your CV to match this role's requirements.</p>
+                  <Button
+                    onClick={() => {
+                      const params = new URLSearchParams();
+                      params.set("role", campaign.role);
+                      params.set("company", campaign.company);
+                      if (campaign.jd_text) params.set("jd", campaign.jd_text);
+                      navigate(`/cv-workspace?${params.toString()}`);
+                    }}
+                  >
+                    <FileText className="h-4 w-4 mr-1" />
+                    Tailor my CV for this role →
+                  </Button>
+                </div>
+              )}
             </div>
           </StepCard>
 
