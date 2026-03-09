@@ -154,7 +154,6 @@ const Onboarding = () => {
       localStorage.setItem(TARGET_KEY, JSON.stringify({
         target_role: targetRole,
         target_location: targetLocation,
-        target_start: targetStart,
       }));
       setStep(3);
     }
