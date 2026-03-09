@@ -242,7 +242,7 @@ If a field is missing from the CV, use empty string or empty array. Do NOT fabri
   } catch (e) {
     console.error("parse-cv error:", e);
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Something went wrong. Please try again." }),
+      JSON.stringify({ error: "Something went wrong. Please try again." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

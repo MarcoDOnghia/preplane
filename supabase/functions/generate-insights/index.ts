@@ -183,7 +183,7 @@ You MUST call the provide_insights function with your analysis.`;
   } catch (error) {
     console.error("generate-insights error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ error: "Something went wrong. Please try again." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

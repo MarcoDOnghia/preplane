@@ -205,7 +205,7 @@ First classify "${keyword}" as a tool/software (Type A) or skill/competency (Typ
   } catch (error) {
     console.error("generate-keyword-bullet error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Something went wrong. Please try again." }),
+      JSON.stringify({ error: "Something went wrong. Please try again." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
