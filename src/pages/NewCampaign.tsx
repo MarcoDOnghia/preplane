@@ -465,6 +465,14 @@ const Index = () => {
     const currentModel = cvModelRef.current;
     if (!result || !currentModel) return;
     const s = result.cvSuggestions[index];
+
+    // FIX 3: Calculate score before applying
+    const aiKeywords = [...(result.atsAnalysis?.keywordsFound || []), ...(result.atsAnalysis?.keywordsMissing || [])];
+    const jd = lastJobDescription || "";
+    const scoreBefore = jd
+      ? calculateAtsScore(cvModelToPlainText(currentModel), jd, aiKeywords).score
+      : null;
+
     undoStackRef.current = [...undoStackRef.current.slice(-19), currentModel];
     const newModel = applySuggestionToModel(currentModel, s.original, s.suggested, s.section);
     const newApplied = [...appliedSuggestions, index];
@@ -472,6 +480,33 @@ const Index = () => {
     setAppliedSuggestions(newApplied);
     setIsDirty(true);
     debouncedSave(newModel, newApplied);
+
+    // FIX 3: Check if score dropped and offer undo
+    if (scoreBefore !== null && jd) {
+      const scoreAfter = calculateAtsScore(cvModelToPlainText(newModel), jd, aiKeywords).score;
+      if (scoreAfter < scoreBefore) {
+        toast({
+          title: `Score dropped from ${scoreBefore} to ${scoreAfter}`,
+          description: "This suggestion reduced your keyword match. Undo?",
+          action: (
+            <ToastAction
+              altText="Undo"
+              onClick={() => {
+                setCvModel(currentModel);
+                setAppliedSuggestions(appliedSuggestions.filter((i) => i !== index));
+                setIsDirty(true);
+                debouncedSave(currentModel, appliedSuggestions.filter((i) => i !== index));
+                toast({ title: "Change undone — score restored" });
+              }}
+            >
+              Undo
+            </ToastAction>
+          ),
+        });
+        return;
+      }
+    }
+
     toast({ title: "✓ Applied", description: `Updated "${s.section}"` });
   };
 
