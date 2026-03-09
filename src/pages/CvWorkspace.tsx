@@ -10,7 +10,8 @@ import AlignmentBanner from "@/components/AlignmentBanner";
 import ApplicationTrackingModal from "@/components/ApplicationTrackingModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Rocket } from "lucide-react";
+import { Rocket, ArrowLeft, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import type { TailorResult } from "@/lib/types";
 import { parseCvToModel, cvModelToPlainText, aiParsedCvToModel } from "@/lib/cvDataModel";
 import type { CvDataModel } from "@/lib/cvDataModel";
@@ -33,6 +34,7 @@ const CvWorkspace = () => {
   const initialRole = searchParams.get("role") || "";
   const initialCompany = searchParams.get("company") || "";
   const initialJd = searchParams.get("jd") || "";
+  const campaignId = searchParams.get("campaign_id") || null;
 
   const [targetRole, setTargetRole] = useState<string | null>(null);
   const [targetLocation, setTargetLocation] = useState<string | null>(null);
@@ -47,7 +49,7 @@ const CvWorkspace = () => {
   const [showTrackingModal, setShowTrackingModal] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [alignmentData, setAlignmentData] = useState<{ alignment: "strong" | "partial" | "weak"; reason: string; targetRole: string } | null>(null);
-
+  const [campaignSynced, setCampaignSynced] = useState(false);
   const [cvModel, setCvModel] = useState<CvDataModel | null>(null);
   const [originalCvModel, setOriginalCvModel] = useState<CvDataModel | null>(null);
   const [preParsedModel, setPreParsedModel] = useState<CvDataModel | null>(null);
@@ -565,6 +567,28 @@ const CvWorkspace = () => {
       } as any).select("id").single();
 
       if (inserted) lastAppIdRef.current = inserted.id;
+
+      // Sync results back to campaign if accessed from one
+      if (campaignId && user) {
+        const cvText = cvModelToPlainText(parsed);
+        const matchScore = data.atsAnalysis?.score || 0;
+        const coverLetterText = data.coverLetterVersions?.[0]?.content || data.coverLetter || "";
+
+        const campaignUpdates: Record<string, any> = {
+          step_cv_done: true,
+          match_score: matchScore,
+          cv_version: cvText,
+        };
+        if (jobDescription) campaignUpdates.jd_text = jobDescription;
+        if (coverLetterText) {
+          campaignUpdates.cover_letter = coverLetterText;
+          campaignUpdates.step_cover_letter_done = true;
+        }
+
+        await supabase.from("campaigns").update(campaignUpdates).eq("id", campaignId);
+        setCampaignSynced(true);
+      }
+
       toast({ title: "Analysis complete!", description: "Your tailored results are ready." });
     } catch (error: any) {
       toast({ title: "Error", description: error.message || "Something went wrong. Please try again.", variant: "destructive" });
@@ -619,6 +643,18 @@ const CvWorkspace = () => {
                   reason={alignmentData.reason}
                   targetRole={alignmentData.targetRole}
                 />
+              )}
+              {/* Return to campaign banner */}
+              {campaignId && campaignSynced && (
+                <div className="rounded-lg border border-success/30 bg-success/5 px-4 py-3 flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <Check className="h-5 w-5 text-success" />
+                    <p className="text-sm font-medium">CV tailored successfully. Your campaign has been updated.</p>
+                  </div>
+                  <Button size="sm" onClick={() => nav(`/campaign/${campaignId}`)}>
+                    <ArrowLeft className="h-4 w-4 mr-1" /> Return to your campaign →
+                  </Button>
+                </div>
               )}
               <CampaignBanner
                 company={lastCompany}
