@@ -443,70 +443,19 @@ const Campaign = () => {
           </Card>
         )}
 
-        {/* Step 1: CV — stands alone */}
-        <div className="space-y-3">
-          <StepCard
-            index={0}
-            step={STEPS[0]}
-            done={campaign.step_cv_done}
-            open={openSteps.has(0)}
-            onToggle={() => toggleStep(0)}
-          >
-            <div className="space-y-3">
-              {campaign.step_cv_done ? (
-                <>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm text-muted-foreground">Match Score:</span>
-                    <span className={`text-lg font-bold ${campaign.match_score >= 80 ? "text-success" : campaign.match_score >= 60 ? "text-yellow-500" : "text-destructive"}`}>
-                      {campaign.match_score}%
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Your CV has been tailored for this role. You can view the full tailored version below.</p>
-                  <Collapsible>
-                    <CollapsibleTrigger asChild>
-                      <Button variant="outline" size="sm">View / Edit tailored CV</Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="mt-3">
-                      <div className="bg-muted rounded-lg p-4 text-xs whitespace-pre-wrap max-h-[300px] overflow-auto">
-                        {campaign.cv_version || "No CV content saved."}
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-                </>
-              ) : (
-                <div className="space-y-3">
-                  <p className="text-sm text-muted-foreground">No CV tailored yet. Tailor your CV to match this role's requirements.</p>
-                  <Button
-                    onClick={() => {
-                      const params = new URLSearchParams();
-                      params.set("role", campaign.role);
-                      params.set("company", campaign.company);
-                      if (campaign.jd_text) params.set("jd", campaign.jd_text);
-                      navigate(`/cv-workspace?${params.toString()}`);
-                    }}
-                  >
-                    <FileText className="h-4 w-4 mr-1" />
-                    Tailor my CV for this role →
-                  </Button>
-                </div>
-              )}
-            </div>
-          </StepCard>
-        </div>
-
         {/* Group: Do these BEFORE applying */}
         <div className="space-y-3">
           <div className="rounded-lg bg-[hsl(30,100%,97%)] border border-[hsl(30,80%,90%)] px-4 py-2">
             <p className="text-xs font-bold uppercase tracking-wide text-[hsl(30,60%,40%)]">Do these BEFORE applying</p>
           </div>
 
-          {/* Step 2: Build proof of work */}
+          {/* Step 1: Build proof of work */}
           <StepCard
-            index={1}
-            step={STEPS[1]}
+            index={0}
+            step={STEPS[0]}
             done={campaign.step_proof_done}
-            open={openSteps.has(1)}
-            onToggle={() => toggleStep(1)}
+            open={openSteps.has(0)}
+            onToggle={() => toggleStep(0)}
           >
             <div className="space-y-3">
               <Button
