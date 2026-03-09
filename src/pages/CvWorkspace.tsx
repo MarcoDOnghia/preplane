@@ -10,7 +10,7 @@ import AlignmentBanner from "@/components/AlignmentBanner";
 import ApplicationTrackingModal from "@/components/ApplicationTrackingModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Rocket } from "lucide-react";
+import { Rocket, ArrowLeft } from "lucide-react";
 import type { TailorResult } from "@/lib/types";
 import { parseCvToModel, cvModelToPlainText, aiParsedCvToModel } from "@/lib/cvDataModel";
 import type { CvDataModel } from "@/lib/cvDataModel";
