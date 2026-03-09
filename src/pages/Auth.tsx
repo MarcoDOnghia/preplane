@@ -221,7 +221,24 @@ const Auth = () => {
                     </ul>
                   )}
                 </div>
-                {error && <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">{error}</div>}
+                {error && (
+                  <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
+                    {error === "ALREADY_EXISTS" ? (
+                      <>
+                        An account with this email already exists.{" "}
+                        <button
+                          type="button"
+                          className="text-primary hover:underline font-medium"
+                          onClick={() => { setIsLogin(true); setError(null); setTouched({}); }}
+                        >
+                          Sign in instead
+                        </button>
+                      </>
+                    ) : (
+                      error
+                    )}
+                  </div>
+                )}
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "Please wait..." : isLogin ? "Sign In" : "Sign Up"}
                 </Button>
