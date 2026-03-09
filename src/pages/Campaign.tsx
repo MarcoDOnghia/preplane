@@ -702,7 +702,7 @@ const Campaign = () => {
               </Button>
               {!connectionName && !campaign.step_connection_done && (
                 <div className="rounded-lg border border-yellow-300 bg-yellow-50 dark:bg-yellow-950/20 dark:border-yellow-800 px-3 py-2 text-sm text-yellow-800 dark:text-yellow-200 space-y-1">
-                  <p>⚠️ You haven't added a contact yet. Head to Step 4 to add a name and LinkedIn URL — it makes your outreach significantly more personal and effective.</p>
+                  <p>⚠️ You haven't added a contact yet. Head to Step 3 to add a name and LinkedIn URL — it makes your outreach significantly more personal and effective.</p>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
