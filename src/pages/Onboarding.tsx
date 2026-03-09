@@ -900,7 +900,24 @@ const Onboarding = () => {
                         </ul>
                       )}
                     </div>
-                    {authError && <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-600">{authError}</div>}
+                    {authError && (
+                      <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-600">
+                        {authError === "ALREADY_EXISTS" ? (
+                          <>
+                            An account with this email already exists.{" "}
+                            <button
+                              type="button"
+                              className="text-[#F97316] hover:underline font-medium"
+                              onClick={() => { setIsLogin(true); setAuthError(null); setTouched({}); }}
+                            >
+                              Sign in instead
+                            </button>
+                          </>
+                        ) : (
+                          authError
+                        )}
+                      </div>
+                    )}
                     <button
                       type="submit"
                       disabled={authLoading}
