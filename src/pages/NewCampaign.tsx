@@ -19,6 +19,8 @@ import { Loader2, Sparkles, ArrowRight, Lightbulb, Link2, Check } from "lucide-r
 import type { TailorResult } from "@/lib/types";
 import { parseCvToModel, cvModelToPlainText, aiParsedCvToModel } from "@/lib/cvDataModel";
 import type { CvDataModel } from "@/lib/cvDataModel";
+import { calculateAtsScore } from "@/lib/atsScore";
+import { ToastAction } from "@/components/ui/toast";
 
 const LOADING_STEPS = [
   { message: "Analyzing job requirements...", progress: 15 },
