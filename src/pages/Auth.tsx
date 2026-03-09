@@ -83,7 +83,7 @@ const Auth = () => {
         }
         navigate("/app");
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -92,6 +92,12 @@ const Auth = () => {
           },
         });
         if (error) throw error;
+        // Check if email is already registered (empty identities array)
+        if (signUpData?.user?.identities && signUpData.user.identities.length === 0) {
+          setError("ALREADY_EXISTS");
+          setLoading(false);
+          return;
+        }
         navigate(`/verify-email?email=${encodeURIComponent(email)}`);
       }
     } catch (err: any) {
