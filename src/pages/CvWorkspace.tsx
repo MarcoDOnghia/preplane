@@ -566,6 +566,28 @@ const CvWorkspace = () => {
       } as any).select("id").single();
 
       if (inserted) lastAppIdRef.current = inserted.id;
+
+      // Sync results back to campaign if accessed from one
+      if (campaignId && user) {
+        const cvText = cvModelToPlainText(parsed);
+        const matchScore = data.atsAnalysis?.score || 0;
+        const coverLetterText = data.coverLetterVersions?.[0]?.content || data.coverLetter || "";
+
+        const campaignUpdates: Record<string, any> = {
+          step_cv_done: true,
+          match_score: matchScore,
+          cv_version: cvText,
+        };
+        if (jobDescription) campaignUpdates.jd_text = jobDescription;
+        if (coverLetterText) {
+          campaignUpdates.cover_letter = coverLetterText;
+          campaignUpdates.step_cover_letter_done = true;
+        }
+
+        await supabase.from("campaigns").update(campaignUpdates).eq("id", campaignId);
+        setCampaignSynced(true);
+      }
+
       toast({ title: "Analysis complete!", description: "Your tailored results are ready." });
     } catch (error: any) {
       toast({ title: "Error", description: error.message || "Something went wrong. Please try again.", variant: "destructive" });
