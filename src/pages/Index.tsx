@@ -377,7 +377,7 @@ const Index = () => {
                     {/* Campaign strength */}
                     <div className="mb-4">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-bold text-slate-500 uppercase tracking-tight">Campaign strength</span>
+                        <span className="text-xs font-bold text-slate-500 uppercase tracking-tight">Application readiness</span>
                         <span className="text-xs font-bold text-[#F97316]">{strength}%</span>
                       </div>
                       <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
