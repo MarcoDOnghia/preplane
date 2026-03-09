@@ -706,15 +706,15 @@ const Campaign = () => {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      setOpenSteps((prev) => new Set(prev).add(3));
+                      setOpenSteps((prev) => new Set(prev).add(2));
                       setTimeout(() => {
-                        const el = document.getElementById("step-3");
+                        const el = document.getElementById("step-2");
                         if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
                       }, 100);
                     }}
                     className="text-xs text-primary hover:text-primary/80 underline underline-offset-2 font-medium"
                   >
-                    Go to Step 4 →
+                    Go to Step 3 →
                   </button>
                 </div>
               )}
