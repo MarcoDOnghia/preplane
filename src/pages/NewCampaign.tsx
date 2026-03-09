@@ -8,7 +8,7 @@ import CampaignBanner from "@/components/CampaignBanner";
 import AlignmentBanner from "@/components/AlignmentBanner";
 import ApplicationTrackingModal from "@/components/ApplicationTrackingModal";
 import { supabase } from "@/integrations/supabase/client";
-import { getAuthHeader } from "@/lib/auth";
+
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
