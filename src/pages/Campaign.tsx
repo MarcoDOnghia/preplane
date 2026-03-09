@@ -88,14 +88,14 @@ const STATUS_OPTIONS = [
   { value: "rejected", label: "Not This Time", color: "bg-destructive/10 text-destructive border-destructive/20" },
 ];
 
-// Step order: CV → Proof → LinkedIn → Contact → Outreach → Cover letter → Follow-up
+// Step order: Proof → LinkedIn → Contact → Outreach → Cover letter → CV ready → Follow-up
 const STEPS = [
-  { key: "step_cv_done", label: "CV tailored", weight: 18, icon: FileText, subtext: "" },
   { key: "step_proof_done", label: "Build your proof of work", weight: 20, icon: Lightbulb, subtext: "Do this first. It gives you something real to say and something worth posting about." },
   { key: "step_linkedin_done", label: "Post about it on LinkedIn", weight: 5, icon: Users, subtext: "Post before you reach out. Tag the company, mention the space, ask a genuine question. Warm is better than cold." },
   { key: "step_connection_done", label: "Find your contact", weight: 13, icon: Users, subtext: "They may have already seen your post. Now find the right person to reach out to directly." },
   { key: "step_outreach_done", label: "Send outreach", weight: 19, icon: Send, subtext: "Lead with what you built and your LinkedIn post. Ask for feedback or a 15-minute coffee chat — not a job." },
   { key: "step_cover_letter_done", label: "Cover letter", weight: 10, icon: Mail, subtext: "Have this ready for when they ask. Not before." },
+  { key: "step_cv_done", label: "CV ready", weight: 18, icon: FileText, subtext: "Have your CV tailored and ready to send when they ask." },
   { key: "step_followup_done", label: "Follow up", weight: 15, icon: Clock, subtext: "Most people follow up zero times. You follow up three times." },
 ] as const;
 
@@ -396,7 +396,7 @@ const Campaign = () => {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <Target className="h-5 w-5 text-primary" />
-                <span className="font-semibold">Campaign Strength</span>
+                <span className="font-semibold">Application Readiness</span>
               </div>
               <span className={`text-2xl font-bold ${strengthScore >= 80 ? "text-success" : strengthScore >= 50 ? "text-yellow-500" : "text-muted-foreground"}`}>
                 {strengthScore}%
@@ -443,70 +443,19 @@ const Campaign = () => {
           </Card>
         )}
 
-        {/* Step 1: CV — stands alone */}
-        <div className="space-y-3">
-          <StepCard
-            index={0}
-            step={STEPS[0]}
-            done={campaign.step_cv_done}
-            open={openSteps.has(0)}
-            onToggle={() => toggleStep(0)}
-          >
-            <div className="space-y-3">
-              {campaign.step_cv_done ? (
-                <>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm text-muted-foreground">Match Score:</span>
-                    <span className={`text-lg font-bold ${campaign.match_score >= 80 ? "text-success" : campaign.match_score >= 60 ? "text-yellow-500" : "text-destructive"}`}>
-                      {campaign.match_score}%
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Your CV has been tailored for this role. You can view the full tailored version below.</p>
-                  <Collapsible>
-                    <CollapsibleTrigger asChild>
-                      <Button variant="outline" size="sm">View / Edit tailored CV</Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="mt-3">
-                      <div className="bg-muted rounded-lg p-4 text-xs whitespace-pre-wrap max-h-[300px] overflow-auto">
-                        {campaign.cv_version || "No CV content saved."}
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-                </>
-              ) : (
-                <div className="space-y-3">
-                  <p className="text-sm text-muted-foreground">No CV tailored yet. Tailor your CV to match this role's requirements.</p>
-                  <Button
-                    onClick={() => {
-                      const params = new URLSearchParams();
-                      params.set("role", campaign.role);
-                      params.set("company", campaign.company);
-                      if (campaign.jd_text) params.set("jd", campaign.jd_text);
-                      navigate(`/cv-workspace?${params.toString()}`);
-                    }}
-                  >
-                    <FileText className="h-4 w-4 mr-1" />
-                    Tailor my CV for this role →
-                  </Button>
-                </div>
-              )}
-            </div>
-          </StepCard>
-        </div>
-
         {/* Group: Do these BEFORE applying */}
         <div className="space-y-3">
           <div className="rounded-lg bg-[hsl(30,100%,97%)] border border-[hsl(30,80%,90%)] px-4 py-2">
             <p className="text-xs font-bold uppercase tracking-wide text-[hsl(30,60%,40%)]">Do these BEFORE applying</p>
           </div>
 
-          {/* Step 2: Build proof of work */}
+          {/* Step 1: Build proof of work */}
           <StepCard
-            index={1}
-            step={STEPS[1]}
+            index={0}
+            step={STEPS[0]}
             done={campaign.step_proof_done}
-            open={openSteps.has(1)}
-            onToggle={() => toggleStep(1)}
+            open={openSteps.has(0)}
+            onToggle={() => toggleStep(0)}
           >
             <div className="space-y-3">
               <Button
@@ -596,13 +545,13 @@ const Campaign = () => {
             </div>
           </StepCard>
 
-          {/* Step 3: LinkedIn Strategy */}
+          {/* Step 2: LinkedIn Strategy */}
           <StepCard
-            index={2}
-            step={STEPS[2]}
+            index={1}
+            step={STEPS[1]}
             done={campaign.step_linkedin_done}
-            open={openSteps.has(2)}
-            onToggle={() => toggleStep(2)}
+            open={openSteps.has(1)}
+            onToggle={() => toggleStep(1)}
           >
             <div className="space-y-5">
               <p className="text-sm italic text-muted-foreground">
@@ -682,7 +631,7 @@ const Campaign = () => {
                     setTimeout(() => {
                       setOpenSteps((prev) => {
                         const next = new Set(prev);
-                        next.delete(2);
+                        next.delete(1);
                         return next;
                       });
                     }, 1500);
@@ -694,13 +643,13 @@ const Campaign = () => {
             </div>
           </StepCard>
 
-          {/* Step 4: Find your contact */}
+          {/* Step 3: Find your contact */}
           <StepCard
-            index={3}
-            step={STEPS[3]}
+            index={2}
+            step={STEPS[2]}
             done={campaign.step_connection_done}
-            open={openSteps.has(3)}
-            onToggle={() => toggleStep(3)}
+            open={openSteps.has(2)}
+            onToggle={() => toggleStep(2)}
           >
             <div className="space-y-3">
               <div>
@@ -734,13 +683,13 @@ const Campaign = () => {
             </div>
           </StepCard>
 
-          {/* Step 5: Send outreach */}
+          {/* Step 4: Send outreach */}
           <StepCard
-            index={4}
-            step={STEPS[4]}
+            index={3}
+            step={STEPS[3]}
             done={campaign.step_outreach_done}
-            open={openSteps.has(4)}
-            onToggle={() => toggleStep(4)}
+            open={openSteps.has(3)}
+            onToggle={() => toggleStep(3)}
           >
             <div className="space-y-3">
               <Button
@@ -753,19 +702,19 @@ const Campaign = () => {
               </Button>
               {!connectionName && !campaign.step_connection_done && (
                 <div className="rounded-lg border border-yellow-300 bg-yellow-50 dark:bg-yellow-950/20 dark:border-yellow-800 px-3 py-2 text-sm text-yellow-800 dark:text-yellow-200 space-y-1">
-                  <p>⚠️ You haven't added a contact yet. Head to Step 4 to add a name and LinkedIn URL — it makes your outreach significantly more personal and effective.</p>
+                  <p>⚠️ You haven't added a contact yet. Head to Step 3 to add a name and LinkedIn URL — it makes your outreach significantly more personal and effective.</p>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      setOpenSteps((prev) => new Set(prev).add(3));
+                      setOpenSteps((prev) => new Set(prev).add(2));
                       setTimeout(() => {
-                        const el = document.getElementById("step-3");
+                        const el = document.getElementById("step-2");
                         if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
                       }, 100);
                     }}
                     className="text-xs text-primary hover:text-primary/80 underline underline-offset-2 font-medium"
                   >
-                    Go to Step 4 →
+                    Go to Step 3 →
                   </button>
                 </div>
               )}
@@ -820,13 +769,13 @@ const Campaign = () => {
             <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Have these ready</p>
           </div>
 
-          {/* Step 6: Cover letter */}
+          {/* Step 5: Cover letter */}
           <StepCard
-            index={5}
-            step={STEPS[5]}
+            index={4}
+            step={STEPS[4]}
             done={campaign.step_cover_letter_done}
-            open={openSteps.has(5)}
-            onToggle={() => toggleStep(5)}
+            open={openSteps.has(4)}
+            onToggle={() => toggleStep(4)}
           >
             <div className="space-y-3">
               {!coverLetter && (
@@ -856,6 +805,55 @@ const Campaign = () => {
                 />
                 <label htmlFor="cover-done" className="text-sm">Ready to send</label>
               </div>
+            </div>
+          </StepCard>
+
+          {/* Step 6: CV ready */}
+          <StepCard
+            index={5}
+            step={STEPS[5]}
+            done={campaign.step_cv_done}
+            open={openSteps.has(5)}
+            onToggle={() => toggleStep(5)}
+          >
+            <div className="space-y-3">
+              {campaign.step_cv_done ? (
+                <>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-muted-foreground">Match Score:</span>
+                    <span className={`text-lg font-bold ${campaign.match_score >= 80 ? "text-success" : campaign.match_score >= 60 ? "text-yellow-500" : "text-destructive"}`}>
+                      {campaign.match_score}%
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Your CV has been tailored for this role.</p>
+                  <Collapsible>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="outline" size="sm">View / Edit tailored CV</Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-3">
+                      <div className="bg-muted rounded-lg p-4 text-xs whitespace-pre-wrap max-h-[300px] overflow-auto">
+                        {campaign.cv_version || "No CV content saved."}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">Tailor your CV to match this role's requirements.</p>
+                  <Button
+                    onClick={() => {
+                      const params = new URLSearchParams();
+                      params.set("role", campaign.role);
+                      params.set("company", campaign.company);
+                      if (campaign.jd_text) params.set("jd", campaign.jd_text);
+                      navigate(`/cv-workspace?${params.toString()}`);
+                    }}
+                  >
+                    <FileText className="h-4 w-4 mr-1" />
+                    Tailor my CV for this role →
+                  </Button>
+                </div>
+              )}
             </div>
           </StepCard>
 

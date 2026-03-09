@@ -26,7 +26,8 @@ const Header = () => {
 
   const navLinks = [
     { label: "Dashboard", path: "/app", icon: LayoutDashboard },
-    { label: "CV Library", path: "/cv-workspace", icon: FileText },
+    { label: "My Campaigns", path: "/app", icon: Target },
+    { label: "CV Workspace", path: "/cv-workspace", icon: FileText },
     { label: "My Target", path: "/onboarding", icon: Target },
   ];
 

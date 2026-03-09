@@ -16,12 +16,12 @@ const TARGET_KEY = "preplane_onboarding_target";
 const ONBOARDING_KEY = "preplane_onboarding_done";
 
 const STEPS = [
-  { key: "step_cv_done", label: "Tailor CV", weight: 18 },
   { key: "step_proof_done", label: "Build proof of work", weight: 20 },
   { key: "step_linkedin_done", label: "Post on LinkedIn", weight: 5 },
   { key: "step_connection_done", label: "Find contact", weight: 13 },
   { key: "step_outreach_done", label: "Send outreach", weight: 19 },
   { key: "step_cover_letter_done", label: "Cover letter", weight: 10 },
+  { key: "step_cv_done", label: "CV ready", weight: 18 },
   { key: "step_followup_done", label: "Follow up", weight: 15 },
 ] as const;
 
@@ -64,14 +64,14 @@ function getNextStep(c: CampaignRow) {
   if (c.step_linkedin_done && !c.step_connection_done) return "Find your contact — they may have seen your post";
   if (c.step_connection_done && !c.step_outreach_done) return "Your proof of work is ready. Time to reach out.";
   if (c.step_outreach_done && !c.step_followup_done) return "Follow up on your outreach";
-  if (!c.step_cv_done) return "Tailor your CV for this role";
   if (!c.step_cover_letter_done) return "Prepare cover letter";
+  if (!c.step_cv_done) return "Get your CV ready for this role";
   return null;
 }
 
 function getChecklist(c: CampaignRow) {
   const items: { label: string; done: boolean }[] = [];
-  if (c.step_cv_done) items.push({ label: "CV tailored", done: true });
+  if (c.step_cv_done) items.push({ label: "CV ready", done: true });
   if (c.step_proof_done) items.push({ label: "Proof of work done", done: true });
   else if (c.proof_in_progress) items.push({ label: "Proof of work in progress", done: false });
   if (c.step_connection_done) items.push({ label: "Company research complete", done: true });
@@ -176,7 +176,7 @@ const Index = () => {
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">Your campaigns</h1>
-            <p className="text-slate-500 mt-1">Manage and track your job applications</p>
+            <p className="text-slate-500 mt-1">Manage and track your target roles</p>
           </div>
           <button
             onClick={() => nav("/app/new")}
@@ -185,7 +185,7 @@ const Index = () => {
             title={atLimit ? "You have 10 active campaigns. Complete or archive one first." : undefined}
           >
             <PlusCircle className="w-5 h-5" />
-            New Campaign
+            New Target Role
           </button>
         </div>
 
@@ -202,18 +202,18 @@ const Index = () => {
         ) : activeCampaigns.length === 0 && archivedCampaigns.length === 0 ? (
           /* Empty state */
           <div className="bg-white rounded-2xl border border-dashed border-slate-300 p-12 text-center space-y-4">
-            <Target className="h-10 w-10 text-slate-400 mx-auto" />
+            <Lightbulb className="h-10 w-10 text-[#F97316] mx-auto" />
             <div>
-              <h3 className="font-bold text-lg text-slate-900">No campaigns yet</h3>
+              <h3 className="font-bold text-lg text-slate-900">Start by telling us which role you're going after.</h3>
               <p className="text-sm text-slate-500 mt-1">
-                Start by tailoring your CV to a role you actually want.
+                We'll build you a proof of work brief in 60 seconds.
               </p>
             </div>
             <button
               onClick={() => nav("/app/new")}
               className="bg-[#F97316] hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-[#F97316]/20 inline-flex items-center gap-2 transition-colors"
             >
-              Start my first campaign <ArrowRight className="h-4 w-4" />
+              Build my first proof of work <ArrowRight className="h-4 w-4" />
             </button>
           </div>
         ) : (
@@ -377,7 +377,7 @@ const Index = () => {
                     {/* Campaign strength */}
                     <div className="mb-4">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-bold text-slate-500 uppercase tracking-tight">Campaign strength</span>
+                        <span className="text-xs font-bold text-slate-500 uppercase tracking-tight">Application readiness</span>
                         <span className="text-xs font-bold text-[#F97316]">{strength}%</span>
                       </div>
                       <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
