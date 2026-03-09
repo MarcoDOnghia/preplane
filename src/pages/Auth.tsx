@@ -83,7 +83,7 @@ const Auth = () => {
         }
         navigate("/app");
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -92,6 +92,12 @@ const Auth = () => {
           },
         });
         if (error) throw error;
+        // Check if email is already registered (empty identities array)
+        if (signUpData?.user?.identities && signUpData.user.identities.length === 0) {
+          setError("ALREADY_EXISTS");
+          setLoading(false);
+          return;
+        }
         navigate(`/verify-email?email=${encodeURIComponent(email)}`);
       }
     } catch (err: any) {
@@ -215,7 +221,24 @@ const Auth = () => {
                     </ul>
                   )}
                 </div>
-                {error && <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">{error}</div>}
+                {error && (
+                  <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
+                    {error === "ALREADY_EXISTS" ? (
+                      <>
+                        An account with this email already exists.{" "}
+                        <button
+                          type="button"
+                          className="text-primary hover:underline font-medium"
+                          onClick={() => { setIsLogin(true); setError(null); setTouched({}); }}
+                        >
+                          Sign in instead
+                        </button>
+                      </>
+                    ) : (
+                      error
+                    )}
+                  </div>
+                )}
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "Please wait..." : isLogin ? "Sign In" : "Sign Up"}
                 </Button>

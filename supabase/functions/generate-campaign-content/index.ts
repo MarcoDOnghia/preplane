@@ -69,11 +69,28 @@ Instructions:
 - It should be impressive but achievable for a motivated student
 - Tone: practical, encouraging, like a mentor giving a real brief
 
+IMPORTANT RULE FOR TOOLS: Only suggest tools that are free or freemium. The user is a student with no budget. Never suggest paid tools like Bloomberg Terminal, Capital IQ, Pitchbook, or any tool that requires a paid subscription.
+
+For each tool you suggest, prefer these free alternatives:
+- Data/Research: Crunchbase (free tier), Companies House, SEC EDGAR, annual reports, Google Scholar, Statista (free tier)
+- Spreadsheets/Modeling: Google Sheets, Microsoft Excel (free via university license or online)
+- Documents/Presentations: Google Docs, Google Slides, Notion (free tier), Canva (free tier)
+- Design: Canva, Figma (free tier)
+- AI assistance: ChatGPT (free tier), Claude (free tier)
+- CRM/Outreach: LinkedIn (free), Hunter.io (free tier), Apollo.io (free tier)
+- Project management: Notion (free), Trello (free)
+- Analytics: Google Analytics (free), Google Trends (free)
+- Finance: Yahoo Finance (free), Google Finance (free), SEC EDGAR (free)
+
+If a premium tool is genuinely the industry standard and has a free trial, mention it in brackets as: [free trial available] — never as the primary recommendation.
+
+The student should be able to complete the entire proof of work with zero financial investment. This is non-negotiable.
+
 You MUST return structured JSON with these fields:
 - title: A punchy project title
 - why_this_works: One sentence explaining why this project demonstrates fit for this specific role
 - what_to_build: Array of 3-4 bullet points describing exactly what the deliverable should include (specific, not vague)
-- tools_to_use: Array of 3-5 specific tools relevant to the project (e.g. Google Sheets, Notion, Canva, ChatGPT, LinkedIn Sales Navigator)
+- tools_to_use: Array of 3-5 specific tools relevant to the project (e.g. Google Sheets, Notion, Canva, ChatGPT)
 - time_estimate: Realistic time estimate string (e.g. "2-3 hours")
 - ai_prompt: A complete, ready-to-use prompt the student can paste into ChatGPT or Claude to get started. The prompt should reference their background and the specific role/company.`,
 

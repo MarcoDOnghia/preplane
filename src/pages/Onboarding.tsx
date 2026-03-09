@@ -185,7 +185,7 @@ const Onboarding = () => {
         // Save target + complete for returning login
         // The useEffect on user will handle it
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -194,6 +194,12 @@ const Onboarding = () => {
           },
         });
         if (error) throw error;
+        // Check if email is already registered (empty identities array)
+        if (signUpData?.user?.identities && signUpData.user.identities.length === 0) {
+          setAuthError("ALREADY_EXISTS");
+          setAuthLoading(false);
+          return;
+        }
         // Store target data in localStorage so we can save after email verification
         localStorage.setItem(TARGET_KEY, JSON.stringify({
           target_role: targetRole,
@@ -651,15 +657,18 @@ const Onboarding = () => {
 
                 {/* Heading */}
                 <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight text-center">
-                  Help me build this for you.
+                  Help me build this WITH you.
                 </h1>
 
                 {/* Body */}
                 <p className="text-slate-500 text-base md:text-lg leading-relaxed text-center">
-                  PrepLane is being built in public by a 20-year-old who faced the exact same problem. If you have ideas, frustrations, or features you wish existed — I genuinely want to hear from you. Early users are shaping what this becomes.
+                  PrepLane is being built by a 20 year old student who faced the exact same problem.
                 </p>
                 <p className="text-slate-500 text-base md:text-lg leading-relaxed text-center">
-                  Oh, and PrepLane is completely free. No credit card, no trial, no catch. Just a tool I wish existed when I started applying.
+                  If you have ideas, frustrations, or features you wish existed — I genuinely want to hear from you. Early users are shaping what this becomes.
+                </p>
+                <p className="text-slate-500 text-base md:text-lg leading-relaxed text-center">
+                  Oh, and PrepLane is completely free. No credit card, no trial, no catch. Just a tool I wished existed when I started applying.
                 </p>
 
                 {/* Action buttons */}
@@ -891,7 +900,24 @@ const Onboarding = () => {
                         </ul>
                       )}
                     </div>
-                    {authError && <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-600">{authError}</div>}
+                    {authError && (
+                      <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-600">
+                        {authError === "ALREADY_EXISTS" ? (
+                          <>
+                            An account with this email already exists.{" "}
+                            <button
+                              type="button"
+                              className="text-[#F97316] hover:underline font-medium"
+                              onClick={() => { setIsLogin(true); setAuthError(null); setTouched({}); }}
+                            >
+                              Sign in instead
+                            </button>
+                          </>
+                        ) : (
+                          authError
+                        )}
+                      </div>
+                    )}
                     <button
                       type="submit"
                       disabled={authLoading}
