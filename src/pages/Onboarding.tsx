@@ -21,6 +21,20 @@ const passwordRules = [
   { label: "At least one number", test: (p: string) => /[0-9]/.test(p) },
 ];
 
+const SignInBanner = () => {
+  const navigate = useNavigate();
+  return (
+    <div className="w-full flex justify-center pt-4 pb-2 px-4">
+      <button
+        onClick={() => navigate("/auth")}
+        className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-[#F97316] text-[#F97316] text-sm font-medium hover:bg-[#F97316]/5 transition-colors"
+      >
+        Already a PrepLane user? Sign in →
+      </button>
+    </div>
+  );
+};
+
 const Onboarding = () => {
   const [searchParams] = useSearchParams();
   const initialStep = searchParams.get("step") === "4" ? 4 : 1;
@@ -262,10 +276,12 @@ const Onboarding = () => {
               <span className="text-xl font-bold tracking-tight text-slate-900">PrepLane</span>
            </div>
           <div className="flex items-center gap-3">
-            <button className="p-2 rounded-full bg-[#F97316]/10 text-slate-600 hover:bg-[#F97316]/20 transition-colors">
-              <Search className="w-5 h-5" />
+            <button
+              onClick={() => navigate("/auth")}
+              className="px-4 py-2 rounded-full border border-[#F97316] text-[#F97316] text-sm font-medium hover:bg-[#F97316]/5 transition-colors"
+            >
+              Already a PrepLane user? Sign in →
             </button>
-            <div className="w-9 h-9 rounded-full bg-slate-200" />
           </div>
         </header>
 
@@ -314,6 +330,9 @@ const Onboarding = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {/* Sign in banner for all steps */}
+      {!user && <SignInBanner />}
+
       {/* Progress indicator */}
       <div className="w-full flex justify-center pt-8 pb-4">
         <div className="flex items-center gap-2">
@@ -657,7 +676,7 @@ const Onboarding = () => {
 
                 {/* Heading */}
                 <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight text-center">
-                  Help me build this WITH you.
+                  Help me build this with you
                 </h1>
 
                 {/* Body */}
@@ -665,7 +684,7 @@ const Onboarding = () => {
                   PrepLane is being built by a 20 year old student who faced the exact same problem.
                 </p>
                 <p className="text-slate-500 text-base md:text-lg leading-relaxed text-center">
-                  If you have ideas, frustrations, or features you wish existed — I genuinely want to hear from you. Early users are shaping what this becomes.
+                  If you have ideas, frustrations, or features you wish existed I genuinely want to hear from you. Early users are shaping what this becomes.
                 </p>
                 <p className="text-slate-500 text-base md:text-lg leading-relaxed text-center">
                   Oh, and PrepLane is completely free. No credit card, no trial, no catch. Just a tool I wished existed when I started applying.
