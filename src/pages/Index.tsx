@@ -176,7 +176,7 @@ const Index = () => {
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">Your campaigns</h1>
-            <p className="text-slate-500 mt-1">Manage and track your job applications</p>
+            <p className="text-slate-500 mt-1">Manage and track your target roles</p>
           </div>
           <button
             onClick={() => nav("/app/new")}
@@ -185,7 +185,7 @@ const Index = () => {
             title={atLimit ? "You have 10 active campaigns. Complete or archive one first." : undefined}
           >
             <PlusCircle className="w-5 h-5" />
-            New Campaign
+            New Target Role
           </button>
         </div>
 
