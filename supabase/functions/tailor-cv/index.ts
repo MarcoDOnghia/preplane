@@ -175,6 +175,7 @@ Only extract keywords from sections relevant to candidate requirements.
    - Identify formatting issues (tables, columns, special characters, images, headers that ATS can't parse)
    - Provide 3 "quick wins" - easiest improvements for better ATS score
 3. Suggest specific CV modifications with original text, suggested replacement, reasoning, priority (high/medium/low), and impact score (1-10).
+   CRITICAL KEYWORD PRESERVATION RULE: Never remove or replace exact keywords that appear in the job description. If a bullet point contains a keyword match, preserve that exact keyword or phrase in the rewritten version. You may rephrase around it but the keyword must survive the edit. Improving language must never come at the cost of keyword density. Before finalizing each suggestion, verify that every JD keyword present in the original text also appears in the suggested text.
    CRITICAL for experience bullet suggestions: Do NOT prefix the suggested bullet text with the job title, role name, or company name (e.g. never start with "Head of VC & Startups:" or "Sales Manager —"). Start the bullet directly with an action verb.
 4. Generate 3 cover letter versions following these STRICT rules:
 
