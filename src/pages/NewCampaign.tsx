@@ -156,9 +156,18 @@ const Index = () => {
 
   const handleExtractJdUrl = async () => {
     if (!setupJd.trim()) return;
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast({ title: "Your session expired. Please sign in again.", variant: "destructive" });
+      nav("/onboarding");
+      return;
+    }
+
     setJdExtractingUrl(true);
     try {
       const { data, error } = await supabase.functions.invoke("extract-jd-from-url", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
         body: { url: setupJd.trim() },
       });
       if (error) throw error;
