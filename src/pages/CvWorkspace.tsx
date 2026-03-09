@@ -48,7 +48,7 @@ const CvWorkspace = () => {
   const [showTrackingModal, setShowTrackingModal] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [alignmentData, setAlignmentData] = useState<{ alignment: "strong" | "partial" | "weak"; reason: string; targetRole: string } | null>(null);
-
+  const [campaignSynced, setCampaignSynced] = useState(false);
   const [cvModel, setCvModel] = useState<CvDataModel | null>(null);
   const [originalCvModel, setOriginalCvModel] = useState<CvDataModel | null>(null);
   const [preParsedModel, setPreParsedModel] = useState<CvDataModel | null>(null);
