@@ -973,7 +973,7 @@ const Index = () => {
                 {setupRole
                   ? `Build your case for ${setupRole}${setupCompany ? ` at ${setupCompany}` : ''}`
                   : targetRole
-                    ? `Build your case for ${targetRole}${targetLocation ? ` in ${targetLocation}` : ''}`
+                    ? `Build your case for ${targetRole}`
                     : 'Build your case'}
               </h1>
               <p className="text-muted-foreground text-sm">

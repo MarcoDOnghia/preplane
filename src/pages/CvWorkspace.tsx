@@ -539,7 +539,7 @@ const CvWorkspace = () => {
   const headingText = initialRole
     ? `Tailor your CV for ${initialRole}${initialCompany ? ` at ${initialCompany}` : ''}`
     : targetRole
-      ? `Tailor your CV for ${targetRole}${targetLocation ? ` in ${targetLocation}` : ''}`
+      ? `Tailor your CV for ${targetRole}`
       : 'Tailor your CV';
 
   return (
