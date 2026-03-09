@@ -460,7 +460,7 @@ You MUST call the tailor_application function with your analysis.`;
   } catch (error) {
     console.error("tailor-cv error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Something went wrong. Please try again." }),
+      JSON.stringify({ error: "Something went wrong. Please try again." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

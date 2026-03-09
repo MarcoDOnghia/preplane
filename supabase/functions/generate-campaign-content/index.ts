@@ -321,7 +321,7 @@ ${proofOfWorkDetails ? `\nProof of Work Details:\n${proofOfWorkDetails}` : ""}
   } catch (error) {
     console.error("generate-campaign-content error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Something went wrong. Please try again." }),
+      JSON.stringify({ error: "Something went wrong. Please try again." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
