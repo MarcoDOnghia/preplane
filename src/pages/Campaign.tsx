@@ -158,6 +158,13 @@ const Campaign = () => {
     setProofSuggestion(c.proof_suggestion || "");
     setCoverLetter(c.cover_letter || "");
     setNotes(c.notes || "");
+
+    // Auto-mark cover letter step done if cover letter exists but step not yet marked
+    if (c.cover_letter && !c.step_cover_letter_done) {
+      await supabase.from("campaigns").update({ step_cover_letter_done: true }).eq("id", id);
+      c.step_cover_letter_done = true;
+    }
+
     // Auto-open the next incomplete step
     const nextIdx = STEPS.findIndex((s) => !c[s.key]);
     if (nextIdx >= 0) setOpenSteps(new Set([nextIdx]));
