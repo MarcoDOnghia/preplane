@@ -261,9 +261,10 @@ EDUCATION — Extract all education entries. Include:
 
 PROFESSIONAL EXPERIENCE — For each role:
   - Format: Role — Company — Dates
-  - Rewrite 3-5 bullets each as: Action verb + JD keyword + quantified result/metric
-  - Example: "Led [JD keyword: due diligence] for [CV data: 5 deals] resulting in [metric]"
-  - Inject 10-12 JD keywords across all experience bullets naturally
+  - Rewrite 3-5 bullets each as: Action verb + JD keyword + context from the ORIGINAL CV
+  - Only include quantified metrics if they appear in the original CV — NEVER invent numbers
+  - Inject JD keywords naturally but ONLY where they truthfully describe what the candidate actually did
+  - If the CV has NO professional experience, do NOT fabricate any. Leave this section empty and add a note that the candidate should build real experience through a Proof of Work project.
 
 TECHNICAL SKILLS — Comma-separated list. Put JD-matching keywords FIRST, then additional skills from CV.
 
