@@ -99,7 +99,7 @@ const CampaignBanner = ({
               className="bg-[#F97316] hover:bg-[#EA6C12] text-primary-foreground font-semibold text-base px-6"
             >
               {creating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-              Build my campaign <ArrowRight className="h-4 w-4 ml-2" />
+              Turn this into a full campaign <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
             <p className="text-xs text-muted-foreground">
               Already applied? You can still build the outreach and follow-up steps.

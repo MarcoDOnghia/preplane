@@ -631,7 +631,7 @@ const Campaign = () => {
                     setTimeout(() => {
                       setOpenSteps((prev) => {
                         const next = new Set(prev);
-                        next.delete(2);
+                        next.delete(1);
                         return next;
                       });
                     }, 1500);
