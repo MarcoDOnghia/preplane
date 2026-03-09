@@ -92,10 +92,10 @@ const STATUS_OPTIONS = [
 const STEPS = [
   { key: "step_proof_done", label: "Build your proof of work", weight: 20, icon: Lightbulb, subtext: "Do this first. It gives you something real to say and something worth posting about." },
   { key: "step_linkedin_done", label: "Post about it on LinkedIn", weight: 5, icon: Users, subtext: "Post before you reach out. Tag the company, mention the space, ask a genuine question. Warm is better than cold." },
-  { key: "step_connection_done", label: "Find your contact", weight: 13, icon: Users, subtext: "They may have already seen your post. Now find the right person to reach out to directly." },
-  { key: "step_outreach_done", label: "Send outreach", weight: 19, icon: Send, subtext: "Lead with what you built and your LinkedIn post. Ask for feedback or a 15-minute coffee chat — not a job." },
-  { key: "step_cover_letter_done", label: "Cover letter", weight: 10, icon: Mail, subtext: "Have this ready for when they ask. Not before." },
-  { key: "step_cv_done", label: "CV ready", weight: 18, icon: FileText, subtext: "Have your CV tailored and ready to send when they ask." },
+  { key: "step_connection_done", label: "Find your contact", weight: 15, icon: Users, subtext: "They may have already seen your post. Now find the right person to reach out to directly." },
+  { key: "step_outreach_done", label: "Send outreach", weight: 20, icon: Send, subtext: "Lead with what you built and your LinkedIn post. Ask for feedback or a 15-minute coffee chat — not a job." },
+  { key: "step_cv_done", label: "CV ready", weight: 15, icon: FileText, subtext: "Have your CV tailored and ready to send when they ask." },
+  { key: "step_cover_letter_done", label: "Cover letter", weight: 10, icon: Mail, subtext: "Have this ready for when they ask. Requires a tailored CV first." },
   { key: "step_followup_done", label: "Follow up", weight: 15, icon: Clock, subtext: "Most people follow up zero times. You follow up three times." },
 ] as const;
 
