@@ -869,9 +869,55 @@ const Campaign = () => {
                     Go to CV ready step →
                   </button>
                 </div>
+              ) : coverLetter ? (
+                <>
+                  {/* Cover letter already exists — pleasant surprise */}
+                  <div className="rounded-lg border border-success/30 bg-success/5 px-4 py-3 mb-3">
+                    <p className="text-sm font-medium text-success flex items-center gap-1.5">
+                      <Check className="h-4 w-4" />
+                      Your cover letter is ready — generated from your tailored CV.
+                    </p>
+                  </div>
+                  <Textarea
+                    value={coverLetter}
+                    onChange={(e) => setCoverLetter(e.target.value)}
+                    onBlur={() => updateCampaign({ cover_letter: coverLetter })}
+                    rows={10}
+                    className="text-sm"
+                  />
+                  <div className="flex gap-2 flex-wrap">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        navigator.clipboard.writeText(coverLetter);
+                        toast({ title: "Copied to clipboard!" });
+                      }}
+                    >
+                      Copy letter
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => generateContent("cover_letter")}
+                      disabled={!!generating}
+                    >
+                      {generating === "cover_letter" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
+                      Regenerate
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="cover-done"
+                      checked={campaign.step_cover_letter_done}
+                      onCheckedChange={(checked) => updateCampaign({ step_cover_letter_done: !!checked, cover_letter: coverLetter || null })}
+                    />
+                    <label htmlFor="cover-done" className="text-sm">Ready to send</label>
+                  </div>
+                </>
               ) : (
                 <>
-                  {/* Checklist showing what's available */}
+                  {/* No cover letter yet — show generate flow */}
                   <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Cover letter inputs</p>
                     <div className="space-y-1.5">
@@ -900,36 +946,14 @@ const Campaign = () => {
                     </div>
                   )}
 
-                  {!coverLetter && (
-                    <Button
-                      size="sm"
-                      onClick={() => generateContent("cover_letter")}
-                      disabled={!!generating || !campaign.jd_text || !campaign.step_cv_done}
-                    >
-                      {generating === "cover_letter" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
-                      Generate cover letter
-                    </Button>
-                  )}
-                  {coverLetter && (
-                    <>
-                      <Textarea
-                        value={coverLetter}
-                        onChange={(e) => setCoverLetter(e.target.value)}
-                        onBlur={() => updateCampaign({ cover_letter: coverLetter })}
-                        rows={10}
-                        className="text-sm"
-                      />
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => generateContent("cover_letter")}
-                        disabled={!!generating || !campaign.jd_text || !campaign.step_cv_done}
-                      >
-                        {generating === "cover_letter" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
-                        Regenerate
-                      </Button>
-                    </>
-                  )}
+                  <Button
+                    size="sm"
+                    onClick={() => generateContent("cover_letter")}
+                    disabled={!!generating || !campaign.jd_text || !campaign.step_cv_done}
+                  >
+                    {generating === "cover_letter" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
+                    Generate cover letter
+                  </Button>
                   <div className="flex items-center gap-2">
                     <Checkbox
                       id="cover-done"
