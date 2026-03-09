@@ -298,8 +298,9 @@ const Index = () => {
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
     }
+  };
 
-  // --- Autosave ---
+
   const saveCvToDb = useCallback(async (model: CvDataModel, applied: number[]) => {
     if (!lastAppIdRef.current) return;
     setSaveStatus("saving");
