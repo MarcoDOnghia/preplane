@@ -545,13 +545,13 @@ const Campaign = () => {
             </div>
           </StepCard>
 
-          {/* Step 3: LinkedIn Strategy */}
+          {/* Step 2: LinkedIn Strategy */}
           <StepCard
-            index={2}
-            step={STEPS[2]}
+            index={1}
+            step={STEPS[1]}
             done={campaign.step_linkedin_done}
-            open={openSteps.has(2)}
-            onToggle={() => toggleStep(2)}
+            open={openSteps.has(1)}
+            onToggle={() => toggleStep(1)}
           >
             <div className="space-y-5">
               <p className="text-sm italic text-muted-foreground">
