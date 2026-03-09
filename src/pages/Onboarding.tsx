@@ -657,15 +657,18 @@ const Onboarding = () => {
 
                 {/* Heading */}
                 <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight text-center">
-                  Help me build this for you.
+                  Help me build this WITH you.
                 </h1>
 
                 {/* Body */}
                 <p className="text-slate-500 text-base md:text-lg leading-relaxed text-center">
-                  PrepLane is being built in public by a 20-year-old who faced the exact same problem. If you have ideas, frustrations, or features you wish existed — I genuinely want to hear from you. Early users are shaping what this becomes.
+                  PrepLane is being built by a 20 year old student who faced the exact same problem.
                 </p>
                 <p className="text-slate-500 text-base md:text-lg leading-relaxed text-center">
-                  Oh, and PrepLane is completely free. No credit card, no trial, no catch. Just a tool I wish existed when I started applying.
+                  If you have ideas, frustrations, or features you wish existed — I genuinely want to hear from you. Early users are shaping what this becomes.
+                </p>
+                <p className="text-slate-500 text-base md:text-lg leading-relaxed text-center">
+                  Oh, and PrepLane is completely free. No credit card, no trial, no catch. Just a tool I wished existed when I started applying.
                 </p>
 
                 {/* Action buttons */}

@@ -922,6 +922,10 @@ const Index = () => {
                       </span>
                     ))}
                   </div>
+                  <p className="flex items-center gap-1 text-xs text-green-600 mt-2">
+                    <Check className="h-3 w-3" />
+                    All tools listed are free or freemium — no budget needed.
+                  </p>
                 </div>
 
                 <div>
