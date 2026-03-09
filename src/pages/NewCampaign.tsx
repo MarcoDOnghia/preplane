@@ -8,7 +8,7 @@ import CampaignBanner from "@/components/CampaignBanner";
 import AlignmentBanner from "@/components/AlignmentBanner";
 import ApplicationTrackingModal from "@/components/ApplicationTrackingModal";
 import { supabase } from "@/integrations/supabase/client";
-import { getAuthHeader } from "@/lib/auth";
+
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
@@ -156,9 +156,18 @@ const Index = () => {
 
   const handleExtractJdUrl = async () => {
     if (!setupJd.trim()) return;
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast({ title: "Your session expired. Please sign in again.", variant: "destructive" });
+      nav("/onboarding");
+      return;
+    }
+
     setJdExtractingUrl(true);
     try {
       const { data, error } = await supabase.functions.invoke("extract-jd-from-url", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
         body: { url: setupJd.trim() },
       });
       if (error) throw error;
@@ -180,19 +189,49 @@ const Index = () => {
       toast({ title: "Please enter a target role", variant: "destructive" });
       return;
     }
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast({ title: "Your session expired. Please sign in again.", variant: "destructive" });
+      nav("/onboarding");
+      return;
+    }
+
     setGeneratingBrief(true);
     try {
-      const headers = await getAuthHeader();
-      const { data, error } = await supabase.functions.invoke("generate-campaign-content", {
-        headers,
-        body: {
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-campaign-content`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({
           contentType: "proof_of_work",
           company: setupCompany.trim() || "a company in this space",
           role: setupRole.trim(),
           jdText: setupJd.trim() || undefined,
-        },
+        }),
       });
-      if (error) throw error;
+
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          toast({ title: "Session expired — please sign in again", variant: "destructive" });
+          nav("/onboarding");
+          return;
+        } else if (response.status === 429) {
+          toast({ title: "You have reached your daily limit for proof of work generation. Come back tomorrow.", variant: "destructive" });
+          return;
+        } else if (response.status === 500) {
+          toast({ title: "Something went wrong on our end. Please try again in a moment.", variant: "destructive" });
+          return;
+        }
+        toast({ title: "Generation failed — please try again.", variant: "destructive" });
+        return;
+      }
+
+      const data = await response.json();
       if (data?.error) throw new Error(data.error);
       setProofBrief(data);
       setSetupPhase('brief');
@@ -752,9 +791,21 @@ const Index = () => {
     }, 4000);
 
     try {
+      // Session check before AI calls
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({ title: "Your session expired. Please sign in again.", variant: "destructive" });
+        clearInterval(interval);
+        setLoading(false);
+        nav("/onboarding");
+        return;
+      }
+      const authHeaders = { Authorization: `Bearer ${session.access_token}` };
+
       // Fire alignment check in parallel (non-blocking)
       if (targetRole) {
         supabase.functions.invoke("check-alignment", {
+          headers: authHeaders,
           body: { targetRole, jobDescription },
         }).then(({ data: alignData }) => {
           if (alignData && !alignData.skipped && alignData.alignment) {
@@ -764,6 +815,7 @@ const Index = () => {
       }
 
       const { data, error } = await supabase.functions.invoke("tailor-cv", {
+        headers: authHeaders,
         body: { cvContent, jobDescription, tone: "professional" },
       });
       if (error) throw error;
