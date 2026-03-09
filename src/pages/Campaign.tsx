@@ -683,13 +683,13 @@ const Campaign = () => {
             </div>
           </StepCard>
 
-          {/* Step 5: Send outreach */}
+          {/* Step 4: Send outreach */}
           <StepCard
-            index={4}
-            step={STEPS[4]}
+            index={3}
+            step={STEPS[3]}
             done={campaign.step_outreach_done}
-            open={openSteps.has(4)}
-            onToggle={() => toggleStep(4)}
+            open={openSteps.has(3)}
+            onToggle={() => toggleStep(3)}
           >
             <div className="space-y-3">
               <Button
