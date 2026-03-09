@@ -35,6 +35,7 @@ import { calculateAtsScore } from "@/lib/atsScore";
 import { cvModelToPlainText, cvModelToHtml } from "@/lib/cvDataModel";
 import type { CvDataModel } from "@/lib/cvDataModel";
 import type { TailorResult, CvSuggestion } from "@/lib/types";
+import { matchKeyword } from "@/lib/atsScore";
 
 interface ResultsSectionProps {
   result: TailorResult;
@@ -148,11 +149,27 @@ const ResultsSection = ({
   };
 
   const visibleSuggestions = useMemo(() => {
+    const allKeywords = [...(liveAts.matchedKeywords || []), ...(liveAts.missingKeywords || [])];
+
     return result.cvSuggestions
-      .map((s, i) => ({ ...s, originalIndex: i }))
+      .map((s, i) => {
+        // FIX 2: Check if applying this suggestion would reduce keyword matches
+        let keywordWarning = false;
+        if (allKeywords.length > 0 && s.original && s.suggested) {
+          const origLower = s.original.toLowerCase();
+          const sugLower = s.suggested.toLowerCase();
+          // Check if any currently matched keyword in original would be lost in suggested
+          for (const kw of allKeywords) {
+            if (matchKeyword(kw, origLower) && !matchKeyword(kw, sugLower)) {
+              keywordWarning = true;
+              break;
+            }
+          }
+        }
+        return { ...s, originalIndex: i, keywordWarning };
+      })
       .filter((_, i) => !dismissedSuggestions.includes(i))
       .filter((s) => {
-        // Issue 5: Skip if overlaps >50% with any applied keyword bullet
         if (appliedKeywordBullets.length > 0) {
           for (const kb of appliedKeywordBullets) {
             if (wordOverlap(s.suggested, kb) > 0.5) return false;
@@ -161,7 +178,7 @@ const ResultsSection = ({
         return true;
       })
       .filter((s) => (priorityFilter ? s.priority === priorityFilter : true));
-  }, [result.cvSuggestions, dismissedSuggestions, priorityFilter, appliedKeywordBullets]);
+  }, [result.cvSuggestions, dismissedSuggestions, priorityFilter, appliedKeywordBullets, liveAts]);
 
   const totalActive = result.cvSuggestions.length - dismissedSuggestions.length;
 
@@ -358,7 +375,7 @@ function SuggestionCard({
   onDismiss,
   onUndo,
 }: {
-  suggestion: CvSuggestion & { originalIndex: number };
+  suggestion: CvSuggestion & { originalIndex: number; keywordWarning?: boolean };
   index: number;
   isApplied: boolean;
   onApply: () => void;
@@ -376,6 +393,12 @@ function SuggestionCard({
           {suggestion.priority && (
             <Badge variant="outline" className={`text-xs ${PRIORITY_COLORS[suggestion.priority] || ""}`}>
               {suggestion.priority}
+            </Badge>
+          )}
+          {suggestion.keywordWarning && !isApplied && (
+            <Badge variant="outline" className="text-xs border-amber-400/50 bg-amber-50 text-amber-700">
+              <AlertTriangle className="h-3 w-3 mr-1" />
+              May affect score
             </Badge>
           )}
           <div className="ml-auto flex gap-1.5">
@@ -397,6 +420,12 @@ function SuggestionCard({
         </CardTitle>
       </CardHeader>
       <CardContent>
+        {suggestion.keywordWarning && !isApplied && (
+          <div className="mb-3 rounded-md border border-amber-300/50 bg-amber-50 p-2 text-xs text-amber-800 flex items-start gap-1.5">
+            <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+            ⚠️ This change may slightly reduce your keyword score but improves readability
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className={`rounded-lg p-4 text-sm ${isApplied ? "bg-muted/50 line-through opacity-60" : "bg-muted"}`}>
             <p className="text-xs font-medium text-muted-foreground mb-2">Original</p>

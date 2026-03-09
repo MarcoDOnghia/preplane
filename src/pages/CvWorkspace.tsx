@@ -12,9 +12,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Rocket, ArrowLeft, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ToastAction } from "@/components/ui/toast";
 import type { TailorResult } from "@/lib/types";
 import { parseCvToModel, cvModelToPlainText, aiParsedCvToModel } from "@/lib/cvDataModel";
 import type { CvDataModel } from "@/lib/cvDataModel";
+import { calculateAtsScore } from "@/lib/atsScore";
 
 // LOADING_STEPS constant
 const LOADING_STEPS = [
@@ -272,6 +274,13 @@ const CvWorkspace = () => {
     const currentModel = cvModelRef.current;
     if (!result || !currentModel) return;
     const s = result.cvSuggestions[index];
+
+    // FIX 3: Calculate score before applying
+    const aiKeywords = [...(result.atsAnalysis?.keywordsFound || []), ...(result.atsAnalysis?.keywordsMissing || [])];
+    const scoreBefore = lastJobDescription
+      ? calculateAtsScore(cvModelToPlainText(currentModel), lastJobDescription, aiKeywords).score
+      : null;
+
     undoStackRef.current = [...undoStackRef.current.slice(-19), currentModel];
     const newModel = applySuggestionToModel(currentModel, s.original, s.suggested, s.section);
     const newApplied = [...appliedSuggestions, index];
@@ -279,6 +288,33 @@ const CvWorkspace = () => {
     setAppliedSuggestions(newApplied);
     setIsDirty(true);
     debouncedSave(newModel, newApplied);
+
+    // FIX 3: Check if score dropped and offer undo
+    if (scoreBefore !== null && lastJobDescription) {
+      const scoreAfter = calculateAtsScore(cvModelToPlainText(newModel), lastJobDescription, aiKeywords).score;
+      if (scoreAfter < scoreBefore) {
+        toast({
+          title: `Score dropped from ${scoreBefore} to ${scoreAfter}`,
+          description: "This suggestion reduced your keyword match. Undo?",
+          action: (
+            <ToastAction
+              altText="Undo"
+              onClick={() => {
+                setCvModel(currentModel);
+                setAppliedSuggestions(appliedSuggestions.filter((i) => i !== index));
+                setIsDirty(true);
+                debouncedSave(currentModel, appliedSuggestions.filter((i) => i !== index));
+                toast({ title: "Change undone — score restored" });
+              }}
+            >
+              Undo
+            </ToastAction>
+          ),
+        });
+        return;
+      }
+    }
+
     toast({ title: "✓ Applied", description: `Updated "${s.section}"` });
   };
 
