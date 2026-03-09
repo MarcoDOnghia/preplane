@@ -297,9 +297,8 @@ const CvWorkspace = () => {
           title: `Score dropped from ${scoreBefore} to ${scoreAfter}`,
           description: "This suggestion reduced your keyword match. Undo?",
           action: (
-            <Button
-              size="sm"
-              variant="outline"
+            <ToastAction
+              altText="Undo"
               onClick={() => {
                 setCvModel(currentModel);
                 setAppliedSuggestions(appliedSuggestions.filter((i) => i !== index));
@@ -309,7 +308,7 @@ const CvWorkspace = () => {
               }}
             >
               Undo
-            </Button>
+            </ToastAction>
           ),
         });
         return;
