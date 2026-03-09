@@ -149,11 +149,27 @@ const ResultsSection = ({
   };
 
   const visibleSuggestions = useMemo(() => {
+    const allKeywords = [...(liveAts.matchedKeywords || []), ...(liveAts.missingKeywords || [])];
+
     return result.cvSuggestions
-      .map((s, i) => ({ ...s, originalIndex: i }))
+      .map((s, i) => {
+        // FIX 2: Check if applying this suggestion would reduce keyword matches
+        let keywordWarning = false;
+        if (allKeywords.length > 0 && s.original && s.suggested) {
+          const origLower = s.original.toLowerCase();
+          const sugLower = s.suggested.toLowerCase();
+          // Check if any currently matched keyword in original would be lost in suggested
+          for (const kw of allKeywords) {
+            if (matchKeyword(kw, origLower) && !matchKeyword(kw, sugLower)) {
+              keywordWarning = true;
+              break;
+            }
+          }
+        }
+        return { ...s, originalIndex: i, keywordWarning };
+      })
       .filter((_, i) => !dismissedSuggestions.includes(i))
       .filter((s) => {
-        // Issue 5: Skip if overlaps >50% with any applied keyword bullet
         if (appliedKeywordBullets.length > 0) {
           for (const kb of appliedKeywordBullets) {
             if (wordOverlap(s.suggested, kb) > 0.5) return false;
@@ -162,7 +178,7 @@ const ResultsSection = ({
         return true;
       })
       .filter((s) => (priorityFilter ? s.priority === priorityFilter : true));
-  }, [result.cvSuggestions, dismissedSuggestions, priorityFilter, appliedKeywordBullets]);
+  }, [result.cvSuggestions, dismissedSuggestions, priorityFilter, appliedKeywordBullets, liveAts]);
 
   const totalActive = result.cvSuggestions.length - dismissedSuggestions.length;
 
