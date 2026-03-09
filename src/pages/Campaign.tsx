@@ -791,6 +791,36 @@ const Campaign = () => {
                       </div>
                     </CollapsibleContent>
                   </Collapsible>
+                  <div className="flex gap-2 flex-wrap">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        const params = new URLSearchParams();
+                        params.set("campaign_id", campaign.id);
+                        params.set("role", campaign.role);
+                        params.set("company", campaign.company);
+                        if (campaign.jd_text) params.set("jd", campaign.jd_text);
+                        navigate(`/cv-workspace?${params.toString()}`);
+                      }}
+                    >
+                      <FileText className="h-4 w-4 mr-1" />
+                      View / Edit in CV Workspace →
+                    </Button>
+                    <button
+                      onClick={() => {
+                        const params = new URLSearchParams();
+                        params.set("campaign_id", campaign.id);
+                        params.set("role", campaign.role);
+                        params.set("company", campaign.company);
+                        if (campaign.jd_text) params.set("jd", campaign.jd_text);
+                        navigate(`/cv-workspace?${params.toString()}`);
+                      }}
+                      className="text-xs text-primary hover:text-primary/80 underline underline-offset-2"
+                    >
+                      Re-tailor CV →
+                    </button>
+                  </div>
                 </>
               ) : (
                 <div className="space-y-3">
@@ -798,6 +828,7 @@ const Campaign = () => {
                   <Button
                     onClick={() => {
                       const params = new URLSearchParams();
+                      params.set("campaign_id", campaign.id);
                       params.set("role", campaign.role);
                       params.set("company", campaign.company);
                       if (campaign.jd_text) params.set("jd", campaign.jd_text);
