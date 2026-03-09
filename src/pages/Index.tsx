@@ -71,7 +71,7 @@ function getNextStep(c: CampaignRow) {
 
 function getChecklist(c: CampaignRow) {
   const items: { label: string; done: boolean }[] = [];
-  if (c.step_cv_done) items.push({ label: "CV tailored", done: true });
+  if (c.step_cv_done) items.push({ label: "CV ready", done: true });
   if (c.step_proof_done) items.push({ label: "Proof of work done", done: true });
   else if (c.proof_in_progress) items.push({ label: "Proof of work in progress", done: false });
   if (c.step_connection_done) items.push({ label: "Company research complete", done: true });
