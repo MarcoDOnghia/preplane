@@ -205,11 +205,7 @@ serve(async (req) => {
     }
 
     // Rate limiting: max 10 outreach messages per day
-    const adminClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
-    const { data: allowed, error: rpcError } = await adminClient.rpc("check_and_increment_usage", {
+    const { data: allowed, error: rpcError } = await supabaseClient.rpc("check_and_increment_usage", {
       _user_id: user.id,
       _feature: "outreach",
       _max_count: 10,
