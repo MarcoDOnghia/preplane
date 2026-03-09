@@ -64,8 +64,8 @@ function getNextStep(c: CampaignRow) {
   if (c.step_linkedin_done && !c.step_connection_done) return "Find your contact — they may have seen your post";
   if (c.step_connection_done && !c.step_outreach_done) return "Your proof of work is ready. Time to reach out.";
   if (c.step_outreach_done && !c.step_followup_done) return "Follow up on your outreach";
-  if (!c.step_cv_done) return "Tailor your CV for this role";
   if (!c.step_cover_letter_done) return "Prepare cover letter";
+  if (!c.step_cv_done) return "Get your CV ready for this role";
   return null;
 }
 
