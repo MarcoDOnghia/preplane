@@ -116,7 +116,7 @@ const Onboarding = () => {
       .update({
         target_role: role || null,
         target_location: loc || null,
-        target_start: start || null,
+        target_start: start || null,  
         onboarding_completed: true,
       } as any)
       .eq("user_id", user.id);
