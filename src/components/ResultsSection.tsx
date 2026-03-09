@@ -35,7 +35,7 @@ import { calculateAtsScore } from "@/lib/atsScore";
 import { cvModelToPlainText, cvModelToHtml } from "@/lib/cvDataModel";
 import type { CvDataModel } from "@/lib/cvDataModel";
 import type { TailorResult, CvSuggestion } from "@/lib/types";
-import { matchKeywordInText } from "@/lib/atsScore";
+import { matchKeyword } from "@/lib/atsScore";
 
 interface ResultsSectionProps {
   result: TailorResult;

@@ -36,7 +36,7 @@ const SYNONYMS: Record<string, string[]> = {
  * Check if a keyword (or any of its synonyms) appears in the CV text.
  * Also does partial/fuzzy matching for multi-word keywords.
  */
-function matchKeyword(keyword: string, cvText: string): boolean {
+export function matchKeyword(keyword: string, cvText: string): boolean {
   const kw = keyword.toLowerCase();
 
   // Direct match
