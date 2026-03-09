@@ -92,10 +92,10 @@ const STATUS_OPTIONS = [
 const STEPS = [
   { key: "step_proof_done", label: "Build your proof of work", weight: 20, icon: Lightbulb, subtext: "Do this first. It gives you something real to say and something worth posting about." },
   { key: "step_linkedin_done", label: "Post about it on LinkedIn", weight: 5, icon: Users, subtext: "Post before you reach out. Tag the company, mention the space, ask a genuine question. Warm is better than cold." },
-  { key: "step_connection_done", label: "Find your contact", weight: 13, icon: Users, subtext: "They may have already seen your post. Now find the right person to reach out to directly." },
-  { key: "step_outreach_done", label: "Send outreach", weight: 19, icon: Send, subtext: "Lead with what you built and your LinkedIn post. Ask for feedback or a 15-minute coffee chat — not a job." },
-  { key: "step_cover_letter_done", label: "Cover letter", weight: 10, icon: Mail, subtext: "Have this ready for when they ask. Not before." },
-  { key: "step_cv_done", label: "CV ready", weight: 18, icon: FileText, subtext: "Have your CV tailored and ready to send when they ask." },
+  { key: "step_connection_done", label: "Find your contact", weight: 15, icon: Users, subtext: "They may have already seen your post. Now find the right person to reach out to directly." },
+  { key: "step_outreach_done", label: "Send outreach", weight: 20, icon: Send, subtext: "Lead with what you built and your LinkedIn post. Ask for feedback or a 15-minute coffee chat — not a job." },
+  { key: "step_cv_done", label: "CV ready", weight: 15, icon: FileText, subtext: "Have your CV tailored and ready to send when they ask." },
+  { key: "step_cover_letter_done", label: "Cover letter", weight: 10, icon: Mail, subtext: "Have this ready for when they ask. Requires a tailored CV first." },
   { key: "step_followup_done", label: "Follow up", weight: 15, icon: Clock, subtext: "Most people follow up zero times. You follow up three times." },
 ] as const;
 
@@ -150,12 +150,6 @@ const Campaign = () => {
       return;
     }
     const c = data as any as CampaignData;
-    
-    // Auto-mark cover letter done if a cover letter exists but step is unchecked
-    if (c.cover_letter && !c.step_cover_letter_done) {
-      await supabase.from("campaigns").update({ step_cover_letter_done: true } as any).eq("id", id);
-      c.step_cover_letter_done = true;
-    }
     
     setCampaign(c);
     setConnectionName(c.connection_name || "");
@@ -769,52 +763,13 @@ const Campaign = () => {
             <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Have these ready</p>
           </div>
 
-          {/* Step 5: Cover letter */}
+          {/* Step 5: CV ready */}
           <StepCard
             index={4}
             step={STEPS[4]}
-            done={campaign.step_cover_letter_done}
+            done={campaign.step_cv_done}
             open={openSteps.has(4)}
             onToggle={() => toggleStep(4)}
-          >
-            <div className="space-y-3">
-              {!coverLetter && (
-                <Button
-                  size="sm"
-                  onClick={() => generateContent("cover_letter")}
-                  disabled={!!generating}
-                >
-                  {generating === "cover_letter" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
-                  Generate cover letter
-                </Button>
-              )}
-              {coverLetter && (
-                <Textarea
-                  value={coverLetter}
-                  onChange={(e) => setCoverLetter(e.target.value)}
-                  onBlur={() => updateCampaign({ cover_letter: coverLetter })}
-                  rows={10}
-                  className="text-sm"
-                />
-              )}
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="cover-done"
-                  checked={campaign.step_cover_letter_done}
-                  onCheckedChange={(checked) => updateCampaign({ step_cover_letter_done: !!checked, cover_letter: coverLetter || null })}
-                />
-                <label htmlFor="cover-done" className="text-sm">Ready to send</label>
-              </div>
-            </div>
-          </StepCard>
-
-          {/* Step 6: CV ready */}
-          <StepCard
-            index={5}
-            step={STEPS[5]}
-            done={campaign.step_cv_done}
-            open={openSteps.has(5)}
-            onToggle={() => toggleStep(5)}
           >
             <div className="space-y-3">
               {campaign.step_cv_done ? (
@@ -853,6 +808,106 @@ const Campaign = () => {
                     Tailor my CV for this role →
                   </Button>
                 </div>
+              )}
+            </div>
+          </StepCard>
+
+          {/* Step 6: Cover letter (requires CV to be done first) */}
+          <StepCard
+            index={5}
+            step={STEPS[5]}
+            done={campaign.step_cover_letter_done}
+            open={openSteps.has(5)}
+            onToggle={() => toggleStep(5)}
+          >
+            <div className="space-y-3">
+              {!campaign.step_cv_done ? (
+                <div className="rounded-lg border border-yellow-300 bg-yellow-50 dark:bg-yellow-950/20 dark:border-yellow-800 px-3 py-2 text-sm text-yellow-800 dark:text-yellow-200">
+                  <p>⚠️ Complete CV tailoring first — your cover letter will use your tailored CV content for the best results.</p>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenSteps((prev) => new Set(prev).add(4));
+                      setTimeout(() => {
+                        const el = document.getElementById("step-4");
+                        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }, 100);
+                    }}
+                    className="text-xs text-primary hover:text-primary/80 underline underline-offset-2 font-medium mt-1"
+                  >
+                    Go to CV ready step →
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {/* Checklist showing what's available */}
+                  <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Cover letter inputs</p>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2 text-sm">
+                        {campaign.jd_text ? <Check className="h-4 w-4 text-success" /> : <X className="h-4 w-4 text-destructive" />}
+                        <span className={campaign.jd_text ? "text-foreground" : "text-muted-foreground"}>Job description</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        {campaign.step_cv_done ? <Check className="h-4 w-4 text-success" /> : <X className="h-4 w-4 text-destructive" />}
+                        <span className={campaign.step_cv_done ? "text-foreground" : "text-muted-foreground"}>Tailored CV</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        {campaign.proof_suggestion ? <Check className="h-4 w-4 text-success" /> : <span className="h-4 w-4 rounded-full border border-muted-foreground/30 flex items-center justify-center text-[10px] text-muted-foreground">—</span>}
+                        <span className={campaign.proof_suggestion ? "text-foreground" : "text-muted-foreground"}>Proof of work {!campaign.proof_suggestion && "(optional — improves quality)"}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        {campaign.outreach_message ? <Check className="h-4 w-4 text-success" /> : <span className="h-4 w-4 rounded-full border border-muted-foreground/30 flex items-center justify-center text-[10px] text-muted-foreground">—</span>}
+                        <span className={campaign.outreach_message ? "text-foreground" : "text-muted-foreground"}>Outreach context {!campaign.outreach_message && "(optional — improves quality)"}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {!campaign.jd_text && (
+                    <div className="rounded-lg border border-yellow-300 bg-yellow-50 dark:bg-yellow-950/20 dark:border-yellow-800 px-3 py-2 text-sm text-yellow-800 dark:text-yellow-200">
+                      <p>A job description is needed to generate a targeted cover letter. Add one when creating the campaign.</p>
+                    </div>
+                  )}
+
+                  {!coverLetter && (
+                    <Button
+                      size="sm"
+                      onClick={() => generateContent("cover_letter")}
+                      disabled={!!generating || !campaign.jd_text || !campaign.step_cv_done}
+                    >
+                      {generating === "cover_letter" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
+                      Generate cover letter
+                    </Button>
+                  )}
+                  {coverLetter && (
+                    <>
+                      <Textarea
+                        value={coverLetter}
+                        onChange={(e) => setCoverLetter(e.target.value)}
+                        onBlur={() => updateCampaign({ cover_letter: coverLetter })}
+                        rows={10}
+                        className="text-sm"
+                      />
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => generateContent("cover_letter")}
+                        disabled={!!generating || !campaign.jd_text || !campaign.step_cv_done}
+                      >
+                        {generating === "cover_letter" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
+                        Regenerate
+                      </Button>
+                    </>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="cover-done"
+                      checked={campaign.step_cover_letter_done}
+                      onCheckedChange={(checked) => updateCampaign({ step_cover_letter_done: !!checked, cover_letter: coverLetter || null })}
+                    />
+                    <label htmlFor="cover-done" className="text-sm">Ready to send</label>
+                  </div>
+                </>
               )}
             </div>
           </StepCard>

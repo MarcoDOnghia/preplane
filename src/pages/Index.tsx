@@ -18,10 +18,10 @@ const ONBOARDING_KEY = "preplane_onboarding_done";
 const STEPS = [
   { key: "step_proof_done", label: "Build proof of work", weight: 20 },
   { key: "step_linkedin_done", label: "Post on LinkedIn", weight: 5 },
-  { key: "step_connection_done", label: "Find contact", weight: 13 },
-  { key: "step_outreach_done", label: "Send outreach", weight: 19 },
+  { key: "step_connection_done", label: "Find contact", weight: 15 },
+  { key: "step_outreach_done", label: "Send outreach", weight: 20 },
+  { key: "step_cv_done", label: "CV ready", weight: 15 },
   { key: "step_cover_letter_done", label: "Cover letter", weight: 10 },
-  { key: "step_cv_done", label: "CV ready", weight: 18 },
   { key: "step_followup_done", label: "Follow up", weight: 15 },
 ] as const;
 
@@ -63,9 +63,9 @@ function getNextStep(c: CampaignRow) {
   if (c.step_proof_done && !c.step_linkedin_done) return "Post about your proof of work on LinkedIn";
   if (c.step_linkedin_done && !c.step_connection_done) return "Find your contact — they may have seen your post";
   if (c.step_connection_done && !c.step_outreach_done) return "Your proof of work is ready. Time to reach out.";
-  if (c.step_outreach_done && !c.step_followup_done) return "Follow up on your outreach";
-  if (!c.step_cover_letter_done) return "Prepare cover letter";
   if (!c.step_cv_done) return "Get your CV ready for this role";
+  if (!c.step_cover_letter_done) return "Prepare cover letter";
+  if (c.step_outreach_done && !c.step_followup_done) return "Follow up on your outreach";
   return null;
 }
 
