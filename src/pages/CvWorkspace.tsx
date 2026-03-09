@@ -33,6 +33,7 @@ const CvWorkspace = () => {
   const initialRole = searchParams.get("role") || "";
   const initialCompany = searchParams.get("company") || "";
   const initialJd = searchParams.get("jd") || "";
+  const campaignId = searchParams.get("campaign_id") || null;
 
   const [targetRole, setTargetRole] = useState<string | null>(null);
   const [targetLocation, setTargetLocation] = useState<string | null>(null);
