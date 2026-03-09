@@ -471,11 +471,51 @@ const CvWorkspace = () => {
         }).catch(() => {});
       }
 
-      const { data, error } = await supabase.functions.invoke("tailor-cv", {
-        body: { cvContent, jobDescription, tone: "professional" },
-      });
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
+      // Helper: invoke tailor-cv with retry
+      const invokeWithRetry = async (retries = 1): Promise<any> => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) throw new Error("Please sign in to use this feature.");
+
+        const { data, error } = await supabase.functions.invoke("tailor-cv", {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+          body: { cvContent, jobDescription, tone: "professional" },
+        });
+
+        if (error) {
+          // Parse friendly error messages
+          const errMsg = typeof error === "object" && "message" in error ? (error as any).message : String(error);
+          
+          if (errMsg.includes("429") || errMsg.toLowerCase().includes("rate limit") || errMsg.toLowerCase().includes("daily limit")) {
+            throw new Error("You've used your daily limit for this feature. Come back tomorrow — limits reset at midnight.");
+          }
+          if (errMsg.includes("401") || errMsg.toLowerCase().includes("unauthorized")) {
+            throw new Error("Your session has expired. Please sign out and sign back in.");
+          }
+          
+          // Retry once on generic errors
+          if (retries > 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            return invokeWithRetry(retries - 1);
+          }
+          
+          throw new Error("Something went wrong while analyzing your CV. Please try again in a moment.");
+        }
+
+        if (data?.error) {
+          if (data.error.includes("daily limit") || data.error.includes("limit")) {
+            throw new Error(data.error);
+          }
+          if (retries > 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            return invokeWithRetry(retries - 1);
+          }
+          throw new Error(data.error);
+        }
+
+        return data;
+      };
+
+      const data = await invokeWithRetry(1);
 
       setResult(data);
 
@@ -527,7 +567,7 @@ const CvWorkspace = () => {
       if (inserted) lastAppIdRef.current = inserted.id;
       toast({ title: "Analysis complete!", description: "Your tailored results are ready." });
     } catch (error: any) {
-      toast({ title: "Error", description: error.message || "Something went wrong", variant: "destructive" });
+      toast({ title: "Error", description: error.message || "Something went wrong. Please try again.", variant: "destructive" });
     } finally {
       clearInterval(interval);
       setLoading(false);
