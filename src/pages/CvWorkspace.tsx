@@ -643,6 +643,18 @@ const CvWorkspace = () => {
                   targetRole={alignmentData.targetRole}
                 />
               )}
+              {/* Return to campaign banner */}
+              {campaignId && campaignSynced && (
+                <div className="rounded-lg border border-success/30 bg-success/5 px-4 py-3 flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <Check className="h-5 w-5 text-success" />
+                    <p className="text-sm font-medium">CV tailored successfully. Your campaign has been updated.</p>
+                  </div>
+                  <Button size="sm" onClick={() => nav(`/campaign/${campaignId}`)}>
+                    <ArrowLeft className="h-4 w-4 mr-1" /> Return to your campaign →
+                  </Button>
+                </div>
+              )}
               <CampaignBanner
                 company={lastCompany}
                 role={lastJobTitle}
