@@ -670,7 +670,6 @@ const Onboarding = () => {
                     localStorage.setItem(TARGET_KEY, JSON.stringify({
                       target_role: targetRole,
                       target_location: targetLocation,
-                      target_start: targetStart,
                     }));
                     setAuthLoading(true);
                     const { error } = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
