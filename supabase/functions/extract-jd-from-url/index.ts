@@ -52,11 +52,7 @@ serve(async (req) => {
     }
 
     const { url: rawUrl } = await req.json();
-    const adminClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
-    const { data: allowed, error: rpcError } = await adminClient.rpc(
+    const { data: allowed, error: rpcError } = await supabaseClient.rpc(
       "check_and_increment_usage",
       { _user_id: user.id, _feature: "jd_url_extract", _max_count: 10 }
     );
