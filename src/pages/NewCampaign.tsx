@@ -271,6 +271,34 @@ const Index = () => {
     }
   };
 
+  const handleContinueCampaign = async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from("campaigns")
+        .insert({
+          user_id: user.id,
+          company: setupCompany.trim() || "General",
+          role: setupRole.trim(),
+          jd_text: setupJd.trim() || "",
+          proof_suggestion: JSON.stringify(proofBrief),
+          proof_in_progress: true,
+          status: "targeting",
+        } as any)
+        .select("id")
+        .single();
+      if (error) {
+        if (error.message?.includes("10 active campaigns")) {
+          toast({ title: "Campaign limit reached", description: "Complete or archive one first.", variant: "destructive" });
+        } else throw error;
+        return;
+      }
+      toast({ title: "Campaign created! Let's keep going." });
+      nav(`/campaign/${data.id}`);
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    }
+
   // --- Autosave ---
   const saveCvToDb = useCallback(async (model: CvDataModel, applied: number[]) => {
     if (!lastAppIdRef.current) return;
