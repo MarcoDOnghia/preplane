@@ -185,7 +185,7 @@ const Onboarding = () => {
         // Save target + complete for returning login
         // The useEffect on user will handle it
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -194,6 +194,12 @@ const Onboarding = () => {
           },
         });
         if (error) throw error;
+        // Check if email is already registered (empty identities array)
+        if (signUpData?.user?.identities && signUpData.user.identities.length === 0) {
+          setAuthError("ALREADY_EXISTS");
+          setAuthLoading(false);
+          return;
+        }
         // Store target data in localStorage so we can save after email verification
         localStorage.setItem(TARGET_KEY, JSON.stringify({
           target_role: targetRole,
