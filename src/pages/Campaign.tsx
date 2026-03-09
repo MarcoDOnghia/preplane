@@ -396,7 +396,7 @@ const Campaign = () => {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <Target className="h-5 w-5 text-primary" />
-                <span className="font-semibold">Campaign Strength</span>
+                <span className="font-semibold">Application Readiness</span>
               </div>
               <span className={`text-2xl font-bold ${strengthScore >= 80 ? "text-success" : strengthScore >= 50 ? "text-yellow-500" : "text-muted-foreground"}`}>
                 {strengthScore}%
