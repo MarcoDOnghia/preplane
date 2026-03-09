@@ -136,7 +136,6 @@ const Onboarding = () => {
         .update({
           target_role: targetRole || null,
           target_location: targetLocation || null,
-          target_start: targetStart || null,
         } as any)
         .eq("user_id", user.id);
       setSaving(false);
