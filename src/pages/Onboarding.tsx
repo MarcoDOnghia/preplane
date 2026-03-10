@@ -124,15 +124,17 @@ const Onboarding = () => {
     // Load from localStorage if component state is empty
     const role = targetRole || (() => { try { return JSON.parse(localStorage.getItem(TARGET_KEY) || "{}").target_role; } catch { return null; } })();
     const loc = targetLocation || (() => { try { return JSON.parse(localStorage.getItem(TARGET_KEY) || "{}").target_location; } catch { return null; } })();
-    const start = (() => { try { return JSON.parse(localStorage.getItem(TARGET_KEY) || "{}").target_start; } catch { return null; } })();
+    const start = targetStart || (() => { try { return JSON.parse(localStorage.getItem(TARGET_KEY) || "{}").target_start; } catch { return null; } })();
+
+    // Only update fields that have actual values — never overwrite existing data with null
+    const updates: Record<string, any> = { onboarding_completed: true };
+    if (role) updates.target_role = role;
+    if (loc) updates.target_location = loc;
+    if (start) updates.target_start = start;
+
     await supabase
       .from("profiles")
-      .update({
-        target_role: role || null,
-        target_location: loc || null,
-        target_start: start || null,  
-        onboarding_completed: true,
-      } as any)
+      .update(updates)
       .eq("user_id", user.id);
     // Clean up localStorage
     localStorage.removeItem(TARGET_KEY);
