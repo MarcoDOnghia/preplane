@@ -30,7 +30,47 @@ const SYNONYMS: Record<string, string[]> = {
   // Experience
   "financial analyst": ["financial analysis", "finance analyst"],
   controller: ["financial controller", "management control", "controllo di gestione"],
+  // Semantic groupings for common phrases
+  "english fluency": ["english", "fluent in english", "fluent english", "english proficient", "english proficiency", "native english", "c1 english", "c2 english", "ielts", "toefl", "english (native)", "english (fluent)", "english (c1)", "english (c2)", "english (b2)"],
+  "onboarding team members": ["onboarding", "onboard", "training team", "training new", "managing team", "team training", "mentoring", "coached", "ramping up"],
+  "okrs tracking": ["okr", "okrs", "kpi tracking", "kpi", "kpis", "objectives and key results", "key performance indicator"],
+  airtable: ["airtable"],
+  notion: ["notion"],
+  figma: ["figma"],
+  jira: ["jira"],
+  trello: ["trello"],
+  slack: ["slack"],
+  asana: ["asana"],
+  hubspot: ["hubspot"],
+  salesforce: ["salesforce"],
+  zapier: ["zapier"],
+  intercom: ["intercom"],
+  zendesk: ["zendesk"],
+  "google analytics": ["google analytics", "ga4"],
+  canva: ["canva"],
+  miro: ["miro"],
+  clickup: ["clickup"],
+  monday: ["monday.com"],
+  linear: ["linear"],
 };
+
+/**
+ * Semantic phrase patterns: if the keyword matches a pattern key,
+ * we check if ANY of the associated terms appear in the CV.
+ * This handles cases like "English fluency" matching "English (C1)".
+ */
+const SEMANTIC_PATTERNS: { test: RegExp; cvTerms: string[] }[] = [
+  // Language + fluency/proficiency
+  { test: /\b(english)\b.*\b(fluen|proficien|native|level|spoken|written)\b/i, cvTerms: ["english"] },
+  { test: /\b(italian)\b.*\b(fluen|proficien|native|level|spoken|written)\b/i, cvTerms: ["italian", "italiano"] },
+  { test: /\b(french)\b.*\b(fluen|proficien|native|level|spoken|written)\b/i, cvTerms: ["french", "français"] },
+  { test: /\b(spanish)\b.*\b(fluen|proficien|native|level|spoken|written)\b/i, cvTerms: ["spanish", "español"] },
+  { test: /\b(german)\b.*\b(fluen|proficien|native|level|spoken|written)\b/i, cvTerms: ["german", "deutsch"] },
+  // Onboarding/training people
+  { test: /\bonboard(ing)?\b.*\b(team|member|employee|staff|hire)\b/i, cvTerms: ["onboarding", "onboard", "training", "mentoring", "coached", "ramping"] },
+  // OKR/KPI tracking
+  { test: /\b(okr|kpi)s?\b.*\b(track|monitor|measur|report)\b/i, cvTerms: ["okr", "kpi", "objectives", "key results", "key performance"] },
+];
 
 /**
  * Check if a keyword (or any of its synonyms) appears in the CV text.
