@@ -615,6 +615,16 @@ const CvWorkspace = () => {
         }).catch(() => {});
       }
 
+      // Inject PoW into CV content if available
+      let enrichedCvContent = cvContent;
+      if (includePow && powData?.proof_suggestion) {
+        const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+        const now = new Date();
+        const currentDate = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+        const powSection = `\n\nPROJECTS\n${powData.role || "Proof of Work"} Project — Self-initiated | ${currentDate}\n${powData.proof_suggestion}\nBuilt as a targeted proof of work for ${powData.company || "a target role"}\n`;
+        enrichedCvContent = cvContent + powSection;
+      }
+
       // Helper: invoke tailor-cv with retry
       const invokeWithRetry = async (retries = 1): Promise<any> => {
         const { data: { session } } = await supabase.auth.getSession();
@@ -622,7 +632,7 @@ const CvWorkspace = () => {
 
         const { data, error } = await supabase.functions.invoke("tailor-cv", {
           headers: { Authorization: `Bearer ${session.access_token}` },
-          body: { cvContent, jobDescription, tone: "professional" },
+          body: { cvContent: enrichedCvContent, jobDescription, tone: "professional" },
         });
 
         if (error) {
