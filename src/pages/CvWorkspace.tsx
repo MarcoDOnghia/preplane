@@ -206,10 +206,29 @@ const CvWorkspace = () => {
   const applySuggestionToModel = (model: CvDataModel, original: string, suggested: string, sectionHint?: string): CvDataModel => {
     const clone: CvDataModel = JSON.parse(JSON.stringify(model));
     const hint = (sectionHint || '').toLowerCase();
+
+    // Advisory-only suggestions (empty original) — these are informational cards
+    // like "Experience Awareness" or "Proof of Work" reminders. They cannot modify the CV model.
+    if (!original || original.trim() === '') {
+      // For summary suggestions with empty original, set summary directly
+      if (hint.includes('summary') || hint.includes('profile')) {
+        clone.summary = suggested;
+        return clone;
+      }
+      // For projects suggestions, add as a new project entry note in summary
+      if (hint.includes('project')) {
+        // Can't add a project structurally — append to summary as guidance
+        return clone;
+      }
+      // General advisory cards — return unchanged
+      return clone;
+    }
+
     const matchPrefix = original.replace(/\.{3,}$/, '').slice(0, 60).toLowerCase();
     const shortPrefix = original.replace(/\.{3,}$/, '').slice(0, 40).toLowerCase();
     const veryShortPrefix = original.replace(/\.{3,}$/, '').slice(0, 30).toLowerCase();
     const fuzzyMatch = (text: string) => {
+      if (!matchPrefix && !shortPrefix && !veryShortPrefix) return false;
       const lower = text.replace(/\.{3,}$/, '').toLowerCase();
       return lower.includes(matchPrefix) || lower.includes(shortPrefix) || lower.includes(veryShortPrefix);
     };
@@ -221,9 +240,11 @@ const CvWorkspace = () => {
       const origLower = original.replace(/\.{3,}$/, '').toLowerCase().trim();
       const origPrefix = origLower.slice(0, 30);
       let matchedLineIdx = -1;
-      for (let li = 0; li < skillLines.length; li++) {
-        const lineLower = skillLines[li].toLowerCase().trim();
-        if (lineLower && (lineLower.includes(origPrefix) || origLower.includes(lineLower.slice(0, 30)))) { matchedLineIdx = li; break; }
+      if (origPrefix) {
+        for (let li = 0; li < skillLines.length; li++) {
+          const lineLower = skillLines[li].toLowerCase().trim();
+          if (lineLower && (lineLower.includes(origPrefix) || origLower.includes(lineLower.slice(0, 30)))) { matchedLineIdx = li; break; }
+        }
       }
       if (matchedLineIdx >= 0 && skillLines.length > 1) { skillLines[matchedLineIdx] = suggested; clone.skills = skillLines.join('\n'); }
       else { clone.skills = suggested; }
@@ -248,7 +269,7 @@ const CvWorkspace = () => {
       }
       const roleOnly = exp.role.replace(/\s*\(.*$/, '').toLowerCase();
       const origRoleOnly = original.replace(/\s*\(.*$/, '').slice(0, 60).toLowerCase();
-      if (roleOnly.includes(origRoleOnly) || exp.role.toLowerCase().includes(matchPrefix)) {
+      if (origRoleOnly && (roleOnly.includes(origRoleOnly) || exp.role.toLowerCase().includes(matchPrefix))) {
         const datePattern = /\s+(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+\d{4}\s*[-–—].*$/i;
         const datePattern2 = /\s+\d{4}\s*[-–—]\s*(?:present|\d{4}).*$/i;
         let cleanRole = suggested.replace(datePattern, '').replace(datePattern2, '').trim();
