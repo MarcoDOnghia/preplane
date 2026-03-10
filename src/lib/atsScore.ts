@@ -30,7 +30,47 @@ const SYNONYMS: Record<string, string[]> = {
   // Experience
   "financial analyst": ["financial analysis", "finance analyst"],
   controller: ["financial controller", "management control", "controllo di gestione"],
+  // Semantic groupings for common phrases
+  "english fluency": ["english", "fluent in english", "fluent english", "english proficient", "english proficiency", "native english", "c1 english", "c2 english", "ielts", "toefl", "english (native)", "english (fluent)", "english (c1)", "english (c2)", "english (b2)"],
+  "onboarding team members": ["onboarding", "onboard", "training team", "training new", "managing team", "team training", "mentoring", "coached", "ramping up"],
+  "okrs tracking": ["okr", "okrs", "kpi tracking", "kpi", "kpis", "objectives and key results", "key performance indicator"],
+  airtable: ["airtable"],
+  notion: ["notion"],
+  figma: ["figma"],
+  jira: ["jira"],
+  trello: ["trello"],
+  slack: ["slack"],
+  asana: ["asana"],
+  hubspot: ["hubspot"],
+  salesforce: ["salesforce"],
+  zapier: ["zapier"],
+  intercom: ["intercom"],
+  zendesk: ["zendesk"],
+  "google analytics": ["google analytics", "ga4"],
+  canva: ["canva"],
+  miro: ["miro"],
+  clickup: ["clickup"],
+  monday: ["monday.com"],
+  linear: ["linear"],
 };
+
+/**
+ * Semantic phrase patterns: if the keyword matches a pattern key,
+ * we check if ANY of the associated terms appear in the CV.
+ * This handles cases like "English fluency" matching "English (C1)".
+ */
+const SEMANTIC_PATTERNS: { test: RegExp; cvTerms: string[] }[] = [
+  // Language + fluency/proficiency
+  { test: /\b(english)\b.*\b(fluen|proficien|native|level|spoken|written)\b/i, cvTerms: ["english"] },
+  { test: /\b(italian)\b.*\b(fluen|proficien|native|level|spoken|written)\b/i, cvTerms: ["italian", "italiano"] },
+  { test: /\b(french)\b.*\b(fluen|proficien|native|level|spoken|written)\b/i, cvTerms: ["french", "français"] },
+  { test: /\b(spanish)\b.*\b(fluen|proficien|native|level|spoken|written)\b/i, cvTerms: ["spanish", "español"] },
+  { test: /\b(german)\b.*\b(fluen|proficien|native|level|spoken|written)\b/i, cvTerms: ["german", "deutsch"] },
+  // Onboarding/training people
+  { test: /\bonboard(ing)?\b.*\b(team|member|employee|staff|hire)\b/i, cvTerms: ["onboarding", "onboard", "training", "mentoring", "coached", "ramping"] },
+  // OKR/KPI tracking
+  { test: /\b(okr|kpi)s?\b.*\b(track|monitor|measur|report)\b/i, cvTerms: ["okr", "kpi", "objectives", "key results", "key performance"] },
+];
 
 /**
  * Check if a keyword (or any of its synonyms) appears in the CV text.
@@ -42,18 +82,32 @@ export function matchKeyword(keyword: string, cvText: string): boolean {
   // Direct match
   if (cvText.includes(kw)) return true;
 
-  // Synonym match
+  // Synonym match (check canonical key → synonyms, and reverse lookup)
   const syns = SYNONYMS[kw];
   if (syns && syns.some((s) => cvText.includes(s))) return true;
 
-  // Also check if the keyword itself is a synonym value for another key
-  for (const [, values] of Object.entries(SYNONYMS)) {
+  for (const [canonical, values] of Object.entries(SYNONYMS)) {
     if (values.includes(kw)) {
-      // Check the canonical form and all other synonyms
+      if (cvText.includes(canonical)) return true;
       for (const v of values) {
         if (v !== kw && cvText.includes(v)) return true;
       }
     }
+  }
+
+  // Semantic pattern matching (e.g. "English fluency" matches CV containing "English")
+  for (const pattern of SEMANTIC_PATTERNS) {
+    if (pattern.test.test(kw)) {
+      if (pattern.cvTerms.some((term) => cvText.includes(term))) return true;
+    }
+  }
+
+  // Single-word tool/brand names: match as whole word anywhere in CV
+  // This catches tools like "Airtable", "Notion", etc. that might appear in any section
+  const kwClean = kw.replace(/[^a-z0-9]/g, "");
+  if (kwClean.length >= 3 && !kw.includes(" ")) {
+    const wordBoundary = new RegExp(`\\b${kwClean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, "i");
+    if (wordBoundary.test(cvText)) return true;
   }
 
   // Partial/fuzzy match for multi-word keywords (e.g. "Excel (advanced)")
@@ -62,14 +116,25 @@ export function matchKeyword(keyword: string, cvText: string): boolean {
     const withoutParens = kw.replace(/\s*\([^)]*\)/g, "").trim();
     if (withoutParens && cvText.includes(withoutParens)) return true;
 
-    // Word overlap: if 70%+ of significant words match
+    // For language keywords with proficiency: "English fluency" → check "english"
+    const langMatch = kw.match(/^(english|italian|french|spanish|german|portuguese|chinese|japanese|arabic|russian|korean|dutch|hindi)\b/);
+    if (langMatch && cvText.includes(langMatch[1])) return true;
+
+    // Word overlap: if 60%+ of significant words match (relaxed from 70%)
     const words = kw
       .replace(/[^a-z0-9\s]/g, " ")
       .split(/\s+/)
-      .filter((w) => w.length > 3);
+      .filter((w) => w.length > 2);
     if (words.length > 0) {
-      const matchCount = words.filter((w) => cvText.includes(w)).length;
-      if (matchCount / words.length >= 0.7) return true;
+      const matchCount = words.filter((w) => {
+        // Use word boundary for short words to avoid false positives
+        if (w.length <= 3) {
+          return new RegExp(`\\b${w}\\b`).test(cvText);
+        }
+        return cvText.includes(w);
+      }).length;
+      if (words.length === 1 && matchCount === 1) return true;
+      if (words.length > 1 && matchCount / words.length >= 0.6) return true;
     }
   }
 
