@@ -131,6 +131,11 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange }: Ats
               )}
             </div>
 
+            {/* Coach tip */}
+            <p className="text-xs text-muted-foreground/80 italic leading-relaxed pt-1">
+              A 70+ score is strong. But a tailored proof of work will do more for your application than a perfect score ever will.
+            </p>
+
             {/* Summary badges */}
             <div className="flex gap-3 pt-1 flex-wrap">
               <Badge variant="outline" className="bg-success/10 text-success border-success/20">
