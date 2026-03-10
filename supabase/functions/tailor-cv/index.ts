@@ -282,6 +282,14 @@ Only extract keywords from sections relevant to candidate requirements.
    - Version C "Friendly": warm and personable, shows personality while staying professional
 5. Skip interview questions generation entirely — return empty arrays for interviewQuestions and questionsToAsk, and empty string for companyBrief.
 
+**PROOF OF WORK PROJECTS:**
+If the CV contains a "PROJECTS" section with a proof of work project (identified by "Self-initiated" or "proof of work" in the text):
+- Treat this project as GENUINE work experience — the student actually built it.
+- Reference it in the Professional Summary suggestions when relevant.
+- Use it to justify skill claims in the CV — if the project demonstrates a skill the JD requires, count it as evidence.
+- In the reformatted CV, place the PROJECTS section between PROFESSIONAL EXPERIENCE and EDUCATION.
+- Do NOT remove, minimize, or question the proof of work project — it is real and valuable.
+
 **STEP 4 — REFORMAT CV INTO ATS TEMPLATE (CRITICAL)**
 You MUST reformat the user's CV into this EXACT standardized ATS template structure:
 
