@@ -59,6 +59,13 @@ const CvWorkspace = () => {
   const [preParsedModel, setPreParsedModel] = useState<CvDataModel | null>(null);
   const [isDirty, setIsDirty] = useState(false);
 
+  // PoW integration state
+  const [showPowReminder, setShowPowReminder] = useState(false);
+  const [showPowInclude, setShowPowInclude] = useState(false);
+  const [pendingSubmitArgs, setPendingSubmitArgs] = useState<{ cvContent: string; jobDescription: string } | null>(null);
+  const [powData, setPowData] = useState<{ proof_suggestion: string; company: string; role: string } | null>(null);
+  const [includePow, setIncludePow] = useState(false);
+
   useEffect(() => {
     if (preParsedModel) {
       setCvModel(preParsedModel);
