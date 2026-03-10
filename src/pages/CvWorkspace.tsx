@@ -502,6 +502,82 @@ const CvWorkspace = () => {
     debouncedSave(clone, appliedSuggestions);
   };
 
+  // Wrapper: show PoW reminder popup for non-campaign access
+  const handleTailorClick = async (cvContent: string, jobDescription: string) => {
+    // If coming from a campaign, skip the popup — go straight to tailoring
+    if (campaignId) {
+      // Fetch campaign PoW data if available
+      const { data: campData } = await supabase
+        .from("campaigns")
+        .select("proof_suggestion, company, role")
+        .eq("id", campaignId)
+        .single();
+
+      if (campData?.proof_suggestion) {
+        setPowData({ proof_suggestion: campData.proof_suggestion, company: campData.company, role: campData.role });
+        setIncludePow(true);
+      }
+      return handleSubmit(cvContent, jobDescription);
+    }
+
+    // Not from a campaign — check if we should show the PoW reminder
+    const POW_DISMISSED_KEY = "preplane_pow_reminder_dismissed";
+    const alreadyDismissed = sessionStorage.getItem(POW_DISMISSED_KEY) === "true";
+
+    if (!alreadyDismissed) {
+      setPendingSubmitArgs({ cvContent, jobDescription });
+      setShowPowReminder(true);
+      return;
+    }
+
+    // Check if user has any campaigns with completed PoW
+    await checkAndOfferPow(cvContent, jobDescription);
+  };
+
+  const checkAndOfferPow = async (cvContent: string, jobDescription: string) => {
+    const { data: campaigns } = await supabase
+      .from("campaigns")
+      .select("proof_suggestion, company, role")
+      .eq("user_id", user.id)
+      .not("proof_suggestion", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (campaigns && campaigns.length > 0 && campaigns[0].proof_suggestion) {
+      setPowData({ proof_suggestion: campaigns[0].proof_suggestion, company: campaigns[0].company, role: campaigns[0].role });
+      setPendingSubmitArgs({ cvContent, jobDescription });
+      setShowPowInclude(true);
+      return;
+    }
+
+    return handleSubmit(cvContent, jobDescription);
+  };
+
+  const handlePowReminderContinue = () => {
+    sessionStorage.setItem("preplane_pow_reminder_dismissed", "true");
+    setShowPowReminder(false);
+    if (pendingSubmitArgs) {
+      checkAndOfferPow(pendingSubmitArgs.cvContent, pendingSubmitArgs.jobDescription);
+    }
+  };
+
+  const handlePowIncludeYes = () => {
+    setIncludePow(true);
+    setShowPowInclude(false);
+    if (pendingSubmitArgs) {
+      handleSubmit(pendingSubmitArgs.cvContent, pendingSubmitArgs.jobDescription);
+    }
+  };
+
+  const handlePowIncludeSkip = () => {
+    setIncludePow(false);
+    setPowData(null);
+    setShowPowInclude(false);
+    if (pendingSubmitArgs) {
+      handleSubmit(pendingSubmitArgs.cvContent, pendingSubmitArgs.jobDescription);
+    }
+  };
+
   const handleSubmit = async (cvContent: string, jobDescription: string) => {
     setLoading(true);
     setResult(null);
