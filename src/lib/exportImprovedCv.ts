@@ -2,6 +2,30 @@ import { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle } from
 import { saveAs } from "file-saver";
 import { parseCvToLines } from "./cvParser";
 
+/** Normalize date separators: replace ---, --, – with em dash — */
+function normalizeDateSeparators(text: string): string {
+  return text
+    .replace(/\s*---\s*/g, " — ")
+    .replace(/\s*--\s*/g, " — ")
+    .replace(/\s*–\s*/g, " — ");
+}
+
+/** Section headers that should be bold + uppercase */
+const SECTION_KEYWORDS = [
+  "profile summary", "professional summary", "summary",
+  "professional experience", "work experience", "experience",
+  "education", "skills", "technical skills",
+  "certifications", "certificates", "languages",
+  "projects", "awards", "volunteer", "references",
+  "additional", "interests", "publications", "activities",
+  "extracurricular", "leadership", "research",
+];
+
+function isSectionText(text: string): boolean {
+  const lower = text.toLowerCase().replace(/[^a-z\s]/g, "").trim();
+  return SECTION_KEYWORDS.some((h) => lower === h || lower.startsWith(h + " "));
+}
+
 export async function exportImprovedCv(
   cvHtml: string,
   userName: string,
@@ -12,6 +36,7 @@ export async function exportImprovedCv(
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
+    const normalizedText = normalizeDateSeparators(line.text);
 
     switch (line.type) {
       case "name":
@@ -19,10 +44,10 @@ export async function exportImprovedCv(
           new Paragraph({
             children: [
               new TextRun({
-                text: line.text.toUpperCase(),
+                text: normalizedText.toUpperCase(),
                 bold: true,
-                size: 32, // 16pt
-                font: "Calibri",
+                size: 24, // 12pt
+                font: "Arial",
               }),
             ],
             alignment: AlignmentType.CENTER,
@@ -36,9 +61,9 @@ export async function exportImprovedCv(
           new Paragraph({
             children: [
               new TextRun({
-                text: line.text,
-                size: 22, // 11pt
-                font: "Calibri",
+                text: normalizedText,
+                size: 20, // 10pt
+                font: "Arial",
               }),
             ],
             alignment: AlignmentType.CENTER,
@@ -57,10 +82,10 @@ export async function exportImprovedCv(
           new Paragraph({
             children: [
               new TextRun({
-                text: line.text,
+                text: normalizedText.toUpperCase(),
                 bold: true,
-                size: 24, // 12pt
-                font: "Calibri",
+                size: 22, // 11pt
+                font: "Arial",
               }),
             ],
             spacing: { before: 280, after: 120 },
@@ -75,31 +100,33 @@ export async function exportImprovedCv(
         );
         break;
 
-      case "subtitle":
+      case "subtitle": {
+        // Subtitles (job title, company, degree) are bold but NOT uppercase
         children.push(
           new Paragraph({
             children: [
               new TextRun({
-                text: line.text,
+                text: normalizedText,
                 bold: true,
                 size: 22, // 11pt
-                font: "Calibri",
+                font: "Arial",
               }),
             ],
             spacing: { before: 80, after: 40 },
           })
         );
         break;
+      }
 
       case "date":
         children.push(
           new Paragraph({
             children: [
               new TextRun({
-                text: line.text,
+                text: normalizedText,
                 italics: true,
-                size: 22,
-                font: "Calibri",
+                size: 22, // 11pt
+                font: "Arial",
               }),
             ],
             spacing: { after: 60 },
@@ -108,13 +135,15 @@ export async function exportImprovedCv(
         break;
 
       case "bullet":
+        // Bullets are NEVER bold — plain 11pt body text
         children.push(
           new Paragraph({
             children: [
               new TextRun({
-                text: line.text,
-                size: 22,
-                font: "Calibri",
+                text: normalizedText,
+                bold: false,
+                size: 22, // 11pt
+                font: "Arial",
               }),
             ],
             bullet: { level: 0 },
@@ -129,9 +158,10 @@ export async function exportImprovedCv(
           new Paragraph({
             children: [
               new TextRun({
-                text: line.text,
-                size: 22,
-                font: "Calibri",
+                text: normalizedText,
+                bold: false,
+                size: 22, // 11pt
+                font: "Arial",
               }),
             ],
             spacing: { after: 60 },
