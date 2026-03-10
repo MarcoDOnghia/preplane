@@ -772,7 +772,7 @@ const CvWorkspace = () => {
         {/* Tailor section */}
         <div id="tailor-section" className="space-y-6">
           <InputSection
-            onSubmit={handleSubmit}
+            onSubmit={handleTailorClick}
             onClear={() => { setResult(null); downloadCountRef.current = 0; }}
             onCvParsed={(model) => setPreParsedModel(model)}
             loading={loading}
@@ -782,13 +782,14 @@ const CvWorkspace = () => {
           {loading && loadingProgress > 0 && (
             <div className="space-y-2">
               <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-[#F97316] rounded-full transition-all duration-500" style={{ width: `${loadingProgress}%` }} />
+                <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${loadingProgress}%` }} />
               </div>
-              <p className="text-xs text-slate-500 text-center">Step {Math.ceil(loadingProgress / 20)} of 5</p>
+              <p className="text-xs text-muted-foreground text-center">Step {Math.ceil(loadingProgress / 20)} of 5</p>
             </div>
           )}
           {result && cvModel && (
             <>
+              {/* Alignment banner — FIRST thing user sees after tailoring */}
               {alignmentData && (
                 <AlignmentBanner
                   alignment={alignmentData.alignment}
@@ -845,27 +846,27 @@ const CvWorkspace = () => {
 
         {/* Stats row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12">
-          <div className="p-4 rounded-xl bg-white border border-[#F97316]/5 shadow-sm">
-            <p className="text-xs text-slate-500 font-medium mb-1">CVs in Library</p>
-            <p className="text-xl font-bold text-slate-900">{totalCvs}</p>
+          <div className="p-4 rounded-xl bg-white border border-primary/5 shadow-sm">
+            <p className="text-xs text-muted-foreground font-medium mb-1">CVs in Library</p>
+            <p className="text-xl font-bold text-foreground">{totalCvs}</p>
             <div className="mt-2">
-              <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-[#F97316] rounded-full" style={{ width: `${(totalCvs / 5) * 100}%` }} />
+              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                <div className="h-full bg-primary rounded-full" style={{ width: `${(totalCvs / 5) * 100}%` }} />
               </div>
-              <p className="text-[10px] text-slate-400 mt-1">{totalCvs}/5 used</p>
+              <p className="text-[10px] text-muted-foreground mt-1">{totalCvs}/5 used</p>
             </div>
           </div>
-          <div className="p-4 rounded-xl bg-white border border-[#F97316]/5 shadow-sm">
-            <p className="text-xs text-slate-500 font-medium mb-1">CVs Tailored</p>
-            <p className="text-xl font-bold text-slate-900">{totalTailored}</p>
+          <div className="p-4 rounded-xl bg-white border border-primary/5 shadow-sm">
+            <p className="text-xs text-muted-foreground font-medium mb-1">CVs Tailored</p>
+            <p className="text-xl font-bold text-foreground">{totalTailored}</p>
           </div>
-          <div className="p-4 rounded-xl bg-white border border-[#F97316]/5 shadow-sm">
-            <p className="text-xs text-slate-500 font-medium mb-1">Avg Match Score</p>
-            <p className="text-xl font-bold text-slate-900">{avgScore > 0 ? `${avgScore}%` : "—"}</p>
+          <div className="p-4 rounded-xl bg-white border border-primary/5 shadow-sm">
+            <p className="text-xs text-muted-foreground font-medium mb-1">Avg Match Score</p>
+            <p className="text-xl font-bold text-foreground">{avgScore > 0 ? `${avgScore}%` : "—"}</p>
           </div>
-          <div className="p-4 rounded-xl bg-white border border-[#F97316]/5 shadow-sm">
-            <p className="text-xs text-slate-500 font-medium mb-1">Last Activity</p>
-            <p className="text-xl font-bold text-slate-900">{totalTailored > 0 ? "Today" : "—"}</p>
+          <div className="p-4 rounded-xl bg-white border border-primary/5 shadow-sm">
+            <p className="text-xs text-muted-foreground font-medium mb-1">Last Activity</p>
+            <p className="text-xl font-bold text-foreground">{totalTailored > 0 ? "Today" : "—"}</p>
           </div>
         </div>
       </main>
@@ -879,6 +880,29 @@ const CvWorkspace = () => {
         jobTitle={lastJobTitle}
         company={lastCompany}
       />
+
+      {/* PoW reminder popup — only for non-campaign access */}
+      <PowReminderModal
+        open={showPowReminder}
+        onClose={() => setShowPowReminder(false)}
+        onStartPoW={() => {
+          sessionStorage.setItem("preplane_pow_reminder_dismissed", "true");
+          setShowPowReminder(false);
+          nav("/app/new");
+        }}
+        onContinue={handlePowReminderContinue}
+      />
+
+      {/* PoW include offer — when user has completed PoW from another campaign */}
+      {powData && (
+        <PowIncludeModal
+          open={showPowInclude}
+          onClose={() => setShowPowInclude(false)}
+          onInclude={handlePowIncludeYes}
+          onSkip={handlePowIncludeSkip}
+          role={powData.role}
+        />
+      )}
     </div>
   );
 };
