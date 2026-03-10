@@ -8,6 +8,8 @@ import ResultsSection from "@/components/ResultsSection";
 import CampaignBanner from "@/components/CampaignBanner";
 import AlignmentBanner from "@/components/AlignmentBanner";
 import ApplicationTrackingModal from "@/components/ApplicationTrackingModal";
+import PowReminderModal from "@/components/PowReminderModal";
+import PowIncludeModal from "@/components/PowIncludeModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Rocket, ArrowLeft, Check } from "lucide-react";
@@ -56,6 +58,13 @@ const CvWorkspace = () => {
   const [originalCvModel, setOriginalCvModel] = useState<CvDataModel | null>(null);
   const [preParsedModel, setPreParsedModel] = useState<CvDataModel | null>(null);
   const [isDirty, setIsDirty] = useState(false);
+
+  // PoW integration state
+  const [showPowReminder, setShowPowReminder] = useState(false);
+  const [showPowInclude, setShowPowInclude] = useState(false);
+  const [pendingSubmitArgs, setPendingSubmitArgs] = useState<{ cvContent: string; jobDescription: string } | null>(null);
+  const [powData, setPowData] = useState<{ proof_suggestion: string; company: string; role: string } | null>(null);
+  const [includePow, setIncludePow] = useState(false);
 
   useEffect(() => {
     if (preParsedModel) {
@@ -206,10 +215,29 @@ const CvWorkspace = () => {
   const applySuggestionToModel = (model: CvDataModel, original: string, suggested: string, sectionHint?: string): CvDataModel => {
     const clone: CvDataModel = JSON.parse(JSON.stringify(model));
     const hint = (sectionHint || '').toLowerCase();
+
+    // Advisory-only suggestions (empty original) — these are informational cards
+    // like "Experience Awareness" or "Proof of Work" reminders. They cannot modify the CV model.
+    if (!original || original.trim() === '') {
+      // For summary suggestions with empty original, set summary directly
+      if (hint.includes('summary') || hint.includes('profile')) {
+        clone.summary = suggested;
+        return clone;
+      }
+      // For projects suggestions, add as a new project entry note in summary
+      if (hint.includes('project')) {
+        // Can't add a project structurally — append to summary as guidance
+        return clone;
+      }
+      // General advisory cards — return unchanged
+      return clone;
+    }
+
     const matchPrefix = original.replace(/\.{3,}$/, '').slice(0, 60).toLowerCase();
     const shortPrefix = original.replace(/\.{3,}$/, '').slice(0, 40).toLowerCase();
     const veryShortPrefix = original.replace(/\.{3,}$/, '').slice(0, 30).toLowerCase();
     const fuzzyMatch = (text: string) => {
+      if (!matchPrefix && !shortPrefix && !veryShortPrefix) return false;
       const lower = text.replace(/\.{3,}$/, '').toLowerCase();
       return lower.includes(matchPrefix) || lower.includes(shortPrefix) || lower.includes(veryShortPrefix);
     };
@@ -221,9 +249,11 @@ const CvWorkspace = () => {
       const origLower = original.replace(/\.{3,}$/, '').toLowerCase().trim();
       const origPrefix = origLower.slice(0, 30);
       let matchedLineIdx = -1;
-      for (let li = 0; li < skillLines.length; li++) {
-        const lineLower = skillLines[li].toLowerCase().trim();
-        if (lineLower && (lineLower.includes(origPrefix) || origLower.includes(lineLower.slice(0, 30)))) { matchedLineIdx = li; break; }
+      if (origPrefix) {
+        for (let li = 0; li < skillLines.length; li++) {
+          const lineLower = skillLines[li].toLowerCase().trim();
+          if (lineLower && (lineLower.includes(origPrefix) || origLower.includes(lineLower.slice(0, 30)))) { matchedLineIdx = li; break; }
+        }
       }
       if (matchedLineIdx >= 0 && skillLines.length > 1) { skillLines[matchedLineIdx] = suggested; clone.skills = skillLines.join('\n'); }
       else { clone.skills = suggested; }
@@ -248,7 +278,7 @@ const CvWorkspace = () => {
       }
       const roleOnly = exp.role.replace(/\s*\(.*$/, '').toLowerCase();
       const origRoleOnly = original.replace(/\s*\(.*$/, '').slice(0, 60).toLowerCase();
-      if (roleOnly.includes(origRoleOnly) || exp.role.toLowerCase().includes(matchPrefix)) {
+      if (origRoleOnly && (roleOnly.includes(origRoleOnly) || exp.role.toLowerCase().includes(matchPrefix))) {
         const datePattern = /\s+(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+\d{4}\s*[-–—].*$/i;
         const datePattern2 = /\s+\d{4}\s*[-–—]\s*(?:present|\d{4}).*$/i;
         let cleanRole = suggested.replace(datePattern, '').replace(datePattern2, '').trim();
@@ -472,6 +502,82 @@ const CvWorkspace = () => {
     debouncedSave(clone, appliedSuggestions);
   };
 
+  // Wrapper: show PoW reminder popup for non-campaign access
+  const handleTailorClick = async (cvContent: string, jobDescription: string) => {
+    // If coming from a campaign, skip the popup — go straight to tailoring
+    if (campaignId) {
+      // Fetch campaign PoW data if available
+      const { data: campData } = await supabase
+        .from("campaigns")
+        .select("proof_suggestion, company, role")
+        .eq("id", campaignId)
+        .single();
+
+      if (campData?.proof_suggestion) {
+        setPowData({ proof_suggestion: campData.proof_suggestion, company: campData.company, role: campData.role });
+        setIncludePow(true);
+      }
+      return handleSubmit(cvContent, jobDescription);
+    }
+
+    // Not from a campaign — check if we should show the PoW reminder
+    const POW_DISMISSED_KEY = "preplane_pow_reminder_dismissed";
+    const alreadyDismissed = sessionStorage.getItem(POW_DISMISSED_KEY) === "true";
+
+    if (!alreadyDismissed) {
+      setPendingSubmitArgs({ cvContent, jobDescription });
+      setShowPowReminder(true);
+      return;
+    }
+
+    // Check if user has any campaigns with completed PoW
+    await checkAndOfferPow(cvContent, jobDescription);
+  };
+
+  const checkAndOfferPow = async (cvContent: string, jobDescription: string) => {
+    const { data: campaigns } = await supabase
+      .from("campaigns")
+      .select("proof_suggestion, company, role")
+      .eq("user_id", user.id)
+      .not("proof_suggestion", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (campaigns && campaigns.length > 0 && campaigns[0].proof_suggestion) {
+      setPowData({ proof_suggestion: campaigns[0].proof_suggestion, company: campaigns[0].company, role: campaigns[0].role });
+      setPendingSubmitArgs({ cvContent, jobDescription });
+      setShowPowInclude(true);
+      return;
+    }
+
+    return handleSubmit(cvContent, jobDescription);
+  };
+
+  const handlePowReminderContinue = () => {
+    sessionStorage.setItem("preplane_pow_reminder_dismissed", "true");
+    setShowPowReminder(false);
+    if (pendingSubmitArgs) {
+      checkAndOfferPow(pendingSubmitArgs.cvContent, pendingSubmitArgs.jobDescription);
+    }
+  };
+
+  const handlePowIncludeYes = () => {
+    setIncludePow(true);
+    setShowPowInclude(false);
+    if (pendingSubmitArgs) {
+      handleSubmit(pendingSubmitArgs.cvContent, pendingSubmitArgs.jobDescription);
+    }
+  };
+
+  const handlePowIncludeSkip = () => {
+    setIncludePow(false);
+    setPowData(null);
+    setShowPowInclude(false);
+    if (pendingSubmitArgs) {
+      handleSubmit(pendingSubmitArgs.cvContent, pendingSubmitArgs.jobDescription);
+    }
+  };
+
   const handleSubmit = async (cvContent: string, jobDescription: string) => {
     setLoading(true);
     setResult(null);
@@ -509,6 +615,16 @@ const CvWorkspace = () => {
         }).catch(() => {});
       }
 
+      // Inject PoW into CV content if available
+      let enrichedCvContent = cvContent;
+      if (includePow && powData?.proof_suggestion) {
+        const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+        const now = new Date();
+        const currentDate = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+        const powSection = `\n\nPROJECTS\n${powData.role || "Proof of Work"} Project — Self-initiated | ${currentDate}\n${powData.proof_suggestion}\nBuilt as a targeted proof of work for ${powData.company || "a target role"}\n`;
+        enrichedCvContent = cvContent + powSection;
+      }
+
       // Helper: invoke tailor-cv with retry
       const invokeWithRetry = async (retries = 1): Promise<any> => {
         const { data: { session } } = await supabase.auth.getSession();
@@ -516,7 +632,7 @@ const CvWorkspace = () => {
 
         const { data, error } = await supabase.functions.invoke("tailor-cv", {
           headers: { Authorization: `Bearer ${session.access_token}` },
-          body: { cvContent, jobDescription, tone: "professional" },
+          body: { cvContent: enrichedCvContent, jobDescription, tone: "professional" },
         });
 
         if (error) {
@@ -656,7 +772,7 @@ const CvWorkspace = () => {
         {/* Tailor section */}
         <div id="tailor-section" className="space-y-6">
           <InputSection
-            onSubmit={handleSubmit}
+            onSubmit={handleTailorClick}
             onClear={() => { setResult(null); downloadCountRef.current = 0; }}
             onCvParsed={(model) => setPreParsedModel(model)}
             loading={loading}
@@ -666,13 +782,14 @@ const CvWorkspace = () => {
           {loading && loadingProgress > 0 && (
             <div className="space-y-2">
               <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-[#F97316] rounded-full transition-all duration-500" style={{ width: `${loadingProgress}%` }} />
+                <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${loadingProgress}%` }} />
               </div>
-              <p className="text-xs text-slate-500 text-center">Step {Math.ceil(loadingProgress / 20)} of 5</p>
+              <p className="text-xs text-muted-foreground text-center">Step {Math.ceil(loadingProgress / 20)} of 5</p>
             </div>
           )}
           {result && cvModel && (
             <>
+              {/* Alignment banner — FIRST thing user sees after tailoring */}
               {alignmentData && (
                 <AlignmentBanner
                   alignment={alignmentData.alignment}
@@ -729,27 +846,27 @@ const CvWorkspace = () => {
 
         {/* Stats row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12">
-          <div className="p-4 rounded-xl bg-white border border-[#F97316]/5 shadow-sm">
-            <p className="text-xs text-slate-500 font-medium mb-1">CVs in Library</p>
-            <p className="text-xl font-bold text-slate-900">{totalCvs}</p>
+          <div className="p-4 rounded-xl bg-white border border-primary/5 shadow-sm">
+            <p className="text-xs text-muted-foreground font-medium mb-1">CVs in Library</p>
+            <p className="text-xl font-bold text-foreground">{totalCvs}</p>
             <div className="mt-2">
-              <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-[#F97316] rounded-full" style={{ width: `${(totalCvs / 5) * 100}%` }} />
+              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                <div className="h-full bg-primary rounded-full" style={{ width: `${(totalCvs / 5) * 100}%` }} />
               </div>
-              <p className="text-[10px] text-slate-400 mt-1">{totalCvs}/5 used</p>
+              <p className="text-[10px] text-muted-foreground mt-1">{totalCvs}/5 used</p>
             </div>
           </div>
-          <div className="p-4 rounded-xl bg-white border border-[#F97316]/5 shadow-sm">
-            <p className="text-xs text-slate-500 font-medium mb-1">CVs Tailored</p>
-            <p className="text-xl font-bold text-slate-900">{totalTailored}</p>
+          <div className="p-4 rounded-xl bg-white border border-primary/5 shadow-sm">
+            <p className="text-xs text-muted-foreground font-medium mb-1">CVs Tailored</p>
+            <p className="text-xl font-bold text-foreground">{totalTailored}</p>
           </div>
-          <div className="p-4 rounded-xl bg-white border border-[#F97316]/5 shadow-sm">
-            <p className="text-xs text-slate-500 font-medium mb-1">Avg Match Score</p>
-            <p className="text-xl font-bold text-slate-900">{avgScore > 0 ? `${avgScore}%` : "—"}</p>
+          <div className="p-4 rounded-xl bg-white border border-primary/5 shadow-sm">
+            <p className="text-xs text-muted-foreground font-medium mb-1">Avg Match Score</p>
+            <p className="text-xl font-bold text-foreground">{avgScore > 0 ? `${avgScore}%` : "—"}</p>
           </div>
-          <div className="p-4 rounded-xl bg-white border border-[#F97316]/5 shadow-sm">
-            <p className="text-xs text-slate-500 font-medium mb-1">Last Activity</p>
-            <p className="text-xl font-bold text-slate-900">{totalTailored > 0 ? "Today" : "—"}</p>
+          <div className="p-4 rounded-xl bg-white border border-primary/5 shadow-sm">
+            <p className="text-xs text-muted-foreground font-medium mb-1">Last Activity</p>
+            <p className="text-xl font-bold text-foreground">{totalTailored > 0 ? "Today" : "—"}</p>
           </div>
         </div>
       </main>
@@ -763,6 +880,29 @@ const CvWorkspace = () => {
         jobTitle={lastJobTitle}
         company={lastCompany}
       />
+
+      {/* PoW reminder popup — only for non-campaign access */}
+      <PowReminderModal
+        open={showPowReminder}
+        onClose={() => setShowPowReminder(false)}
+        onStartPoW={() => {
+          sessionStorage.setItem("preplane_pow_reminder_dismissed", "true");
+          setShowPowReminder(false);
+          nav("/app/new");
+        }}
+        onContinue={handlePowReminderContinue}
+      />
+
+      {/* PoW include offer — when user has completed PoW from another campaign */}
+      {powData && (
+        <PowIncludeModal
+          open={showPowInclude}
+          onClose={() => setShowPowInclude(false)}
+          onInclude={handlePowIncludeYes}
+          onSkip={handlePowIncludeSkip}
+          role={powData.role}
+        />
+      )}
     </div>
   );
 };
