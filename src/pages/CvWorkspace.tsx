@@ -617,13 +617,14 @@ const CvWorkspace = () => {
         }).catch(() => {});
       }
 
-      // Inject PoW into CV content if available
+      // Inject PoW into CV content if available — use powOverride (sync) or fall back to state
+      const activePow = powOverride || (includePow ? powData : null);
       let enrichedCvContent = cvContent;
-      if (includePow && powData?.proof_suggestion) {
+      if (activePow?.proof_suggestion) {
         const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
         const now = new Date();
         const currentDate = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
-        const powSection = `\n\nPROJECTS\n${powData.role || "Proof of Work"} Project — Self-initiated | ${currentDate}\n${powData.proof_suggestion}\nBuilt as a targeted proof of work for ${powData.company || "a target role"}\n`;
+        const powSection = `\n\nPROJECTS\n${activePow.role || "Proof of Work"} Project — Self-initiated | ${currentDate}\n${activePow.proof_suggestion}\nBuilt as a targeted proof of work for ${activePow.company || "a target role"}\n`;
         enrichedCvContent = cvContent + powSection;
       }
 
