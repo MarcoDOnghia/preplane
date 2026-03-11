@@ -433,11 +433,21 @@ export function cvModelToPlainText(model: CvDataModel): string {
     });
   }
 
+  if (model.projects.length) {
+    parts.push("PROJECTS");
+    model.projects.forEach((p) => {
+      parts.push(`${p.title}${p.dates ? " " + p.dates : ""}`);
+      p.bullets.forEach((b) => parts.push("• " + b));
+      parts.push("");
+    });
+  }
+
   if (model.education.length) {
     parts.push("EDUCATION");
     model.education.forEach((e) => {
-      parts.push(`${e.university}${e.dates ? " | " + e.dates : ""}`);
+      if (e.university) parts.push(e.university);
       if (e.degree) parts.push(e.degree);
+      if (e.dates) parts.push(e.dates);
       if (e.coursework) parts.push("Relevant Coursework: " + e.coursework);
       parts.push("");
     });
@@ -447,15 +457,6 @@ export function cvModelToPlainText(model: CvDataModel): string {
     parts.push("SKILLS");
     parts.push(model.skills);
     parts.push("");
-  }
-
-  if (model.projects.length) {
-    parts.push("PROJECTS");
-    model.projects.forEach((p) => {
-      parts.push(`${p.title}${p.dates ? " " + p.dates : ""}`);
-      p.bullets.forEach((b) => parts.push("• " + b));
-      parts.push("");
-    });
   }
 
   if (model.certifications.length) {
