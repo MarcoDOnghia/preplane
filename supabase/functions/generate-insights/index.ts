@@ -78,6 +78,19 @@ serve(async (req) => {
       });
     }
 
+    // Rate limit: 10/day
+    const { data: allowed } = await supabaseClient.rpc('check_and_increment_usage', {
+      _user_id: user.id,
+      _feature: 'generate_insights',
+      _max_count: 10,
+    });
+    if (!allowed) {
+      return new Response(JSON.stringify({ error: "Daily limit reached for insights. Resets tomorrow." }), {
+        status: 429,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { summary } = await req.json();
 
     // Validate and whitelist summary fields

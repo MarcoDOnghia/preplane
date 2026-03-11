@@ -62,6 +62,19 @@ serve(async (req) => {
       });
     }
 
+    // Rate limit: 20/day
+    const { data: allowed } = await supabaseClient.rpc('check_and_increment_usage', {
+      _user_id: user.id,
+      _feature: 'generate_keyword_bullet',
+      _max_count: 20,
+    });
+    if (!allowed) {
+      return new Response(JSON.stringify({ error: "Daily limit reached for keyword suggestions. Resets tomorrow." }), {
+        status: 429,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { keyword: rawKeyword, cvContent: rawCvContent, jobDescription: rawJobDescription, existingBullets } = await req.json();
 
     // Injection check
