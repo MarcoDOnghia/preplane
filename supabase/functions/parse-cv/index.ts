@@ -66,6 +66,19 @@ serve(async (req) => {
       });
     }
 
+    // Rate limit: 5/day
+    const { data: allowed } = await supabase.rpc('check_and_increment_usage', {
+      _user_id: userData.user.id,
+      _feature: 'parse_cv',
+      _max_count: 5,
+    });
+    if (!allowed) {
+      return new Response(JSON.stringify({ error: "Daily limit reached for CV parsing. Resets tomorrow." }), {
+        status: 429,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { rawText: rawTextInput } = await req.json();
     if (!rawTextInput || typeof rawTextInput !== "string") {
       return new Response(JSON.stringify({ error: "rawText is required" }), {
