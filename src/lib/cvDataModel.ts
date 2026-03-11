@@ -433,11 +433,21 @@ export function cvModelToPlainText(model: CvDataModel): string {
     });
   }
 
+  if (model.projects.length) {
+    parts.push("PROJECTS");
+    model.projects.forEach((p) => {
+      parts.push(`${p.title}${p.dates ? " " + p.dates : ""}`);
+      p.bullets.forEach((b) => parts.push("• " + b));
+      parts.push("");
+    });
+  }
+
   if (model.education.length) {
     parts.push("EDUCATION");
     model.education.forEach((e) => {
-      parts.push(`${e.university}${e.dates ? " | " + e.dates : ""}`);
+      if (e.university) parts.push(e.university);
       if (e.degree) parts.push(e.degree);
+      if (e.dates) parts.push(e.dates);
       if (e.coursework) parts.push("Relevant Coursework: " + e.coursework);
       parts.push("");
     });
@@ -447,15 +457,6 @@ export function cvModelToPlainText(model: CvDataModel): string {
     parts.push("SKILLS");
     parts.push(model.skills);
     parts.push("");
-  }
-
-  if (model.projects.length) {
-    parts.push("PROJECTS");
-    model.projects.forEach((p) => {
-      parts.push(`${p.title}${p.dates ? " " + p.dates : ""}`);
-      p.bullets.forEach((b) => parts.push("• " + b));
-      parts.push("");
-    });
   }
 
   if (model.certifications.length) {
@@ -507,20 +508,6 @@ export function cvModelToHtml(model: CvDataModel): string {
     });
   }
 
-  if (model.education.length) {
-    parts.push(`<h2>EDUCATION</h2>`);
-    model.education.forEach((e) => {
-      parts.push(`<p><strong>${esc(e.university)}</strong>${e.dates ? " | " + esc(e.dates) : ""}</p>`);
-      if (e.degree) parts.push(`<p>${esc(e.degree)}</p>`);
-      if (e.coursework) parts.push(`<p><strong>Relevant Coursework:</strong> ${esc(e.coursework)}</p>`);
-    });
-  }
-
-  if (model.skills) {
-    parts.push(`<h2>SKILLS</h2>`);
-    parts.push(`<p>${esc(model.skills)}</p>`);
-  }
-
   if (model.projects.length) {
     parts.push(`<h2>PROJECTS</h2>`);
     model.projects.forEach((p) => {
@@ -531,6 +518,20 @@ export function cvModelToHtml(model: CvDataModel): string {
         parts.push("</ul>");
       }
     });
+  }
+
+  if (model.education.length) {
+    parts.push(`<h2>EDUCATION</h2>`);
+    model.education.forEach((e) => {
+      if (e.university) parts.push(`<p><strong>${esc(e.university)}</strong></p>`);
+      if (e.degree) parts.push(`<p>${esc(e.degree)}${e.dates ? " — " + esc(e.dates) : ""}</p>`);
+      if (e.coursework) parts.push(`<p>Relevant Coursework: ${esc(e.coursework)}</p>`);
+    });
+  }
+
+  if (model.skills) {
+    parts.push(`<h2>SKILLS</h2>`);
+    parts.push(`<p>${esc(model.skills)}</p>`);
   }
 
   if (model.certifications.length) {

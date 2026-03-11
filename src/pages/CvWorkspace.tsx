@@ -514,8 +514,10 @@ const CvWorkspace = () => {
         .single();
 
       if (campData?.proof_suggestion) {
-        setPowData({ proof_suggestion: campData.proof_suggestion, company: campData.company, role: campData.role });
+        const pow = { proof_suggestion: campData.proof_suggestion, company: campData.company, role: campData.role };
+        setPowData(pow);
         setIncludePow(true);
+        return handleSubmit(cvContent, jobDescription, pow);
       }
       return handleSubmit(cvContent, jobDescription);
     }
@@ -565,7 +567,7 @@ const CvWorkspace = () => {
     setIncludePow(true);
     setShowPowInclude(false);
     if (pendingSubmitArgs) {
-      handleSubmit(pendingSubmitArgs.cvContent, pendingSubmitArgs.jobDescription);
+      handleSubmit(pendingSubmitArgs.cvContent, pendingSubmitArgs.jobDescription, powData || undefined);
     }
   };
 
@@ -578,7 +580,7 @@ const CvWorkspace = () => {
     }
   };
 
-  const handleSubmit = async (cvContent: string, jobDescription: string) => {
+  const handleSubmit = async (cvContent: string, jobDescription: string, powOverride?: { proof_suggestion: string; company: string; role: string }) => {
     setLoading(true);
     setResult(null);
     setAlignmentData(null);
@@ -615,13 +617,14 @@ const CvWorkspace = () => {
         }).catch(() => {});
       }
 
-      // Inject PoW into CV content if available
+      // Inject PoW into CV content if available — use powOverride (sync) or fall back to state
+      const activePow = powOverride || (includePow ? powData : null);
       let enrichedCvContent = cvContent;
-      if (includePow && powData?.proof_suggestion) {
+      if (activePow?.proof_suggestion) {
         const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
         const now = new Date();
         const currentDate = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
-        const powSection = `\n\nPROJECTS\n${powData.role || "Proof of Work"} Project — Self-initiated | ${currentDate}\n${powData.proof_suggestion}\nBuilt as a targeted proof of work for ${powData.company || "a target role"}\n`;
+        const powSection = `\n\nPROJECTS\n${activePow.role || "Proof of Work"} Project — Self-initiated | ${currentDate}\n${activePow.proof_suggestion}\nBuilt as a targeted proof of work for ${activePow.company || "a target role"}\n`;
         enrichedCvContent = cvContent + powSection;
       }
 

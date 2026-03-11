@@ -429,14 +429,14 @@ function SuggestionCard({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className={`rounded-lg p-4 text-sm ${isApplied ? "bg-muted/50 line-through opacity-60" : "bg-muted"}`}>
             <p className="text-xs font-medium text-muted-foreground mb-2">Original</p>
-            <p>{suggestion.original}</p>
+            <p className="whitespace-pre-line">{suggestion.original}</p>
           </div>
           <div className={`rounded-lg border p-4 text-sm ${isApplied ? "bg-success/10 border-success/20" : "bg-primary/5 border-primary/20"}`}>
             <p className={`text-xs font-medium mb-2 flex items-center gap-1 ${isApplied ? "text-success" : "text-primary"}`}>
               {isApplied ? <Check className="h-3 w-3" /> : <ArrowRight className="h-3 w-3" />}
               {isApplied ? "Applied" : "Suggested"}
             </p>
-            <p>{suggestion.suggested}</p>
+            <p className="whitespace-pre-line">{suggestion.suggested}</p>
           </div>
         </div>
         <p className="mt-3 text-sm text-muted-foreground italic">💡 {suggestion.reason}</p>
