@@ -580,7 +580,7 @@ const CvWorkspace = () => {
     }
   };
 
-  const handleSubmit = async (cvContent: string, jobDescription: string) => {
+  const handleSubmit = async (cvContent: string, jobDescription: string, powOverride?: { proof_suggestion: string; company: string; role: string }) => {
     setLoading(true);
     setResult(null);
     setAlignmentData(null);
