@@ -514,8 +514,10 @@ const CvWorkspace = () => {
         .single();
 
       if (campData?.proof_suggestion) {
-        setPowData({ proof_suggestion: campData.proof_suggestion, company: campData.company, role: campData.role });
+        const pow = { proof_suggestion: campData.proof_suggestion, company: campData.company, role: campData.role };
+        setPowData(pow);
         setIncludePow(true);
+        return handleSubmit(cvContent, jobDescription, pow);
       }
       return handleSubmit(cvContent, jobDescription);
     }
