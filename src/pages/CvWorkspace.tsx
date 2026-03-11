@@ -567,7 +567,7 @@ const CvWorkspace = () => {
     setIncludePow(true);
     setShowPowInclude(false);
     if (pendingSubmitArgs) {
-      handleSubmit(pendingSubmitArgs.cvContent, pendingSubmitArgs.jobDescription);
+      handleSubmit(pendingSubmitArgs.cvContent, pendingSubmitArgs.jobDescription, powData || undefined);
     }
   };
 
