@@ -14,6 +14,7 @@ import { formatDistanceToNow, differenceInDays } from "date-fns";
 
 const TARGET_KEY = "preplane_onboarding_target";
 const ONBOARDING_KEY = "preplane_onboarding_done";
+const POW_GENERATED_KEY = "preplane_pow_generated";
 
 const STEPS = [
   { key: "step_proof_done", label: "Build proof of work", weight: 20 },
