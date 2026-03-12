@@ -83,6 +83,15 @@ function getChecklist(c: CampaignRow) {
   return items.slice(0, 2);
 }
 
+interface PowBrief {
+  title: string;
+  why_this_works: string;
+  what_to_build: string[];
+  tools_to_use: string[];
+  time_estimate: string;
+  ai_prompt: string;
+}
+
 const Index = () => {
   const { user, loading: authLoading } = useAuth();
   const nav = useNavigate();
@@ -92,6 +101,11 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
   const [showArchived, setShowArchived] = useState(false);
   const [followupNudgeDismissed, setFollowupNudgeDismissed] = useState(false);
+
+  // First-load PoW auto-generation
+  const [powGenerating, setPowGenerating] = useState(false);
+  const [powBrief, setPowBrief] = useState<PowBrief | null>(null);
+  const [powSkipped, setPowSkipped] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -109,6 +123,9 @@ const Index = () => {
       .single()
       .then(async ({ data }) => {
         const d = data as any;
+        let resolvedRole: string | null = null;
+        let resolvedLocation: string | null = null;
+
         if (savedTarget) {
           try {
             const target = JSON.parse(savedTarget);
@@ -123,8 +140,8 @@ const Index = () => {
               .eq("user_id", user.id);
             localStorage.removeItem(TARGET_KEY);
             localStorage.removeItem(ONBOARDING_KEY);
-            setTargetRole(target.target_role || null);
-            setTargetLocation(target.target_location || null);
+            resolvedRole = target.target_role || null;
+            resolvedLocation = target.target_location || null;
           } catch {
             localStorage.removeItem(TARGET_KEY);
           }
@@ -132,16 +149,55 @@ const Index = () => {
           nav("/onboarding", { replace: true });
           return;
         } else {
-          if (d?.target_role) setTargetRole(d.target_role);
-          if (d?.target_location) setTargetLocation(d.target_location);
+          resolvedRole = d?.target_role || null;
+          resolvedLocation = d?.target_location || null;
         }
+
+        setTargetRole(resolvedRole);
+        setTargetLocation(resolvedLocation);
 
         const { data: campData } = await supabase
           .from("campaigns")
           .select("id, company, role, match_score, status, step_cv_done, step_connection_done, step_outreach_done, step_proof_done, step_linkedin_done, step_cover_letter_done, step_followup_done, created_at, archived, proof_suggestion, proof_in_progress, followup_date")
           .order("created_at", { ascending: false });
-        setCampaigns((campData as any as CampaignRow[]) || []);
+        const loadedCampaigns = (campData as any as CampaignRow[]) || [];
+        setCampaigns(loadedCampaigns);
         setLoading(false);
+
+        // Auto-generate PoW brief for brand-new users
+        const alreadyGenerated = localStorage.getItem(POW_GENERATED_KEY) === "true";
+        if (!alreadyGenerated && loadedCampaigns.length === 0 && resolvedRole) {
+          localStorage.setItem(POW_GENERATED_KEY, "true");
+          setPowGenerating(true);
+          try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) throw new Error("No session");
+            const res = await fetch(
+              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-campaign-content`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({
+                  contentType: "proof_of_work",
+                  company: "your target company",
+                  role: resolvedRole,
+                }),
+              }
+            );
+            if (!res.ok) throw new Error("Generation failed");
+            const brief = await res.json();
+            if (brief && brief.title) {
+              setPowBrief(brief);
+            }
+          } catch {
+            // Fail silently — fall through to normal dashboard
+          } finally {
+            setPowGenerating(false);
+          }
+        }
       });
   }, [user, authLoading, nav]);
 
