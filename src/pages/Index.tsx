@@ -104,7 +104,6 @@ const Index = () => {
 
   // First-load PoW auto-generation
   const [powGenerating, setPowGenerating] = useState(false);
-  const [powBrief, setPowBrief] = useState<PowBrief | null>(null);
   const [powSkipped, setPowSkipped] = useState(false);
 
   useEffect(() => {
@@ -164,7 +163,7 @@ const Index = () => {
         setCampaigns(loadedCampaigns);
         setLoading(false);
 
-        // Auto-generate PoW brief for brand-new users
+        // Auto-generate PoW brief for brand-new users — only once
         const alreadyGenerated = localStorage.getItem(POW_GENERATED_KEY) === "true";
         if (!alreadyGenerated && loadedCampaigns.length === 0 && resolvedRole) {
           localStorage.setItem(POW_GENERATED_KEY, "true");
@@ -179,6 +178,7 @@ const Index = () => {
                 headers: {
                   "Content-Type": "application/json",
                   Authorization: `Bearer ${session.access_token}`,
+                  apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
                 },
                 body: JSON.stringify({
                   contentType: "proof_of_work",
@@ -190,7 +190,25 @@ const Index = () => {
             if (!res.ok) throw new Error("Generation failed");
             const brief = await res.json();
             if (brief && brief.title) {
-              setPowBrief(brief);
+              // Save as a campaign immediately so it persists on refresh (FIX 2+3)
+              const { data: newCampaign, error: insertErr } = await supabase
+                .from("campaigns")
+                .insert({
+                  user_id: user.id,
+                  company: "General",
+                  role: resolvedRole,
+                  jd_text: "",
+                  proof_suggestion: JSON.stringify(brief),
+                  proof_in_progress: true,
+                  status: "targeting",
+                } as any)
+                .select("id")
+                .single();
+              if (!insertErr && newCampaign) {
+                // Redirect to the campaign page — uses the same rendering as all campaigns (FIX 3)
+                nav(`/campaign/${newCampaign.id}`, { replace: true });
+                return;
+              }
             }
           } catch {
             // Fail silently — fall through to normal dashboard
@@ -235,86 +253,6 @@ const Index = () => {
             Skip for now →
           </button>
         </div>
-      </div>
-    );
-  }
-
-  // First-load PoW result screen
-  if (powBrief && !powSkipped && campaigns.length === 0) {
-    return (
-      <div className="min-h-screen bg-[#FAF9F7] flex flex-col">
-        <Header />
-        <main className="flex-1 max-w-2xl mx-auto w-full px-4 sm:px-6 py-10 space-y-8">
-          <div className="text-center space-y-2">
-            <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 px-4 py-1.5 rounded-full text-sm font-semibold">
-              <Check className="w-4 h-4" /> Brief ready
-            </div>
-            <h1 className="text-3xl font-bold text-slate-900">{powBrief.title}</h1>
-            <p className="text-slate-500">{powBrief.why_this_works}</p>
-          </div>
-
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-6">
-            <div>
-              <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
-                <Target className="w-5 h-5 text-[#F97316]" /> What to build
-              </h3>
-              <ul className="space-y-2">
-                {powBrief.what_to_build.map((item, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
-                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#F97316] shrink-0" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
-                <Zap className="w-5 h-5 text-[#F97316]" /> Tools to use
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {powBrief.tools_to_use.map((tool, i) => (
-                  <span key={i} className="bg-slate-100 text-slate-700 text-sm px-3 py-1 rounded-full">{tool}</span>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 text-sm text-slate-600">
-              <Clock className="w-4 h-4 text-slate-400" />
-              Estimated time: <span className="font-semibold">{powBrief.time_estimate}</span>
-            </div>
-
-            {powBrief.ai_prompt && (
-              <div>
-                <h3 className="font-bold text-slate-900 mb-2 text-sm">AI starter prompt</h3>
-                <div className="bg-slate-50 rounded-lg p-4 text-sm text-slate-600 whitespace-pre-line border border-slate-200">
-                  {powBrief.ai_prompt}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="text-center">
-            <p className="text-sm text-slate-500 italic mb-6">
-              This is your foundation. Build this first — everything else follows.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <button
-                onClick={() => setPowSkipped(true)}
-                className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-6 py-3 rounded-xl font-semibold transition-colors"
-              >
-                Start building — I'll be back when it's done
-              </button>
-              <button
-                onClick={() => { setPowSkipped(true); nav("/app/new"); }}
-                className="bg-[#F97316] hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-[#F97316]/20 flex items-center justify-center gap-2 transition-colors"
-              >
-                Set up my first campaign <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </main>
-        <AppFooter />
       </div>
     );
   }
