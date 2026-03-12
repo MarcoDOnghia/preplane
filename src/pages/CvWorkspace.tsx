@@ -581,6 +581,12 @@ const CvWorkspace = () => {
   };
 
   const handleSubmit = async (cvContent: string, jobDescription: string, powOverride?: { proof_suggestion: string; company: string; role: string }) => {
+    // FIX 4: Validate CV text before calling edge function
+    if (!cvContent || cvContent.trim().length < 50) {
+      toast({ title: "We could not read your CV. Please try uploading it again.", variant: "destructive" });
+      return;
+    }
+
     setLoading(true);
     setResult(null);
     setAlignmentData(null);
