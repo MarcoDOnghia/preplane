@@ -26,7 +26,7 @@ const SignInBanner = () => {
   return (
     <div className="w-full flex justify-center pt-4 pb-2 px-4">
       <button
-        onClick={() => navigate("/auth")}
+        onClick={() => navigate("/onboarding?step=4&mode=login")}
         className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-[#F97316] text-[#F97316] text-sm font-medium hover:bg-[#F97316]/5 transition-colors"
       >
         Already a PrepLane user? Sign in →
