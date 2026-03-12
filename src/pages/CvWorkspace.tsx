@@ -752,7 +752,12 @@ const CvWorkspace = () => {
 
       toast({ title: "Analysis complete!", description: "Your tailored results are ready." });
     } catch (error: any) {
-      toast({ title: "Error", description: error.message || "Something went wrong. Please try again.", variant: "destructive" });
+      const msg = error.message || "Something went wrong while analysing your CV.";
+      // FIX 4: Show friendlier message with retry button
+      toast({
+        title: msg.includes("daily limit") ? msg : "Our AI is taking longer than usual. Please try again in a moment.",
+        variant: "destructive",
+      });
     } finally {
       clearInterval(interval);
       setLoading(false);
