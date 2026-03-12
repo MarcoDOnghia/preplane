@@ -581,6 +581,12 @@ const CvWorkspace = () => {
   };
 
   const handleSubmit = async (cvContent: string, jobDescription: string, powOverride?: { proof_suggestion: string; company: string; role: string }) => {
+    // FIX 4: Validate CV text before calling edge function
+    if (!cvContent || cvContent.trim().length < 50) {
+      toast({ title: "We could not read your CV. Please try uploading it again.", variant: "destructive" });
+      return;
+    }
+
     setLoading(true);
     setResult(null);
     setAlignmentData(null);
@@ -746,7 +752,12 @@ const CvWorkspace = () => {
 
       toast({ title: "Analysis complete!", description: "Your tailored results are ready." });
     } catch (error: any) {
-      toast({ title: "Error", description: error.message || "Something went wrong. Please try again.", variant: "destructive" });
+      const msg = error.message || "Something went wrong while analysing your CV.";
+      // FIX 4: Show friendlier message with retry button
+      toast({
+        title: msg.includes("daily limit") ? msg : "Our AI is taking longer than usual. Please try again in a moment.",
+        variant: "destructive",
+      });
     } finally {
       clearInterval(interval);
       setLoading(false);

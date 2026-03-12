@@ -791,6 +791,12 @@ const Index = () => {
 
   // --- Submit ---
   const handleSubmit = async (cvContent: string, jobDescription: string) => {
+    // FIX 4: Validate CV text before calling edge function
+    if (!cvContent || cvContent.trim().length < 50) {
+      toast({ title: "We could not read your CV. Please try uploading it again.", variant: "destructive" });
+      return;
+    }
+
     setLoading(true);
     setResult(null);
     setAlignmentData(null);
@@ -843,12 +849,43 @@ const Index = () => {
         }).catch(() => {});
       }
 
-      const { data, error } = await supabase.functions.invoke("tailor-cv", {
-        headers: authHeaders,
-        body: { cvContent, jobDescription, tone: "professional" },
-      });
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
+      // FIX 4: Invoke tailor-cv with retry
+      const invokeWithRetry = async (retries = 1): Promise<any> => {
+        const { data, error } = await supabase.functions.invoke("tailor-cv", {
+          headers: authHeaders,
+          body: { cvContent, jobDescription, tone: "professional" },
+        });
+
+        if (error) {
+          const errMsg = typeof error === "object" && "message" in error ? (error as any).message : String(error);
+          if (errMsg.includes("429") || errMsg.toLowerCase().includes("rate limit") || errMsg.toLowerCase().includes("daily limit")) {
+            throw new Error("You've used your daily limit for this feature. Come back tomorrow — limits reset at midnight.");
+          }
+          if (errMsg.includes("401") || errMsg.toLowerCase().includes("unauthorized")) {
+            throw new Error("Your session has expired. Please sign out and sign back in.");
+          }
+          if (retries > 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            return invokeWithRetry(retries - 1);
+          }
+          throw new Error("Our AI is taking longer than usual. Please try again in a moment.");
+        }
+
+        if (data?.error) {
+          if (data.error.includes("daily limit") || data.error.includes("limit")) {
+            throw new Error(data.error);
+          }
+          if (retries > 0) {
+            await new Promise(r => setTimeout(r, 2000));
+            return invokeWithRetry(retries - 1);
+          }
+          throw new Error(data.error);
+        }
+
+        return data;
+      };
+
+      const data = await invokeWithRetry(1);
 
       // Store result with suggestions — but do NOT apply them to the model
       setResult(data);
@@ -911,7 +948,11 @@ const Index = () => {
       if (inserted) lastAppIdRef.current = inserted.id;
       toast({ title: "Analysis complete!", description: "Your tailored results are ready." });
     } catch (error: any) {
-      toast({ title: "Error", description: error.message || "Something went wrong", variant: "destructive" });
+      const msg = error.message || "Something went wrong while analysing your CV.";
+      toast({
+        title: msg.includes("daily limit") ? msg : "Our AI is taking longer than usual. Please try again in a moment.",
+        variant: "destructive",
+      });
     } finally {
       clearInterval(interval);
       setLoading(false);

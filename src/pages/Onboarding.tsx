@@ -26,7 +26,7 @@ const SignInBanner = () => {
   return (
     <div className="w-full flex justify-center pt-4 pb-2 px-4">
       <button
-        onClick={() => navigate("/auth")}
+        onClick={() => navigate("/onboarding?step=4&mode=login")}
         className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-[#F97316] text-[#F97316] text-sm font-medium hover:bg-[#F97316]/5 transition-colors"
       >
         Already a PrepLane user? Sign in →
@@ -38,6 +38,7 @@ const SignInBanner = () => {
 const Onboarding = () => {
   const [searchParams] = useSearchParams();
   const initialStep = searchParams.get("step") === "4" ? 4 : 1;
+  const initialLoginMode = searchParams.get("mode") === "login";
   const [step, setStep] = useState(initialStep);
   const [targetRole, setTargetRole] = useState("");
   const [targetLocation, setTargetLocation] = useState("");
@@ -48,7 +49,7 @@ const Onboarding = () => {
   const [ready, setReady] = useState(false);
 
   // Auth form state (step 4)
-  const [isLogin, setIsLogin] = useState(false);
+  const [isLogin, setIsLogin] = useState(initialLoginMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -279,7 +280,7 @@ const Onboarding = () => {
            </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate("/auth")}
+              onClick={() => navigate("/onboarding?step=4&mode=login")}
               className="px-4 py-2 rounded-full border border-[#F97316] text-[#F97316] text-sm font-medium hover:bg-[#F97316]/5 transition-colors"
             >
               Already a PrepLane user? Sign in →
@@ -952,14 +953,28 @@ const Onboarding = () => {
 
                 {/* Toggle login/signup */}
                 <div className="text-center text-sm text-slate-500">
-                  {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
-                  <button
-                    type="button"
-                    className="text-[#F97316] hover:underline font-semibold"
-                    onClick={() => { setIsLogin(!isLogin); setAuthError(null); setForgotMode(false); setTouched({}); }}
-                  >
-                    {isLogin ? "Sign up" : "Sign in"}
-                  </button>
+                  {isLogin ? (
+                    <>
+                      <button
+                        type="button"
+                        className="text-[#F97316] hover:underline font-semibold"
+                        onClick={() => { setIsLogin(false); setAuthError(null); setForgotMode(false); setTouched({}); navigate("/onboarding"); }}
+                      >
+                        New to PrepLane? Start here →
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      Already have an account?{" "}
+                      <button
+                        type="button"
+                        className="text-[#F97316] hover:underline font-semibold"
+                        onClick={() => { setIsLogin(true); setAuthError(null); setForgotMode(false); setTouched({}); }}
+                      >
+                        Sign in
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
 
