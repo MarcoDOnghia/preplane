@@ -953,14 +953,28 @@ const Onboarding = () => {
 
                 {/* Toggle login/signup */}
                 <div className="text-center text-sm text-slate-500">
-                  {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
-                  <button
-                    type="button"
-                    className="text-[#F97316] hover:underline font-semibold"
-                    onClick={() => { setIsLogin(!isLogin); setAuthError(null); setForgotMode(false); setTouched({}); }}
-                  >
-                    {isLogin ? "Sign up" : "Sign in"}
-                  </button>
+                  {isLogin ? (
+                    <>
+                      <button
+                        type="button"
+                        className="text-[#F97316] hover:underline font-semibold"
+                        onClick={() => { setIsLogin(false); setAuthError(null); setForgotMode(false); setTouched({}); navigate("/onboarding"); }}
+                      >
+                        New to PrepLane? Start here →
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      Already have an account?{" "}
+                      <button
+                        type="button"
+                        className="text-[#F97316] hover:underline font-semibold"
+                        onClick={() => { setIsLogin(true); setAuthError(null); setForgotMode(false); setTouched({}); }}
+                      >
+                        Sign in
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
 
