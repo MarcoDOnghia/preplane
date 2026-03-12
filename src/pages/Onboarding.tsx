@@ -38,6 +38,7 @@ const SignInBanner = () => {
 const Onboarding = () => {
   const [searchParams] = useSearchParams();
   const initialStep = searchParams.get("step") === "4" ? 4 : 1;
+  const initialLoginMode = searchParams.get("mode") === "login";
   const [step, setStep] = useState(initialStep);
   const [targetRole, setTargetRole] = useState("");
   const [targetLocation, setTargetLocation] = useState("");
@@ -48,7 +49,7 @@ const Onboarding = () => {
   const [ready, setReady] = useState(false);
 
   // Auth form state (step 4)
-  const [isLogin, setIsLogin] = useState(false);
+  const [isLogin, setIsLogin] = useState(initialLoginMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
