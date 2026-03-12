@@ -948,7 +948,11 @@ const Index = () => {
       if (inserted) lastAppIdRef.current = inserted.id;
       toast({ title: "Analysis complete!", description: "Your tailored results are ready." });
     } catch (error: any) {
-      toast({ title: "Error", description: error.message || "Something went wrong", variant: "destructive" });
+      const msg = error.message || "Something went wrong while analysing your CV.";
+      toast({
+        title: msg.includes("daily limit") ? msg : "Our AI is taking longer than usual. Please try again in a moment.",
+        variant: "destructive",
+      });
     } finally {
       clearInterval(interval);
       setLoading(false);
