@@ -280,7 +280,7 @@ const Onboarding = () => {
            </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate("/auth")}
+              onClick={() => navigate("/onboarding?step=4&mode=login")}
               className="px-4 py-2 rounded-full border border-[#F97316] text-[#F97316] text-sm font-medium hover:bg-[#F97316]/5 transition-colors"
             >
               Already a PrepLane user? Sign in →
