@@ -124,6 +124,7 @@ const Campaign = () => {
   const [followups, setFollowups] = useState<{ day3: string; day7: string; day14: string }>({ day3: "", day7: "", day14: "" });
   const [followupSent, setFollowupSent] = useState<{ day3: boolean; day7: boolean; day14: boolean }>({ day3: false, day7: false, day14: false });
   const [notes, setNotes] = useState("");
+  const [companyInput, setCompanyInput] = useState("");
 
   useEffect(() => {
     if (id) {
