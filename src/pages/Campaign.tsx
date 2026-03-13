@@ -224,8 +224,8 @@ const Campaign = () => {
           jdText: campaign.jd_text,
           cvSummary: campaign.cv_version?.slice(0, 2000),
           connectionName: connectionName || undefined,
-          proofOfWorkTitle: (contentType === "outreach" || contentType === "linkedin_angles") ? getProofTitle() : undefined,
-          proofOfWorkDetails: contentType === "linkedin_angles" ? proofSuggestion : undefined,
+          proofOfWorkTitle: (contentType === "outreach" || contentType === "linkedin_angles" || contentType === "cover_letter") ? getProofTitle() : undefined,
+          proofOfWorkDetails: (contentType === "linkedin_angles" || contentType === "cover_letter") ? proofSuggestion : undefined,
         },
       });
       if (error) throw error;

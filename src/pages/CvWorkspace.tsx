@@ -630,7 +630,18 @@ const CvWorkspace = () => {
         const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
         const now = new Date();
         const currentDate = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
-        const powSection = `\n\nPROJECTS\n${activePow.role || "Proof of Work"} Project — Self-initiated | ${currentDate}\n${activePow.proof_suggestion}\nBuilt as a targeted proof of work for ${activePow.company || "a target role"}\n`;
+        let powTitle = activePow.role || "Proof of Work";
+        let powDescription = "";
+        let powTools = "";
+        try {
+          const parsed = JSON.parse(activePow.proof_suggestion);
+          if (parsed.title) powTitle = parsed.title;
+          if (parsed.why_this_works) powDescription = parsed.why_this_works;
+          if (parsed.tools_to_use) powTools = `Tools used: ${(parsed.tools_to_use as string[]).join(", ")}`;
+        } catch {
+          powDescription = activePow.proof_suggestion.split("\n")[0] || "";
+        }
+        const powSection = `\n\nPROJECTS\n${powTitle} — Self-initiated | ${currentDate}\n${powDescription}\n${powTools}\nBuilt as a targeted proof of work for ${activePow.company || "a target role"}\n`;
         enrichedCvContent = cvContent + powSection;
       }
 
