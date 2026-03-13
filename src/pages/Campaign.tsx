@@ -693,31 +693,60 @@ const Campaign = () => {
             onToggle={() => toggleStep(3)}
           >
             <div className="space-y-3">
-              <Button
-                size="sm"
-                onClick={() => generateContent("outreach")}
-                disabled={!!generating}
-              >
-                {generating === "outreach" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
-                Generate outreach message
-              </Button>
-              {!connectionName && !campaign.step_connection_done && (
-                <div className="rounded-lg border border-yellow-300 bg-yellow-50 dark:bg-yellow-950/20 dark:border-yellow-800 px-3 py-2 text-sm text-yellow-800 dark:text-yellow-200 space-y-1">
-                  <p>⚠️ You haven't added a contact yet. Head to Step 3 to add a name and LinkedIn URL — it makes your outreach significantly more personal and effective.</p>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setOpenSteps((prev) => new Set(prev).add(2));
-                      setTimeout(() => {
-                        const el = document.getElementById("step-2");
-                        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-                      }, 100);
-                    }}
-                    className="text-xs text-primary hover:text-primary/80 underline underline-offset-2 font-medium"
-                  >
-                    Go to Step 3 →
-                  </button>
+              {/* Gate outreach on company name */}
+              {!campaign.company || campaign.company.trim() === "" ? (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Which company are you targeting with this outreach?</label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={companyInput}
+                      onChange={(e) => setCompanyInput(e.target.value)}
+                      placeholder="e.g. Stripe"
+                      className="flex-1"
+                    />
+                    <Button
+                      size="sm"
+                      disabled={!companyInput.trim()}
+                      onClick={async () => {
+                        const name = companyInput.trim();
+                        if (!name) return;
+                        await updateCampaign({ company: name });
+                        setCompanyInput("");
+                      }}
+                    >
+                      Save
+                    </Button>
+                  </div>
                 </div>
+              ) : (
+                <>
+                  <Button
+                    size="sm"
+                    onClick={() => generateContent("outreach")}
+                    disabled={!!generating}
+                  >
+                    {generating === "outreach" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
+                    Generate outreach message
+                  </Button>
+                  {!connectionName && !campaign.step_connection_done && (
+                    <div className="rounded-lg border border-yellow-300 bg-yellow-50 dark:bg-yellow-950/20 dark:border-yellow-800 px-3 py-2 text-sm text-yellow-800 dark:text-yellow-200 space-y-1">
+                      <p>⚠️ You haven't added a contact yet. Head to Step 3 to add a name and LinkedIn URL — it makes your outreach significantly more personal and effective.</p>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenSteps((prev) => new Set(prev).add(2));
+                          setTimeout(() => {
+                            const el = document.getElementById("step-2");
+                            if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                          }, 100);
+                        }}
+                        className="text-xs text-primary hover:text-primary/80 underline underline-offset-2 font-medium"
+                      >
+                        Go to Step 3 →
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
               {outreachMessage && (
                 <div className="space-y-2">
