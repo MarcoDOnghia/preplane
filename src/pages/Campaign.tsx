@@ -809,7 +809,26 @@ const Campaign = () => {
             onToggle={() => toggleStep(4)}
           >
             <div className="space-y-3">
-              {campaign.step_cv_done ? (
+              {!campaign.proof_suggestion ? (
+                <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-4 space-y-3">
+                  <p className="text-sm text-foreground">
+                    Before tailoring your CV, you need to build your Proof of Work. This is what separates your application from everyone else's. Not a better CV: something real.
+                  </p>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setOpenSteps((prev) => new Set(prev).add(0));
+                      setTimeout(() => {
+                        const el = document.getElementById("step-0");
+                        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }, 100);
+                    }}
+                  >
+                    <Lightbulb className="h-4 w-4 mr-1" />
+                    Build my Proof of Work
+                  </Button>
+                </div>
+              ) : campaign.step_cv_done ? (
                 <>
                   <div className="flex items-center gap-3">
                     <span className="text-sm text-muted-foreground">Match Score:</span>
@@ -861,7 +880,7 @@ const Campaign = () => {
                 </>
               ) : (
                 <div className="space-y-3">
-                  <p className="text-sm text-muted-foreground">Tailor your CV to match this role's requirements.</p>
+                  <p className="text-sm text-muted-foreground">Tailor your CV to match this role's requirements. Your Proof of Work will be included automatically.</p>
                   <Button
                     onClick={() => {
                       const params = new URLSearchParams();
