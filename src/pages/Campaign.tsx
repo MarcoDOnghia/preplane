@@ -224,8 +224,8 @@ const Campaign = () => {
           jdText: campaign.jd_text,
           cvSummary: campaign.cv_version?.slice(0, 2000),
           connectionName: connectionName || undefined,
-          proofOfWorkTitle: (contentType === "outreach" || contentType === "linkedin_angles") ? getProofTitle() : undefined,
-          proofOfWorkDetails: contentType === "linkedin_angles" ? proofSuggestion : undefined,
+          proofOfWorkTitle: (contentType === "outreach" || contentType === "linkedin_angles" || contentType === "cover_letter") ? getProofTitle() : undefined,
+          proofOfWorkDetails: (contentType === "linkedin_angles" || contentType === "cover_letter") ? proofSuggestion : undefined,
         },
       });
       if (error) throw error;
@@ -809,7 +809,26 @@ const Campaign = () => {
             onToggle={() => toggleStep(4)}
           >
             <div className="space-y-3">
-              {campaign.step_cv_done ? (
+              {!campaign.proof_suggestion ? (
+                <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-4 space-y-3">
+                  <p className="text-sm text-foreground">
+                    Before tailoring your CV, you need to build your Proof of Work. This is what separates your application from everyone else's. Not a better CV: something real.
+                  </p>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setOpenSteps((prev) => new Set(prev).add(0));
+                      setTimeout(() => {
+                        const el = document.getElementById("step-0");
+                        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }, 100);
+                    }}
+                  >
+                    <Lightbulb className="h-4 w-4 mr-1" />
+                    Build my Proof of Work
+                  </Button>
+                </div>
+              ) : campaign.step_cv_done ? (
                 <>
                   <div className="flex items-center gap-3">
                     <span className="text-sm text-muted-foreground">Match Score:</span>
@@ -861,7 +880,7 @@ const Campaign = () => {
                 </>
               ) : (
                 <div className="space-y-3">
-                  <p className="text-sm text-muted-foreground">Tailor your CV to match this role's requirements.</p>
+                  <p className="text-sm text-muted-foreground">Tailor your CV to match this role's requirements. Your Proof of Work will be included automatically.</p>
                   <Button
                     onClick={() => {
                       const params = new URLSearchParams();
@@ -889,7 +908,26 @@ const Campaign = () => {
             onToggle={() => toggleStep(5)}
           >
             <div className="space-y-3">
-              {!campaign.step_cv_done ? (
+              {!campaign.proof_suggestion ? (
+                <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-4 space-y-3">
+                  <p className="text-sm text-foreground">
+                    Before tailoring your CV, you need to build your Proof of Work. This is what separates your application from everyone else's. Not a better CV: something real.
+                  </p>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setOpenSteps((prev) => new Set(prev).add(0));
+                      setTimeout(() => {
+                        const el = document.getElementById("step-0");
+                        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }, 100);
+                    }}
+                  >
+                    <Lightbulb className="h-4 w-4 mr-1" />
+                    Build my Proof of Work
+                  </Button>
+                </div>
+              ) : !campaign.step_cv_done ? (
                 <div className="rounded-lg border border-yellow-300 bg-yellow-50 dark:bg-yellow-950/20 dark:border-yellow-800 px-3 py-2 text-sm text-yellow-800 dark:text-yellow-200">
                   <p>⚠️ Complete CV tailoring first — your cover letter will use your tailored CV content for the best results.</p>
                   <button

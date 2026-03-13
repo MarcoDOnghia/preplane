@@ -114,10 +114,13 @@ Return all three as separate messages.`,
 Instructions:
 - 3-4 paragraphs, 250-350 words total
 - Opening: Hook with something specific about the company
-- Middle: Connect 2-3 relevant experiences to the role requirements
+- Middle paragraph 1: Connect 2-3 relevant experiences to the role requirements
+- Middle paragraph 2 (MANDATORY if Proof of Work is provided): Write a dedicated paragraph explaining the Proof of Work project. Describe what it is, what was built, and why it is directly relevant to this specific role and company. Write as if the HR manager has never heard of it before — be specific and concrete, not vague. This paragraph should make the reader think "this person actually did the work."
 - Close: Express genuine enthusiasm and next steps
 - Sound professional but human — no corporate boilerplate
-- Use the job description context to tailor every sentence`,
+- Use the job description context to tailor every sentence
+- Never use em-dashes (—) or double-dashes (--)
+- Never start consecutive sentences with "I" or "My"`,
 
   linkedin_angles: `You are a career strategist helping a student figure out what to post on LinkedIn about a proof-of-work project they completed.
 
