@@ -406,7 +406,7 @@ function SuggestionCard({
           <span className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold ${isApplied ? "bg-success text-success-foreground" : "bg-primary text-primary-foreground"}`}>
             {isApplied ? <Check className="h-3.5 w-3.5" /> : index + 1}
           </span>
-          {suggestion.section}
+          {cleanSection}
           {suggestion.priority && (
             <Badge variant="outline" className={`text-xs ${PRIORITY_COLORS[suggestion.priority] || ""}`}>
               {suggestion.priority}
