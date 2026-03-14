@@ -453,10 +453,10 @@ function SuggestionCard({
               {isApplied ? <Check className="h-3 w-3" /> : <ArrowRight className="h-3 w-3" />}
               {isApplied ? "Applied" : "Suggested"}
             </p>
-            <p className="whitespace-pre-line">{sanitizeDisplayText(suggestion.suggested)}</p>
+            <p className="whitespace-pre-line">{cleanSuggested}</p>
           </div>
         </div>
-        <p className="mt-3 text-sm text-muted-foreground italic">💡 {sanitizeDisplayText(suggestion.reason)}</p>
+        <p className="mt-3 text-sm text-muted-foreground italic">💡 {cleanReason}</p>
       </CardContent>
     </Card>
   );
