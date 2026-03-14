@@ -162,7 +162,7 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange }: Ats
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {keywordsFound.map((kw, i) => (
+              {sanitizeDisplayArray(keywordsFound).map((kw, i) => (
                 <Badge key={i} className="bg-success/10 text-success border-success/20 hover:bg-success/20">
                   ✓ {kw}
                 </Badge>
