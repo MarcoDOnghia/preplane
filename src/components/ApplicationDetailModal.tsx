@@ -7,6 +7,7 @@ import { Download, Clock, DollarSign } from "lucide-react";
 import { exportCoverLetter, exportCvSuggestions } from "@/lib/exportDoc";
 import ApplicationTimeline from "./ApplicationTimeline";
 import type { TailorResult } from "@/lib/types";
+import { sanitizeDisplayText } from "@/lib/sanitizeText";
 
 interface AppRow {
   id: string;
