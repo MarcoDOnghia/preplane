@@ -36,6 +36,7 @@ import { cvModelToPlainText, cvModelToHtml } from "@/lib/cvDataModel";
 import type { CvDataModel } from "@/lib/cvDataModel";
 import type { TailorResult, CvSuggestion } from "@/lib/types";
 import { matchKeyword } from "@/lib/atsScore";
+import { sanitizeDisplayText, sanitizeDisplayArray } from "@/lib/sanitizeText";
 
 interface ResultsSectionProps {
   result: TailorResult;
