@@ -170,6 +170,17 @@ export async function exportAtsTemplateCv(cv: ReformattedCv, jobTitle: string) {
           spacing: { after: 20 },
         })
       );
+      if ((ed as any).gpa) {
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: "GPA: ", bold: true, size: BODY_SIZE, font: FONT }),
+              new TextRun({ text: (ed as any).gpa, size: BODY_SIZE, font: FONT }),
+            ],
+            spacing: { after: 20 },
+          })
+        );
+      }
       if (ed.coursework) {
         children.push(
           new Paragraph({
