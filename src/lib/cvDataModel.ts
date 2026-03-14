@@ -368,6 +368,7 @@ export function reformattedCvToModel(cv: ReformattedCv): CvDataModel {
       degree: e.degree,
       university: e.university,
       dates: e.dates,
+      gpa: "",
       coursework: e.coursework || "",
     })),
     skills: cv.technicalSkills || "",
