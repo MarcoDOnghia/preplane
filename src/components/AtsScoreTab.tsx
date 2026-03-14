@@ -238,7 +238,7 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange }: Ats
           </CardHeader>
           <CardContent>
             <ul className="space-y-2">
-              {formattingIssues.map((issue, i) => (
+              {sanitizeDisplayArray(formattingIssues).map((issue, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm">
                   <AlertTriangle className="h-4 w-4 text-yellow-500 shrink-0 mt-0.5" />
                   {issue}
