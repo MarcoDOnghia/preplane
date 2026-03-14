@@ -151,7 +151,7 @@ const ApplicationDetailModal = ({ open, onClose, app, userId }: ApplicationDetai
               <Card>
                 <CardHeader><CardTitle className="text-base">Cover Letter</CardTitle></CardHeader>
                 <CardContent>
-                  <p className="text-sm leading-relaxed whitespace-pre-line line-clamp-[20]">{result.coverLetter}</p>
+                  <p className="text-sm leading-relaxed whitespace-pre-line line-clamp-[20]">{sanitizeDisplayText(result.coverLetter)}</p>
                 </CardContent>
               </Card>
             )}
