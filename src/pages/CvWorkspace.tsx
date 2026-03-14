@@ -260,12 +260,23 @@ const CvWorkspace = () => {
       return clone;
     }
 
-    if (hint.includes('education') || hint.includes('coursework') || hint.includes('degree')) {
+    if (hint.includes('education') || hint.includes('coursework') || hint.includes('degree') || hint.includes('gpa') || hint.includes('university')) {
       for (const edu of clone.education) {
+        if (hint.includes('gpa')) { edu.gpa = suggested; return clone; }
         if (hint.includes('coursework') || hint.includes('relevant')) { edu.coursework = suggested; return clone; }
-        if (hint.includes('degree')) { edu.degree = suggested; return clone; }
+        if (hint.includes('degree')) {
+          // Clean replace — don't concatenate, just set
+          edu.degree = suggested;
+          return clone;
+        }
+        if (hint.includes('university') || hint.includes('school')) {
+          edu.university = suggested;
+          return clone;
+        }
+        // Fuzzy match on existing fields — replace the matched field only
         if (edu.coursework && fuzzyMatch(edu.coursework)) { edu.coursework = suggested; return clone; }
         if (edu.degree && fuzzyMatch(edu.degree)) { edu.degree = suggested; return clone; }
+        if (edu.university && fuzzyMatch(edu.university)) { edu.university = suggested; return clone; }
       }
       if (clone.education.length > 0) { clone.education[0].coursework = suggested; return clone; }
     }
@@ -296,6 +307,7 @@ const CvWorkspace = () => {
     for (const edu of clone.education) {
       if (edu.degree && fuzzyMatch(edu.degree)) { edu.degree = suggested; return clone; }
       if (edu.coursework && fuzzyMatch(edu.coursework)) { edu.coursework = suggested; return clone; }
+      if (edu.university && fuzzyMatch(edu.university)) { edu.university = suggested; return clone; }
     }
     return clone;
   };

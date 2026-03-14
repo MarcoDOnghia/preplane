@@ -14,6 +14,7 @@ export interface CvEducation {
   degree: string;
   university: string;
   dates: string;
+  gpa: string;
   coursework: string;
 }
 
@@ -256,10 +257,18 @@ export function parseCvToModel(input: string): CvDataModel {
 
       case "education": {
         if (isBullet(line)) {
-          // Coursework as bullets
           if (currentEdu) {
             const c = cleanBullet(line);
-            currentEdu.coursework = currentEdu.coursework ? currentEdu.coursework + ", " + c : c;
+            // Detect GPA bullets
+            if (/^gpa\s*:/i.test(c) || /^gpa\s/i.test(c) || /^\d+(\.\d+)?\s*\/\s*\d+/i.test(c)) {
+              currentEdu.gpa = c.replace(/^gpa\s*:?\s*/i, "").trim();
+            } else {
+              currentEdu.coursework = currentEdu.coursework ? currentEdu.coursework + ", " + c : c;
+            }
+          }
+        } else if (/^gpa\s*:/i.test(line)) {
+          if (currentEdu) {
+            currentEdu.gpa = line.replace(/^gpa\s*:?\s*/i, "").trim();
           }
         } else if (/relevant\s+coursework/i.test(line)) {
           if (currentEdu) {
@@ -276,7 +285,7 @@ export function parseCvToModel(input: string): CvDataModel {
             flushEdu();
             const d = extractDates(line);
             const cleaned = removeDates(line, d);
-            currentEdu = { degree: cleaned, university: "", dates: d, coursework: "" };
+            currentEdu = { degree: cleaned, university: "", dates: d, gpa: "", coursework: "" };
           }
         }
         break;
@@ -359,6 +368,7 @@ export function reformattedCvToModel(cv: ReformattedCv): CvDataModel {
       degree: e.degree,
       university: e.university,
       dates: e.dates,
+      gpa: "",
       coursework: e.coursework || "",
     })),
     skills: cv.technicalSkills || "",
@@ -399,6 +409,7 @@ export function aiParsedCvToModel(cvData: any): CvDataModel {
       degree: e.degree || "",
       university: e.school || e.university || "",
       dates: e.dates || "",
+      gpa: e.gpa || "",
       coursework: e.coursework || "",
     })),
     skills: Array.isArray(cvData.skills) ? cvData.skills.join(", ") : (cvData.skills || ""),
@@ -445,9 +456,9 @@ export function cvModelToPlainText(model: CvDataModel): string {
   if (model.education.length) {
     parts.push("EDUCATION");
     model.education.forEach((e) => {
-      if (e.university) parts.push(e.university);
+      parts.push(`${e.university}${e.dates ? " | " + e.dates : ""}`);
       if (e.degree) parts.push(e.degree);
-      if (e.dates) parts.push(e.dates);
+      if (e.gpa) parts.push("GPA: " + e.gpa);
       if (e.coursework) parts.push("Relevant Coursework: " + e.coursework);
       parts.push("");
     });
@@ -523,8 +534,9 @@ export function cvModelToHtml(model: CvDataModel): string {
   if (model.education.length) {
     parts.push(`<h2>EDUCATION</h2>`);
     model.education.forEach((e) => {
-      if (e.university) parts.push(`<p><strong>${esc(e.university)}</strong></p>`);
-      if (e.degree) parts.push(`<p>${esc(e.degree)}${e.dates ? " — " + esc(e.dates) : ""}</p>`);
+      parts.push(`<p><strong>${esc(e.university)}</strong>${e.dates ? " | " + esc(e.dates) : ""}</p>`);
+      if (e.degree) parts.push(`<p>${esc(e.degree)}</p>`);
+      if (e.gpa) parts.push(`<p>GPA: ${esc(e.gpa)}</p>`);
       if (e.coursework) parts.push(`<p>Relevant Coursework: ${esc(e.coursework)}</p>`);
     });
   }

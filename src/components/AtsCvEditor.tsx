@@ -160,6 +160,7 @@ const AtsCvEditor = ({
           university: e.university,
           dates: e.dates,
           coursework: e.coursework,
+          gpa: "",
         })),
         technicalSkills: model.skills,
         projectExperience: model.projects.map((p) => ({
@@ -307,33 +308,49 @@ const AtsCvEditor = ({
           {/* Education */}
           <SectionLabel>EDUCATION</SectionLabel>
           {model.education.map((edu, i) => (
-            <div key={i} className="mb-3 group relative">
+            <div key={i} className="mb-4 group relative">
+              {/* University | Dates */}
               <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-1.5 mb-1">
                 <Input
                   value={edu.university}
                   onChange={(e) => updateEdu(i, { university: e.target.value })}
                   className="text-sm font-semibold"
-                  placeholder="University"
+                  placeholder="University / School"
                 />
                 <Input
                   value={edu.dates}
                   onChange={(e) => updateEdu(i, { dates: e.target.value })}
-                  className="text-sm text-muted-foreground w-full sm:w-40"
-                  placeholder="Dates"
+                  className="text-sm text-muted-foreground w-full sm:w-48"
+                  placeholder="Start – End"
                 />
               </div>
+              {/* Degree */}
               <Input
                 value={edu.degree}
                 onChange={(e) => updateEdu(i, { degree: e.target.value })}
                 className="text-sm mb-1"
-                placeholder="Degree"
+                placeholder="Degree (e.g. BSc Economics and Management)"
               />
-              <Input
-                value={edu.coursework}
-                onChange={(e) => updateEdu(i, { coursework: e.target.value })}
-                className="text-xs text-muted-foreground"
-                placeholder="Relevant Coursework (comma-separated)"
-              />
+              {/* GPA */}
+              <div className="flex items-center gap-1.5 mb-1 ml-4">
+                <span className="text-xs text-muted-foreground whitespace-nowrap">GPA:</span>
+                <Input
+                  value={edu.gpa || ""}
+                  onChange={(e) => updateEdu(i, { gpa: e.target.value })}
+                  className="text-xs text-muted-foreground h-7 max-w-[200px]"
+                  placeholder="e.g. 3.8/4.0 (leave blank if N/A)"
+                />
+              </div>
+              {/* Coursework */}
+              <div className="flex items-center gap-1.5 ml-4">
+                <span className="text-xs text-muted-foreground whitespace-nowrap">Coursework:</span>
+                <Input
+                  value={edu.coursework}
+                  onChange={(e) => updateEdu(i, { coursework: e.target.value })}
+                  className="text-xs text-muted-foreground h-7"
+                  placeholder="Relevant Coursework (comma-separated)"
+                />
+              </div>
               <Button
                 variant="ghost"
                 size="icon"
@@ -349,7 +366,7 @@ const AtsCvEditor = ({
             size="sm"
             className="text-xs"
             onClick={() =>
-              set("education", [...model.education, { degree: "", university: "", dates: "", coursework: "" }])
+              set("education", [...model.education, { degree: "", university: "", dates: "", gpa: "", coursework: "" }])
             }
           >
             <Plus className="h-3 w-3 mr-1" /> Add Education

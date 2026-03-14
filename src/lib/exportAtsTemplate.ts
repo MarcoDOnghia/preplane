@@ -60,6 +60,9 @@ export function reformattedCvToHtml(cv: ReformattedCv): string {
     cv.education.forEach((e) => {
       parts.push(`<p><strong>${escapeHtml(e.university)}</strong> | ${escapeHtml(e.dates)}</p>`);
       parts.push(`<p>${escapeHtml(e.degree)}</p>`);
+      if ((e as any).gpa) {
+        parts.push(`<p>GPA: ${escapeHtml((e as any).gpa)}</p>`);
+      }
       if (e.coursework) {
         parts.push(`<p><strong>Relevant Coursework:</strong> ${escapeHtml(e.coursework)}</p>`);
       }
@@ -167,6 +170,17 @@ export async function exportAtsTemplateCv(cv: ReformattedCv, jobTitle: string) {
           spacing: { after: 20 },
         })
       );
+      if ((ed as any).gpa) {
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: "GPA: ", bold: true, size: BODY_SIZE, font: FONT }),
+              new TextRun({ text: (ed as any).gpa, size: BODY_SIZE, font: FONT }),
+            ],
+            spacing: { after: 20 },
+          })
+        );
+      }
       if (ed.coursework) {
         children.push(
           new Paragraph({
