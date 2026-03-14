@@ -14,6 +14,7 @@ export interface CvEducation {
   degree: string;
   university: string;
   dates: string;
+  gpa: string;
   coursework: string;
 }
 
