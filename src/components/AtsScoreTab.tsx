@@ -260,7 +260,7 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange }: Ats
           </CardHeader>
           <CardContent>
             <ol className="space-y-2">
-              {quickWins.slice(0, 3).map((win, i) => (
+              {sanitizeDisplayArray(quickWins).slice(0, 3).map((win, i) => (
                 <li key={i} className="flex items-start gap-3 text-sm">
                   <span className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold shrink-0">
                     {i + 1}
