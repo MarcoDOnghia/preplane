@@ -456,9 +456,9 @@ export function cvModelToPlainText(model: CvDataModel): string {
   if (model.education.length) {
     parts.push("EDUCATION");
     model.education.forEach((e) => {
-      if (e.university) parts.push(e.university);
+      parts.push(`${e.university}${e.dates ? " | " + e.dates : ""}`);
       if (e.degree) parts.push(e.degree);
-      if (e.dates) parts.push(e.dates);
+      if (e.gpa) parts.push("GPA: " + e.gpa);
       if (e.coursework) parts.push("Relevant Coursework: " + e.coursework);
       parts.push("");
     });
