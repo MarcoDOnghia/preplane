@@ -7,6 +7,7 @@ import { Download, Clock, DollarSign } from "lucide-react";
 import { exportCoverLetter, exportCvSuggestions } from "@/lib/exportDoc";
 import ApplicationTimeline from "./ApplicationTimeline";
 import type { TailorResult } from "@/lib/types";
+import { sanitizeDisplayText } from "@/lib/sanitizeText";
 
 interface AppRow {
   id: string;
@@ -139,8 +140,8 @@ const ApplicationDetailModal = ({ open, onClose, app, userId }: ApplicationDetai
                 <CardContent className="space-y-3">
                   {result.cvSuggestions.slice(0, 5).map((s, i) => (
                     <div key={i} className="border-b last:border-0 pb-3">
-                      <p className="text-sm font-medium">{s.section}</p>
-                      <p className="text-xs text-muted-foreground mt-1">"{s.suggested}"</p>
+                      <p className="text-sm font-medium">{sanitizeDisplayText(s.section)}</p>
+                      <p className="text-xs text-muted-foreground mt-1">"{sanitizeDisplayText(s.suggested)}"</p>
                     </div>
                   ))}
                 </CardContent>
@@ -150,7 +151,7 @@ const ApplicationDetailModal = ({ open, onClose, app, userId }: ApplicationDetai
               <Card>
                 <CardHeader><CardTitle className="text-base">Cover Letter</CardTitle></CardHeader>
                 <CardContent>
-                  <p className="text-sm leading-relaxed whitespace-pre-line line-clamp-[20]">{result.coverLetter}</p>
+                  <p className="text-sm leading-relaxed whitespace-pre-line line-clamp-[20]">{sanitizeDisplayText(result.coverLetter)}</p>
                 </CardContent>
               </Card>
             )}

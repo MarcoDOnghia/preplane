@@ -16,6 +16,7 @@ import {
 import { useState, useMemo, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import type { AtsAnalysis } from "@/lib/types";
+import { sanitizeDisplayText, sanitizeDisplayArray } from "@/lib/sanitizeText";
 
 interface AtsScoreTabProps {
   atsAnalysis: AtsAnalysis;
@@ -161,7 +162,7 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange }: Ats
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {keywordsFound.map((kw, i) => (
+              {sanitizeDisplayArray(keywordsFound).map((kw, i) => (
                 <Badge key={i} className="bg-success/10 text-success border-success/20 hover:bg-success/20">
                   ✓ {kw}
                 </Badge>
@@ -188,7 +189,7 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange }: Ats
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {keywordsMissing.map((kw) => (
+              {sanitizeDisplayArray(keywordsMissing).map((kw) => (
                 <Badge
                   key={kw}
                   variant="outline"
@@ -237,7 +238,7 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange }: Ats
           </CardHeader>
           <CardContent>
             <ul className="space-y-2">
-              {formattingIssues.map((issue, i) => (
+              {sanitizeDisplayArray(formattingIssues).map((issue, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm">
                   <AlertTriangle className="h-4 w-4 text-yellow-500 shrink-0 mt-0.5" />
                   {issue}
@@ -259,7 +260,7 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange }: Ats
           </CardHeader>
           <CardContent>
             <ol className="space-y-2">
-              {quickWins.slice(0, 3).map((win, i) => (
+              {sanitizeDisplayArray(quickWins).slice(0, 3).map((win, i) => (
                 <li key={i} className="flex items-start gap-3 text-sm">
                   <span className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold shrink-0">
                     {i + 1}

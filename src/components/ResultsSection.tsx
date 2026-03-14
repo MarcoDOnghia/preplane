@@ -36,6 +36,7 @@ import { cvModelToPlainText, cvModelToHtml } from "@/lib/cvDataModel";
 import type { CvDataModel } from "@/lib/cvDataModel";
 import type { TailorResult, CvSuggestion } from "@/lib/types";
 import { matchKeyword } from "@/lib/atsScore";
+import { sanitizeDisplayText, sanitizeDisplayArray } from "@/lib/sanitizeText";
 
 interface ResultsSectionProps {
   result: TailorResult;
@@ -382,6 +383,22 @@ function SuggestionCard({
   onDismiss: () => void;
   onUndo: () => void;
 }) {
+  const cleanSection = sanitizeDisplayText(suggestion.section);
+  const cleanOriginal = sanitizeDisplayText(suggestion.original);
+  const cleanSuggested = sanitizeDisplayText(suggestion.suggested);
+  const cleanReason = sanitizeDisplayText(suggestion.reason);
+
+  // Fallback for malformed data
+  if (!cleanSuggested && !cleanOriginal) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <p className="text-sm text-muted-foreground">We couldn't generate suggestions for this section. Try re-uploading your CV.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className={isApplied ? "border-success/30 bg-success/5" : ""}>
       <CardHeader className="pb-2">
@@ -389,7 +406,7 @@ function SuggestionCard({
           <span className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold ${isApplied ? "bg-success text-success-foreground" : "bg-primary text-primary-foreground"}`}>
             {isApplied ? <Check className="h-3.5 w-3.5" /> : index + 1}
           </span>
-          {suggestion.section}
+          {cleanSection}
           {suggestion.priority && (
             <Badge variant="outline" className={`text-xs ${PRIORITY_COLORS[suggestion.priority] || ""}`}>
               {suggestion.priority}
@@ -429,17 +446,17 @@ function SuggestionCard({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className={`rounded-lg p-4 text-sm ${isApplied ? "bg-muted/50 line-through opacity-60" : "bg-muted"}`}>
             <p className="text-xs font-medium text-muted-foreground mb-2">Original</p>
-            <p className="whitespace-pre-line">{suggestion.original}</p>
+            <p className="whitespace-pre-line">{cleanOriginal}</p>
           </div>
           <div className={`rounded-lg border p-4 text-sm ${isApplied ? "bg-success/10 border-success/20" : "bg-primary/5 border-primary/20"}`}>
             <p className={`text-xs font-medium mb-2 flex items-center gap-1 ${isApplied ? "text-success" : "text-primary"}`}>
               {isApplied ? <Check className="h-3 w-3" /> : <ArrowRight className="h-3 w-3" />}
               {isApplied ? "Applied" : "Suggested"}
             </p>
-            <p className="whitespace-pre-line">{suggestion.suggested}</p>
+            <p className="whitespace-pre-line">{cleanSuggested}</p>
           </div>
         </div>
-        <p className="mt-3 text-sm text-muted-foreground italic">💡 {suggestion.reason}</p>
+        <p className="mt-3 text-sm text-muted-foreground italic">💡 {cleanReason}</p>
       </CardContent>
     </Card>
   );
@@ -496,7 +513,7 @@ function JdRequirementsPanel({
           </CardHeader>
           <CardContent>
             <ul className="space-y-1.5">
-              {quickWins.slice(0, 3).map((win, i) => (
+              {sanitizeDisplayArray(quickWins).slice(0, 3).map((win, i) => (
                 <li key={i} className="flex items-start gap-2 text-xs leading-relaxed">
                   <TrendingUp className="h-3.5 w-3.5 mt-0.5 shrink-0 text-success" />
                   {win}
@@ -517,7 +534,7 @@ function JdRequirementsPanel({
         </CardHeader>
         <CardContent>
           <ul className="space-y-1.5">
-            {requirements.map((req, i) => (
+            {sanitizeDisplayArray(requirements).map((req, i) => (
               <li key={i} className="flex items-start gap-2 text-xs leading-relaxed">
                 <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary/60" />
                 {req}
