@@ -307,6 +307,7 @@ const CvWorkspace = () => {
     for (const edu of clone.education) {
       if (edu.degree && fuzzyMatch(edu.degree)) { edu.degree = suggested; return clone; }
       if (edu.coursework && fuzzyMatch(edu.coursework)) { edu.coursework = suggested; return clone; }
+      if (edu.university && fuzzyMatch(edu.university)) { edu.university = suggested; return clone; }
     }
     return clone;
   };
