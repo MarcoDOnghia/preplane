@@ -189,7 +189,7 @@ const AtsScoreTab = ({ atsAnalysis, currentCv, jobDescription, onCvChange }: Ats
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {keywordsMissing.map((kw) => (
+              {sanitizeDisplayArray(keywordsMissing).map((kw) => (
                 <Badge
                   key={kw}
                   variant="outline"
