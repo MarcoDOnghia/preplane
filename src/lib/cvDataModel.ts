@@ -409,6 +409,7 @@ export function aiParsedCvToModel(cvData: any): CvDataModel {
       degree: e.degree || "",
       university: e.school || e.university || "",
       dates: e.dates || "",
+      gpa: e.gpa || "",
       coursework: e.coursework || "",
     })),
     skills: Array.isArray(cvData.skills) ? cvData.skills.join(", ") : (cvData.skills || ""),
