@@ -257,10 +257,18 @@ export function parseCvToModel(input: string): CvDataModel {
 
       case "education": {
         if (isBullet(line)) {
-          // Coursework as bullets
           if (currentEdu) {
             const c = cleanBullet(line);
-            currentEdu.coursework = currentEdu.coursework ? currentEdu.coursework + ", " + c : c;
+            // Detect GPA bullets
+            if (/^gpa\s*:/i.test(c) || /^gpa\s/i.test(c) || /^\d+(\.\d+)?\s*\/\s*\d+/i.test(c)) {
+              currentEdu.gpa = c.replace(/^gpa\s*:?\s*/i, "").trim();
+            } else {
+              currentEdu.coursework = currentEdu.coursework ? currentEdu.coursework + ", " + c : c;
+            }
+          }
+        } else if (/^gpa\s*:/i.test(line)) {
+          if (currentEdu) {
+            currentEdu.gpa = line.replace(/^gpa\s*:?\s*/i, "").trim();
           }
         } else if (/relevant\s+coursework/i.test(line)) {
           if (currentEdu) {
@@ -277,7 +285,7 @@ export function parseCvToModel(input: string): CvDataModel {
             flushEdu();
             const d = extractDates(line);
             const cleaned = removeDates(line, d);
-            currentEdu = { degree: cleaned, university: "", dates: d, coursework: "" };
+            currentEdu = { degree: cleaned, university: "", dates: d, gpa: "", coursework: "" };
           }
         }
         break;
