@@ -140,8 +140,8 @@ const ApplicationDetailModal = ({ open, onClose, app, userId }: ApplicationDetai
                 <CardContent className="space-y-3">
                   {result.cvSuggestions.slice(0, 5).map((s, i) => (
                     <div key={i} className="border-b last:border-0 pb-3">
-                      <p className="text-sm font-medium">{s.section}</p>
-                      <p className="text-xs text-muted-foreground mt-1">"{s.suggested}"</p>
+                      <p className="text-sm font-medium">{sanitizeDisplayText(s.section)}</p>
+                      <p className="text-xs text-muted-foreground mt-1">"{sanitizeDisplayText(s.suggested)}"</p>
                     </div>
                   ))}
                 </CardContent>
