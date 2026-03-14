@@ -383,6 +383,22 @@ function SuggestionCard({
   onDismiss: () => void;
   onUndo: () => void;
 }) {
+  const cleanSection = sanitizeDisplayText(suggestion.section);
+  const cleanOriginal = sanitizeDisplayText(suggestion.original);
+  const cleanSuggested = sanitizeDisplayText(suggestion.suggested);
+  const cleanReason = sanitizeDisplayText(suggestion.reason);
+
+  // Fallback for malformed data
+  if (!cleanSuggested && !cleanOriginal) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <p className="text-sm text-muted-foreground">We couldn't generate suggestions for this section. Try re-uploading your CV.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className={isApplied ? "border-success/30 bg-success/5" : ""}>
       <CardHeader className="pb-2">
