@@ -60,6 +60,9 @@ export function reformattedCvToHtml(cv: ReformattedCv): string {
     cv.education.forEach((e) => {
       parts.push(`<p><strong>${escapeHtml(e.university)}</strong> | ${escapeHtml(e.dates)}</p>`);
       parts.push(`<p>${escapeHtml(e.degree)}</p>`);
+      if ((e as any).gpa) {
+        parts.push(`<p>GPA: ${escapeHtml((e as any).gpa)}</p>`);
+      }
       if (e.coursework) {
         parts.push(`<p><strong>Relevant Coursework:</strong> ${escapeHtml(e.coursework)}</p>`);
       }
