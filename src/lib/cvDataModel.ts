@@ -534,8 +534,9 @@ export function cvModelToHtml(model: CvDataModel): string {
   if (model.education.length) {
     parts.push(`<h2>EDUCATION</h2>`);
     model.education.forEach((e) => {
-      if (e.university) parts.push(`<p><strong>${esc(e.university)}</strong></p>`);
-      if (e.degree) parts.push(`<p>${esc(e.degree)}${e.dates ? " — " + esc(e.dates) : ""}</p>`);
+      parts.push(`<p><strong>${esc(e.university)}</strong>${e.dates ? " | " + esc(e.dates) : ""}</p>`);
+      if (e.degree) parts.push(`<p>${esc(e.degree)}</p>`);
+      if (e.gpa) parts.push(`<p>GPA: ${esc(e.gpa)}</p>`);
       if (e.coursework) parts.push(`<p>Relevant Coursework: ${esc(e.coursework)}</p>`);
     });
   }
