@@ -446,7 +446,7 @@ function SuggestionCard({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className={`rounded-lg p-4 text-sm ${isApplied ? "bg-muted/50 line-through opacity-60" : "bg-muted"}`}>
             <p className="text-xs font-medium text-muted-foreground mb-2">Original</p>
-            <p className="whitespace-pre-line">{sanitizeDisplayText(suggestion.original)}</p>
+            <p className="whitespace-pre-line">{cleanOriginal}</p>
           </div>
           <div className={`rounded-lg border p-4 text-sm ${isApplied ? "bg-success/10 border-success/20" : "bg-primary/5 border-primary/20"}`}>
             <p className={`text-xs font-medium mb-2 flex items-center gap-1 ${isApplied ? "text-success" : "text-primary"}`}>
