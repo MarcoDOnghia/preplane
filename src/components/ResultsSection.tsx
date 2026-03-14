@@ -497,7 +497,7 @@ function JdRequirementsPanel({
           </CardHeader>
           <CardContent>
             <ul className="space-y-1.5">
-              {quickWins.slice(0, 3).map((win, i) => (
+              {sanitizeDisplayArray(quickWins).slice(0, 3).map((win, i) => (
                 <li key={i} className="flex items-start gap-2 text-xs leading-relaxed">
                   <TrendingUp className="h-3.5 w-3.5 mt-0.5 shrink-0 text-success" />
                   {win}
