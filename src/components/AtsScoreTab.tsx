@@ -16,6 +16,7 @@ import {
 import { useState, useMemo, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import type { AtsAnalysis } from "@/lib/types";
+import { sanitizeDisplayText, sanitizeDisplayArray } from "@/lib/sanitizeText";
 
 interface AtsScoreTabProps {
   atsAnalysis: AtsAnalysis;
