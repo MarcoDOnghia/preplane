@@ -115,11 +115,15 @@ Instructions:
 - 3-4 paragraphs, 250-350 words total
 - Opening: Hook with something specific about the company
 - Middle paragraph 1: Connect 2-3 relevant experiences to the role requirements
-- Middle paragraph 2 (MANDATORY if Proof of Work is provided): Write a dedicated paragraph explaining the Proof of Work project. Describe what it is, what was built, and why it is directly relevant to this specific role and company. Write as if the HR manager has never heard of it before — be specific and concrete, not vague. This paragraph should make the reader think "this person actually did the work."
+- Middle paragraph 2 (MANDATORY if Proof of Work is provided): Write a FULL, STANDALONE paragraph about the Proof of Work project. The reader is an HR manager who has NEVER seen any outreach message and has ZERO prior context about this project. You must include ALL THREE of the following:
+  1. What the project is: one plain-language sentence a stranger would understand (e.g. "I built a 90-day operational roadmap for a Series A fintech startup")
+  2. What was specifically built or produced: name the deliverable, its format, scope, and any concrete outputs (e.g. "a 12-page strategy document including competitor benchmarking across 8 companies, a prioritized initiative matrix, and a proposed KPI dashboard")
+  3. Why it is directly relevant to THIS role at THIS company: connect the project's substance to a specific challenge, priority, or value of the company mentioned in the job description
+  This paragraph must be detailed enough that someone reading only this paragraph would understand what the project was, be impressed by the effort, and see its relevance. Do NOT assume the reader has any background. Do NOT be vague or hand-wavy.
 - Close: Express genuine enthusiasm and next steps
-- Sound professional but human — no corporate boilerplate
+- Sound professional but human, no corporate boilerplate
 - Use the job description context to tailor every sentence
-- Never use em-dashes (—) or double-dashes (--)
+- Never use em-dashes or double-dashes
 - Never start consecutive sentences with "I" or "My"`,
 
   linkedin_angles: `You are a career strategist helping a student figure out what to post on LinkedIn about a proof-of-work project they completed.
