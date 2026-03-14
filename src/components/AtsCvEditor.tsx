@@ -160,6 +160,7 @@ const AtsCvEditor = ({
           university: e.university,
           dates: e.dates,
           coursework: e.coursework,
+          gpa: "",
         })),
         technicalSkills: model.skills,
         projectExperience: model.projects.map((p) => ({
