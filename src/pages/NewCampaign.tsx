@@ -1059,63 +1059,108 @@ const Index = () => {
               </p>
             </div>
 
-            <Card className="border-primary/30 bg-primary/5">
-              <CardContent className="pt-6 space-y-5">
-                <h3 className="text-xl font-bold">{proofBrief.title}</h3>
-
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Why this works</p>
-                  <p className="text-sm">{proofBrief.why_this_works}</p>
-                </div>
-
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">What to build</p>
-                  <ul className="list-disc pl-5 space-y-1">
-                    {(proofBrief.what_to_build as string[]).map((b: string, i: number) => (
-                      <li key={i} className="text-sm">{b}</li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Tools to use</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {(proofBrief.tools_to_use as string[]).map((t: string, i: number) => (
-                      <span key={i} className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
-                        {t}
-                      </span>
-                    ))}
+            {proofBrief.build_steps ? (
+              /* New format */
+              <Card className="border-primary/30 bg-primary/5">
+                <CardContent className="pt-6 space-y-5">
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">The Project</p>
+                    <p className="text-base font-semibold">{proofBrief.project}</p>
                   </div>
-                  <p className="flex items-center gap-1 text-xs text-green-600 mt-2">
-                    <Check className="h-3 w-3" />
-                    All tools listed are free or freemium — no budget needed.
-                  </p>
-                </div>
 
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Time estimate</p>
-                  <p className="text-sm">{proofBrief.time_estimate}</p>
-                </div>
-
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Ready-to-use AI prompt</p>
-                  <div className="relative">
-                    <pre className="text-xs bg-muted rounded-md p-3 whitespace-pre-wrap font-sans">{proofBrief.ai_prompt}</pre>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="absolute top-1 right-1 h-7 text-xs"
-                      onClick={() => {
-                        navigator.clipboard.writeText(proofBrief.ai_prompt);
-                        toast({ title: "Prompt copied!" });
-                      }}
-                    >
-                      Copy
-                    </Button>
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Why This Works</p>
+                    <p className="text-sm">{proofBrief.why_this_works}</p>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">How to Build It — Step by Step</p>
+                    <ol className="list-decimal pl-5 space-y-2">
+                      {(proofBrief.build_steps as string[]).map((step: string, i: number) => (
+                        <li key={i} className="text-sm">{step}</li>
+                      ))}
+                    </ol>
+                    <p className="flex items-center gap-1 text-xs text-green-600 mt-2">
+                      <Check className="h-3 w-3" />
+                      All tools listed are free or freemium — no budget needed.
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">What the Final Output Should Look Like</p>
+                    <p className="text-sm">{proofBrief.final_output}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">The Insight to Include</p>
+                    <p className="text-sm italic">{proofBrief.key_insight}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Your Outreach Hook</p>
+                    <div className="relative">
+                      <p className="text-sm bg-background border border-primary/20 rounded-md p-3 font-medium">{proofBrief.outreach_hook}</p>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="absolute top-1 right-1 h-7 text-xs"
+                        onClick={() => {
+                          navigator.clipboard.writeText(proofBrief.outreach_hook);
+                          toast({ title: "Hook copied!" });
+                        }}
+                      >
+                        Copy
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              /* Legacy format */
+              <Card className="border-primary/30 bg-primary/5">
+                <CardContent className="pt-6 space-y-5">
+                  <h3 className="text-xl font-bold">{proofBrief.title}</h3>
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Why this works</p>
+                    <p className="text-sm">{proofBrief.why_this_works}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">What to build</p>
+                    <ul className="list-disc pl-5 space-y-1">
+                      {(proofBrief.what_to_build as string[]).map((b: string, i: number) => (
+                        <li key={i} className="text-sm">{b}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Tools to use</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(proofBrief.tools_to_use as string[]).map((t: string, i: number) => (
+                        <span key={i} className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">{t}</span>
+                      ))}
+                    </div>
+                    <p className="flex items-center gap-1 text-xs text-green-600 mt-2">
+                      <Check className="h-3 w-3" />
+                      All tools listed are free or freemium — no budget needed.
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Time estimate</p>
+                    <p className="text-sm">{proofBrief.time_estimate}</p>
+                  </div>
+                  {proofBrief.ai_prompt && (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Ready-to-use AI prompt</p>
+                      <div className="relative">
+                        <pre className="text-xs bg-muted rounded-md p-3 whitespace-pre-wrap font-sans">{proofBrief.ai_prompt}</pre>
+                        <Button variant="ghost" size="sm" className="absolute top-1 right-1 h-7 text-xs"
+                          onClick={() => { navigator.clipboard.writeText(proofBrief.ai_prompt); toast({ title: "Prompt copied!" }); }}>Copy</Button>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             <div className="flex flex-col sm:flex-row gap-3">
               <Button onClick={handleStartBuilding} variant="outline" size="lg" className="flex-1">
