@@ -978,7 +978,7 @@ const Index = () => {
               <Lightbulb className="h-10 w-10 text-primary mx-auto" />
               <h1 className="text-[28px] font-bold tracking-tight">What role are you going after?</h1>
               <p className="text-muted-foreground text-sm">
-                We'll generate a proof-of-work brief — a specific mini-project that shows you're the real deal.
+                We'll build you a specific project that shows you can do the job — before you even apply.
               </p>
             </div>
             <div className="space-y-4">
@@ -994,7 +994,7 @@ const Index = () => {
               <div>
                 <label className="text-sm font-medium">
                   Company name{" "}
-                  <span className="text-muted-foreground font-normal">(optional — leave blank for a general brief)</span>
+                  <span className="text-muted-foreground font-normal">(recommended — we'll tailor the brief specifically to this company)</span>
                 </label>
                 <Input
                   value={setupCompany}
@@ -1005,8 +1005,8 @@ const Index = () => {
               </div>
               <div>
                 <label className="text-sm font-medium">
-                  Job description{" "}
-                  <span className="text-muted-foreground font-normal">(optional but recommended)</span>
+                  Job posting or URL{" "}
+                  <span className="text-muted-foreground font-normal">(optional — no posting? no problem. we'll build around the company instead)</span>
                 </label>
                 <Textarea
                   value={setupJd}
