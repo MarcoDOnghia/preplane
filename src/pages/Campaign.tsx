@@ -260,7 +260,7 @@ const Campaign = () => {
     if (!proofSuggestion) return undefined;
     try {
       const parsed = JSON.parse(proofSuggestion);
-      return parsed?.title;
+      return parsed?.project || parsed?.title;
     } catch {
       return proofSuggestion.split("\n")[0];
     }
