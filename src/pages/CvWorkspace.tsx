@@ -519,20 +519,27 @@ const CvWorkspace = () => {
   const handleTailorClick = async (cvContent: string, jobDescription: string) => {
     // If coming from a campaign, skip the popup — go straight to tailoring
     if (campaignId) {
-      // Fetch campaign PoW data if available
+      // Fetch campaign PoW data — MUST use this campaign's PoW only
       const { data: campData } = await supabase
         .from("campaigns")
         .select("proof_suggestion, company, role")
         .eq("id", campaignId)
         .single();
 
-      if (campData?.proof_suggestion) {
-        const pow = { proof_suggestion: campData.proof_suggestion, company: campData.company, role: campData.role };
-        setPowData(pow);
-        setIncludePow(true);
-        return handleSubmit(cvContent, jobDescription, pow);
+      if (!campData?.proof_suggestion) {
+        toast({
+          title: "Proof of Work missing",
+          description: "You haven't built your Proof of Work for this campaign yet. Build it first — it's the most important part of your application.",
+          variant: "destructive",
+          duration: 8000,
+        });
+        return;
       }
-      return handleSubmit(cvContent, jobDescription);
+
+      const pow = { proof_suggestion: campData.proof_suggestion, company: campData.company, role: campData.role };
+      setPowData(pow);
+      setIncludePow(true);
+      return handleSubmit(cvContent, jobDescription, pow);
     }
 
     // Not from a campaign — check if we should show the PoW reminder
@@ -663,7 +670,7 @@ const CvWorkspace = () => {
         const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
         const now = new Date();
         const currentDate = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
-        let powTitle = activePow.role || "Proof of Work";
+        let powTitle = "Proof of Work Project";
         let powDescription = "";
         let powTools = "";
         try {
@@ -674,7 +681,8 @@ const CvWorkspace = () => {
         } catch {
           powDescription = activePow.proof_suggestion.split("\n")[0] || "";
         }
-        const powSection = `\n\nPROJECTS\n${powTitle} — Self-initiated | ${currentDate}\n${powDescription}\n${powTools}\nBuilt as a targeted proof of work for ${activePow.company || "a target role"}\n`;
+        const companyContext = activePow.company ? ` for ${activePow.company}` : "";
+        const powSection = `\n\nPROJECTS\n${powTitle} — Self-initiated | ${currentDate}\n${powDescription}\n${powTools}\nBuilt as a targeted proof of work${companyContext}\n`;
         enrichedCvContent = cvContent + powSection;
       }
 
