@@ -234,7 +234,7 @@ const Campaign = () => {
       if (contentType === "outreach" && data.message) {
         setOutreachMessage(data.message);
         await updateCampaign({ outreach_message: data.message });
-      } else if (contentType === "proof_of_work" && data.title) {
+      } else if (contentType === "proof_of_work" && (data.project || data.title)) {
         const structured = JSON.stringify(data);
         setProofSuggestion(structured);
         await updateCampaign({ proof_suggestion: structured });
