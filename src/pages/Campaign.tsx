@@ -245,10 +245,12 @@ const Campaign = () => {
       if (contentType === "outreach" && data.message) {
         setOutreachMessage(data.message);
         await updateCampaign({ outreach_message: data.message });
+        console.log(`[PoW flow] Outreach message stored for campaign ${id}`);
       } else if (contentType === "proof_of_work" && (data.project || data.title)) {
         const structured = JSON.stringify(data);
         setProofSuggestion(structured);
         await updateCampaign({ proof_suggestion: structured });
+        console.log(`[PoW flow] PoW brief stored for campaign ${id}: ${structured.slice(0, 100)}...`);
       } else if (contentType === "linkedin_angles" && data.angles) {
         const anglesJson = JSON.stringify(data.angles);
         await updateCampaign({ linkedin_angles: anglesJson } as any);
