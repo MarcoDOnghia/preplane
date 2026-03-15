@@ -1005,8 +1005,8 @@ const Index = () => {
               </div>
               <div>
                 <label className="text-sm font-medium">
-                  Job description{" "}
-                  <span className="text-muted-foreground font-normal">(optional but recommended)</span>
+                  Job posting or URL{" "}
+                  <span className="text-muted-foreground font-normal">(optional — no posting? no problem. we'll build around the company instead)</span>
                 </label>
                 <Textarea
                   value={setupJd}
