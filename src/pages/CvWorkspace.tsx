@@ -938,6 +938,15 @@ const CvWorkspace = () => {
                 appliedKeywordBullets={appliedKeywordBulletsRef.current}
                 addedKeywords={addedKeywords}
               />
+              {/* Cold outreach cover letter — optional step after results */}
+              {isColdOutreach && coldMeta && cvModel && (
+                <ColdCoverLetterSection
+                  cvPlainText={cvModelToPlainText(cvModel)}
+                  company={coldMeta.company}
+                  roleType={coldMeta.roleType}
+                  powBrief={powData?.proof_suggestion || null}
+                />
+              )}
             </>
           )}
         </div>
