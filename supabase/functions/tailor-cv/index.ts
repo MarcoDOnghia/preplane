@@ -587,7 +587,7 @@ You MUST call the tailor_application function with your analysis.`;
       }
       const errorText = await response.text();
       console.error("AI gateway error:", response.status, errorText);
-      throw new Error(\`AI gateway error: \${response.status}\`);
+      throw new Error(`AI gateway error: ${response.status}`);
     }
 
     const data = await response.json();
