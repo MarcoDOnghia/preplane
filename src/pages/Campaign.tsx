@@ -234,7 +234,7 @@ const Campaign = () => {
       if (contentType === "outreach" && data.message) {
         setOutreachMessage(data.message);
         await updateCampaign({ outreach_message: data.message });
-      } else if (contentType === "proof_of_work" && data.title) {
+      } else if (contentType === "proof_of_work" && (data.project || data.title)) {
         const structured = JSON.stringify(data);
         setProofSuggestion(structured);
         await updateCampaign({ proof_suggestion: structured });
@@ -260,7 +260,7 @@ const Campaign = () => {
     if (!proofSuggestion) return undefined;
     try {
       const parsed = JSON.parse(proofSuggestion);
-      return parsed?.title;
+      return parsed?.project || parsed?.title;
     } catch {
       return proofSuggestion.split("\n")[0];
     }
@@ -471,16 +471,69 @@ const Campaign = () => {
               {proofSuggestion && (() => {
                 let parsed: any = null;
                 try { parsed = JSON.parse(proofSuggestion); } catch { /* legacy plain text */ }
-                if (parsed && parsed.title && parsed.what_to_build) {
+                if (parsed && (parsed.project || parsed.title) && (parsed.build_steps || parsed.what_to_build)) {
+                  // New format
+                  if (parsed.build_steps) {
+                    return (
+                      <div className="space-y-5 rounded-lg border p-4 bg-muted/30">
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">The Project</p>
+                          <p className="text-sm font-semibold">{parsed.project}</p>
+                        </div>
+
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Why This Works</p>
+                          <p className="text-sm">{parsed.why_this_works}</p>
+                        </div>
+
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">How to Build It — Step by Step</p>
+                          <ol className="list-decimal pl-5 space-y-2">
+                            {(parsed.build_steps as string[]).map((step: string, i: number) => (
+                              <li key={i} className="text-sm">{step}</li>
+                            ))}
+                          </ol>
+                          <p className="flex items-center gap-1 text-xs text-green-600 mt-2">
+                            <Check className="h-3 w-3" />
+                            All tools listed are free or freemium — no budget needed.
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">What the Final Output Should Look Like</p>
+                          <p className="text-sm">{parsed.final_output}</p>
+                        </div>
+
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">The Insight to Include</p>
+                          <p className="text-sm italic">{parsed.key_insight}</p>
+                        </div>
+
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Your Outreach Hook</p>
+                          <div className="relative">
+                            <p className="text-sm bg-primary/5 border border-primary/20 rounded-md p-3 font-medium">{parsed.outreach_hook}</p>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="absolute top-1 right-1 h-7 text-xs"
+                              onClick={() => { navigator.clipboard.writeText(parsed.outreach_hook); toast({ title: "Hook copied!" }); }}
+                            >
+                              Copy
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+                  // Legacy format (title + what_to_build)
                   return (
                     <div className="space-y-4 rounded-lg border p-4 bg-muted/30">
                       <h4 className="font-semibold text-base">{parsed.title}</h4>
-
                       <div>
                         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Why this works</p>
                         <p className="text-sm">{parsed.why_this_works}</p>
                       </div>
-
                       <div>
                         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">What to build</p>
                         <ul className="list-disc pl-5 space-y-1">
@@ -489,7 +542,6 @@ const Campaign = () => {
                           ))}
                         </ul>
                       </div>
-
                       <div>
                         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Tools to use</p>
                         <div className="flex flex-wrap gap-1.5">
@@ -502,26 +554,20 @@ const Campaign = () => {
                           All tools listed are free or freemium — no budget needed.
                         </p>
                       </div>
-
                       <div>
                         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Time estimate</p>
                         <p className="text-sm">{parsed.time_estimate}</p>
                       </div>
-
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Ready-to-use AI prompt</p>
-                        <div className="relative">
-                          <pre className="text-xs bg-muted rounded-md p-3 whitespace-pre-wrap font-sans">{parsed.ai_prompt}</pre>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="absolute top-1 right-1 h-7 text-xs"
-                            onClick={() => { navigator.clipboard.writeText(parsed.ai_prompt); toast({ title: "Prompt copied!" }); }}
-                          >
-                            Copy
-                          </Button>
+                      {parsed.ai_prompt && (
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Ready-to-use AI prompt</p>
+                          <div className="relative">
+                            <pre className="text-xs bg-muted rounded-md p-3 whitespace-pre-wrap font-sans">{parsed.ai_prompt}</pre>
+                            <Button variant="ghost" size="sm" className="absolute top-1 right-1 h-7 text-xs"
+                              onClick={() => { navigator.clipboard.writeText(parsed.ai_prompt); toast({ title: "Prompt copied!" }); }}>Copy</Button>
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   );
                 }

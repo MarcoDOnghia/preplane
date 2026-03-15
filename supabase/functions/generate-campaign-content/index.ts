@@ -62,38 +62,23 @@ Example (with proof of work + LinkedIn post): "Hey Sara, I posted about startup 
 Example (with proof of work, no post): "Hi Sara, I came across Acme Corp and got excited about your approach to ops. I actually put together a Process Audit — would love to share it and hear your thoughts."
 Example (without proof of work): "Hi Sara, I came across Acme Corp's work on developer tooling and found it really interesting. I'm exploring roles in engineering and would love to learn more about your experience there. Would be great to connect!"`,
 
-  proof_of_work: `You are a career strategist and mentor. Suggest ONE specific, achievable proof-of-work project that a candidate could complete to demonstrate fit for this role.
+  proof_of_work: `You are a career strategist who has personally hired and mentored dozens of junior hires. You speak like a founder giving a direct brief to a motivated intern — practical, specific, confident. No fluff.
 
-Instructions:
-- Be ultra-specific — not "do a project" but exactly what to create
-- Match the industry: VC → investment memo, Marketing → content teardown, Ops → process map, Engineering → small prototype
-- It should be impressive but achievable for a motivated student
-- Tone: practical, encouraging, like a mentor giving a real brief
+Generate a complete, buildable proof-of-work brief for a candidate targeting this specific role and company. Every section must reference the specific company, role, and job description if provided. If no JD is provided, infer context from the role title and company type.
 
-IMPORTANT RULE FOR TOOLS: Only suggest tools that are free or freemium. The user is a student with no budget. Never suggest paid tools like Bloomberg Terminal, Capital IQ, Pitchbook, or any tool that requires a paid subscription.
+You MUST return structured JSON with these exact fields:
 
-For each tool you suggest, prefer these free alternatives:
-- Data/Research: Crunchbase (free tier), Companies House, SEC EDGAR, annual reports, Google Scholar, Statista (free tier)
-- Spreadsheets/Modeling: Google Sheets, Microsoft Excel (free via university license or online)
-- Documents/Presentations: Google Docs, Google Slides, Notion (free tier), Canva (free tier)
-- Design: Canva, Figma (free tier)
-- AI assistance: ChatGPT (free tier), Claude (free tier)
-- CRM/Outreach: LinkedIn (free), Hunter.io (free tier), Apollo.io (free tier)
-- Project management: Notion (free), Trello (free)
-- Analytics: Google Analytics (free), Google Trends (free)
-- Finance: Yahoo Finance (free), Google Finance (free), SEC EDGAR (free)
+- project: One sentence. What the project is and who it is for. Be specific. Example: "A GTM expansion brief for Flowdesk's entry into the Southern European market."
 
-If a premium tool is genuinely the industry standard and has a free trial, mention it in brackets as: [free trial available] — never as the primary recommendation.
+- why_this_works: 2-3 sentences explaining specifically why this project will resonate with THIS company and THIS role. Reference the JD and company context. Not generic — tied to what this specific company cares about.
 
-The student should be able to complete the entire proof of work with zero financial investment. This is non-negotiable.
+- build_steps: Array of 4-6 numbered steps. Each step tells the user exactly what to do, in what order, using which free tool. No vague instructions like "research the company." Instead: "Go to LinkedIn and find [Company]'s last 3 hiring posts for [role type] roles — note what skills they keep repeating." Every step must name a specific free tool (LinkedIn, Google, Notion, Google Sheets, Canva, Figma free tier, Google Slides, SEC EDGAR, Crunchbase free tier, Google Trends, Yahoo Finance, etc.). The student must be able to complete everything with zero financial investment.
 
-You MUST return structured JSON with these fields:
-- title: A punchy project title
-- why_this_works: One sentence explaining why this project demonstrates fit for this specific role
-- what_to_build: Array of 3-4 bullet points describing exactly what the deliverable should include (specific, not vague)
-- tools_to_use: Array of 3-5 specific tools relevant to the project (e.g. Google Sheets, Notion, Canva, ChatGPT)
-- time_estimate: Realistic time estimate string (e.g. "2-3 hours")
-- ai_prompt: A complete, ready-to-use prompt the student can paste into ChatGPT or Claude to get started. The prompt should reference their background and the specific role/company.`,
+- final_output: A specific description of what the finished deliverable should look like. Include: format (e.g. Notion page, Google Slides deck, one-page PDF), approximate length, what sections it should contain, and what separates a strong version from a weak one. Set the quality bar clearly.
+
+- key_insight: One specific observation or angle that will make the reader think "this person gets our business." Tied to the company, the role, and the JD. This is the thing that makes the proof of work memorable and shows genuine understanding.
+
+- outreach_hook: One sentence that leads the outreach message. Starts with what was built and ends with why it matters to them. This is the exact line the user pastes at the start of their cold outreach. Never start with "I wanted to reach out" or "I'm reaching out." Example: "I built a GTM expansion brief mapping Flowdesk's three biggest untapped segments in Italy — happy to share it if useful."`,
 
   follow_up: `You are a career coach helping craft follow-up messages. Generate THREE follow-up templates:
 
@@ -252,14 +237,14 @@ ${proofOfWorkDetails ? `\nProof of Work Details:\n${proofOfWorkDetails}` : ""}
       },
       proof_of_work: {
         properties: {
-          title: { type: "string", description: "Punchy project title" },
-          why_this_works: { type: "string", description: "One sentence on why this demonstrates fit" },
-          what_to_build: { type: "array", items: { type: "string" }, description: "3-4 bullet points of what the deliverable should include" },
-          tools_to_use: { type: "array", items: { type: "string" }, description: "3-5 specific tools" },
-          time_estimate: { type: "string", description: "Realistic time estimate" },
-          ai_prompt: { type: "string", description: "Ready-to-use AI prompt for ChatGPT/Claude" },
+          project: { type: "string", description: "One sentence: what the project is and who it is for" },
+          why_this_works: { type: "string", description: "2-3 sentences on why this resonates with this specific company and role" },
+          build_steps: { type: "array", items: { type: "string" }, description: "4-6 numbered step-by-step instructions with specific free tools" },
+          final_output: { type: "string", description: "What the finished deliverable should look like — format, length, structure, quality bar" },
+          key_insight: { type: "string", description: "One specific observation that shows the candidate gets this business" },
+          outreach_hook: { type: "string", description: "One sentence outreach opener starting with what was built" },
         },
-        required: ["title", "why_this_works", "what_to_build", "tools_to_use", "time_estimate", "ai_prompt"],
+        required: ["project", "why_this_works", "build_steps", "final_output", "key_insight", "outreach_hook"],
       },
       follow_up: {
         properties: {
