@@ -519,20 +519,27 @@ const CvWorkspace = () => {
   const handleTailorClick = async (cvContent: string, jobDescription: string) => {
     // If coming from a campaign, skip the popup — go straight to tailoring
     if (campaignId) {
-      // Fetch campaign PoW data if available
+      // Fetch campaign PoW data — MUST use this campaign's PoW only
       const { data: campData } = await supabase
         .from("campaigns")
         .select("proof_suggestion, company, role")
         .eq("id", campaignId)
         .single();
 
-      if (campData?.proof_suggestion) {
-        const pow = { proof_suggestion: campData.proof_suggestion, company: campData.company, role: campData.role };
-        setPowData(pow);
-        setIncludePow(true);
-        return handleSubmit(cvContent, jobDescription, pow);
+      if (!campData?.proof_suggestion) {
+        toast({
+          title: "Proof of Work missing",
+          description: "You haven't built your Proof of Work for this campaign yet. Build it first — it's the most important part of your application.",
+          variant: "destructive",
+          duration: 8000,
+        });
+        return;
       }
-      return handleSubmit(cvContent, jobDescription);
+
+      const pow = { proof_suggestion: campData.proof_suggestion, company: campData.company, role: campData.role };
+      setPowData(pow);
+      setIncludePow(true);
+      return handleSubmit(cvContent, jobDescription, pow);
     }
 
     // Not from a campaign — check if we should show the PoW reminder
