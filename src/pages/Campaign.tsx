@@ -152,6 +152,8 @@ const Campaign = () => {
     }
     const c = data as any as CampaignData;
     
+    console.log(`[PoW flow] Campaign ${id} loaded: proof_suggestion ${c.proof_suggestion ? 'PRESENT' : 'MISSING'}, cover_letter ${c.cover_letter ? 'PRESENT' : 'MISSING'}`);
+    
     setCampaign(c);
     setConnectionName(c.connection_name || "");
     setConnectionUrl(c.connection_url || "");
