@@ -863,8 +863,22 @@ const CvWorkspace = () => {
           )}
           {result && cvModel && (
             <>
+              {/* Cold outreach banner */}
+              {isColdOutreach && (
+                <div className="rounded-xl bg-amber-50 border border-amber-200/60 p-5 flex items-start gap-3">
+                  <Zap className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-sm font-bold text-amber-900">
+                      No JD means your PoW is your application.
+                    </p>
+                    <p className="text-sm text-amber-800/80 mt-1">
+                      Your CV just needs to not disqualify you — your proof of work will do the talking.
+                    </p>
+                  </div>
+                </div>
+              )}
               {/* Alignment banner — FIRST thing user sees after tailoring */}
-              {alignmentData && (
+              {alignmentData && !isColdOutreach && (
                 <AlignmentBanner
                   alignment={alignmentData.alignment}
                   reason={alignmentData.reason}
