@@ -683,9 +683,18 @@ const CvWorkspace = () => {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) throw new Error("Please sign in to use this feature.");
 
+        const invokeBody: Record<string, any> = { cvContent: enrichedCvContent, tone: "professional" };
+        if (coldMeta) {
+          invokeBody.mode = coldMeta.mode;
+          invokeBody.coldCompany = coldMeta.coldCompany;
+          invokeBody.coldRoleType = coldMeta.coldRoleType;
+        } else {
+          invokeBody.jobDescription = jobDescription;
+        }
+
         const { data, error } = await supabase.functions.invoke("tailor-cv", {
           headers: { Authorization: `Bearer ${session.access_token}` },
-          body: { cvContent: enrichedCvContent, jobDescription, tone: "professional" },
+          body: invokeBody,
         });
 
         if (error) {
