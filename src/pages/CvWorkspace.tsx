@@ -738,8 +738,14 @@ const CvWorkspace = () => {
       const stripMd = (s: string) => s.replace(/\*+/g, '').trim();
       let jobTitle = "Untitled Position";
       let company = "Unknown Company";
-      if (data.company) company = stripMd(data.company);
-      if (data.jobTitle || data.role) jobTitle = stripMd(data.jobTitle || data.role);
+
+      if (coldMeta) {
+        company = coldMeta.coldCompany;
+        jobTitle = `${coldMeta.coldRoleType} (Cold Outreach)`;
+      } else {
+        if (data.company) company = stripMd(data.company);
+        if (data.jobTitle || data.role) jobTitle = stripMd(data.jobTitle || data.role);
+      }
       if (company === "Unknown Company" || jobTitle === "Untitled Position") {
         const lines = jobDescription.split(/\n/).map(l => l.trim()).filter(Boolean);
         for (const line of lines) {
