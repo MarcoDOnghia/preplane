@@ -608,7 +608,7 @@ const CvWorkspace = () => {
       return;
     }
     setIsColdOutreach(true);
-    // Use handleSubmit with a synthetic JD context and cold outreach metadata
+    setColdMeta({ company, roleType });
     await handleSubmitCore(cvContent, "", undefined, { mode: "cold_outreach", coldCompany: company, coldRoleType: roleType });
   };
 
