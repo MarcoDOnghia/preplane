@@ -10,6 +10,7 @@ import AlignmentBanner from "@/components/AlignmentBanner";
 import ApplicationTrackingModal from "@/components/ApplicationTrackingModal";
 import PowReminderModal from "@/components/PowReminderModal";
 import PowIncludeModal from "@/components/PowIncludeModal";
+import ColdCoverLetterSection from "@/components/ColdCoverLetterSection";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Rocket, ArrowLeft, Check, Zap } from "lucide-react";
