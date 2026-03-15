@@ -49,18 +49,24 @@ const PROMPTS: Record<string, string> = {
 Instructions:
 - This is NOT a cover letter, NOT a formal email
 - It's a LinkedIn connection request or DM — max 300 characters ideally, absolutely no more than 500
-- CRITICAL: You MUST mention the COMPANY NAME in the message. The whole point of outreach is to show you're targeting THIS specific company. A generic message that could be sent to anyone is useless.
-- If the student has completed a proof of work project, LEAD with that — mention the project title and what it shows
-- If the student has posted about it on LinkedIn, REFERENCE that post — e.g. "I posted about [topic] yesterday"
-- The ideal structure: "Hey [name], I posted about [topic] yesterday and got thinking about [Company Name]. I put together [proof of work title] — would love your take as someone at [Company Name]. Open to a quick chat?"
-- Reference something specific about the company or the person's work
+- CRITICAL: You MUST mention the COMPANY NAME in the message.
+
+**OUTREACH HOOK RULE — THIS IS MANDATORY:**
+- The user has already generated a Proof of Work outreach hook. It will be provided in the context as "Outreach Hook."
+- You MUST use this exact hook as the OPENING LINE of the message. You may very slightly adapt it to include the contact's name, but the substance and wording must remain the same.
+- NEVER write a new opening hook from scratch. NEVER replace the provided hook with a generic opener.
+- If no outreach hook is provided, do NOT generate a message — return an error.
+
+**MESSAGE STRUCTURE (exactly 3 parts):**
+1. [The outreach hook from PoW brief — exact or adapted for the contact's name/role]
+2. [One sentence connecting the work to the company's current situation or challenge]
+3. [Soft CTA — ask for feedback or a quick chat, NEVER ask for a job or internship directly]
+
 - Be human, warm, and specific — not generic
 - No buzzwords, no "passionate about leveraging synergies"
 - Sound like a real person, not a template
 
-Example (with proof of work + LinkedIn post): "Hey Sara, I posted about startup scaling yesterday and it got me thinking about Acme Corp. I put together a 90-Day Ops Roadmap for your team — would love your take. Open to a quick chat?"
-Example (with proof of work, no post): "Hi Sara, I came across Acme Corp and got excited about your approach to ops. I actually put together a Process Audit — would love to share it and hear your thoughts."
-Example (without proof of work): "Hi Sara, I came across Acme Corp's work on developer tooling and found it really interesting. I'm exploring roles in engineering and would love to learn more about your experience there. Would be great to connect!"`,
+Example: "Hey Sara, I built a GTM expansion brief mapping Flowdesk's three biggest untapped segments in Italy — happy to share it if useful. Saw your team just opened a Southern Europe desk, so the timing felt right. Would love your take over a quick chat if you're open to it."`,
 
   proof_of_work: `You are a career strategist who has personally hired and mentored dozens of junior hires. You speak like a founder giving a direct brief to a motivated intern — practical, specific, confident. No fluff.
 
@@ -167,7 +173,7 @@ serve(async (req) => {
     }
 
     // Check all text inputs for injection attempts
-    const allInputs = [body.company, body.role, body.jdText, body.cvSummary, body.connectionName, body.proofOfWorkTitle, body.proofOfWorkDetails].filter(Boolean);
+    const allInputs = [body.company, body.role, body.jdText, body.cvSummary, body.connectionName, body.proofOfWorkTitle, body.proofOfWorkDetails, body.proofOfWorkHook].filter(Boolean);
     for (const input of allInputs) {
       if (typeof input === "string" && containsInjection(input)) {
         console.warn(`Prompt injection attempt detected from user ${user.id}`);
@@ -208,6 +214,7 @@ serve(async (req) => {
     const connectionName = validateString(body.connectionName, "connectionName", 200);
     const proofOfWorkTitle = validateString(body.proofOfWorkTitle, "proofOfWorkTitle", 500);
     const proofOfWorkDetails = validateString(body.proofOfWorkDetails, "proofOfWorkDetails", 5000);
+    const proofOfWorkHook = validateString(body.proofOfWorkHook, "proofOfWorkHook", 500);
 
     if (!company || !role) {
       return new Response(JSON.stringify({ error: "Company and role are required" }), {
@@ -231,6 +238,7 @@ ${cvSummary ? `\nCandidate Background:\n${cvSummary}` : ""}
 ${connectionName ? `\nConnection/Recipient: ${connectionName}` : ""}
 ${proofOfWorkTitle ? `\nProof of Work Completed: ${proofOfWorkTitle}` : ""}
 ${proofOfWorkDetails ? `\nProof of Work Details:\n${proofOfWorkDetails}` : ""}
+${proofOfWorkHook ? `\nOutreach Hook (USE THIS AS THE OPENING LINE — do not replace it):\n${proofOfWorkHook}` : ""}
 </USER_CONTEXT>`;
 
     // Define tool schema based on content type
