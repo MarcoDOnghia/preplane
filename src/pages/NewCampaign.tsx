@@ -978,7 +978,7 @@ const Index = () => {
               <Lightbulb className="h-10 w-10 text-primary mx-auto" />
               <h1 className="text-[28px] font-bold tracking-tight">What role are you going after?</h1>
               <p className="text-muted-foreground text-sm">
-                We'll generate a proof-of-work brief — a specific mini-project that shows you're the real deal.
+                We'll build you a specific project that shows you can do the job — before you even apply.
               </p>
             </div>
             <div className="space-y-4">
