@@ -77,15 +77,32 @@ serve(async (req) => {
       );
     }
 
-    const { cvContent, jobDescription, tone } = await req.json();
+    const body = await req.json();
+    const { cvContent, jobDescription, tone, mode, coldCompany, coldRoleType } = body;
+
+    const isColdMode = mode === "cold_outreach";
 
     const MAX_CV_LENGTH = 50000;
     const MAX_JOB_DESC_LENGTH = 20000;
     const VALID_TONES = ["professional", "enthusiastic", "creative"];
 
-    if (!cvContent || !jobDescription) {
+    if (!cvContent) {
+      return new Response(
+        JSON.stringify({ error: "CV content is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!isColdMode && !jobDescription) {
       return new Response(
         JSON.stringify({ error: "CV content and job description are required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (isColdMode && (!coldCompany || !coldRoleType)) {
+      return new Response(
+        JSON.stringify({ error: "Company name and role type are required for cold outreach mode" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -97,7 +114,7 @@ serve(async (req) => {
       );
     }
 
-    if (typeof jobDescription !== "string" || jobDescription.length > MAX_JOB_DESC_LENGTH) {
+    if (!isColdMode && (typeof jobDescription !== "string" || jobDescription.length > MAX_JOB_DESC_LENGTH)) {
       return new Response(
         JSON.stringify({ error: `Job description exceeds maximum length of ${MAX_JOB_DESC_LENGTH} characters` }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -112,12 +129,15 @@ serve(async (req) => {
     }
 
     // Injection check
-    if (containsInjection(cvContent) || containsInjection(jobDescription)) {
-      console.warn(`Prompt injection attempt detected from user ${user.id}`);
-      return new Response(
-        JSON.stringify({ error: "Invalid input" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    const textsToCheck = [cvContent, jobDescription, coldCompany, coldRoleType].filter(Boolean) as string[];
+    for (const text of textsToCheck) {
+      if (containsInjection(text)) {
+        console.warn(`Prompt injection attempt detected from user ${user.id}`);
+        return new Response(
+          JSON.stringify({ error: "Invalid input" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -127,7 +147,9 @@ serve(async (req) => {
 
     // Sanitize and truncate user inputs before passing to AI
     const safeCv = sanitizeInput(cvContent).slice(0, 3000);
-    const safeJobDesc = sanitizeInput(jobDescription).slice(0, 5000);
+    const safeJobDesc = isColdMode ? "" : sanitizeInput(jobDescription).slice(0, 5000);
+    const safeCompany = isColdMode ? sanitizeInput(coldCompany!).slice(0, 200) : "";
+    const safeRoleType = isColdMode ? sanitizeInput(coldRoleType!).slice(0, 200) : "";
 
 const systemPrompt = `You are an expert career coach, CV tailoring specialist, and interview preparation expert. Analyze the CV and job description provided, then return a comprehensive analysis.
 
