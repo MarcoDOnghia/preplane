@@ -846,7 +846,8 @@ const CvWorkspace = () => {
         <div id="tailor-section" className="space-y-6">
           <InputSection
             onSubmit={handleTailorClick}
-            onClear={() => { setResult(null); downloadCountRef.current = 0; }}
+            onColdSubmit={handleColdSubmit}
+            onClear={() => { setResult(null); setIsColdOutreach(false); downloadCountRef.current = 0; }}
             onCvParsed={(model) => setPreParsedModel(model)}
             loading={loading}
             loadingMessage={loadingMessage}
