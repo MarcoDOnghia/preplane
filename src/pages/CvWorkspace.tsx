@@ -593,12 +593,32 @@ const CvWorkspace = () => {
     }
   };
 
+  const handleColdSubmit = async (cvContent: string, company: string, roleType: string) => {
+    if (!cvContent || cvContent.trim().length < 50) {
+      toast({ title: "We could not read your CV. Please try uploading it again.", variant: "destructive" });
+      return;
+    }
+    setIsColdOutreach(true);
+    // Use handleSubmit with a synthetic JD context and cold outreach metadata
+    await handleSubmitCore(cvContent, "", undefined, { mode: "cold_outreach", coldCompany: company, coldRoleType: roleType });
+  };
+
   const handleSubmit = async (cvContent: string, jobDescription: string, powOverride?: { proof_suggestion: string; company: string; role: string }) => {
     // FIX 4: Validate CV text before calling edge function
     if (!cvContent || cvContent.trim().length < 50) {
       toast({ title: "We could not read your CV. Please try uploading it again.", variant: "destructive" });
       return;
     }
+    setIsColdOutreach(false);
+    await handleSubmitCore(cvContent, jobDescription, powOverride);
+  };
+
+  const handleSubmitCore = async (
+    cvContent: string,
+    jobDescription: string,
+    powOverride?: { proof_suggestion: string; company: string; role: string },
+    coldMeta?: { mode: string; coldCompany: string; coldRoleType: string }
+  ) => {
 
     setLoading(true);
     setResult(null);
