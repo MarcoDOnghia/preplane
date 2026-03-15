@@ -10,6 +10,7 @@ import AlignmentBanner from "@/components/AlignmentBanner";
 import ApplicationTrackingModal from "@/components/ApplicationTrackingModal";
 import PowReminderModal from "@/components/PowReminderModal";
 import PowIncludeModal from "@/components/PowIncludeModal";
+import ColdCoverLetterSection from "@/components/ColdCoverLetterSection";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Rocket, ArrowLeft, Check, Zap } from "lucide-react";
@@ -55,6 +56,7 @@ const CvWorkspace = () => {
   const [alignmentData, setAlignmentData] = useState<{ alignment: "strong" | "partial" | "weak"; reason: string; targetRole: string } | null>(null);
   const [campaignSynced, setCampaignSynced] = useState(false);
   const [isColdOutreach, setIsColdOutreach] = useState(false);
+  const [coldMeta, setColdMeta] = useState<{ company: string; roleType: string } | null>(null);
   const [cvModel, setCvModel] = useState<CvDataModel | null>(null);
   const [originalCvModel, setOriginalCvModel] = useState<CvDataModel | null>(null);
   const [preParsedModel, setPreParsedModel] = useState<CvDataModel | null>(null);
@@ -606,7 +608,7 @@ const CvWorkspace = () => {
       return;
     }
     setIsColdOutreach(true);
-    // Use handleSubmit with a synthetic JD context and cold outreach metadata
+    setColdMeta({ company, roleType });
     await handleSubmitCore(cvContent, "", undefined, { mode: "cold_outreach", coldCompany: company, coldRoleType: roleType });
   };
 
@@ -936,6 +938,15 @@ const CvWorkspace = () => {
                 appliedKeywordBullets={appliedKeywordBulletsRef.current}
                 addedKeywords={addedKeywords}
               />
+              {/* Cold outreach cover letter — optional step after results */}
+              {isColdOutreach && coldMeta && cvModel && (
+                <ColdCoverLetterSection
+                  cvPlainText={cvModelToPlainText(cvModel)}
+                  company={coldMeta.company}
+                  roleType={coldMeta.roleType}
+                  powBrief={powData?.proof_suggestion || null}
+                />
+              )}
             </>
           )}
         </div>
