@@ -522,11 +522,14 @@ const CvWorkspace = () => {
     // If coming from a campaign, skip the popup — go straight to tailoring
     if (campaignId) {
       // Fetch campaign PoW data — MUST use this campaign's PoW only
+      console.log(`[PoW flow] CV tailoring: loading PoW from campaign ID ${campaignId}`);
       const { data: campData } = await supabase
         .from("campaigns")
         .select("proof_suggestion, company, role")
         .eq("id", campaignId)
         .single();
+
+      console.log(`[PoW flow] CV tailoring: campaign ${campaignId} proof_suggestion ${campData?.proof_suggestion ? 'FOUND' : 'MISSING'}`);
 
       if (!campData?.proof_suggestion) {
         toast({
@@ -667,6 +670,7 @@ const CvWorkspace = () => {
 
       // Inject PoW into CV content if available — use powOverride (sync) or fall back to state
       const activePow = powOverride || (includePow ? powData : null);
+      console.log(`[PoW flow] CV enrichment: activePow ${activePow ? 'PRESENT' : 'NONE'}${activePow ? `, company: ${activePow.company}, role: ${activePow.role}` : ''}`);
       let enrichedCvContent = cvContent;
       if (activePow?.proof_suggestion) {
         const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -677,11 +681,20 @@ const CvWorkspace = () => {
         let powTools = "";
         try {
           const parsed = JSON.parse(activePow.proof_suggestion);
-          if (parsed.title) powTitle = parsed.title;
+          // Support both new format (project) and legacy format (title)
+          if (parsed.project) powTitle = parsed.project;
+          else if (parsed.title) powTitle = parsed.title;
           if (parsed.why_this_works) powDescription = parsed.why_this_works;
+          // Support both new format (build_steps) and legacy format (tools_to_use)
           if (parsed.tools_to_use) powTools = `Tools used: ${(parsed.tools_to_use as string[]).join(", ")}`;
+          else if (parsed.build_steps) {
+            // Extract tool names from build steps for the CV section
+            powTools = `Key deliverable: ${parsed.final_output || parsed.why_this_works || ""}`.slice(0, 200);
+          }
+          console.log(`[PoW flow] CV enrichment: parsed PoW title="${powTitle}"`);
         } catch {
           powDescription = activePow.proof_suggestion.split("\n")[0] || "";
+          console.log(`[PoW flow] CV enrichment: PoW parse failed, using plain text fallback`);
         }
         const companyContext = activePow.company ? ` for ${activePow.company}` : "";
         const powSection = `\n\nPROJECTS\n${powTitle} — Self-initiated | ${currentDate}\n${powDescription}\n${powTools}\nBuilt as a targeted proof of work${companyContext}\n`;

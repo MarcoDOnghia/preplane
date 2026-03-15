@@ -152,6 +152,8 @@ const Campaign = () => {
     }
     const c = data as any as CampaignData;
     
+    console.log(`[PoW flow] Campaign ${id} loaded: proof_suggestion ${c.proof_suggestion ? 'PRESENT' : 'MISSING'}, cover_letter ${c.cover_letter ? 'PRESENT' : 'MISSING'}`);
+    
     setCampaign(c);
     setConnectionName(c.connection_name || "");
     setConnectionUrl(c.connection_url || "");
@@ -213,8 +215,18 @@ const Campaign = () => {
   const generateContent = async (contentType: string) => {
     if (!campaign) return;
     setGenerating(contentType);
+    console.log(`[PoW flow] generateContent("${contentType}") for campaign ${id}, company: ${campaign.company}`);
+    console.log(`[PoW flow] Campaign ${id} proof_suggestion: ${proofSuggestion ? 'PRESENT (' + proofSuggestion.slice(0, 80) + '...)' : 'MISSING'}`);
     try {
       const headers = await getAuthHeader();
+      // PoW data is passed to ALL content types that benefit from it
+      const needsPoW = ["outreach", "linkedin_angles", "cover_letter", "follow_up"];
+      const powTitle = needsPoW.includes(contentType) ? getProofTitle() : undefined;
+      const powDetails = ["linkedin_angles", "cover_letter", "follow_up"].includes(contentType) ? proofSuggestion : undefined;
+      const powHook = contentType === "outreach" ? getProofHook() : undefined;
+
+      console.log(`[PoW flow] ${contentType}: powTitle=${powTitle || 'none'}, powDetails=${powDetails ? 'PRESENT' : 'none'}, powHook=${powHook || 'none'}`);
+
       const { data, error } = await supabase.functions.invoke("generate-campaign-content", {
         headers,
         body: {
@@ -224,9 +236,9 @@ const Campaign = () => {
           jdText: campaign.jd_text,
           cvSummary: campaign.cv_version?.slice(0, 2000),
           connectionName: connectionName || undefined,
-          proofOfWorkTitle: (contentType === "outreach" || contentType === "linkedin_angles" || contentType === "cover_letter") ? getProofTitle() : undefined,
-          proofOfWorkDetails: (contentType === "linkedin_angles" || contentType === "cover_letter") ? proofSuggestion : undefined,
-          proofOfWorkHook: contentType === "outreach" ? getProofHook() : undefined,
+          proofOfWorkTitle: powTitle,
+          proofOfWorkDetails: powDetails,
+          proofOfWorkHook: powHook,
         },
       });
       if (error) throw error;
@@ -235,10 +247,12 @@ const Campaign = () => {
       if (contentType === "outreach" && data.message) {
         setOutreachMessage(data.message);
         await updateCampaign({ outreach_message: data.message });
+        console.log(`[PoW flow] Outreach message stored for campaign ${id}`);
       } else if (contentType === "proof_of_work" && (data.project || data.title)) {
         const structured = JSON.stringify(data);
         setProofSuggestion(structured);
         await updateCampaign({ proof_suggestion: structured });
+        console.log(`[PoW flow] PoW brief stored for campaign ${id}: ${structured.slice(0, 100)}...`);
       } else if (contentType === "linkedin_angles" && data.angles) {
         const anglesJson = JSON.stringify(data.angles);
         await updateCampaign({ linkedin_angles: anglesJson } as any);
