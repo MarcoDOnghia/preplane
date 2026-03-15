@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Download,
   CheckCircle2,
@@ -18,6 +19,8 @@ import {
   X,
   Undo2,
   ArrowRight,
+  PenLine,
+  Info,
 } from "lucide-react";
 import {
   DropdownMenu,
