@@ -7,6 +7,13 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+function isPrivate172(hostname: string): boolean {
+  const parts = hostname.split(".");
+  if (parts.length !== 4 || parts[0] !== "172") return false;
+  const second = parseInt(parts[1], 10);
+  return second >= 16 && second <= 31;
+}
+
 function isValidUrl(urlString: string): boolean {
   try {
     const parsed = new URL(urlString);
@@ -17,7 +24,7 @@ function isValidUrl(urlString: string): boolean {
       hostname === "127.0.0.1" ||
       hostname.startsWith("192.168.") ||
       hostname.startsWith("10.") ||
-      hostname.startsWith("172.16.") ||
+      isPrivate172(hostname) ||
       hostname.startsWith("169.254.") ||
       hostname === "[::1]"
     ) return false;
