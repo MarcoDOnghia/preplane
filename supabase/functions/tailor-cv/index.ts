@@ -412,8 +412,8 @@ You MUST call the tailor_application function with your analysis.`;
 
     const chosenSystemPrompt = isColdMode ? coldOutreachPrompt : systemPrompt;
     const userPrompt = isColdMode
-      ? \`<USER_CV>\n\${safeCv}\n</USER_CV>\n\nTarget Company: \${safeCompany}\nTarget Role Type: \${safeRoleType}\`
-      : \`<USER_CV>\n\${safeCv}\n</USER_CV>\n\n<USER_JOB_DESC>\n\${safeJobDesc}\n</USER_JOB_DESC>\`;
+      ? `<USER_CV>\n${safeCv}\n</USER_CV>\n\nTarget Company: ${safeCompany}\nTarget Role Type: ${safeRoleType}`
+      : `<USER_CV>\n${safeCv}\n</USER_CV>\n\n<USER_JOB_DESC>\n${safeJobDesc}\n</USER_JOB_DESC>`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
