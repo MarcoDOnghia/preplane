@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Download,
   CheckCircle2,
@@ -18,6 +19,8 @@ import {
   X,
   Undo2,
   ArrowRight,
+  PenLine,
+  Info,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -368,6 +371,22 @@ export default ResultsSection;
 
 // ─── Suggestion Card ────────────────────────────────────────
 
+// Heuristic: is this suggestion directional guidance (Type B) vs direct replacement (Type A)?
+function isGuidanceSuggestion(original: string, suggested: string): boolean {
+  if (!suggested) return false;
+  // If no original text, it's guidance (advisory card)
+  if (!original || original.trim() === "") return true;
+  // Directive patterns: starts with imperative verbs / contains instructional language
+  const directivePatterns = /^(emphasize|de-emphasize|remove|move|minimize|consider|add|include|highlight|reduce|expand|reorder|restructure|rephrase|avoid|focus|position|frame|replace|rewrite|ensure|try|make sure|keep|drop|cut|shift|prioritize|integrate|swap|combine|merge|split|consolidate|reorganize)\b/i;
+  const lines = suggested.split("\n").map(l => l.replace(/^[•\-*]\s*/, "").trim()).filter(Boolean);
+  // If most lines start with directive verbs, it's guidance
+  const directiveLines = lines.filter(l => directivePatterns.test(l));
+  if (lines.length > 0 && directiveLines.length / lines.length >= 0.5) return true;
+  // If suggested text contains "your CV", "your resume", "this section" — it's meta-advice
+  if (/\b(your cv|your resume|this section|your profile|your summary|in your)\b/i.test(suggested)) return true;
+  return false;
+}
+
 function SuggestionCard({
   suggestion,
   index,
@@ -387,6 +406,7 @@ function SuggestionCard({
   const cleanOriginal = sanitizeDisplayText(suggestion.original);
   const cleanSuggested = sanitizeDisplayText(suggestion.suggested);
   const cleanReason = sanitizeDisplayText(suggestion.reason);
+  const isGuidance = isGuidanceSuggestion(cleanOriginal, cleanSuggested);
 
   // Fallback for malformed data
   if (!cleanSuggested && !cleanOriginal) {
@@ -398,6 +418,17 @@ function SuggestionCard({
       </Card>
     );
   }
+
+  const handleEditManually = () => {
+    // Scroll to CV editor tab
+    const editorEl = document.getElementById("cv-editor-section") || document.querySelector('[data-tab="editor"]');
+    if (editorEl) {
+      editorEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      // Try clicking the editor tab
+      const editorTab = document.querySelector('[value="editor"]') as HTMLElement;
+      if (editorTab) editorTab.click();
+    }
+  };
 
   return (
     <Card className={isApplied ? "border-success/30 bg-success/5" : ""}>
@@ -423,6 +454,15 @@ function SuggestionCard({
               <Button size="sm" variant="outline" onClick={onUndo} className="text-xs h-7">
                 <Undo2 className="h-3 w-3 mr-1" /> Undo
               </Button>
+            ) : isGuidance ? (
+              <>
+                <Button size="sm" variant="outline" onClick={handleEditManually} className="text-xs h-7">
+                  <PenLine className="h-3 w-3 mr-1" /> Edit manually →
+                </Button>
+                <Button size="sm" variant="ghost" onClick={onDismiss} className="text-xs h-7 text-muted-foreground">
+                  <X className="h-3 w-3 mr-1" /> Dismiss
+                </Button>
+              </>
             ) : (
               <>
                 <Button size="sm" onClick={onApply} className="text-xs h-7 bg-success hover:bg-success/90 text-success-foreground">
@@ -444,14 +484,28 @@ function SuggestionCard({
           </div>
         )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className={`rounded-lg p-4 text-sm ${isApplied ? "bg-muted/50 line-through opacity-60" : "bg-muted"}`}>
-            <p className="text-xs font-medium text-muted-foreground mb-2">Original</p>
-            <p className="whitespace-pre-line">{cleanOriginal}</p>
-          </div>
-          <div className={`rounded-lg border p-4 text-sm ${isApplied ? "bg-success/10 border-success/20" : "bg-primary/5 border-primary/20"}`}>
+          {cleanOriginal && (
+            <div className={`rounded-lg p-4 text-sm ${isApplied ? "bg-muted/50 line-through opacity-60" : "bg-muted"}`}>
+              <p className="text-xs font-medium text-muted-foreground mb-2">Original</p>
+              <p className="whitespace-pre-line">{cleanOriginal}</p>
+            </div>
+          )}
+          <div className={`rounded-lg border p-4 text-sm ${!cleanOriginal ? "md:col-span-2" : ""} ${isApplied ? "bg-success/10 border-success/20" : "bg-primary/5 border-primary/20"}`}>
             <p className={`text-xs font-medium mb-2 flex items-center gap-1 ${isApplied ? "text-success" : "text-primary"}`}>
-              {isApplied ? <Check className="h-3 w-3" /> : <ArrowRight className="h-3 w-3" />}
-              {isApplied ? "Applied" : "Suggested"}
+              {isApplied ? <Check className="h-3 w-3" /> : isGuidance ? <PenLine className="h-3 w-3" /> : <ArrowRight className="h-3 w-3" />}
+              {isApplied ? "Applied" : isGuidance ? "Guidance" : "Suggested"}
+              {isGuidance && !isApplied && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="h-3 w-3 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-[200px] text-xs">
+                      This is strategic advice — edit your CV directly to apply it
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
             </p>
             <p className="whitespace-pre-line">{cleanSuggested}</p>
           </div>
