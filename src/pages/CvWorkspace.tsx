@@ -522,11 +522,14 @@ const CvWorkspace = () => {
     // If coming from a campaign, skip the popup — go straight to tailoring
     if (campaignId) {
       // Fetch campaign PoW data — MUST use this campaign's PoW only
+      console.log(`[PoW flow] CV tailoring: loading PoW from campaign ID ${campaignId}`);
       const { data: campData } = await supabase
         .from("campaigns")
         .select("proof_suggestion, company, role")
         .eq("id", campaignId)
         .single();
+
+      console.log(`[PoW flow] CV tailoring: campaign ${campaignId} proof_suggestion ${campData?.proof_suggestion ? 'FOUND' : 'MISSING'}`);
 
       if (!campData?.proof_suggestion) {
         toast({
