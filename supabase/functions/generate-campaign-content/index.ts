@@ -237,14 +237,14 @@ ${proofOfWorkDetails ? `\nProof of Work Details:\n${proofOfWorkDetails}` : ""}
       },
       proof_of_work: {
         properties: {
-          title: { type: "string", description: "Punchy project title" },
-          why_this_works: { type: "string", description: "One sentence on why this demonstrates fit" },
-          what_to_build: { type: "array", items: { type: "string" }, description: "3-4 bullet points of what the deliverable should include" },
-          tools_to_use: { type: "array", items: { type: "string" }, description: "3-5 specific tools" },
-          time_estimate: { type: "string", description: "Realistic time estimate" },
-          ai_prompt: { type: "string", description: "Ready-to-use AI prompt for ChatGPT/Claude" },
+          project: { type: "string", description: "One sentence: what the project is and who it is for" },
+          why_this_works: { type: "string", description: "2-3 sentences on why this resonates with this specific company and role" },
+          build_steps: { type: "array", items: { type: "string" }, description: "4-6 numbered step-by-step instructions with specific free tools" },
+          final_output: { type: "string", description: "What the finished deliverable should look like — format, length, structure, quality bar" },
+          key_insight: { type: "string", description: "One specific observation that shows the candidate gets this business" },
+          outreach_hook: { type: "string", description: "One sentence outreach opener starting with what was built" },
         },
-        required: ["title", "why_this_works", "what_to_build", "tools_to_use", "time_estimate", "ai_prompt"],
+        required: ["project", "why_this_works", "build_steps", "final_output", "key_insight", "outreach_hook"],
       },
       follow_up: {
         properties: {
