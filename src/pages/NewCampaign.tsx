@@ -994,7 +994,7 @@ const Index = () => {
               <div>
                 <label className="text-sm font-medium">
                   Company name{" "}
-                  <span className="text-muted-foreground font-normal">(optional — leave blank for a general brief)</span>
+                  <span className="text-muted-foreground font-normal">(recommended — we'll tailor the brief specifically to this company)</span>
                 </label>
                 <Input
                   value={setupCompany}
