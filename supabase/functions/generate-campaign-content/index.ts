@@ -173,7 +173,7 @@ serve(async (req) => {
     }
 
     // Check all text inputs for injection attempts
-    const allInputs = [body.company, body.role, body.jdText, body.cvSummary, body.connectionName, body.proofOfWorkTitle, body.proofOfWorkDetails].filter(Boolean);
+    const allInputs = [body.company, body.role, body.jdText, body.cvSummary, body.connectionName, body.proofOfWorkTitle, body.proofOfWorkDetails, body.proofOfWorkHook].filter(Boolean);
     for (const input of allInputs) {
       if (typeof input === "string" && containsInjection(input)) {
         console.warn(`Prompt injection attempt detected from user ${user.id}`);
