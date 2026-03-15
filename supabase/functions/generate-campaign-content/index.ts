@@ -214,6 +214,7 @@ serve(async (req) => {
     const connectionName = validateString(body.connectionName, "connectionName", 200);
     const proofOfWorkTitle = validateString(body.proofOfWorkTitle, "proofOfWorkTitle", 500);
     const proofOfWorkDetails = validateString(body.proofOfWorkDetails, "proofOfWorkDetails", 5000);
+    const proofOfWorkHook = validateString(body.proofOfWorkHook, "proofOfWorkHook", 500);
 
     if (!company || !role) {
       return new Response(JSON.stringify({ error: "Company and role are required" }), {
