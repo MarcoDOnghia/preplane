@@ -266,6 +266,16 @@ const Campaign = () => {
     }
   };
 
+  const getProofHook = (): string | undefined => {
+    if (!proofSuggestion) return undefined;
+    try {
+      const parsed = JSON.parse(proofSuggestion);
+      return parsed?.outreach_hook;
+    } catch {
+      return undefined;
+    }
+  };
+
   const handleArchive = async () => {
     if (!id) return;
     await supabase.from("campaigns").update({ archived: true } as any).eq("id", id);
