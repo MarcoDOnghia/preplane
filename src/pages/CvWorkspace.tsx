@@ -12,7 +12,7 @@ import PowReminderModal from "@/components/PowReminderModal";
 import PowIncludeModal from "@/components/PowIncludeModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Rocket, ArrowLeft, Check } from "lucide-react";
+import { Rocket, ArrowLeft, Check, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ToastAction } from "@/components/ui/toast";
 import type { TailorResult } from "@/lib/types";
