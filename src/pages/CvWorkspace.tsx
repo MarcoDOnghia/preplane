@@ -12,7 +12,7 @@ import PowReminderModal from "@/components/PowReminderModal";
 import PowIncludeModal from "@/components/PowIncludeModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Rocket, ArrowLeft, Check } from "lucide-react";
+import { Rocket, ArrowLeft, Check, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ToastAction } from "@/components/ui/toast";
 import type { TailorResult } from "@/lib/types";
@@ -54,6 +54,7 @@ const CvWorkspace = () => {
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [alignmentData, setAlignmentData] = useState<{ alignment: "strong" | "partial" | "weak"; reason: string; targetRole: string } | null>(null);
   const [campaignSynced, setCampaignSynced] = useState(false);
+  const [isColdOutreach, setIsColdOutreach] = useState(false);
   const [cvModel, setCvModel] = useState<CvDataModel | null>(null);
   const [originalCvModel, setOriginalCvModel] = useState<CvDataModel | null>(null);
   const [preParsedModel, setPreParsedModel] = useState<CvDataModel | null>(null);
@@ -592,12 +593,32 @@ const CvWorkspace = () => {
     }
   };
 
+  const handleColdSubmit = async (cvContent: string, company: string, roleType: string) => {
+    if (!cvContent || cvContent.trim().length < 50) {
+      toast({ title: "We could not read your CV. Please try uploading it again.", variant: "destructive" });
+      return;
+    }
+    setIsColdOutreach(true);
+    // Use handleSubmit with a synthetic JD context and cold outreach metadata
+    await handleSubmitCore(cvContent, "", undefined, { mode: "cold_outreach", coldCompany: company, coldRoleType: roleType });
+  };
+
   const handleSubmit = async (cvContent: string, jobDescription: string, powOverride?: { proof_suggestion: string; company: string; role: string }) => {
     // FIX 4: Validate CV text before calling edge function
     if (!cvContent || cvContent.trim().length < 50) {
       toast({ title: "We could not read your CV. Please try uploading it again.", variant: "destructive" });
       return;
     }
+    setIsColdOutreach(false);
+    await handleSubmitCore(cvContent, jobDescription, powOverride);
+  };
+
+  const handleSubmitCore = async (
+    cvContent: string,
+    jobDescription: string,
+    powOverride?: { proof_suggestion: string; company: string; role: string },
+    coldMeta?: { mode: string; coldCompany: string; coldRoleType: string }
+  ) => {
 
     setLoading(true);
     setResult(null);
@@ -662,9 +683,18 @@ const CvWorkspace = () => {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) throw new Error("Please sign in to use this feature.");
 
+        const invokeBody: Record<string, any> = { cvContent: enrichedCvContent, tone: "professional" };
+        if (coldMeta) {
+          invokeBody.mode = coldMeta.mode;
+          invokeBody.coldCompany = coldMeta.coldCompany;
+          invokeBody.coldRoleType = coldMeta.coldRoleType;
+        } else {
+          invokeBody.jobDescription = jobDescription;
+        }
+
         const { data, error } = await supabase.functions.invoke("tailor-cv", {
           headers: { Authorization: `Bearer ${session.access_token}` },
-          body: { cvContent: enrichedCvContent, jobDescription, tone: "professional" },
+          body: invokeBody,
         });
 
         if (error) {
@@ -708,8 +738,14 @@ const CvWorkspace = () => {
       const stripMd = (s: string) => s.replace(/\*+/g, '').trim();
       let jobTitle = "Untitled Position";
       let company = "Unknown Company";
-      if (data.company) company = stripMd(data.company);
-      if (data.jobTitle || data.role) jobTitle = stripMd(data.jobTitle || data.role);
+
+      if (coldMeta) {
+        company = coldMeta.coldCompany;
+        jobTitle = `${coldMeta.coldRoleType} (Cold Outreach)`;
+      } else {
+        if (data.company) company = stripMd(data.company);
+        if (data.jobTitle || data.role) jobTitle = stripMd(data.jobTitle || data.role);
+      }
       if (company === "Unknown Company" || jobTitle === "Untitled Position") {
         const lines = jobDescription.split(/\n/).map(l => l.trim()).filter(Boolean);
         for (const line of lines) {
@@ -810,7 +846,8 @@ const CvWorkspace = () => {
         <div id="tailor-section" className="space-y-6">
           <InputSection
             onSubmit={handleTailorClick}
-            onClear={() => { setResult(null); downloadCountRef.current = 0; }}
+            onColdSubmit={handleColdSubmit}
+            onClear={() => { setResult(null); setIsColdOutreach(false); downloadCountRef.current = 0; }}
             onCvParsed={(model) => setPreParsedModel(model)}
             loading={loading}
             loadingMessage={loadingMessage}
@@ -826,8 +863,22 @@ const CvWorkspace = () => {
           )}
           {result && cvModel && (
             <>
+              {/* Cold outreach banner */}
+              {isColdOutreach && (
+                <div className="rounded-xl bg-amber-50 border border-amber-200/60 p-5 flex items-start gap-3">
+                  <Zap className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-sm font-bold text-amber-900">
+                      No JD means your PoW is your application.
+                    </p>
+                    <p className="text-sm text-amber-800/80 mt-1">
+                      Your CV just needs to not disqualify you — your proof of work will do the talking.
+                    </p>
+                  </div>
+                </div>
+              )}
               {/* Alignment banner — FIRST thing user sees after tailoring */}
-              {alignmentData && (
+              {alignmentData && !isColdOutreach && (
                 <AlignmentBanner
                   alignment={alignmentData.alignment}
                   reason={alignmentData.reason}

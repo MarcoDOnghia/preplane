@@ -2,9 +2,10 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   CloudUpload, FileText, Rocket, Loader2, X, CheckCircle2, Link2, PlusCircle,
-  Trash2, FolderOpen, MoreVertical, Lightbulb, Wand2, Info
+  Trash2, FolderOpen, MoreVertical, Lightbulb, Wand2, Info, Zap
 } from "lucide-react";
 import { extractTextFromFile } from "@/lib/fileParser";
 import { useToast } from "@/hooks/use-toast";
@@ -12,9 +13,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import type { CvDataModel } from "@/lib/cvDataModel";
 import { aiParsedCvToModel, parseCvToModel } from "@/lib/cvDataModel";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface InputSectionProps {
   onSubmit: (cvContent: string, jobDescription: string) => void;
+  onColdSubmit?: (cvContent: string, company: string, roleType: string) => void;
   onClear?: () => void;
   onCvParsed?: (model: CvDataModel) => void;
   loading: boolean;
@@ -32,7 +41,22 @@ interface SavedCv {
 const MAX_SIZE = 2 * 1024 * 1024;
 const MAX_CVS = 5;
 
-const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage, initialJd }: InputSectionProps) => {
+const ROLE_TYPES = [
+  "GTM / Sales",
+  "Marketing",
+  "Finance",
+  "Operations",
+  "Engineering",
+  "Product Management",
+  "Data / Analytics",
+  "Design / UX",
+  "HR / People",
+  "Consulting",
+  "Legal",
+  "Other",
+];
+
+const InputSection = ({ onSubmit, onColdSubmit, onClear, onCvParsed, loading, loadingMessage, initialJd }: InputSectionProps) => {
   const { user } = useAuth();
   const [savedCvs, setSavedCvs] = useState<SavedCv[]>([]);
   const [selectedCvId, setSelectedCvId] = useState<string>("");
@@ -40,10 +64,15 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage, 
   const [cvName, setCvName] = useState("");
   const [uploading, setUploading] = useState(false);
 
+  const [mode, setMode] = useState<"jd" | "cold">(initialJd ? "jd" : "jd");
   const [jdText, setJdText] = useState(initialJd || "");
   const [jdFile, setJdFile] = useState<{ text: string; name: string; error: string }>({ text: "", name: "", error: "" });
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [extracting, setExtracting] = useState(false);
+
+  // Cold outreach fields
+  const [coldCompany, setColdCompany] = useState("");
+  const [coldRoleType, setColdRoleType] = useState("");
 
   const cvInputRef = useRef<HTMLInputElement>(null);
   const jdInputRef = useRef<HTMLInputElement>(null);
@@ -210,21 +239,38 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage, 
   };
 
   const effectiveJd = jdText.trim() || jdFile.text;
-  const bothReady = cvText.length > 0 && effectiveJd.length > 0;
+  const jdReady = cvText.length > 0 && effectiveJd.length > 0;
+  const coldReady = cvText.length > 0 && coldCompany.trim().length > 0 && coldRoleType.length > 0;
+  const bothReady = mode === "jd" ? jdReady : coldReady;
 
   const handleSubmit = () => {
-    if (!cvText || !effectiveJd) {
-      toast({ title: "Missing input", description: "Select a CV and provide a job description.", variant: "destructive" });
-      return;
+    if (mode === "jd") {
+      if (!cvText || !effectiveJd) {
+        toast({ title: "Missing input", description: "Select a CV and provide a job description.", variant: "destructive" });
+        return;
+      }
+      onSubmit(cvText, effectiveJd);
+    } else {
+      if (!cvText || !coldCompany.trim() || !coldRoleType) {
+        toast({ title: "Missing input", description: "Select a CV, enter a company name, and pick a role type.", variant: "destructive" });
+        return;
+      }
+      if (onColdSubmit) {
+        onColdSubmit(cvText, coldCompany.trim(), coldRoleType);
+      }
     }
-    onSubmit(cvText, effectiveJd);
   };
 
   const handleClear = () => {
-    setJdText("");
-    setJdFile({ text: "", name: "", error: "" });
-    setLinkedinUrl("");
-    if (jdInputRef.current) jdInputRef.current.value = "";
+    if (mode === "jd") {
+      setJdText("");
+      setJdFile({ text: "", name: "", error: "" });
+      setLinkedinUrl("");
+      if (jdInputRef.current) jdInputRef.current.value = "";
+    } else {
+      setColdCompany("");
+      setColdRoleType("");
+    }
     onClear?.();
   };
 
@@ -316,7 +362,9 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage, 
         <div className="bg-[#F97316] rounded-xl p-6 text-white shadow-lg shadow-[#F97316]/20 relative overflow-hidden">
           <p className="font-bold mb-2">Pro Tip</p>
           <p className="text-sm text-white/90">
-            Tailor your CV for each role — generic applications get filtered out. Even small changes to your summary and skills section can dramatically improve your match score.
+            {mode === "jd"
+              ? "Tailor your CV for each role — generic applications get filtered out. Even small changes to your summary and skills section can dramatically improve your match score."
+              : "No JD? No problem. Your proof of work is your application. A tailored CV just makes sure you don't get disqualified before they see it."}
           </p>
           <Lightbulb className="w-24 h-24 text-white/10 absolute -bottom-4 -right-4 rotate-12" />
         </div>
@@ -333,44 +381,121 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage, 
               </div>
               <h2 className="text-2xl font-bold text-slate-900">Tailor your CV</h2>
             </div>
-            <p className="text-slate-500 mt-1 text-sm">Paste a job description and get AI-powered suggestions to improve your match.</p>
+            <p className="text-slate-500 mt-1 text-sm">
+              {mode === "jd"
+                ? "Paste a job description and get AI-powered suggestions to improve your match."
+                : "No job posting? We'll tailor your CV for cold outreach using your proof of work."}
+            </p>
+
+            {/* Mode toggle */}
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={() => setMode("jd")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  mode === "jd"
+                    ? "bg-[#F97316] text-white shadow-md"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                I have a job posting
+              </button>
+              <button
+                onClick={() => setMode("cold")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
+                  mode === "cold"
+                    ? "bg-[#F97316] text-white shadow-md"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                <Zap className="w-3.5 h-3.5" />
+                No job posting? No problem.
+              </button>
+            </div>
           </div>
 
           {/* Body */}
           <div className="p-8 flex-1 flex flex-col gap-6">
-            <div>
-              <label className="text-sm font-semibold text-slate-700 mb-2 block">Job Description or URL</label>
-              <Textarea
-                value={jdText}
-                onChange={(e) => setJdText(e.target.value)}
-                placeholder="Paste full job description here..."
-                className="w-full min-h-[300px] p-6 rounded-xl border-slate-200 bg-slate-50 focus:ring-2 focus:ring-[#F97316] focus:border-transparent resize-none text-slate-700 placeholder:text-slate-400"
-                disabled={loading}
-              />
-            </div>
+            {mode === "jd" ? (
+              <>
+                <div>
+                  <label className="text-sm font-semibold text-slate-700 mb-2 block">Job Description or URL</label>
+                  <Textarea
+                    value={jdText}
+                    onChange={(e) => setJdText(e.target.value)}
+                    placeholder="Paste full job description here..."
+                    className="w-full min-h-[300px] p-6 rounded-xl border-slate-200 bg-slate-50 focus:ring-2 focus:ring-[#F97316] focus:border-transparent resize-none text-slate-700 placeholder:text-slate-400"
+                    disabled={loading}
+                  />
+                </div>
 
-            {/* URL extract */}
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1">
-                <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <Input
-                  value={linkedinUrl}
-                  onChange={(e) => setLinkedinUrl(e.target.value)}
-                  placeholder="LinkedIn / job URL (optional)"
-                  className="pl-9 h-10 text-sm border-slate-200 bg-slate-50 focus:ring-2 focus:ring-[#F97316] focus:border-transparent"
-                  disabled={loading || extracting}
-                />
+                {/* URL extract */}
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Input
+                      value={linkedinUrl}
+                      onChange={(e) => setLinkedinUrl(e.target.value)}
+                      placeholder="LinkedIn / job URL (optional)"
+                      className="pl-9 h-10 text-sm border-slate-200 bg-slate-50 focus:ring-2 focus:ring-[#F97316] focus:border-transparent"
+                      disabled={loading || extracting}
+                    />
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleExtractFromUrl}
+                    disabled={!linkedinUrl.trim() || extracting || loading}
+                    className="text-sm h-10 border-slate-200"
+                  >
+                    {extracting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Extract"}
+                  </Button>
+                </div>
+              </>
+            ) : (
+              /* Cold outreach mode */
+              <div className="space-y-6">
+                {/* Context banner */}
+                <div className="rounded-xl bg-amber-50 border border-amber-200/60 p-5">
+                  <p className="text-sm font-semibold text-amber-900 mb-1">Cold Outreach CV</p>
+                  <p className="text-sm text-amber-800/80">
+                    When you're reaching out without a job posting, your proof of work is your application. 
+                    We'll tailor your CV so it doesn't disqualify you — your PoW will do the talking.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="cold-company" className="text-sm font-semibold text-slate-700 mb-2 block">
+                      Company name
+                    </Label>
+                    <Input
+                      id="cold-company"
+                      value={coldCompany}
+                      onChange={(e) => setColdCompany(e.target.value)}
+                      placeholder="e.g. Stripe, Notion, a Series B fintech startup..."
+                      className="h-12 text-sm border-slate-200 bg-slate-50 focus:ring-2 focus:ring-[#F97316] focus:border-transparent"
+                      disabled={loading}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="cold-role" className="text-sm font-semibold text-slate-700 mb-2 block">
+                      Target role type
+                    </Label>
+                    <Select value={coldRoleType} onValueChange={setColdRoleType} disabled={loading}>
+                      <SelectTrigger className="h-12 text-sm border-slate-200 bg-slate-50 focus:ring-2 focus:ring-[#F97316] focus:border-transparent">
+                        <SelectValue placeholder="Select a role type..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ROLE_TYPES.map((rt) => (
+                          <SelectItem key={rt} value={rt}>{rt}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExtractFromUrl}
-                disabled={!linkedinUrl.trim() || extracting || loading}
-                className="text-sm h-10 border-slate-200"
-              >
-                {extracting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Extract"}
-              </Button>
-            </div>
+            )}
 
             {/* Bottom action row */}
             <div className="pt-4 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-4">
@@ -386,9 +511,9 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage, 
               </div>
 
               <div className="flex items-center gap-3">
-                {(cvText || effectiveJd) && !loading && (
+                {((mode === "jd" && (cvText || effectiveJd)) || (mode === "cold" && (coldCompany || coldRoleType))) && !loading && (
                   <button onClick={handleClear} className="text-sm text-slate-400 hover:text-slate-600 flex items-center gap-1">
-                    <X className="h-4 w-4" /> Clear JD
+                    <X className="h-4 w-4" /> Clear
                   </button>
                 )}
                 <button
@@ -398,8 +523,10 @@ const InputSection = ({ onSubmit, onClear, onCvParsed, loading, loadingMessage, 
                 >
                   {loading ? (
                     <><Loader2 className="w-5 h-5 animate-spin" />{loadingMessage}</>
-                  ) : (
+                  ) : mode === "jd" ? (
                     <><Rocket className="w-5 h-5" />Tailor My CV</>
+                  ) : (
+                    <><Zap className="w-5 h-5" />Tailor for Cold Outreach</>
                   )}
                 </button>
               </div>
