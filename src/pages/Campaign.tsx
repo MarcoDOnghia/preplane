@@ -213,8 +213,18 @@ const Campaign = () => {
   const generateContent = async (contentType: string) => {
     if (!campaign) return;
     setGenerating(contentType);
+    console.log(`[PoW flow] generateContent("${contentType}") for campaign ${id}, company: ${campaign.company}`);
+    console.log(`[PoW flow] Campaign ${id} proof_suggestion: ${proofSuggestion ? 'PRESENT (' + proofSuggestion.slice(0, 80) + '...)' : 'MISSING'}`);
     try {
       const headers = await getAuthHeader();
+      // PoW data is passed to ALL content types that benefit from it
+      const needsPoW = ["outreach", "linkedin_angles", "cover_letter", "follow_up"];
+      const powTitle = needsPoW.includes(contentType) ? getProofTitle() : undefined;
+      const powDetails = ["linkedin_angles", "cover_letter", "follow_up"].includes(contentType) ? proofSuggestion : undefined;
+      const powHook = contentType === "outreach" ? getProofHook() : undefined;
+
+      console.log(`[PoW flow] ${contentType}: powTitle=${powTitle || 'none'}, powDetails=${powDetails ? 'PRESENT' : 'none'}, powHook=${powHook || 'none'}`);
+
       const { data, error } = await supabase.functions.invoke("generate-campaign-content", {
         headers,
         body: {
@@ -224,9 +234,9 @@ const Campaign = () => {
           jdText: campaign.jd_text,
           cvSummary: campaign.cv_version?.slice(0, 2000),
           connectionName: connectionName || undefined,
-          proofOfWorkTitle: (contentType === "outreach" || contentType === "linkedin_angles" || contentType === "cover_letter") ? getProofTitle() : undefined,
-          proofOfWorkDetails: (contentType === "linkedin_angles" || contentType === "cover_letter") ? proofSuggestion : undefined,
-          proofOfWorkHook: contentType === "outreach" ? getProofHook() : undefined,
+          proofOfWorkTitle: powTitle,
+          proofOfWorkDetails: powDetails,
+          proofOfWorkHook: powHook,
         },
       });
       if (error) throw error;
