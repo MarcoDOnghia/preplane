@@ -226,6 +226,7 @@ const Campaign = () => {
           connectionName: connectionName || undefined,
           proofOfWorkTitle: (contentType === "outreach" || contentType === "linkedin_angles" || contentType === "cover_letter") ? getProofTitle() : undefined,
           proofOfWorkDetails: (contentType === "linkedin_angles" || contentType === "cover_letter") ? proofSuggestion : undefined,
+          proofOfWorkHook: contentType === "outreach" ? getProofHook() : undefined,
         },
       });
       if (error) throw error;
