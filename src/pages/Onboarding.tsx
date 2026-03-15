@@ -50,6 +50,14 @@ const Onboarding = () => {
 
   // Auth form state (step 4)
   const [isLogin, setIsLogin] = useState(initialLoginMode);
+
+  // Sync step and login mode when URL search params change (e.g. Sign In banner click)
+  useEffect(() => {
+    const urlStep = searchParams.get("step") === "4" ? 4 : null;
+    const urlMode = searchParams.get("mode") === "login";
+    if (urlStep !== null) setStep(urlStep);
+    if (urlMode) setIsLogin(true);
+  }, [searchParams]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
