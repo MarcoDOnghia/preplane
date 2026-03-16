@@ -1036,7 +1036,7 @@ const Onboarding = () => {
                   type="button"
                   className="hover:underline"
                   style={{ color: "#f97415", fontWeight: 600 }}
-                  onClick={() => { setIsLogin(true); setAuthError(null); setForgotMode(false); setTouched({}); }}
+                  onClick={() => navigate("/onboarding?step=4&mode=login")}
                 >
                   Sign in
                 </button>
