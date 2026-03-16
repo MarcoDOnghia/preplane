@@ -273,68 +273,85 @@ const Onboarding = () => {
 
   if (step === 1) {
     return (
-      <div className="relative min-h-screen overflow-hidden flex flex-col" style={{ background: "#FAF9F6", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-        {/* Background orbs */}
-        <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-[#F97316]/5 blur-3xl -z-10" />
-        <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-[#F97316]/5 blur-3xl -z-10" />
+      <div className="relative min-h-screen overflow-hidden flex flex-col items-center justify-center" style={{ background: "#111111", fontFamily: "Inter, sans-serif" }}>
+        {/* Background glow blobs */}
+        <div className="fixed top-0 left-0 w-[500px] h-[500px] rounded-full opacity-20 pointer-events-none" style={{ background: "rgba(249,116,21,0.10)", filter: "blur(120px)" }} />
+        <div className="fixed bottom-0 right-0 w-[500px] h-[500px] rounded-full opacity-20 pointer-events-none" style={{ background: "rgba(249,116,21,0.05)", filter: "blur(120px)" }} />
 
-        {/* Header */}
-        <header className="w-full border-b border-[#F97316]/10 px-6 md:px-20 py-4 flex items-center justify-between">
-           <div className="flex items-center gap-2">
-              <div className="bg-[#F97316] p-2 rounded-xl flex items-center justify-center">
-                <Rocket className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-xl font-bold tracking-tight text-slate-900">PrepLane</span>
-           </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate("/onboarding?step=4&mode=login")}
-              className="px-4 py-2 rounded-full border border-[#F97316] text-[#F97316] text-sm font-medium hover:bg-[#F97316]/5 transition-colors"
-            >
-              Already a PrepLane user? Sign in →
-            </button>
+        {/* Header - logo only, centered */}
+        <header className="absolute top-0 left-0 right-0 flex justify-center py-6">
+          <div className="flex items-center gap-2">
+            <div className="bg-[#f97415] p-2 rounded-lg flex items-center justify-center">
+              <Rocket className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-xl font-bold text-white">PrepLane</span>
           </div>
         </header>
 
-        {/* Main content */}
-        <main className="flex-1 flex flex-col items-center justify-center px-6 py-12">
-          <div className="max-w-[720px] text-center space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* Icon badge */}
-            <div className="mx-auto w-fit p-4 rounded-full bg-[#F97316]/10">
-              <Rocket className="w-12 h-12 text-[#F97316]" />
+        <div className="w-full max-w-[720px] px-6 flex flex-col items-center text-center space-y-10">
+          {/* Progress pills */}
+          <div className="flex flex-col items-center gap-3">
+            <div className="flex items-center gap-2">
+              <div className="h-1.5 w-12 rounded-full bg-[#f97415]" />
+              <div className="h-1.5 w-12 rounded-full bg-[#1e293b]" />
+              <div className="h-1.5 w-12 rounded-full bg-[#1e293b]" />
+              <div className="h-1.5 w-12 rounded-full bg-[#1e293b]" />
             </div>
-
-            {/* Heading */}
-            <h1 className="text-4xl md:text-6xl font-extrabold leading-[1.1] tracking-tight text-slate-900">
-              Stop applying to everything.
-              <br />
-              <span className="text-[#F97316]">Start owning your shot.</span>
-            </h1>
-
-            {/* Body */}
-            <p className="text-lg md:text-xl font-medium text-slate-800 max-w-[640px] mx-auto leading-relaxed">
-              Most students send 30+ applications and hear nothing back. Not because their CV is bad — because they never stopped to ask:{" "}
-              <em className="font-bold">what do I actually want, and am I building toward it?</em>
-            </p>
-            <p className="text-base md:text-lg text-slate-800/70 max-w-[600px] mx-auto leading-relaxed">
-              PrepLane is being built to change that. Not a tool that helps you apply faster — one that helps you apply smarter, to fewer roles, with a genuinely compelling case for each one.
-            </p>
-
-            {/* CTA */}
-            <div>
-              <button
-                type="button"
-                onClick={() => setStep(2)}
-                className="group inline-flex items-center gap-2 rounded-xl h-14 px-8 bg-[#F97316] text-white text-lg font-bold shadow-lg shadow-[#F97316]/25 hover:-translate-y-0.5 transition-all active:translate-y-0"
-              >
-                I'm in
-                <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-              </button>
-            </div>
+            <span className="font-medium uppercase" style={{ color: "#64748b", fontSize: "11px", letterSpacing: "0.15em" }}>Step 1 of 4</span>
           </div>
-        </main>
 
-        <AppFooter />
+          {/* Headline */}
+          <h1 className="font-bold leading-[1.1] tracking-tight" style={{ fontSize: "clamp(36px, 6vw, 60px)" }}>
+            <span className="text-white">Stop applying to everything.</span>
+            <br />
+            <span style={{ color: "#f97415" }}>Start owning your shot.</span>
+          </h1>
+
+          {/* Subtitle */}
+          <div className="max-w-[520px]" style={{ color: "#64748b", fontSize: "18px", lineHeight: "1.7" }}>
+            <p>Most students send 30+ applications and hear nothing back. Not because their CV is bad — because they never stopped to ask:</p>
+            <p className="italic font-bold mt-2">what do I actually want, and am I building toward it?</p>
+          </div>
+
+          {/* CTA */}
+          <button
+            type="button"
+            onClick={() => setStep(2)}
+            className="font-bold text-white transition-colors hover:bg-[#ea6c0a]"
+            style={{ background: "#f97415", fontSize: "18px", padding: "16px 40px", borderRadius: "8px" }}
+          >
+            I'm in →
+          </button>
+
+          {/* Social proof */}
+          <p className="max-w-[600px]" style={{ fontSize: "13px", color: "#64748b" }}>
+            Joining students going after Stockholm scaleups, VC-backed founders, angel-funded teams, and the next generation of European startups.
+          </p>
+
+          {/* Stat cards */}
+          <div className="flex flex-wrap justify-center gap-4" style={{ marginTop: "48px" }}>
+            {[
+              { number: "5", label: "targeted campaigns beat 50 random applications" },
+              { number: "1", label: "proof of work opens doors a CV never will" },
+              { number: "Free", label: "no credit card, no catch" },
+            ].map((card) => (
+              <div
+                key={card.number}
+                className="text-center"
+                style={{
+                  background: "#1a1a1a",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                  borderRadius: "12px",
+                  padding: "20px 28px",
+                  minWidth: "200px",
+                }}
+              >
+                <div className="text-white" style={{ fontSize: "24px", fontWeight: 900 }}>{card.number}</div>
+                <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>{card.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
