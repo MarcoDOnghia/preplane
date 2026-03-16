@@ -728,71 +728,102 @@ const Onboarding = () => {
 
           {/* Step 3 — The invitation */}
           {step === 3 && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-              <div className="w-full max-w-lg mx-auto bg-white rounded-xl shadow-sm border border-slate-100 p-8 md:p-12 space-y-8">
-                {/* Icon badge */}
-                <div className="flex justify-center">
-                  <div className="relative">
-                    <div className="w-20 h-20 rounded-full bg-[#F97316]/10 flex items-center justify-center">
-                      <Heart className="w-8 h-8 text-[#F97316]" />
-                    </div>
-                    <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-[#F97316]/15 flex items-center justify-center">
-                      <BadgeCheck className="w-4 h-4 text-[#F97316]" />
-                    </div>
+            <div className="animate-in fade-in duration-500 fixed inset-0 z-50 flex flex-col" style={{ background: "#111111", fontFamily: "Inter, sans-serif" }}>
+              {/* Header */}
+              <div className="w-full max-w-[960px] mx-auto flex items-center justify-between px-6 py-6">
+                <button
+                  onClick={() => setStep(2)}
+                  className="p-2.5 rounded-lg transition-colors hover:bg-white/10"
+                  style={{ background: "rgba(255,255,255,0.05)" }}
+                  aria-label="Go back"
+                >
+                  <ArrowRight className="w-5 h-5 text-white rotate-180" />
+                </button>
+                <div className="flex items-center gap-2 flex-1 mx-4">
+                  <div className="h-1.5 flex-1 rounded-full bg-[#f97415]" />
+                  <div className="h-1.5 flex-1 rounded-full bg-[#f97415]" />
+                  <div className="h-1.5 flex-1 rounded-full bg-[#f97415]" />
+                  <div className="h-1.5 flex-1 rounded-full" style={{ background: "rgba(255,255,255,0.10)" }} />
+                </div>
+                <div className="w-10" />
+              </div>
+
+              {/* Main card */}
+              <div className="flex-1 flex items-center justify-center px-4">
+                <div
+                  className="w-full max-w-[520px] flex flex-col gap-8"
+                  style={{
+                    background: "#1a1a1a",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    borderRadius: "12px",
+                    padding: "48px",
+                  }}
+                >
+                  {/* Label */}
+                  <span className="font-bold uppercase" style={{ color: "#f97415", fontSize: "11px", letterSpacing: "0.1em" }}>
+                    BUILT WITH YOU
+                  </span>
+
+                  {/* Headline */}
+                  <h1 className="font-bold text-white tracking-tight" style={{ fontSize: "30px" }}>
+                    Help me build this with you.
+                  </h1>
+
+                  {/* Paragraphs */}
+                  <div className="flex flex-col gap-4" style={{ color: "#64748b", fontSize: "15px", lineHeight: "1.7" }}>
+                    <p>PrepLane is being built by a 20yo student who faced the exact same problem.</p>
+                    <p>If you have ideas, frustrations, or features you wish existed I genuinely want to hear from you. Early users are shaping what this becomes.</p>
+                    <p>Oh, and PrepLane is completely free. No credit card, no trial, no catch. Just a tool I wished existed when I started applying.</p>
+                  </div>
+
+                  {/* Buttons */}
+                  <div className="flex flex-col gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (user) {
+                          saveProfileAndComplete();
+                        } else {
+                          localStorage.setItem(ONBOARDING_KEY, "true");
+                          setStep(4);
+                        }
+                      }}
+                      disabled={saving}
+                      className="w-full text-white font-bold transition-colors hover:bg-[#ea6c0a] disabled:opacity-60"
+                      style={{ background: "#f97415", padding: "16px", borderRadius: "8px" }}
+                    >
+                      {saving ? "Starting..." : "Start building my profile →"}
+                    </button>
+
+                    <a
+                      href="https://www.linkedin.com/in/marcodonghiaa/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full text-center font-bold transition-colors"
+                      style={{
+                        color: "#f97415",
+                        border: "1px solid #f97415",
+                        padding: "16px",
+                        borderRadius: "8px",
+                        background: "transparent",
+                      }}
+                      onMouseEnter={(e) => { (e.target as HTMLElement).style.background = "rgba(249,116,22,0.05)"; }}
+                      onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "transparent"; }}
+                    >
+                      Connect on LinkedIn →
+                    </a>
                   </div>
                 </div>
+              </div>
 
-                {/* Heading */}
-                <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight text-center">
-                  Help me build this with you
-                </h1>
-
-                {/* Body */}
-                <p className="text-slate-500 text-base md:text-lg leading-relaxed text-center">
-                  PrepLane is being built by a 20 year old student who faced the exact same problem.
-                </p>
-                <p className="text-slate-500 text-base md:text-lg leading-relaxed text-center">
-                  If you have ideas, frustrations, or features you wish existed I genuinely want to hear from you. Early users are shaping what this becomes.
-                </p>
-                <p className="text-slate-500 text-base md:text-lg leading-relaxed text-center">
-                  Oh, and PrepLane is completely free. No credit card, no trial, no catch. Just a tool I wished existed when I started applying.
-                </p>
-
-                {/* Action buttons */}
-                <div className="flex items-center justify-center">
-                  <a
-                    href="https://www.linkedin.com/in/marcodonghiaa/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-6 py-3.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-medium text-sm hover:border-[#F97316] hover:text-[#F97316] transition-colors"
-                  >
-                    <LinkIcon className="w-4 h-4" />
-                    Connect on LinkedIn →
-                  </a>
+              {/* Footer logo */}
+              <div className="flex justify-center py-6 opacity-30">
+                <div className="flex items-center gap-2">
+                  <div className="bg-[#f97415] p-1.5 rounded-lg flex items-center justify-center">
+                    <Rocket className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="text-sm font-bold text-white">PrepLane</span>
                 </div>
-
-                {/* CTA */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (user) {
-                      saveProfileAndComplete();
-                    } else {
-                      localStorage.setItem(ONBOARDING_KEY, "true");
-                      setStep(4);
-                    }
-                  }}
-                  disabled={saving}
-                  className="w-full flex items-center justify-center gap-2 bg-[#F97316] hover:bg-orange-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-orange-200 transition-colors disabled:opacity-60"
-                >
-                  {saving ? "Starting..." : "Start building my profile"}
-                  <ArrowRight className="w-5 h-5" />
-                </button>
-
-                {/* Footer */}
-                <p className="text-center text-xs text-slate-400">
-                  Step 3 of 4 · <span className="text-[#F97316]">Community & Vision</span>
-                </p>
               </div>
             </div>
           )}
