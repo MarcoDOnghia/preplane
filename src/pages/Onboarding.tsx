@@ -1027,7 +1027,7 @@ const Onboarding = () => {
                       className="w-full flex items-center justify-center gap-2 text-white font-bold transition-all active:scale-[0.98] hover:bg-[#ea6c0a] disabled:opacity-60"
                       style={{ background: "#f97415", fontSize: "16px", padding: "16px", borderRadius: "8px", marginTop: "8px" }}
                     >
-                      {authLoading ? "Please wait..." : "Create my free account →"}
+                      {authLoading ? "Please wait..." : isLogin ? "Sign in →" : "Create my free account →"}
                     </button>
                   </form>
                 </div>
