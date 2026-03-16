@@ -909,7 +909,8 @@ const Onboarding = () => {
 
                   {/* Form */}
                   <form onSubmit={handleAuth}>
-                    {/* Full Name */}
+                    {/* Full Name — signup only */}
+                    {!isLogin && (
                     <div style={{ marginBottom: "16px" }}>
                       <label className="block font-medium" style={{ color: "#cbd5e1", fontSize: "13px", marginBottom: "6px" }}>Full Name</label>
                       <input
@@ -931,6 +932,7 @@ const Onboarding = () => {
                         onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.10)"; e.target.style.boxShadow = "none"; }}
                       />
                     </div>
+                    )}
 
                     {/* Email */}
                     <div style={{ marginBottom: "16px" }}>
