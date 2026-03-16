@@ -831,51 +831,46 @@ const Onboarding = () => {
 
           {/* Step 4 — Sign up / Login (only for unauthenticated users) */}
           {step === 4 && !user && (
-            <div className="min-h-screen flex flex-col" style={{ background: "#111111", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-              {/* Header with back arrow and progress pills */}
-              <div className="w-full flex items-center justify-between px-6 py-6">
+            <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "#111111", fontFamily: "Inter, sans-serif" }}>
+              {/* Header */}
+              <div className="w-full flex items-center justify-between" style={{ padding: "16px 24px" }}>
                 <button
                   onClick={() => setStep(step - 1)}
-                  className="p-3 rounded-lg hover:bg-white/5 transition-colors"
+                  className="flex items-center justify-center w-10 h-10 rounded-lg transition-colors"
+                  style={{ background: "rgba(255,255,255,0.05)" }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.10)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
                   aria-label="Go back"
                 >
                   <ArrowRight className="w-5 h-5 text-white rotate-180" />
                 </button>
-                
-                {/* Progress pills - 4 pills all orange */}
                 <div className="flex items-center gap-2">
                   {[1, 2, 3, 4].map((s) => (
-                    <div
-                      key={s}
-                      className="h-1.5 w-12 rounded-full bg-[#f97415]"
-                    />
+                    <div key={s} className="h-1.5 w-12 rounded-full bg-[#f97415]" />
                   ))}
                 </div>
-                
-                <div className="w-11" /> {/* Spacer for centering */}
+                <div className="w-10" />
               </div>
 
-              {/* Main content */}
-              <div className="flex-1 flex items-center justify-center px-4">
-                <div 
-                  className="w-full max-w-[448px] rounded-xl p-8 space-y-8"
-                  style={{ 
-                    backgroundColor: "rgba(255,255,255,0.05)",
+              {/* Main */}
+              <div className="flex-1 flex items-center justify-center" style={{ padding: "48px 24px" }}>
+                <div
+                  className="w-full max-w-[448px]"
+                  style={{
+                    background: "rgba(255,255,255,0.05)",
                     border: "1px solid rgba(255,255,255,0.10)",
                     borderRadius: "12px",
                     padding: "32px",
-                    backdropFilter: "blur(8px)"
+                    backdropFilter: "blur(8px)",
                   }}
                 >
-                  {/* Header */}
-                  <div className="text-center space-y-3">
-                    <h1 className="font-bold text-white" style={{ fontSize: "30px", marginBottom: "12px" }}>
-                      Save your progress.
-                    </h1>
-                    <p className="text-sm" style={{ color: "#94a3b8", fontSize: "14px" }}>
-                      Create a free account to save your target, your CV, and your campaigns. Takes 10 seconds.
-                    </p>
-                  </div>
+                  {/* Headline */}
+                  <h1 className="text-center font-bold text-white" style={{ fontSize: "30px", marginBottom: "8px" }}>
+                    Save your progress.
+                  </h1>
+                  <p className="text-center" style={{ color: "#94a3b8", fontSize: "14px", marginBottom: "24px" }}>
+                    Create a free account to save your target, your CV, and your campaigns. Takes 10 seconds.
+                  </p>
 
                   {/* Google Button */}
                   <button
@@ -893,8 +888,8 @@ const Onboarding = () => {
                         setAuthLoading(false);
                       }
                     }}
-                    className="w-full flex items-center justify-center gap-3 py-4 bg-white text-[#111111] font-semibold text-[15px] transition-colors disabled:opacity-60 hover:bg-[#f1f5f9]"
-                    style={{ borderRadius: "8px" }}
+                    className="w-full flex items-center justify-center gap-3 bg-white font-semibold transition-colors disabled:opacity-60 hover:bg-[#f1f5f9]"
+                    style={{ color: "#111111", fontSize: "15px", borderRadius: "8px", padding: "12px 16px", marginBottom: "16px" }}
                   >
                     <svg className="h-5 w-5" viewBox="0 0 24 24">
                       <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
@@ -906,70 +901,52 @@ const Onboarding = () => {
                   </button>
 
                   {/* Divider */}
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <span 
-                        className="w-full"
-                        style={{ borderTop: "1px solid rgba(255,255,255,0.10)" }}
-                      />
-                    </div>
-                    <div className="relative flex justify-center">
-                      <span 
-                        className="px-3 text-xs font-medium"
-                        style={{ color: "#64748b", fontSize: "14px", letterSpacing: "0.05em" }}
-                      >
-                        or
-                      </span>
-                    </div>
+                  <div className="flex items-center gap-3" style={{ margin: "16px 0" }}>
+                    <div className="flex-1" style={{ height: "1px", background: "rgba(255,255,255,0.10)" }} />
+                    <span className="uppercase font-medium" style={{ color: "#64748b", fontSize: "13px", letterSpacing: "0.1em" }}>or</span>
+                    <div className="flex-1" style={{ height: "1px", background: "rgba(255,255,255,0.10)" }} />
                   </div>
 
                   {/* Form */}
-                  <form onSubmit={handleAuth} className="space-y-6">
+                  <form onSubmit={handleAuth}>
                     {/* Full Name */}
-                    <div className="space-y-2">
-                      <label 
-                        className="font-medium"
-                        style={{ color: "#cbd5e1", fontSize: "13px", marginBottom: "6px" }}
-                      >
-                        Full Name
-                      </label>
+                    <div style={{ marginBottom: "16px" }}>
+                      <label className="block font-medium" style={{ color: "#cbd5e1", fontSize: "13px", marginBottom: "6px" }}>Full Name</label>
                       <input
                         type="text"
                         value={displayName}
                         onChange={(e) => setDisplayName(e.target.value)}
-                        placeholder="Your full name"
+                        placeholder="John Doe"
                         required={!isLogin}
                         className="w-full focus:outline-none transition-colors"
                         style={{
-                          backgroundColor: "rgba(255,255,255,0.05)",
+                          background: "rgba(255,255,255,0.05)",
                           border: "1px solid rgba(255,255,255,0.10)",
                           borderRadius: "8px",
                           color: "white",
                           padding: "12px 16px",
-                          fontSize: "14px"
+                          fontSize: "14px",
                         }}
+                        onFocus={(e) => { e.target.style.borderColor = "#f97415"; e.target.style.boxShadow = "0 0 0 1px #f97415"; }}
+                        onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.10)"; e.target.style.boxShadow = "none"; }}
                       />
                     </div>
 
                     {/* Email */}
-                    <div className="space-y-2">
-                      <label 
-                        className="font-medium"
-                        style={{ color: "#cbd5e1", fontSize: "13px", marginBottom: "6px" }}
-                      >
-                        Email
-                      </label>
+                    <div style={{ marginBottom: "16px" }}>
+                      <label className="block font-medium" style={{ color: "#cbd5e1", fontSize: "13px", marginBottom: "6px" }}>Email Address</label>
                       <input
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        onBlur={() => setTouched((t) => ({ ...t, email: true }))}
-                        placeholder="you@example.com"
+                        onBlur={(e) => { setTouched((t) => ({ ...t, email: true })); e.target.style.borderColor = "rgba(255,255,255,0.10)"; e.target.style.boxShadow = "none"; }}
+                        onFocus={(e) => { e.target.style.borderColor = "#f97415"; e.target.style.boxShadow = "0 0 0 1px #f97415"; }}
+                        placeholder="john@example.com"
                         required
                         className="w-full focus:outline-none transition-colors"
                         style={{
-                          backgroundColor: "rgba(255,255,255,0.05)",
-                          border: touched.email && email && !isEmailValid 
+                          background: "rgba(255,255,255,0.05)",
+                          border: touched.email && email && !isEmailValid
                             ? "1px solid #ef4444"
                             : touched.email && email && isEmailValid
                             ? "1px solid #22c55e"
@@ -977,43 +954,41 @@ const Onboarding = () => {
                           borderRadius: "8px",
                           color: "white",
                           padding: "12px 16px",
-                          fontSize: "14px"
+                          fontSize: "14px",
                         }}
                       />
                     </div>
 
                     {/* Password */}
-                    <div className="space-y-2">
-                      <label 
-                        className="font-medium"
-                        style={{ color: "#cbd5e1", fontSize: "13px", marginBottom: "6px" }}
-                      >
-                        Password
-                      </label>
+                    <div style={{ marginBottom: "16px" }}>
+                      <label className="block font-medium" style={{ color: "#cbd5e1", fontSize: "13px", marginBottom: "6px" }}>Password</label>
                       <div className="relative">
                         <input
                           type={showPassword ? "text" : "password"}
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
-                          onBlur={() => setTouched((t) => ({ ...t, password: true }))}
-                          placeholder="Create a strong password"
+                          onBlur={(e) => { setTouched((t) => ({ ...t, password: true })); e.target.style.borderColor = "rgba(255,255,255,0.10)"; e.target.style.boxShadow = "none"; }}
+                          onFocus={(e) => { e.target.style.borderColor = "#f97415"; e.target.style.boxShadow = "0 0 0 1px #f97415"; }}
+                          placeholder="••••••••"
                           required
                           minLength={8}
                           className="w-full focus:outline-none transition-colors"
                           style={{
-                            backgroundColor: "rgba(255,255,255,0.05)",
+                            background: "rgba(255,255,255,0.05)",
                             border: "1px solid rgba(255,255,255,0.10)",
                             borderRadius: "8px",
                             color: "white",
                             padding: "12px 16px",
-                            fontSize: "14px"
+                            fontSize: "14px",
                           }}
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-4 top-1/2 -translate-y-1/2 transition-colors"
-                          style={{ color: "#475569" }}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 transition-colors hover:opacity-80"
+                          style={{ color: "#64748b" }}
+                          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#94a3b8"; }}
+                          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "#64748b"; }}
                         >
                           {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                         </button>
@@ -1022,7 +997,7 @@ const Onboarding = () => {
 
                     {/* Error */}
                     {authError && (
-                      <div className="rounded-lg p-3 text-sm" style={{ backgroundColor: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#ef4444" }}>
+                      <div className="rounded-lg p-3 text-sm" style={{ backgroundColor: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#ef4444", marginBottom: "16px" }}>
                         {authError === "ALREADY_EXISTS" ? (
                           <>
                             An account with this email already exists.{" "}
@@ -1041,36 +1016,30 @@ const Onboarding = () => {
                       </div>
                     )}
 
-                    {/* Submit Button */}
+                    {/* Submit */}
                     <button
                       type="submit"
                       disabled={authLoading}
-                      className="w-full flex items-center justify-center gap-2 text-white font-bold transition-all active:scale-[0.98] hover:bg-[#ea6c0a]"
-                      style={{
-                        backgroundColor: "#f97415",
-                        fontSize: "16px",
-                        padding: "16px",
-                        borderRadius: "8px"
-                      }}
+                      className="w-full flex items-center justify-center gap-2 text-white font-bold transition-all active:scale-[0.98] hover:bg-[#ea6c0a] disabled:opacity-60"
+                      style={{ background: "#f97415", fontSize: "16px", padding: "16px", borderRadius: "8px", marginTop: "8px" }}
                     >
-                      {authLoading ? "Please wait..." : "Create my free account"}
-                      <ArrowRight className="w-5 h-5" />
+                      {authLoading ? "Please wait..." : "Create my free account →"}
                     </button>
                   </form>
-
-                  {/* Footer */}
-                  <div className="text-center text-sm" style={{ color: "#94a3b8" }}>
-                    Already have an account?{" "}
-                    <button
-                      type="button"
-                      className="font-semibold hover:underline"
-                      style={{ color: "#f97415" }}
-                      onClick={() => { setIsLogin(true); setAuthError(null); setForgotMode(false); setTouched({}); }}
-                    >
-                      Sign in
-                    </button>
-                  </div>
                 </div>
+              </div>
+
+              {/* Footer */}
+              <div className="text-center" style={{ padding: "32px", color: "#94a3b8", fontSize: "14px" }}>
+                Already have an account?{" "}
+                <button
+                  type="button"
+                  className="hover:underline"
+                  style={{ color: "#f97415", fontWeight: 600 }}
+                  onClick={() => { setIsLogin(true); setAuthError(null); setForgotMode(false); setTouched({}); }}
+                >
+                  Sign in
+                </button>
               </div>
             </div>
           )}
