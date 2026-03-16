@@ -273,24 +273,24 @@ const Onboarding = () => {
 
   if (step === 1) {
     return (
-      <div className="relative min-h-screen overflow-hidden flex flex-col items-center justify-center" style={{ background: "#111111", fontFamily: "Inter, sans-serif" }}>
+      <div className="relative min-h-screen overflow-hidden flex flex-col items-center" style={{ background: "#111111", fontFamily: "Inter, sans-serif" }}>
         {/* Background glow blobs */}
-        <div className="fixed top-0 left-0 w-[500px] h-[500px] rounded-full opacity-20 pointer-events-none" style={{ background: "rgba(249,116,21,0.10)", filter: "blur(120px)" }} />
-        <div className="fixed bottom-0 right-0 w-[500px] h-[500px] rounded-full opacity-20 pointer-events-none" style={{ background: "rgba(249,116,21,0.05)", filter: "blur(120px)" }} />
+        <div className="fixed top-0 left-0 rounded-full pointer-events-none" style={{ width: "40vw", height: "40vw", background: "#f97415", opacity: 0.08, filter: "blur(120px)", zIndex: -1 }} />
+        <div className="fixed bottom-0 right-0 rounded-full pointer-events-none" style={{ width: "40vw", height: "40vw", background: "#f97415", opacity: 0.04, filter: "blur(120px)", zIndex: -1 }} />
 
         {/* Header - logo only, centered */}
-        <header className="absolute top-0 left-0 right-0 flex justify-center py-6">
+        <header className="flex justify-center" style={{ paddingTop: "32px" }}>
           <div className="flex items-center gap-2">
-            <div className="bg-[#f97415] p-2 rounded-lg flex items-center justify-center">
+            <div className="bg-[#f97415] p-2 rounded-xl flex items-center justify-center">
               <Rocket className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-bold text-white">PrepLane</span>
           </div>
         </header>
 
-        <div className="w-full max-w-[720px] px-6 flex flex-col items-center text-center space-y-10">
+        <div className="w-full max-w-[1200px] px-6 flex flex-col items-center text-center">
           {/* Progress pills */}
-          <div className="flex flex-col items-center gap-3">
+          <div className="flex flex-col items-center gap-3" style={{ marginTop: "32px" }}>
             <div className="flex items-center gap-2">
               <div className="h-1.5 w-12 rounded-full bg-[#f97415]" />
               <div className="h-1.5 w-12 rounded-full bg-[#1e293b]" />
@@ -301,14 +301,14 @@ const Onboarding = () => {
           </div>
 
           {/* Headline */}
-          <h1 className="font-bold leading-[1.1] tracking-tight" style={{ fontSize: "clamp(36px, 6vw, 60px)" }}>
+          <h1 className="leading-[1.1]" style={{ fontSize: "clamp(36px, 6vw, 60px)", fontWeight: 900, letterSpacing: "-0.02em", marginTop: "80px" }}>
             <span className="text-white">Stop applying to everything.</span>
             <br />
             <span style={{ color: "#f97415" }}>Start owning your shot.</span>
           </h1>
 
           {/* Subtitle */}
-          <div className="max-w-[520px]" style={{ color: "#64748b", fontSize: "18px", lineHeight: "1.7" }}>
+          <div className="max-w-[520px]" style={{ color: "#64748b", fontSize: "18px", lineHeight: "1.7", marginTop: "32px" }}>
             <p>Most students send 30+ applications and hear nothing back. Not because their CV is bad — because they never stopped to ask:</p>
             <p className="italic font-bold mt-2">what do I actually want, and am I building toward it?</p>
           </div>
@@ -318,13 +318,13 @@ const Onboarding = () => {
             type="button"
             onClick={() => setStep(2)}
             className="font-bold text-white transition-colors hover:bg-[#ea6c0a]"
-            style={{ background: "#f97415", fontSize: "18px", padding: "16px 40px", borderRadius: "8px" }}
+            style={{ background: "#f97415", fontSize: "18px", padding: "16px 40px", borderRadius: "8px", marginTop: "48px" }}
           >
             I'm in →
           </button>
 
           {/* Social proof */}
-          <p className="max-w-[600px]" style={{ fontSize: "13px", color: "#64748b" }}>
+          <p className="max-w-[600px]" style={{ fontSize: "13px", color: "#64748b", marginTop: "32px" }}>
             Joining students going after Stockholm scaleups, VC-backed founders, angel-funded teams, and the next generation of European startups.
           </p>
 
@@ -344,6 +344,7 @@ const Onboarding = () => {
                   borderRadius: "12px",
                   padding: "20px 28px",
                   minWidth: "200px",
+                  maxWidth: "280px",
                 }}
               >
                 <div className="text-white" style={{ fontSize: "24px", fontWeight: 900 }}>{card.number}</div>
