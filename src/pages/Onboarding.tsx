@@ -273,68 +273,85 @@ const Onboarding = () => {
 
   if (step === 1) {
     return (
-      <div className="relative min-h-screen overflow-hidden flex flex-col" style={{ background: "#FAF9F6", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-        {/* Background orbs */}
-        <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-[#F97316]/5 blur-3xl -z-10" />
-        <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-[#F97316]/5 blur-3xl -z-10" />
+      <div className="relative min-h-screen overflow-hidden flex flex-col items-center justify-center" style={{ background: "#111111", fontFamily: "Inter, sans-serif" }}>
+        {/* Background glow blobs */}
+        <div className="fixed top-0 left-0 w-[500px] h-[500px] rounded-full opacity-20 pointer-events-none" style={{ background: "rgba(249,116,21,0.10)", filter: "blur(120px)" }} />
+        <div className="fixed bottom-0 right-0 w-[500px] h-[500px] rounded-full opacity-20 pointer-events-none" style={{ background: "rgba(249,116,21,0.05)", filter: "blur(120px)" }} />
 
-        {/* Header */}
-        <header className="w-full border-b border-[#F97316]/10 px-6 md:px-20 py-4 flex items-center justify-between">
-           <div className="flex items-center gap-2">
-              <div className="bg-[#F97316] p-2 rounded-xl flex items-center justify-center">
-                <Rocket className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-xl font-bold tracking-tight text-slate-900">PrepLane</span>
-           </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate("/onboarding?step=4&mode=login")}
-              className="px-4 py-2 rounded-full border border-[#F97316] text-[#F97316] text-sm font-medium hover:bg-[#F97316]/5 transition-colors"
-            >
-              Already a PrepLane user? Sign in →
-            </button>
+        {/* Header - logo only, centered */}
+        <header className="absolute top-0 left-0 right-0 flex justify-center py-6">
+          <div className="flex items-center gap-2">
+            <div className="bg-[#f97415] p-2 rounded-lg flex items-center justify-center">
+              <Rocket className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-xl font-bold text-white">PrepLane</span>
           </div>
         </header>
 
-        {/* Main content */}
-        <main className="flex-1 flex flex-col items-center justify-center px-6 py-12">
-          <div className="max-w-[720px] text-center space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* Icon badge */}
-            <div className="mx-auto w-fit p-4 rounded-full bg-[#F97316]/10">
-              <Rocket className="w-12 h-12 text-[#F97316]" />
+        <div className="w-full max-w-[720px] px-6 flex flex-col items-center text-center space-y-10">
+          {/* Progress pills */}
+          <div className="flex flex-col items-center gap-3">
+            <div className="flex items-center gap-2">
+              <div className="h-1.5 w-12 rounded-full bg-[#f97415]" />
+              <div className="h-1.5 w-12 rounded-full bg-[#1e293b]" />
+              <div className="h-1.5 w-12 rounded-full bg-[#1e293b]" />
+              <div className="h-1.5 w-12 rounded-full bg-[#1e293b]" />
             </div>
-
-            {/* Heading */}
-            <h1 className="text-4xl md:text-6xl font-extrabold leading-[1.1] tracking-tight text-slate-900">
-              Stop applying to everything.
-              <br />
-              <span className="text-[#F97316]">Start owning your shot.</span>
-            </h1>
-
-            {/* Body */}
-            <p className="text-lg md:text-xl font-medium text-slate-800 max-w-[640px] mx-auto leading-relaxed">
-              Most students send 30+ applications and hear nothing back. Not because their CV is bad — because they never stopped to ask:{" "}
-              <em className="font-bold">what do I actually want, and am I building toward it?</em>
-            </p>
-            <p className="text-base md:text-lg text-slate-800/70 max-w-[600px] mx-auto leading-relaxed">
-              PrepLane is being built to change that. Not a tool that helps you apply faster — one that helps you apply smarter, to fewer roles, with a genuinely compelling case for each one.
-            </p>
-
-            {/* CTA */}
-            <div>
-              <button
-                type="button"
-                onClick={() => setStep(2)}
-                className="group inline-flex items-center gap-2 rounded-xl h-14 px-8 bg-[#F97316] text-white text-lg font-bold shadow-lg shadow-[#F97316]/25 hover:-translate-y-0.5 transition-all active:translate-y-0"
-              >
-                I'm in
-                <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-              </button>
-            </div>
+            <span className="font-medium uppercase" style={{ color: "#64748b", fontSize: "11px", letterSpacing: "0.15em" }}>Step 1 of 4</span>
           </div>
-        </main>
 
-        <AppFooter />
+          {/* Headline */}
+          <h1 className="font-bold leading-[1.1] tracking-tight" style={{ fontSize: "clamp(36px, 6vw, 60px)" }}>
+            <span className="text-white">Stop applying to everything.</span>
+            <br />
+            <span style={{ color: "#f97415" }}>Start owning your shot.</span>
+          </h1>
+
+          {/* Subtitle */}
+          <div className="max-w-[520px]" style={{ color: "#64748b", fontSize: "18px", lineHeight: "1.7" }}>
+            <p>Most students send 30+ applications and hear nothing back. Not because their CV is bad — because they never stopped to ask:</p>
+            <p className="italic font-bold mt-2">what do I actually want, and am I building toward it?</p>
+          </div>
+
+          {/* CTA */}
+          <button
+            type="button"
+            onClick={() => setStep(2)}
+            className="font-bold text-white transition-colors hover:bg-[#ea6c0a]"
+            style={{ background: "#f97415", fontSize: "18px", padding: "16px 40px", borderRadius: "8px" }}
+          >
+            I'm in →
+          </button>
+
+          {/* Social proof */}
+          <p className="max-w-[600px]" style={{ fontSize: "13px", color: "#64748b" }}>
+            Joining students going after Stockholm scaleups, VC-backed founders, angel-funded teams, and the next generation of European startups.
+          </p>
+
+          {/* Stat cards */}
+          <div className="flex flex-wrap justify-center gap-4" style={{ marginTop: "48px" }}>
+            {[
+              { number: "5", label: "targeted campaigns beat 50 random applications" },
+              { number: "1", label: "proof of work opens doors a CV never will" },
+              { number: "Free", label: "no credit card, no catch" },
+            ].map((card) => (
+              <div
+                key={card.number}
+                className="text-center"
+                style={{
+                  background: "#1a1a1a",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                  borderRadius: "12px",
+                  padding: "20px 28px",
+                  minWidth: "200px",
+                }}
+              >
+                <div className="text-white" style={{ fontSize: "24px", fontWeight: 900 }}>{card.number}</div>
+                <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>{card.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -586,156 +603,227 @@ const Onboarding = () => {
           )}
 
           {step === 2 && !isReturning && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-              <div className="w-full max-w-lg mx-auto bg-white rounded-xl shadow-sm border border-slate-100 p-8 md:p-12 space-y-8">
-                {/* Header */}
-                <div className="space-y-4 text-center">
-                   <div className="flex items-center justify-center gap-2">
-                     <div className="bg-[#F97316] p-2 rounded-xl flex items-center justify-center">
-                       <Rocket className="w-5 h-5 text-white" />
-                     </div>
-                     <span className="text-xl font-bold tracking-tight text-slate-900">PrepLane</span>
-                   </div>
-                  <div>
-                    <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-                      What are you working toward?
-                    </h1>
-                    <p className="text-slate-500 mt-2 text-sm">
-                      This becomes your north star. Every application you work on in PrepLane will be measured against it.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Form fields */}
-                <div className="space-y-6">
-                  {/* Question 1: Target role */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-700">What role are you targeting?</label>
-                    <div className="relative">
-                      <Briefcase className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="text"
-                        placeholder="e.g. VC Analyst, SDR, Marketing Intern"
-                        value={targetRole}
-                        onChange={(e) => setTargetRole(e.target.value)}
-                        className="w-full pl-12 pr-4 py-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316] transition-colors"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Question 2: Europe yes/no */}
-                  <div className="space-y-3">
-                    <label className="text-sm font-medium text-slate-700">Are you based in Europe?</label>
-                    <div className="flex gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setTargetLocation("Europe")}
-                        className={`flex-1 px-4 py-3.5 rounded-xl text-sm font-medium transition-all ${
-                          targetLocation === "Europe"
-                            ? "border-2 border-[#F97316] text-[#F97316] bg-orange-50 shadow-sm"
-                            : "border border-slate-200 text-slate-600 bg-white hover:border-slate-300"
-                        }`}
-                      >
-                        🌍 Yes, I'm in Europe
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setTargetLocation("")}
-                        className={`flex-1 px-4 py-3.5 rounded-xl text-sm font-medium transition-all ${
-                          targetLocation === ""
-                            ? "border-2 border-[#F97316] text-[#F97316] bg-orange-50 shadow-sm"
-                            : "border border-slate-200 text-slate-600 bg-white hover:border-slate-300"
-                        }`}
-                      >
-                        🌐 No, I'm elsewhere
-                      </button>
-                    </div>
-                    <p className="text-xs text-slate-400">
-                      PrepLane is currently optimized for the European market. You can still use it anywhere.
-                    </p>
-                  </div>
-                </div>
-
-                {/* CTA */}
+            <div className="animate-in fade-in duration-500 fixed inset-0 z-50 flex flex-col" style={{ background: "#111111", fontFamily: "Inter, sans-serif" }}>
+              {/* Header */}
+              <div className="w-full max-w-[960px] mx-auto flex items-center justify-between px-6 py-6">
                 <button
-                  type="button"
-                  onClick={saveTargetAndAdvance}
-                  disabled={saving || !targetRole.trim()}
-                  className="w-full flex items-center justify-center gap-2 bg-[#F97316] hover:bg-orange-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-orange-200 transition-colors disabled:opacity-60"
+                  onClick={() => setStep(1)}
+                  className="p-2.5 rounded-lg transition-colors"
+                  style={{ background: "rgba(30,41,59,0.5)", border: "1px solid rgba(255,255,255,0.08)" }}
+                  aria-label="Go back"
                 >
-                  {saving ? "Saving..." : "Set my target →"}
+                  <ArrowRight className="w-5 h-5 text-white rotate-180" />
                 </button>
+                <div className="flex items-center gap-2">
+                  <div className="h-1.5 w-12 rounded-full bg-[#f97415]" />
+                  <div className="h-1.5 w-12 rounded-full bg-[#f97415]" />
+                  <div className="h-1.5 w-12 rounded-full bg-[#334155]" />
+                  <div className="h-1.5 w-12 rounded-full bg-[#334155]" />
+                </div>
+                <div className="w-10" />
+              </div>
+
+              {/* Main card */}
+              <div className="flex-1 flex items-center justify-center px-4">
+                <div
+                  className="w-full max-w-[520px] space-y-8"
+                  style={{
+                    background: "#1a1a1a",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    borderRadius: "12px",
+                    padding: "48px",
+                  }}
+                >
+                  {/* Label */}
+                  <span className="font-bold uppercase" style={{ color: "#f97415", fontSize: "11px", letterSpacing: "0.15em" }}>
+                    YOUR NORTH STAR
+                  </span>
+
+                  {/* Headline */}
+                  <div style={{ marginTop: "12px" }}>
+                    <h1 className="font-bold text-white" style={{ fontSize: "30px" }}>Who are you going after?</h1>
+                    <p style={{ color: "#94a3b8", fontSize: "15px", marginTop: "8px" }}>
+                      Every campaign you build in PrepLane will be calibrated around this target.
+                    </p>
+                  </div>
+
+                  {/* Target role input */}
+                  <div className="space-y-2">
+                    <label className="block font-medium" style={{ color: "#cbd5e1", fontSize: "13px" }}>Target role</label>
+                    <input
+                      type="text"
+                      value={targetRole}
+                      onChange={(e) => setTargetRole(e.target.value)}
+                      placeholder="e.g. GTM Intern, VC Analyst, Marketing Intern"
+                      className="w-full focus:outline-none transition-colors"
+                      style={{
+                        background: "rgba(15,23,42,0.5)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        borderRadius: "8px",
+                        padding: "12px 16px",
+                        color: "white",
+                        fontSize: "14px",
+                      }}
+                      onFocus={(e) => { e.target.style.borderColor = "#f97415"; e.target.style.boxShadow = "0 0 0 1px #f97415"; }}
+                      onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.08)"; e.target.style.boxShadow = "none"; }}
+                    />
+                  </div>
+
+                  {/* Target company type */}
+                  <div className="space-y-2">
+                    <label className="block font-medium" style={{ color: "#cbd5e1", fontSize: "13px" }}>Target company type</label>
+                    <div className="flex flex-wrap gap-2">
+                      {["Startup", "Scaleup", "Boutique firm", "VC fund"].map((type) => {
+                        const selected = companySizes.includes(type);
+                        return (
+                          <button
+                            key={type}
+                            type="button"
+                            onClick={() =>
+                              setCompanySizes((prev) =>
+                                selected ? prev.filter((s) => s !== type) : [...prev, type]
+                              )
+                            }
+                            className="rounded-full font-medium transition-colors"
+                            style={{
+                              padding: "8px 16px",
+                              fontSize: "13px",
+                              background: selected ? "#f97415" : "rgba(30,41,59,0.5)",
+                              color: selected ? "white" : "#94a3b8",
+                              border: selected ? "1px solid #f97415" : "1px solid rgba(255,255,255,0.08)",
+                            }}
+                          >
+                            {type}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* CTA */}
+                  <button
+                    type="button"
+                    onClick={saveTargetAndAdvance}
+                    disabled={saving || !targetRole.trim()}
+                    className="group w-full flex items-center justify-center gap-2 text-white font-bold transition-all hover:bg-[#ea6c0a] disabled:opacity-60"
+                    style={{ background: "#f97415", padding: "16px", borderRadius: "8px" }}
+                  >
+                    {saving ? "Saving..." : "Set my target"}
+                    <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Footer logo */}
+              <div className="flex justify-center py-6 opacity-30">
+                <div className="flex items-center gap-2">
+                  <div className="bg-[#f97415] p-1.5 rounded-lg flex items-center justify-center">
+                    <Rocket className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="text-sm font-bold text-white">PrepLane</span>
+                </div>
               </div>
             </div>
           )}
 
           {/* Step 3 — The invitation */}
           {step === 3 && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-              <div className="w-full max-w-lg mx-auto bg-white rounded-xl shadow-sm border border-slate-100 p-8 md:p-12 space-y-8">
-                {/* Icon badge */}
-                <div className="flex justify-center">
-                  <div className="relative">
-                    <div className="w-20 h-20 rounded-full bg-[#F97316]/10 flex items-center justify-center">
-                      <Heart className="w-8 h-8 text-[#F97316]" />
-                    </div>
-                    <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-[#F97316]/15 flex items-center justify-center">
-                      <BadgeCheck className="w-4 h-4 text-[#F97316]" />
-                    </div>
+            <div className="animate-in fade-in duration-500 fixed inset-0 z-50 flex flex-col" style={{ background: "#111111", fontFamily: "Inter, sans-serif" }}>
+              {/* Header */}
+              <div className="w-full max-w-[960px] mx-auto flex items-center justify-between px-6 py-6">
+                <button
+                  onClick={() => setStep(2)}
+                  className="p-2.5 rounded-lg transition-colors hover:bg-white/10"
+                  style={{ background: "rgba(255,255,255,0.05)" }}
+                  aria-label="Go back"
+                >
+                  <ArrowRight className="w-5 h-5 text-white rotate-180" />
+                </button>
+                <div className="flex items-center gap-2 flex-1 mx-4">
+                  <div className="h-1.5 flex-1 rounded-full bg-[#f97415]" />
+                  <div className="h-1.5 flex-1 rounded-full bg-[#f97415]" />
+                  <div className="h-1.5 flex-1 rounded-full bg-[#f97415]" />
+                  <div className="h-1.5 flex-1 rounded-full" style={{ background: "rgba(255,255,255,0.10)" }} />
+                </div>
+                <div className="w-10" />
+              </div>
+
+              {/* Main card */}
+              <div className="flex-1 flex items-center justify-center px-4">
+                <div
+                  className="w-full max-w-[520px] flex flex-col gap-8"
+                  style={{
+                    background: "#1a1a1a",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    borderRadius: "12px",
+                    padding: "48px",
+                  }}
+                >
+                  {/* Label */}
+                  <span className="font-bold uppercase" style={{ color: "#f97415", fontSize: "11px", letterSpacing: "0.1em" }}>
+                    BUILT WITH YOU
+                  </span>
+
+                  {/* Headline */}
+                  <h1 className="font-bold text-white tracking-tight" style={{ fontSize: "30px" }}>
+                    Help me build this with you.
+                  </h1>
+
+                  {/* Paragraphs */}
+                  <div className="flex flex-col gap-4" style={{ color: "#64748b", fontSize: "15px", lineHeight: "1.7" }}>
+                    <p>PrepLane is being built by a 20yo student who faced the exact same problem.</p>
+                    <p>If you have ideas, frustrations, or features you wish existed I genuinely want to hear from you. Early users are shaping what this becomes.</p>
+                    <p>Oh, and PrepLane is completely free. No credit card, no trial, no catch. Just a tool I wished existed when I started applying.</p>
+                  </div>
+
+                  {/* Buttons */}
+                  <div className="flex flex-col gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (user) {
+                          saveProfileAndComplete();
+                        } else {
+                          localStorage.setItem(ONBOARDING_KEY, "true");
+                          setStep(4);
+                        }
+                      }}
+                      disabled={saving}
+                      className="w-full text-white font-bold transition-colors hover:bg-[#ea6c0a] disabled:opacity-60"
+                      style={{ background: "#f97415", padding: "16px", borderRadius: "8px" }}
+                    >
+                      {saving ? "Starting..." : "Start building my profile →"}
+                    </button>
+
+                    <a
+                      href="https://www.linkedin.com/in/marcodonghiaa/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full text-center font-bold transition-colors"
+                      style={{
+                        color: "#f97415",
+                        border: "1px solid #f97415",
+                        padding: "16px",
+                        borderRadius: "8px",
+                        background: "transparent",
+                      }}
+                      onMouseEnter={(e) => { (e.target as HTMLElement).style.background = "rgba(249,116,22,0.05)"; }}
+                      onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "transparent"; }}
+                    >
+                      Connect on LinkedIn →
+                    </a>
                   </div>
                 </div>
+              </div>
 
-                {/* Heading */}
-                <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight text-center">
-                  Help me build this with you
-                </h1>
-
-                {/* Body */}
-                <p className="text-slate-500 text-base md:text-lg leading-relaxed text-center">
-                  PrepLane is being built by a 20 year old student who faced the exact same problem.
-                </p>
-                <p className="text-slate-500 text-base md:text-lg leading-relaxed text-center">
-                  If you have ideas, frustrations, or features you wish existed I genuinely want to hear from you. Early users are shaping what this becomes.
-                </p>
-                <p className="text-slate-500 text-base md:text-lg leading-relaxed text-center">
-                  Oh, and PrepLane is completely free. No credit card, no trial, no catch. Just a tool I wished existed when I started applying.
-                </p>
-
-                {/* Action buttons */}
-                <div className="flex items-center justify-center">
-                  <a
-                    href="https://www.linkedin.com/in/marcodonghiaa/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-6 py-3.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-medium text-sm hover:border-[#F97316] hover:text-[#F97316] transition-colors"
-                  >
-                    <LinkIcon className="w-4 h-4" />
-                    Connect on LinkedIn →
-                  </a>
+              {/* Footer logo */}
+              <div className="flex justify-center py-6 opacity-30">
+                <div className="flex items-center gap-2">
+                  <div className="bg-[#f97415] p-1.5 rounded-lg flex items-center justify-center">
+                    <Rocket className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="text-sm font-bold text-white">PrepLane</span>
                 </div>
-
-                {/* CTA */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (user) {
-                      saveProfileAndComplete();
-                    } else {
-                      localStorage.setItem(ONBOARDING_KEY, "true");
-                      setStep(4);
-                    }
-                  }}
-                  disabled={saving}
-                  className="w-full flex items-center justify-center gap-2 bg-[#F97316] hover:bg-orange-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-orange-200 transition-colors disabled:opacity-60"
-                >
-                  {saving ? "Starting..." : "Start building my profile"}
-                  <ArrowRight className="w-5 h-5" />
-                </button>
-
-                {/* Footer */}
-                <p className="text-center text-xs text-slate-400">
-                  Step 3 of 4 · <span className="text-[#F97316]">Community & Vision</span>
-                </p>
               </div>
             </div>
           )}
