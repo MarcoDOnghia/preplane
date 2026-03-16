@@ -866,10 +866,12 @@ const Onboarding = () => {
                 >
                   {/* Headline */}
                   <h1 className="text-center font-bold text-white" style={{ fontSize: "30px", marginBottom: "8px" }}>
-                    Save your progress.
+                    {isLogin ? "Welcome back." : "Save your progress."}
                   </h1>
                   <p className="text-center" style={{ color: "#94a3b8", fontSize: "14px", marginBottom: "24px" }}>
-                    Create a free account to save your target, your CV, and your campaigns. Takes 10 seconds.
+                    {isLogin
+                      ? "Sign in to access your tailored applications."
+                      : "Create a free account to save your target, your CV, and your campaigns. Takes 10 seconds."}
                   </p>
 
                   {/* Google Button */}
