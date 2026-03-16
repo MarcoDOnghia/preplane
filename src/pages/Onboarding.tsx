@@ -866,10 +866,12 @@ const Onboarding = () => {
                 >
                   {/* Headline */}
                   <h1 className="text-center font-bold text-white" style={{ fontSize: "30px", marginBottom: "8px" }}>
-                    Save your progress.
+                    {isLogin ? "Welcome back." : "Save your progress."}
                   </h1>
                   <p className="text-center" style={{ color: "#94a3b8", fontSize: "14px", marginBottom: "24px" }}>
-                    Create a free account to save your target, your CV, and your campaigns. Takes 10 seconds.
+                    {isLogin
+                      ? "Sign in to access your tailored applications."
+                      : "Create a free account to save your target, your CV, and your campaigns. Takes 10 seconds."}
                   </p>
 
                   {/* Google Button */}
@@ -909,7 +911,8 @@ const Onboarding = () => {
 
                   {/* Form */}
                   <form onSubmit={handleAuth}>
-                    {/* Full Name */}
+                    {/* Full Name — signup only */}
+                    {!isLogin && (
                     <div style={{ marginBottom: "16px" }}>
                       <label className="block font-medium" style={{ color: "#cbd5e1", fontSize: "13px", marginBottom: "6px" }}>Full Name</label>
                       <input
@@ -931,6 +934,7 @@ const Onboarding = () => {
                         onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.10)"; e.target.style.boxShadow = "none"; }}
                       />
                     </div>
+                    )}
 
                     {/* Email */}
                     <div style={{ marginBottom: "16px" }}>
@@ -1023,7 +1027,7 @@ const Onboarding = () => {
                       className="w-full flex items-center justify-center gap-2 text-white font-bold transition-all active:scale-[0.98] hover:bg-[#ea6c0a] disabled:opacity-60"
                       style={{ background: "#f97415", fontSize: "16px", padding: "16px", borderRadius: "8px", marginTop: "8px" }}
                     >
-                      {authLoading ? "Please wait..." : "Create my free account →"}
+                      {authLoading ? "Please wait..." : isLogin ? "Sign in →" : "Create my free account →"}
                     </button>
                   </form>
                 </div>
@@ -1031,14 +1035,14 @@ const Onboarding = () => {
 
               {/* Footer */}
               <div className="text-center" style={{ padding: "32px", color: "#94a3b8", fontSize: "14px" }}>
-                Already have an account?{" "}
+                {isLogin ? "New to PrepLane? " : "Already have an account? "}
                 <button
                   type="button"
                   className="hover:underline"
                   style={{ color: "#f97415", fontWeight: 600 }}
-                  onClick={() => setIsLogin(true)}
+                  onClick={() => { setIsLogin(!isLogin); setAuthError(null); setTouched({}); }}
                 >
-                  Sign in
+                  {isLogin ? "Start here →" : "Sign in"}
                 </button>
               </div>
             </div>
