@@ -1035,14 +1035,14 @@ const Onboarding = () => {
 
               {/* Footer */}
               <div className="text-center" style={{ padding: "32px", color: "#94a3b8", fontSize: "14px" }}>
-                Already have an account?{" "}
+                {isLogin ? "New to PrepLane? " : "Already have an account? "}
                 <button
                   type="button"
                   className="hover:underline"
                   style={{ color: "#f97415", fontWeight: 600 }}
-                  onClick={() => setIsLogin(true)}
+                  onClick={() => { setIsLogin(!isLogin); setAuthError(null); setTouched({}); }}
                 >
-                  Sign in
+                  {isLogin ? "Start here →" : "Sign in"}
                 </button>
               </div>
             </div>
