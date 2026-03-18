@@ -88,15 +88,31 @@ const STATUS_OPTIONS = [
   { value: "rejected", label: "Not This Time", color: "bg-destructive/10 text-destructive border-destructive/20" },
 ];
 
-// Step order: Proof → LinkedIn → Contact → Outreach → Cover letter → CV ready → Follow-up
+// Step order: Set target → PoW → LinkedIn → Contact+Outreach
+// Active steps for the beta launch flow
+const ACTIVE_STEPS = [
+  { key: "step_proof_done", label: "Set your target", weight: 25, icon: Target, subtext: "Define the company and role you're going after." },
+  { key: "step_proof_done", label: "Generate your PoW brief", weight: 35, icon: Lightbulb, subtext: "This is the core of your campaign. Build something real that shows you can do the job — before you even apply." },
+  { key: "step_linkedin_done", label: "Post about it on LinkedIn", weight: 20, icon: Users, subtext: "Post before you reach out. Tag the company, mention the space, ask a genuine question. Warm is better than cold." },
+  { key: "step_outreach_done", label: "Find your contact and send outreach", weight: 20, icon: Send, subtext: "Find the right person at the company and reach out with your proof of work." },
+] as const;
+
+// Coming soon steps (hidden from active flow)
+const COMING_SOON_STEPS = [
+  { label: "CV tailoring", icon: FileText },
+  { label: "Cover letter", icon: Mail },
+  { label: "Follow up sequence", icon: Clock },
+];
+
+// Legacy STEPS kept for score calculation compatibility
 const STEPS = [
-  { key: "step_proof_done", label: "Build your proof of work", weight: 20, icon: Lightbulb, subtext: "Do this first. It gives you something real to say and something worth posting about." },
-  { key: "step_linkedin_done", label: "Post about it on LinkedIn", weight: 5, icon: Users, subtext: "Post before you reach out. Tag the company, mention the space, ask a genuine question. Warm is better than cold." },
-  { key: "step_connection_done", label: "Find your contact", weight: 15, icon: Users, subtext: "They may have already seen your post. Now find the right person to reach out to directly." },
-  { key: "step_outreach_done", label: "Send outreach", weight: 20, icon: Send, subtext: "Lead with what you built and your LinkedIn post. Ask for feedback or a 15-minute coffee chat — not a job." },
-  { key: "step_cv_done", label: "CV ready", weight: 15, icon: FileText, subtext: "Have your CV tailored and ready to send when they ask." },
-  { key: "step_cover_letter_done", label: "Cover letter", weight: 10, icon: Mail, subtext: "Have this ready for when they ask. Requires a tailored CV first." },
-  { key: "step_followup_done", label: "Follow up", weight: 15, icon: Clock, subtext: "Most people follow up zero times. You follow up three times." },
+  { key: "step_proof_done", label: "Build your proof of work", weight: 20, icon: Lightbulb, subtext: "" },
+  { key: "step_linkedin_done", label: "Post about it on LinkedIn", weight: 5, icon: Users, subtext: "" },
+  { key: "step_connection_done", label: "Find your contact", weight: 15, icon: Users, subtext: "" },
+  { key: "step_outreach_done", label: "Send outreach", weight: 20, icon: Send, subtext: "" },
+  { key: "step_cv_done", label: "CV ready", weight: 15, icon: FileText, subtext: "" },
+  { key: "step_cover_letter_done", label: "Cover letter", weight: 10, icon: Mail, subtext: "" },
+  { key: "step_followup_done", label: "Follow up", weight: 15, icon: Clock, subtext: "" },
 ] as const;
 
 const BANNER_DISMISS_PREFIX = "preplane_campaign_banner_dismissed_";
