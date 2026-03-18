@@ -433,27 +433,19 @@ const Campaign = () => {
           </div>
         )}
 
-        {/* Campaign Strength Score */}
+        {/* Campaign Strength — simplified for beta */}
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <Target className="h-5 w-5 text-primary" />
-                <span className="font-semibold">Application Readiness</span>
+                <span className="font-semibold">Campaign Progress</span>
               </div>
               <span className={`text-2xl font-bold ${strengthScore >= 80 ? "text-success" : strengthScore >= 50 ? "text-yellow-500" : "text-muted-foreground"}`}>
                 {strengthScore}%
               </span>
             </div>
             <Progress value={strengthScore} className="h-3" />
-            <div className="flex flex-wrap gap-2 mt-3">
-              {STEPS.map((s) => (
-                <Badge key={s.key} variant="outline" className={`text-xs ${campaign[s.key] ? "bg-success/10 text-success border-success/20" : "text-muted-foreground"}`}>
-                  {campaign[s.key] ? <Check className="h-3 w-3 mr-1" /> : null}
-                  {s.label} ({s.weight}%)
-                </Badge>
-              ))}
-            </div>
           </CardContent>
         </Card>
 
