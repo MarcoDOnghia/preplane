@@ -57,6 +57,8 @@ const Index = () => {
   const [proofBrief, setProofBrief] = useState<any>(null);
   const [generatingBrief, setGeneratingBrief] = useState(false);
   const [jdExtractingUrl, setJdExtractingUrl] = useState(false);
+  const [showNoCompanyWarning, setShowNoCompanyWarning] = useState(false);
+  const companyInputRef = useRef<HTMLInputElement>(null);
 
   // Check onboarding status and save any pending target from onboarding
   useEffect(() => {
