@@ -673,6 +673,14 @@ const Campaign = () => {
             onToggle={() => toggleStep(2)}
           >
             <div className="space-y-5">
+              {/* Intro text */}
+              <p style={{ color: '#94A3B8', fontSize: '15px', lineHeight: 1.7, margin: 0 }}>
+                Don't reach out cold. Post about what you built first.
+                <br /><br />
+                When your DM arrives, there's a chance they've already seen your work — that changes the entire conversation.
+                <br /><br />
+                Personal branding isn't vanity. It's your warmest possible introduction.
+              </p>
               {/* New note at the top */}
               <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
                 <p className="text-sm text-foreground font-medium">
