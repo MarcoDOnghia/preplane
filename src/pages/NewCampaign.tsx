@@ -1237,218 +1237,55 @@ const Index = () => {
           </div>
         )}
 
-        {/* Phase 2: Proof of work brief — the hero moment */}
-        {setupPhase === 'brief' && proofBrief && (
+        {/* Phase 2: Proof of work brief — step-by-step navigator */}
+        {setupPhase === 'brief' && proofBrief && proofBrief.build_steps && (
+          <BriefNavigator
+            proofBrief={proofBrief}
+            setupCompany={setupCompany}
+            onStartBuilding={handleStartBuilding}
+            onContinueCampaign={handleContinueCampaign}
+            toast={toast}
+          />
+        )}
+        {/* Legacy brief format fallback */}
+        {setupPhase === 'brief' && proofBrief && !proofBrief.build_steps && (
           <div style={{ maxWidth: '720px', margin: '0 auto' }}>
-            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-              <h1 style={{ color: '#FFFFFF', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.02em', marginBottom: '8px' }}>
-                Your proof-of-work brief
-              </h1>
-              <p style={{ color: '#94A3B8', fontSize: '15px' }}>
-                This is what will set you apart from every other applicant
-                {setupCompany ? ` at ${setupCompany}` : ""}.
-              </p>
+            <div style={{
+              background: '#1A1A1A',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '16px',
+              padding: '40px',
+            }}>
+              <h3 style={{ color: '#FFFFFF', fontSize: '20px', fontWeight: 700, marginBottom: '20px' }}>{proofBrief.title}</h3>
+              <div style={{ marginBottom: '20px' }}>
+                <p style={{ color: '#F97316', fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>Why this works</p>
+                <p style={{ color: '#E2E8F0', fontSize: '15px', lineHeight: 1.7 }}>{proofBrief.why_this_works}</p>
+              </div>
+              <div style={{ marginBottom: '20px' }}>
+                <p style={{ color: '#F97316', fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>What to build</p>
+                <ul style={{ paddingLeft: '20px', margin: 0 }}>
+                  {(proofBrief.what_to_build as string[]).map((b: string, i: number) => (
+                    <li key={i} style={{ color: '#E2E8F0', fontSize: '15px', lineHeight: 1.7, marginBottom: '4px' }}>{b}</li>
+                  ))}
+                </ul>
+              </div>
+              <div style={{ marginBottom: '20px' }}>
+                <p style={{ color: '#F97316', fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>Tools to use</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '6px' }}>
+                  {(proofBrief.tools_to_use as string[]).map((t: string, i: number) => (
+                    <span key={i} style={{ background: 'rgba(249,115,22,0.15)', color: '#F97316', fontSize: '12px', fontWeight: 500, padding: '4px 10px', borderRadius: '999px' }}>{t}</span>
+                  ))}
+                </div>
+              </div>
             </div>
-
-            {proofBrief.build_steps ? (
-              <div style={{
-                background: '#1A1A1A',
-                border: '1px solid rgba(255,255,255,0.08)',
-                borderRadius: '16px',
-                padding: '40px',
-              }}>
-                <div style={{ marginBottom: '28px' }}>
-                  <p style={{ color: '#F97316', fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>The Project</p>
-                  <p style={{ color: '#E2E8F0', fontSize: '15px', lineHeight: 1.7, fontWeight: 600 }}>{proofBrief.project}</p>
-                </div>
-
-                <div style={{ marginBottom: '28px' }}>
-                  <p style={{ color: '#F97316', fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>Why This Works</p>
-                  <p style={{ color: '#E2E8F0', fontSize: '15px', lineHeight: 1.7 }}>{proofBrief.why_this_works}</p>
-                </div>
-
-                <div style={{ marginBottom: '28px' }}>
-                  <p style={{ color: '#F97316', fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, marginBottom: '12px' }}>How to Build It — Step by Step</p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {(proofBrief.build_steps as string[]).map((step: string, i: number) => (
-                      <div key={i} style={{
-                        background: '#242424',
-                        border: '1px solid rgba(255,255,255,0.06)',
-                        borderRadius: '8px',
-                        padding: '16px',
-                        display: 'flex',
-                        gap: '12px',
-                      }}>
-                        <span style={{ color: '#F97316', fontWeight: 700, fontSize: '14px', flexShrink: 0 }}>{i + 1}.</span>
-                        <span style={{ color: '#E2E8F0', fontSize: '14px', lineHeight: 1.6 }}>{step}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <p style={{ color: '#22c55e', fontSize: '13px', marginTop: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Check className="h-3.5 w-3.5" style={{ color: '#22c55e' }} />
-                    All tools listed are free or freemium — no budget needed.
-                  </p>
-                </div>
-
-                <div style={{ marginBottom: '28px' }}>
-                  <p style={{ color: '#F97316', fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>What the Final Output Should Look Like</p>
-                  <p style={{ color: '#E2E8F0', fontSize: '15px', lineHeight: 1.7 }}>{proofBrief.final_output}</p>
-                </div>
-
-                {proofBrief.effort_guide && (
-                  <div style={{ marginBottom: '28px', marginTop: '24px' }}>
-                    <p style={{ color: '#F97316', fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, marginBottom: '12px' }}>Effort Guide</p>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '12px' }}>
-                      <div style={{ background: '#242424', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', padding: '20px' }}>
-                        <p style={{ color: '#F97316', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em', marginBottom: '8px' }}>Minimum (gets noticed)</p>
-                        <p style={{ color: '#E2E8F0', fontSize: '14px', lineHeight: 1.6 }}>{proofBrief.effort_guide.minimum}</p>
-                      </div>
-                      <div style={{ background: '#242424', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', padding: '20px' }}>
-                        <p style={{ color: '#F97316', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em', marginBottom: '8px' }}>Impressive (gets forwarded)</p>
-                        <p style={{ color: '#E2E8F0', fontSize: '14px', lineHeight: 1.6 }}>{proofBrief.effort_guide.impressive}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div style={{ marginBottom: '28px' }}>
-                  <p style={{ color: '#F97316', fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>The Insight to Include</p>
-                  <p style={{ color: '#94A3B8', fontSize: '15px', lineHeight: 1.7, fontStyle: 'italic' }}>{proofBrief.key_insight}</p>
-                </div>
-
-                <div>
-                  <p style={{ color: '#F97316', fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>Your Outreach Hook</p>
-                  <div style={{
-                    background: '#1A1A1A',
-                    borderLeft: '3px solid #F97316',
-                    borderRadius: '0 8px 8px 0',
-                    padding: '20px 24px',
-                    marginTop: '8px',
-                    position: 'relative' as const,
-                  }}>
-                    <p style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 500, lineHeight: 1.6, paddingRight: '70px' }}>{proofBrief.outreach_hook}</p>
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(proofBrief.outreach_hook);
-                        toast({ title: "Hook copied!" });
-                      }}
-                      style={{
-                        position: 'absolute' as const,
-                        top: '16px',
-                        right: '16px',
-                        background: '#F97316',
-                        color: '#FFFFFF',
-                        fontWeight: 600,
-                        fontSize: '13px',
-                        padding: '6px 14px',
-                        borderRadius: '6px',
-                        border: 'none',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      Copy
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div style={{
-                background: '#1A1A1A',
-                border: '1px solid rgba(255,255,255,0.08)',
-                borderRadius: '16px',
-                padding: '40px',
-              }}>
-                <h3 style={{ color: '#FFFFFF', fontSize: '20px', fontWeight: 700, marginBottom: '20px' }}>{proofBrief.title}</h3>
-                <div style={{ marginBottom: '20px' }}>
-                  <p style={{ color: '#F97316', fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>Why this works</p>
-                  <p style={{ color: '#E2E8F0', fontSize: '15px', lineHeight: 1.7 }}>{proofBrief.why_this_works}</p>
-                </div>
-                <div style={{ marginBottom: '20px' }}>
-                  <p style={{ color: '#F97316', fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>What to build</p>
-                  <ul style={{ paddingLeft: '20px', margin: 0 }}>
-                    {(proofBrief.what_to_build as string[]).map((b: string, i: number) => (
-                      <li key={i} style={{ color: '#E2E8F0', fontSize: '15px', lineHeight: 1.7, marginBottom: '4px' }}>{b}</li>
-                    ))}
-                  </ul>
-                </div>
-                <div style={{ marginBottom: '20px' }}>
-                  <p style={{ color: '#F97316', fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>Tools to use</p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '6px' }}>
-                    {(proofBrief.tools_to_use as string[]).map((t: string, i: number) => (
-                      <span key={i} style={{ background: 'rgba(249,115,22,0.15)', color: '#F97316', fontSize: '12px', fontWeight: 500, padding: '4px 10px', borderRadius: '999px' }}>{t}</span>
-                    ))}
-                  </div>
-                  <p style={{ color: '#22c55e', fontSize: '13px', marginTop: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Check className="h-3.5 w-3.5" style={{ color: '#22c55e' }} />
-                    All tools listed are free or freemium — no budget needed.
-                  </p>
-                </div>
-                <div style={{ marginBottom: '20px' }}>
-                  <p style={{ color: '#F97316', fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>Time estimate</p>
-                  <p style={{ color: '#E2E8F0', fontSize: '15px', lineHeight: 1.7 }}>{proofBrief.time_estimate}</p>
-                </div>
-                {proofBrief.ai_prompt && (
-                  <div>
-                    <p style={{ color: '#F97316', fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>Ready-to-use AI prompt</p>
-                    <div style={{ position: 'relative' as const }}>
-                      <pre style={{ color: '#E2E8F0', fontSize: '12px', background: '#242424', borderRadius: '8px', padding: '16px', whiteSpace: 'pre-wrap' as const, fontFamily: 'Inter, sans-serif' }}>{proofBrief.ai_prompt}</pre>
-                      <button
-                        onClick={() => { navigator.clipboard.writeText(proofBrief.ai_prompt); toast({ title: "Prompt copied!" }); }}
-                        style={{ position: 'absolute' as const, top: '8px', right: '8px', background: '#F97316', color: '#FFFFFF', fontWeight: 600, fontSize: '13px', padding: '6px 14px', borderRadius: '6px', border: 'none', cursor: 'pointer' }}
-                      >Copy</button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '32px' }} className="sm:flex-row">
-              <button
-                onClick={handleStartBuilding}
-                style={{
-                  flex: 1,
-                  background: 'transparent',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  color: '#FFFFFF',
-                  borderRadius: '8px',
-                  padding: '12px 24px',
-                  fontSize: '14px',
-                  cursor: 'pointer',
-                  transition: 'border-color 0.2s',
-                  fontWeight: 500,
-                }}
-                onMouseEnter={(e) => (e.target as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.3)'}
-                onMouseLeave={(e) => (e.target as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.15)'}
-              >
+              <button onClick={handleStartBuilding} style={{ flex: 1, background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: '#FFFFFF', borderRadius: '8px', padding: '12px 24px', fontSize: '14px', cursor: 'pointer', fontWeight: 500 }}>
                 Start building — I'll be back when it's done
               </button>
-              <button
-                onClick={handleContinueCampaign}
-                style={{
-                  flex: 1,
-                  background: '#F97316',
-                  color: '#FFFFFF',
-                  fontWeight: 700,
-                  borderRadius: '8px',
-                  padding: '12px 28px',
-                  fontSize: '14px',
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: 'background 0.2s',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                }}
-                onMouseEnter={(e) => (e.target as HTMLButtonElement).style.background = '#EA6C0A'}
-                onMouseLeave={(e) => (e.target as HTMLButtonElement).style.background = '#F97316'}
-              >
+              <button onClick={handleContinueCampaign} style={{ flex: 1, background: '#F97316', color: '#FFFFFF', fontWeight: 700, borderRadius: '8px', padding: '12px 28px', fontSize: '14px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                 Continue setting up my campaign →
               </button>
             </div>
-            <p style={{ color: '#94A3B8', fontSize: '12px', textAlign: 'center', marginTop: '12px' }}>
-              Both options create your campaign. "Start building" takes you to the dashboard. "Continue" takes you straight into your campaign steps.
-            </p>
           </div>
         )}
 
