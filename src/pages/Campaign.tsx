@@ -449,200 +449,210 @@ const Campaign = () => {
           </CardContent>
         </Card>
 
-        {/* Today's Focus */}
-        {nextStep >= 0 && (
-          <Card className="border-primary/30 bg-primary/5">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-1">
-                <Sparkles className="h-4 w-4 text-primary" />
-                <span className="text-sm font-semibold text-primary">Today's focus</span>
-              </div>
-              <p className="text-sm text-foreground">
-                {STEPS[nextStep].label} — complete this step to strengthen your campaign.
-              </p>
-              <a
-                href={`#step-${nextStep}`}
-                className="inline-block mt-3"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setOpenSteps((prev) => new Set(prev).add(nextStep));
-                  setTimeout(() => {
-                    const el = document.getElementById(`step-${nextStep}`);
-                    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-                  }, 100);
-                }}
-              >
-                <Button size="sm" asChild><span>Go to step →</span></Button>
-              </a>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Group: Do these BEFORE applying */}
+        {/* ===== ACTIVE STEPS (Beta: 4 steps) ===== */}
         <div className="space-y-3">
-          <div className="rounded-lg bg-[hsl(30,100%,97%)] border border-[hsl(30,80%,90%)] px-4 py-2">
-            <p className="text-xs font-bold uppercase tracking-wide text-[hsl(30,60%,40%)]">Do these BEFORE applying</p>
-          </div>
 
-          {/* Step 1: Build proof of work */}
+          {/* STEP 1 — Set your target (kept as-is: company + role are shown in header) */}
           <StepCard
             index={0}
-            step={STEPS[0]}
-            done={campaign.step_proof_done}
+            step={ACTIVE_STEPS[0]}
+            done={!!(campaign.company && campaign.role)}
             open={openSteps.has(0)}
             onToggle={() => toggleStep(0)}
           >
             <div className="space-y-3">
-              <Button
-                size="sm"
-                onClick={() => generateContent("proof_of_work")}
-                disabled={!!generating}
-              >
-                {generating === "proof_of_work" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
-                Generate proof of work idea
-              </Button>
-              {proofSuggestion && (() => {
-                let parsed: any = null;
-                try { parsed = JSON.parse(proofSuggestion); } catch { /* legacy plain text */ }
-                if (parsed && (parsed.project || parsed.title) && (parsed.build_steps || parsed.what_to_build)) {
-                  // New format
-                  if (parsed.build_steps) {
-                    return (
-                      <div className="space-y-5 rounded-lg border p-4 bg-muted/30">
-                        <div>
-                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">The Project</p>
-                          <p className="text-sm font-semibold">{parsed.project}</p>
-                        </div>
-
-                        <div>
-                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Why This Works</p>
-                          <p className="text-sm">{parsed.why_this_works}</p>
-                        </div>
-
-                        <div>
-                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">How to Build It — Step by Step</p>
-                          <ol className="list-decimal pl-5 space-y-2">
-                            {(parsed.build_steps as string[]).map((step: string, i: number) => (
-                              <li key={i} className="text-sm">{step}</li>
-                            ))}
-                          </ol>
-                          <p className="flex items-center gap-1 text-xs text-green-600 mt-2">
-                            <Check className="h-3 w-3" />
-                            All tools listed are free or freemium — no budget needed.
-                          </p>
-                        </div>
-
-                        <div>
-                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">What the Final Output Should Look Like</p>
-                          <p className="text-sm">{parsed.final_output}</p>
-                        </div>
-
-                        <div>
-                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">The Insight to Include</p>
-                          <p className="text-sm italic">{parsed.key_insight}</p>
-                        </div>
-
-                        <div>
-                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Your Outreach Hook</p>
-                          <div className="relative">
-                            <p className="text-sm bg-primary/5 border border-primary/20 rounded-md p-3 font-medium">{parsed.outreach_hook}</p>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="absolute top-1 right-1 h-7 text-xs"
-                              onClick={() => { navigator.clipboard.writeText(parsed.outreach_hook); toast({ title: "Hook copied!" }); }}
-                            >
-                              Copy
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  }
-                  // Legacy format (title + what_to_build)
-                  return (
-                    <div className="space-y-4 rounded-lg border p-4 bg-muted/30">
-                      <h4 className="font-semibold text-base">{parsed.title}</h4>
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Why this works</p>
-                        <p className="text-sm">{parsed.why_this_works}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">What to build</p>
-                        <ul className="list-disc pl-5 space-y-1">
-                          {(parsed.what_to_build as string[]).map((b: string, i: number) => (
-                            <li key={i} className="text-sm">{b}</li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Tools to use</p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {(parsed.tools_to_use as string[]).map((t: string, i: number) => (
-                            <span key={i} className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">{t}</span>
-                          ))}
-                        </div>
-                        <p className="flex items-center gap-1 text-xs text-green-600 mt-2">
-                          <Check className="h-3 w-3" />
-                          All tools listed are free or freemium — no budget needed.
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Time estimate</p>
-                        <p className="text-sm">{parsed.time_estimate}</p>
-                      </div>
-                      {parsed.ai_prompt && (
-                        <div>
-                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Ready-to-use AI prompt</p>
-                          <div className="relative">
-                            <pre className="text-xs bg-muted rounded-md p-3 whitespace-pre-wrap font-sans">{parsed.ai_prompt}</pre>
-                            <Button variant="ghost" size="sm" className="absolute top-1 right-1 h-7 text-xs"
-                              onClick={() => { navigator.clipboard.writeText(parsed.ai_prompt); toast({ title: "Prompt copied!" }); }}>Copy</Button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                }
-                // Legacy fallback: plain text
-                return (
-                  <Textarea
-                    value={proofSuggestion}
-                    onChange={(e) => setProofSuggestion(e.target.value)}
-                    onBlur={() => updateCampaign({ proof_suggestion: proofSuggestion })}
-                    rows={5}
-                    className="text-sm"
-                  />
-                );
-              })()}
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="proof-done"
-                  checked={campaign.step_proof_done}
-                  onCheckedChange={(checked) => updateCampaign({ step_proof_done: !!checked, proof_in_progress: false, proof_suggestion: proofSuggestion || null } as any)}
-                />
-                <label htmlFor="proof-done" className="text-sm">I've completed this</label>
+              <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Company</p>
+                  <p className="text-sm font-semibold">{campaign.company || "Not set"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Role</p>
+                  <p className="text-sm font-semibold">{campaign.role || "Not set"}</p>
+                </div>
+                {campaign.match_score > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Match Score</p>
+                    <p className={`text-sm font-semibold ${campaign.match_score >= 80 ? "text-success" : campaign.match_score >= 60 ? "text-yellow-500" : "text-destructive"}`}>
+                      {campaign.match_score}%
+                    </p>
+                  </div>
+                )}
               </div>
+              {campaign.company && campaign.role && (
+                <div className="flex items-center gap-2 text-success font-medium text-sm">
+                  <Check className="h-5 w-5" />
+                  <span>Target set — {campaign.company}, {campaign.role}</span>
+                </div>
+              )}
             </div>
           </StepCard>
 
-          {/* Step 2: LinkedIn Strategy */}
+          {/* STEP 2 — Generate your PoW brief (visually prominent) */}
+          <Card id="step-1" className={`${campaign.step_proof_done ? "border-success/30" : "border-primary/40 ring-2 ring-primary/20"}`}>
+            <CardHeader
+              className="pb-0 cursor-pointer select-none"
+              onClick={() => toggleStep(1)}
+            >
+              <CardTitle className="text-sm flex items-center gap-2">
+                <span className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold ${campaign.step_proof_done ? "bg-success text-success-foreground" : "bg-primary text-primary-foreground"}`}>
+                  {campaign.step_proof_done ? <Check className="h-4 w-4" /> : 2}
+                </span>
+                <Lightbulb className={`h-5 w-5 ${campaign.step_proof_done ? "text-muted-foreground" : "text-primary"}`} />
+                <span className="flex-1">
+                  <span className={`${campaign.step_proof_done ? "" : "text-primary font-bold"}`}>Generate your PoW brief</span>
+                  <span className="block text-xs font-normal text-muted-foreground mt-0.5">
+                    This is the core of your campaign. Build something real that shows you can do the job — before you even apply.
+                  </span>
+                </span>
+                {openSteps.has(1) ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              </CardTitle>
+            </CardHeader>
+            {openSteps.has(1) && (
+              <CardContent className="pt-4">
+                <div className="space-y-3">
+                  <Button
+                    size="sm"
+                    onClick={() => generateContent("proof_of_work")}
+                    disabled={!!generating}
+                  >
+                    {generating === "proof_of_work" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
+                    Generate proof of work idea
+                  </Button>
+                  {proofSuggestion && (() => {
+                    let parsed: any = null;
+                    try { parsed = JSON.parse(proofSuggestion); } catch { /* legacy plain text */ }
+                    if (parsed && (parsed.project || parsed.title) && (parsed.build_steps || parsed.what_to_build)) {
+                      if (parsed.build_steps) {
+                        return (
+                          <div className="space-y-5 rounded-lg border p-4 bg-muted/30">
+                            <div>
+                              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">The Project</p>
+                              <p className="text-sm font-semibold">{parsed.project}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Why This Works</p>
+                              <p className="text-sm">{parsed.why_this_works}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">How to Build It — Step by Step</p>
+                              <ol className="list-decimal pl-5 space-y-2">
+                                {(parsed.build_steps as string[]).map((step: string, i: number) => (
+                                  <li key={i} className="text-sm">{step}</li>
+                                ))}
+                              </ol>
+                              <p className="flex items-center gap-1 text-xs text-green-600 mt-2">
+                                <Check className="h-3 w-3" />
+                                All tools listed are free or freemium — no budget needed.
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">What the Final Output Should Look Like</p>
+                              <p className="text-sm">{parsed.final_output}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">The Insight to Include</p>
+                              <p className="text-sm italic">{parsed.key_insight}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Your Outreach Hook</p>
+                              <div className="relative">
+                                <p className="text-sm bg-primary/5 border border-primary/20 rounded-md p-3 font-medium">{parsed.outreach_hook}</p>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="absolute top-1 right-1 h-7 text-xs"
+                                  onClick={() => { navigator.clipboard.writeText(parsed.outreach_hook); toast({ title: "Hook copied!" }); }}
+                                >
+                                  Copy
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      }
+                      // Legacy format
+                      return (
+                        <div className="space-y-4 rounded-lg border p-4 bg-muted/30">
+                          <h4 className="font-semibold text-base">{parsed.title}</h4>
+                          <div>
+                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Why this works</p>
+                            <p className="text-sm">{parsed.why_this_works}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">What to build</p>
+                            <ul className="list-disc pl-5 space-y-1">
+                              {(parsed.what_to_build as string[]).map((b: string, i: number) => (
+                                <li key={i} className="text-sm">{b}</li>
+                              ))}
+                            </ul>
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Tools to use</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {(parsed.tools_to_use as string[]).map((t: string, i: number) => (
+                                <span key={i} className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">{t}</span>
+                              ))}
+                            </div>
+                            <p className="flex items-center gap-1 text-xs text-green-600 mt-2">
+                              <Check className="h-3 w-3" />
+                              All tools listed are free or freemium — no budget needed.
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Time estimate</p>
+                            <p className="text-sm">{parsed.time_estimate}</p>
+                          </div>
+                          {parsed.ai_prompt && (
+                            <div>
+                              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Ready-to-use AI prompt</p>
+                              <div className="relative">
+                                <pre className="text-xs bg-muted rounded-md p-3 whitespace-pre-wrap font-sans">{parsed.ai_prompt}</pre>
+                                <Button variant="ghost" size="sm" className="absolute top-1 right-1 h-7 text-xs"
+                                  onClick={() => { navigator.clipboard.writeText(parsed.ai_prompt); toast({ title: "Prompt copied!" }); }}>Copy</Button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+                    // Legacy fallback: plain text
+                    return (
+                      <Textarea
+                        value={proofSuggestion}
+                        onChange={(e) => setProofSuggestion(e.target.value)}
+                        onBlur={() => updateCampaign({ proof_suggestion: proofSuggestion })}
+                        rows={5}
+                        className="text-sm"
+                      />
+                    );
+                  })()}
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="proof-done"
+                      checked={campaign.step_proof_done}
+                      onCheckedChange={(checked) => updateCampaign({ step_proof_done: !!checked, proof_in_progress: false, proof_suggestion: proofSuggestion || null } as any)}
+                    />
+                    <label htmlFor="proof-done" className="text-sm">I've completed this</label>
+                  </div>
+                </div>
+              </CardContent>
+            )}
+          </Card>
+
+          {/* STEP 3 — Post about it on LinkedIn */}
           <StepCard
-            index={1}
-            step={STEPS[1]}
+            index={2}
+            step={ACTIVE_STEPS[2]}
             done={campaign.step_linkedin_done}
-            open={openSteps.has(1)}
-            onToggle={() => toggleStep(1)}
+            open={openSteps.has(2)}
+            onToggle={() => toggleStep(2)}
           >
             <div className="space-y-5">
-              <p className="text-sm italic text-muted-foreground">
-                We could write this for you. We won't. Your story told in your words is 10× more powerful than anything we generate.
-              </p>
-
-              {/* Tip */}
+              {/* New note at the top */}
               <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
-                <p className="text-sm text-foreground">
-                  💡 <strong>Tip:</strong> Tag someone in the role you're targeting — e.g. "Curious what @[Name] thinks about this, given their work at @[Company]." This turns a cold outreach into a warm one before you've sent a single DM.
+                <p className="text-sm text-foreground font-medium">
+                  ✍️ Write this yourself — authenticity is everything. We give you the angle, you write the words.
                 </p>
               </div>
 
@@ -682,7 +692,7 @@ const Campaign = () => {
                 })()}
               </div>
 
-              {/* Fixed playbook */}
+              {/* Playbook */}
               <div className="space-y-3">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">PrepLane's LinkedIn playbook</p>
                 <div className="rounded-lg border bg-muted/30 p-4 space-y-3 text-sm">
@@ -712,7 +722,7 @@ const Campaign = () => {
                     setTimeout(() => {
                       setOpenSteps((prev) => {
                         const next = new Set(prev);
-                        next.delete(1);
+                        next.delete(2);
                         return next;
                       });
                     }, 1500);
@@ -724,89 +734,103 @@ const Campaign = () => {
             </div>
           </StepCard>
 
-          {/* Step 3: Find your contact */}
-          <StepCard
-            index={2}
-            step={STEPS[2]}
-            done={campaign.step_connection_done}
-            open={openSteps.has(2)}
-            onToggle={() => toggleStep(2)}
-          >
-            <div className="space-y-3">
-              <div>
-                <label className="text-sm font-medium">Name of someone at {campaign.company}</label>
-                <Input
-                  value={connectionName}
-                  onChange={(e) => setConnectionName(e.target.value)}
-                  onBlur={() => updateCampaign({ connection_name: connectionName || null })}
-                  placeholder="e.g. Sarah Chen"
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Their LinkedIn URL (optional)</label>
-                <Input
-                  value={connectionUrl}
-                  onChange={(e) => setConnectionUrl(e.target.value)}
-                  onBlur={() => updateCampaign({ connection_url: connectionUrl || null })}
-                  placeholder="https://linkedin.com/in/..."
-                  className="mt-1"
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="connection-done"
-                  checked={campaign.step_connection_done}
-                  onCheckedChange={(checked) => updateCampaign({ step_connection_done: !!checked, connection_name: connectionName || null, connection_url: connectionUrl || null })}
-                />
-                <label htmlFor="connection-done" className="text-sm">I've found my contact</label>
-              </div>
-            </div>
-          </StepCard>
-
-          {/* Step 4: Send outreach */}
+          {/* STEP 4 — Find your contact and send outreach (merged) */}
           <StepCard
             index={3}
-            step={STEPS[3]}
+            step={ACTIVE_STEPS[3]}
             done={campaign.step_outreach_done}
             open={openSteps.has(3)}
             onToggle={() => toggleStep(3)}
           >
-            <div className="space-y-3">
-              {/* Gate outreach on company name */}
-              {!campaign.company || campaign.company.trim() === "" ? (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Which company are you targeting with this outreach?</label>
-                  <div className="flex gap-2">
-                    <Input
-                      value={companyInput}
-                      onChange={(e) => setCompanyInput(e.target.value)}
-                      placeholder="e.g. Stripe"
-                      className="flex-1"
-                    />
-                    <Button
-                      size="sm"
-                      disabled={!companyInput.trim()}
-                      onClick={async () => {
-                        const name = companyInput.trim();
-                        if (!name) return;
-                        await updateCampaign({ company: name });
-                        setCompanyInput("");
-                      }}
-                    >
-                      Save
-                    </Button>
-                  </div>
+            <div className="space-y-6">
+              {/* Section A: Who to look for */}
+              <div className="space-y-3">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Who to look for</p>
+                <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+                  <p className="text-sm">
+                    Look for someone at <span className="font-semibold">{campaign.company}</span> who is either:
+                  </p>
+                  <ul className="list-disc pl-5 space-y-1 text-sm">
+                    <li>The hiring manager for the <span className="font-semibold">{campaign.role}</span> role</li>
+                    <li>A team lead or senior IC in the same department</li>
+                    <li>A recruiter who recently posted about this team or role</li>
+                  </ul>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Search LinkedIn for "{campaign.company} {campaign.role}" — look for someone 1–2 levels above the role you're targeting.
+                  </p>
                 </div>
-              ) : (
-                <>
-                  {!getProofHook() ? (
-                    <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 space-y-1">
-                      <p className="font-semibold">Generate your Proof of Work first — your outreach needs to lead with something real.</p>
-                      <p className="text-amber-800/80 text-xs">Your PoW brief includes an outreach hook that becomes the opening line of your message. Without it, outreach is generic.</p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const query = encodeURIComponent(`${campaign.company} ${campaign.role}`);
+                    window.open(`https://www.linkedin.com/search/results/people/?keywords=${query}`, "_blank");
+                  }}
+                >
+                  Open LinkedIn → 
+                </Button>
+              </div>
+
+              {/* Contact info inputs */}
+              <div className="space-y-3">
+                <div>
+                  <label className="text-sm font-medium">Name of someone at {campaign.company}</label>
+                  <Input
+                    value={connectionName}
+                    onChange={(e) => setConnectionName(e.target.value)}
+                    onBlur={() => updateCampaign({ connection_name: connectionName || null })}
+                    placeholder="e.g. Sarah Chen"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Their LinkedIn URL (optional)</label>
+                  <Input
+                    value={connectionUrl}
+                    onChange={(e) => setConnectionUrl(e.target.value)}
+                    onBlur={() => updateCampaign({ connection_url: connectionUrl || null })}
+                    placeholder="https://linkedin.com/in/..."
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
+              {/* Section B: Outreach message */}
+              <div className="space-y-3">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Your outreach message</p>
+
+                {!campaign.company || campaign.company.trim() === "" ? (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Which company are you targeting with this outreach?</label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={companyInput}
+                        onChange={(e) => setCompanyInput(e.target.value)}
+                        placeholder="e.g. Stripe"
+                        className="flex-1"
+                      />
+                      <Button
+                        size="sm"
+                        disabled={!companyInput.trim()}
+                        onClick={async () => {
+                          const name = companyInput.trim();
+                          if (!name) return;
+                          await updateCampaign({ company: name });
+                          setCompanyInput("");
+                        }}
+                      >
+                        Save
+                      </Button>
                     </div>
-                  ) : (
-                    <>
+                  </div>
+                ) : (
+                  <>
+                    {!getProofHook() ? (
+                      <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 space-y-1">
+                        <p className="font-semibold">Generate your Proof of Work first — your outreach needs to lead with something real.</p>
+                        <p className="text-amber-800/80 text-xs">Your PoW brief includes an outreach hook that becomes the opening line of your message. Without it, outreach is generic.</p>
+                      </div>
+                    ) : (
                       <Button
                         size="sm"
                         onClick={() => generateContent("outreach")}
@@ -815,49 +839,33 @@ const Campaign = () => {
                         {generating === "outreach" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
                         Generate outreach message
                       </Button>
-                      {!connectionName && !campaign.step_connection_done && (
-                        <div className="rounded-lg border border-yellow-300 bg-yellow-50 dark:bg-yellow-950/20 dark:border-yellow-800 px-3 py-2 text-sm text-yellow-800 dark:text-yellow-200 space-y-1">
-                          <p>⚠️ You haven't added a contact yet. Head to Step 3 to add a name and LinkedIn URL — it makes your outreach significantly more personal and effective.</p>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setOpenSteps((prev) => new Set(prev).add(2));
-                              setTimeout(() => {
-                                const el = document.getElementById("step-2");
-                                if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-                              }, 100);
-                            }}
-                            className="text-xs text-primary hover:text-primary/80 underline underline-offset-2 font-medium"
-                          >
-                            Go to Step 3 →
-                          </button>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </>
-              )}
-              {outreachMessage && (
-                <div className="space-y-2">
-                  <Textarea
-                    value={outreachMessage}
-                    onChange={(e) => setOutreachMessage(e.target.value)}
-                    onBlur={() => updateCampaign({ outreach_message: outreachMessage })}
-                    rows={5}
-                    className="text-sm"
-                  />
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      navigator.clipboard.writeText(outreachMessage);
-                      toast({ title: "Copied to clipboard!" });
-                    }}
-                  >
-                    Copy message
-                  </Button>
-                </div>
-              )}
+                    )}
+                  </>
+                )}
+                {outreachMessage && (
+                  <div className="space-y-2">
+                    <Textarea
+                      value={outreachMessage}
+                      onChange={(e) => setOutreachMessage(e.target.value)}
+                      onBlur={() => updateCampaign({ outreach_message: outreachMessage })}
+                      rows={5}
+                      className="text-sm"
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        navigator.clipboard.writeText(outreachMessage);
+                        toast({ title: "Copied to clipboard!" });
+                      }}
+                    >
+                      Copy message
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {/* Mark as done */}
               <Button
                 size="sm"
                 variant="default"
@@ -868,6 +876,7 @@ const Campaign = () => {
                   followDate.setDate(followDate.getDate() + 7);
                   await updateCampaign({
                     step_outreach_done: true,
+                    step_connection_done: true,
                     connection_name: connectionName,
                     connection_url: connectionUrl || null,
                     outreach_message: outreachMessage || null,
@@ -882,313 +891,26 @@ const Campaign = () => {
           </StepCard>
         </div>
 
-        {/* Group: Have these ready */}
-        <div className="space-y-3">
-          <div className="rounded-lg bg-muted/50 border px-4 py-2">
-            <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Have these ready</p>
-          </div>
-
-          {/* Step 5: CV ready */}
-          <StepCard
-            index={4}
-            step={STEPS[4]}
-            done={campaign.step_cv_done}
-            open={openSteps.has(4)}
-            onToggle={() => toggleStep(4)}
-          >
-            <div className="space-y-3">
-              {!campaign.proof_suggestion ? (
-                <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-4 space-y-3">
-                  <p className="text-sm text-foreground">
-                    Before tailoring your CV, you need to build your Proof of Work. This is what separates your application from everyone else's. Not a better CV: something real.
-                  </p>
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      setOpenSteps((prev) => new Set(prev).add(0));
-                      setTimeout(() => {
-                        const el = document.getElementById("step-0");
-                        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-                      }, 100);
-                    }}
-                  >
-                    <Lightbulb className="h-4 w-4 mr-1" />
-                    Build my Proof of Work
-                  </Button>
-                </div>
-              ) : campaign.step_cv_done ? (
-                <>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm text-muted-foreground">Match Score:</span>
-                    <span className={`text-lg font-bold ${campaign.match_score >= 80 ? "text-success" : campaign.match_score >= 60 ? "text-yellow-500" : "text-destructive"}`}>
-                      {campaign.match_score}%
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Your CV has been tailored for this role.</p>
-                  <Collapsible>
-                    <CollapsibleTrigger asChild>
-                      <Button variant="outline" size="sm">View / Edit tailored CV</Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="mt-3">
-                      <div className="bg-muted rounded-lg p-4 text-xs whitespace-pre-wrap max-h-[300px] overflow-auto">
-                        {campaign.cv_version || "No CV content saved."}
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-                  <div className="flex gap-2 flex-wrap">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        const params = new URLSearchParams();
-                        params.set("campaign_id", campaign.id);
-                        params.set("role", campaign.role);
-                        params.set("company", campaign.company);
-                        if (campaign.jd_text) params.set("jd", campaign.jd_text);
-                        navigate(`/cv-workspace?${params.toString()}`);
-                      }}
-                    >
-                      <FileText className="h-4 w-4 mr-1" />
-                      View / Edit in CV Workspace →
-                    </Button>
-                    <button
-                      onClick={() => {
-                        const params = new URLSearchParams();
-                        params.set("campaign_id", campaign.id);
-                        params.set("role", campaign.role);
-                        params.set("company", campaign.company);
-                        if (campaign.jd_text) params.set("jd", campaign.jd_text);
-                        navigate(`/cv-workspace?${params.toString()}`);
-                      }}
-                      className="text-xs text-primary hover:text-primary/80 underline underline-offset-2"
-                    >
-                      Re-tailor CV →
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="space-y-3">
-                  <p className="text-sm text-muted-foreground">Tailor your CV to match this role's requirements. Your Proof of Work will be included automatically.</p>
-                  <Button
-                    onClick={() => {
-                      const params = new URLSearchParams();
-                      params.set("campaign_id", campaign.id);
-                      params.set("role", campaign.role);
-                      params.set("company", campaign.company);
-                      if (campaign.jd_text) params.set("jd", campaign.jd_text);
-                      navigate(`/cv-workspace?${params.toString()}`);
-                    }}
-                  >
-                    <FileText className="h-4 w-4 mr-1" />
-                    Tailor my CV for this role →
-                  </Button>
-                </div>
-              )}
-            </div>
-          </StepCard>
-
-          {/* Step 6: Cover letter (requires CV to be done first) */}
-          <StepCard
-            index={5}
-            step={STEPS[5]}
-            done={campaign.step_cover_letter_done}
-            open={openSteps.has(5)}
-            onToggle={() => toggleStep(5)}
-          >
-            <div className="space-y-3">
-              {!campaign.proof_suggestion ? (
-                <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-4 space-y-3">
-                  <p className="text-sm text-foreground">
-                    Before tailoring your CV, you need to build your Proof of Work. This is what separates your application from everyone else's. Not a better CV: something real.
-                  </p>
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      setOpenSteps((prev) => new Set(prev).add(0));
-                      setTimeout(() => {
-                        const el = document.getElementById("step-0");
-                        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-                      }, 100);
-                    }}
-                  >
-                    <Lightbulb className="h-4 w-4 mr-1" />
-                    Build my Proof of Work
-                  </Button>
-                </div>
-              ) : !campaign.step_cv_done ? (
-                <div className="rounded-lg border border-yellow-300 bg-yellow-50 dark:bg-yellow-950/20 dark:border-yellow-800 px-3 py-2 text-sm text-yellow-800 dark:text-yellow-200">
-                  <p>⚠️ Complete CV tailoring first — your cover letter will use your tailored CV content for the best results.</p>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setOpenSteps((prev) => new Set(prev).add(4));
-                      setTimeout(() => {
-                        const el = document.getElementById("step-4");
-                        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-                      }, 100);
-                    }}
-                    className="text-xs text-primary hover:text-primary/80 underline underline-offset-2 font-medium mt-1"
-                  >
-                    Go to CV ready step →
-                  </button>
-                </div>
-              ) : coverLetter ? (
-                <>
-                  {/* Cover letter already exists — pleasant surprise */}
-                  <div className="rounded-lg border border-success/30 bg-success/5 px-4 py-3 mb-3">
-                    <p className="text-sm font-medium text-success flex items-center gap-1.5">
-                      <Check className="h-4 w-4" />
-                      Your cover letter is ready — generated from your tailored CV.
-                    </p>
-                  </div>
-                  <Textarea
-                    value={coverLetter}
-                    onChange={(e) => setCoverLetter(e.target.value)}
-                    onBlur={() => updateCampaign({ cover_letter: coverLetter })}
-                    rows={10}
-                    className="text-sm"
-                  />
-                  <div className="flex gap-2 flex-wrap">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        navigator.clipboard.writeText(coverLetter);
-                        toast({ title: "Copied to clipboard!" });
-                      }}
-                    >
-                      Copy letter
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => generateContent("cover_letter")}
-                      disabled={!!generating}
-                    >
-                      {generating === "cover_letter" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
-                      Regenerate
-                    </Button>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      id="cover-done"
-                      checked={campaign.step_cover_letter_done}
-                      onCheckedChange={(checked) => updateCampaign({ step_cover_letter_done: !!checked, cover_letter: coverLetter || null })}
-                    />
-                    <label htmlFor="cover-done" className="text-sm">Ready to send</label>
-                  </div>
-                </>
-              ) : (
-                <>
-                  {/* No cover letter yet — show generate flow */}
-                  <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Cover letter inputs</p>
-                    <div className="space-y-1.5">
-                      <div className="flex items-center gap-2 text-sm">
-                        {campaign.jd_text ? <Check className="h-4 w-4 text-success" /> : <X className="h-4 w-4 text-destructive" />}
-                        <span className={campaign.jd_text ? "text-foreground" : "text-muted-foreground"}>Job description</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        {campaign.step_cv_done ? <Check className="h-4 w-4 text-success" /> : <X className="h-4 w-4 text-destructive" />}
-                        <span className={campaign.step_cv_done ? "text-foreground" : "text-muted-foreground"}>Tailored CV</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        {campaign.proof_suggestion ? <Check className="h-4 w-4 text-success" /> : <span className="h-4 w-4 rounded-full border border-muted-foreground/30 flex items-center justify-center text-[10px] text-muted-foreground">—</span>}
-                        <span className={campaign.proof_suggestion ? "text-foreground" : "text-muted-foreground"}>Proof of work {!campaign.proof_suggestion && "(optional — improves quality)"}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        {campaign.outreach_message ? <Check className="h-4 w-4 text-success" /> : <span className="h-4 w-4 rounded-full border border-muted-foreground/30 flex items-center justify-center text-[10px] text-muted-foreground">—</span>}
-                        <span className={campaign.outreach_message ? "text-foreground" : "text-muted-foreground"}>Outreach context {!campaign.outreach_message && "(optional — improves quality)"}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {!campaign.jd_text && (
-                    <div className="rounded-lg border border-yellow-300 bg-yellow-50 dark:bg-yellow-950/20 dark:border-yellow-800 px-3 py-2 text-sm text-yellow-800 dark:text-yellow-200">
-                      <p>A job description is needed to generate a targeted cover letter. Add one when creating the campaign.</p>
-                    </div>
-                  )}
-
-                  <Button
-                    size="sm"
-                    onClick={() => generateContent("cover_letter")}
-                    disabled={!!generating || !campaign.jd_text || !campaign.step_cv_done}
-                  >
-                    {generating === "cover_letter" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
-                    Generate cover letter
-                  </Button>
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      id="cover-done"
-                      checked={campaign.step_cover_letter_done}
-                      onCheckedChange={(checked) => updateCampaign({ step_cover_letter_done: !!checked, cover_letter: coverLetter || null })}
-                    />
-                    <label htmlFor="cover-done" className="text-sm">Ready to send</label>
-                  </div>
-                </>
-              )}
-            </div>
-          </StepCard>
-
-          {/* Step 7: Follow-up */}
-          <StepCard
-            index={6}
-            step={STEPS[6]}
-            done={campaign.step_followup_done}
-            open={openSteps.has(6)}
-            onToggle={() => toggleStep(6)}
-          >
-            <div className="space-y-3">
-              {campaign.followup_date && (
-                <p className="text-sm text-muted-foreground">
-                  Follow up on <span className="font-medium text-foreground">{new Date(campaign.followup_date).toLocaleDateString()}</span>
-                </p>
-              )}
-              <Button
-                size="sm"
-                onClick={() => generateContent("follow_up")}
-                disabled={!!generating}
-              >
-                {generating === "follow_up" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
-                Generate follow-up messages
-              </Button>
-              {(followups.day3 || followups.day7 || followups.day14) && (
-                <div className="space-y-4">
-                  {[
-                    { key: "day3" as const, label: "Day 3 — Light touch" },
-                    { key: "day7" as const, label: "Day 7 — Add value" },
-                    { key: "day14" as const, label: "Day 14 — Final check-in" },
-                  ].map((f) => (
-                    <div key={f.key} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">{f.label}</span>
-                        <div className="flex items-center gap-2">
-                          <Checkbox
-                            checked={followupSent[f.key]}
-                            onCheckedChange={(checked) => {
-                              const next = { ...followupSent, [f.key]: !!checked };
-                              setFollowupSent(next);
-                              if (next.day3 && next.day7 && next.day14) {
-                                updateCampaign({ step_followup_done: true });
-                              }
-                            }}
-                          />
-                          <span className="text-xs text-muted-foreground">Sent</span>
-                        </div>
-                      </div>
-                      <Textarea
-                        value={followups[f.key]}
-                        onChange={(e) => setFollowups((prev) => ({ ...prev, [f.key]: e.target.value }))}
-                        rows={3}
-                        className="text-sm"
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </StepCard>
-
+        {/* ===== COMING SOON CARDS ===== */}
+        <div className="space-y-3 mt-8">
+          <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground px-1">More tools — coming soon</p>
+          {COMING_SOON_STEPS.map((step) => {
+            const Icon = step.icon;
+            return (
+              <Card key={step.label} className="opacity-50 cursor-default">
+                <CardHeader className="pb-0">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <span className="h-6 w-6 rounded-full flex items-center justify-center bg-muted text-muted-foreground text-xs">—</span>
+                    <Icon className="h-4 w-4 text-muted-foreground" />
+                    <span className="flex-1 text-muted-foreground">{step.label}</span>
+                    <Badge className="bg-[#F97316]/15 text-[#F97316] border-[#F97316]/30 hover:bg-[#F97316]/15 text-xs">
+                      Coming soon
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+              </Card>
+            );
+          })}
         </div>
 
         {/* Notes */}
