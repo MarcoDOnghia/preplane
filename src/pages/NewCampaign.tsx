@@ -1233,6 +1233,22 @@ const Index = () => {
                     <p className="text-sm">{proofBrief.final_output}</p>
                   </div>
 
+                  {proofBrief.effort_guide && (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Effort Guide</p>
+                      <div className="space-y-2">
+                        <div className="rounded-md border border-[rgba(255,255,255,0.08)] p-3" style={{ background: "#1A1A1A" }}>
+                          <p className="text-xs font-semibold text-[#F97316] mb-0.5">Minimum (gets noticed)</p>
+                          <p className="text-sm">{proofBrief.effort_guide.minimum}</p>
+                        </div>
+                        <div className="rounded-md border border-[rgba(255,255,255,0.08)] p-3" style={{ background: "#1A1A1A" }}>
+                          <p className="text-xs font-semibold text-[#F97316] mb-0.5">Impressive (gets forwarded)</p>
+                          <p className="text-sm">{proofBrief.effort_guide.impressive}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div>
                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">The Insight to Include</p>
                     <p className="text-sm italic">{proofBrief.key_insight}</p>

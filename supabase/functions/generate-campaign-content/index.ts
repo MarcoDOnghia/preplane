@@ -76,17 +76,48 @@ ABSOLUTE TRUTHFULNESS RULE — THIS OVERRIDES EVERYTHING:
 - Never invent examples of competitors, clients, partners, or market data. If you don't know, tell the user to find out.
 - The same rule applies to the outreach_hook and key_insight fields — no fabricated specifics.
 
+PRINCIPLE 1 — ROLE-SPECIFIC DELIVERABLE (MANDATORY):
+Before generating anything, identify the role type from the user input and select the correct deliverable type. The deliverable MUST match the role. Never generate a generic "playbook" when a more specific output type exists.
+
+Role-to-deliverable mapping:
+- Marketing/Growth → lead list, content teardown, or campaign strategy
+- Product/Design → screen redesign, UX audit, or friction analysis
+- Engineering → fix an open issue, automation script, or tool build
+- Sales/SDR → prospect list, outreach sequence, or competitive battlecard
+- Finance/VC → company teardown, market map, or investment analysis
+- Operations → process audit, workflow redesign, or automation script
+- GTM → go-to-market brief, ICP analysis, or outbound strategy
+
+If the role doesn't fit these categories, infer the closest match and pick the most specific deliverable possible.
+
+PRINCIPLE 2 — NO SKILL BARRIER (MANDATORY):
+Every build step must be achievable by a student with no technical background using only free tools and AI assistance. If a step requires a specific skill, add: "Use [specific AI tool or free tool] to do this — no experience needed."
+
 Generate a complete, buildable proof-of-work brief for a candidate targeting this role and company. Every section must reference the specific company, role, and job description if provided. If no JD is provided, infer context from the role title and company type.
 
 You MUST return structured JSON with these exact fields:
 
-- project: One sentence. What the project is and who it is for. Be specific if company is provided, use "your target company" if not. Example with company: "A GTM expansion brief for Flowdesk's entry into the Southern European market." Example without: "A GTM expansion brief mapping untapped segments in Southern Europe for your target company."
+- project: One sentence. What the project is and who it is for. The deliverable type MUST match the role category per Principle 1. Be specific if company is provided, use "your target company" if not. Example with company: "A GTM expansion brief for Flowdesk's entry into the Southern European market." Example without: "A GTM expansion brief mapping untapped segments in Southern Europe for your target company."
 
 - why_this_works: 2-3 sentences explaining specifically why this project will resonate with this type of company and this role. Reference the JD and company context if provided. If no company details, explain why this type of project impresses hiring managers for this role category.
 
-- build_steps: Array of 4-6 numbered steps. Each step tells the user exactly what to do, in what order, using which free tool. No vague instructions like "research the company." Instead: "Go to LinkedIn and find [Company]'s last 3 hiring posts for [role type] roles — note what skills they keep repeating." If no company is provided, instruct the user to fill in the company name themselves: "Go to LinkedIn and find your target company's last 3 hiring posts..." Every step must name a specific free tool (LinkedIn, Google, Notion, Google Sheets, Canva, Figma free tier, Google Slides, SEC EDGAR, Crunchbase free tier, Google Trends, Yahoo Finance, etc.). The student must be able to complete everything with zero financial investment.
+- build_steps: Array of 5-7 numbered steps.
+
+  STEP 1 MUST ALWAYS BE A DEDICATED RESEARCH STEP. Frame it as: "Before you build anything, spend 30-45 minutes on this research. This is what separates a generic project from one that gets a response." This step must tell the student exactly where to look for company intelligence and include at least 3 of these specific sources tailored to the company and role:
+  • LinkedIn jobs page: what skills keep appearing in their recent hires?
+  • Founder/CEO recent LinkedIn posts: what problems are they talking about publicly right now?
+  • Product reviews on G2, Trustpilot, or App Store: what do customers complain about most?
+  • Company blog or engineering blog: what are they actively building?
+  • Recent funding announcements or press releases: what did they say they would use the money for?
+  • Employee LinkedIn profiles: what are team members posting about? What bottlenecks do they hint at?
+
+  STEPS 2-7: The remaining build steps. Each step tells the user exactly what to do, in what order, using which free tool. No vague instructions. Every step must name a specific free tool (LinkedIn, Google, Notion, Google Sheets, Canva, Figma free tier, Google Slides, ChatGPT free tier, Claude free tier, SEC EDGAR, Crunchbase free tier, Google Trends, Yahoo Finance, etc.). If a step requires a skill the student may not have, explicitly add which free AI tool or resource to use. The student must be able to complete everything with zero financial investment and no prior expertise.
 
 - final_output: A specific description of what the finished deliverable should look like. Include: format (e.g. Notion page, Google Slides deck, one-page PDF), approximate length, what sections it should contain, and what separates a strong version from a weak one. Set the quality bar clearly.
+
+- effort_guide: An object with two fields:
+  • minimum: One sentence describing the bare minimum version that would still be worth sending — the "gets noticed" threshold.
+  • impressive: One sentence describing what would make a founder show this to their whole team — the "gets forwarded" threshold.
 
 - key_insight: One specific observation or angle that will make the reader think "this person gets our business." If a company and JD are provided, tie it to their specifics. If not, describe the TYPE of insight the user should look for and where to find it — do not invent one.
 
@@ -251,14 +282,23 @@ ${proofOfWorkHook ? `\nOutreach Hook (USE THIS AS THE OPENING LINE — do not re
       },
       proof_of_work: {
         properties: {
-          project: { type: "string", description: "One sentence: what the project is and who it is for" },
+          project: { type: "string", description: "One sentence: what the project is and who it is for, with role-specific deliverable type" },
           why_this_works: { type: "string", description: "2-3 sentences on why this resonates with this specific company and role" },
-          build_steps: { type: "array", items: { type: "string" }, description: "4-6 numbered step-by-step instructions with specific free tools" },
+          build_steps: { type: "array", items: { type: "string" }, description: "5-7 steps. Step 1 is always dedicated research (30-45 min, 3+ specific sources). Remaining steps use free tools with no skill barrier." },
           final_output: { type: "string", description: "What the finished deliverable should look like — format, length, structure, quality bar" },
+          effort_guide: {
+            type: "object",
+            properties: {
+              minimum: { type: "string", description: "One sentence: bare minimum version that gets noticed" },
+              impressive: { type: "string", description: "One sentence: version that gets forwarded to the whole team" },
+            },
+            required: ["minimum", "impressive"],
+            description: "Effort calibration with minimum and impressive thresholds",
+          },
           key_insight: { type: "string", description: "One specific observation that shows the candidate gets this business" },
           outreach_hook: { type: "string", description: "One sentence outreach opener starting with what was built" },
         },
-        required: ["project", "why_this_works", "build_steps", "final_output", "key_insight", "outreach_hook"],
+        required: ["project", "why_this_works", "build_steps", "final_output", "effort_guide", "key_insight", "outreach_hook"],
       },
       follow_up: {
         properties: {
