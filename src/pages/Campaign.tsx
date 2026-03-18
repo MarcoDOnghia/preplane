@@ -93,7 +93,7 @@ const STATUS_OPTIONS = [
 const ACTIVE_STEPS = [
   { key: "step_proof_done", label: "Set your target", weight: 25, icon: Target, subtext: "Define the company and role you're going after." },
   { key: "step_proof_done", label: "Generate your PoW brief", weight: 35, icon: Lightbulb, subtext: "This is the core of your campaign. Build something real that shows you can do the job — before you even apply." },
-  { key: "step_linkedin_done", label: "Post about it on LinkedIn", weight: 20, icon: Users, subtext: "Post before you reach out. Tag the company, mention the space, ask a genuine question. Warm is better than cold." },
+  { key: "step_linkedin_done", label: "Showcase your work before you pitch", weight: 20, icon: Users, subtext: "Post before you reach out. Tag the company, mention the space, ask a genuine question. Warm is better than cold." },
   { key: "step_outreach_done", label: "Find your contact and send outreach", weight: 20, icon: Send, subtext: "Find the right person at the company and reach out with your proof of work." },
 ] as const;
 
