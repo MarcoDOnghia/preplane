@@ -555,6 +555,10 @@ const Campaign = () => {
                                 All tools listed are free or freemium — no budget needed.
                               </p>
                             </div>
+                            <div>
+                              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">What the Final Output Should Look Like</p>
+                              <p className="text-sm">{parsed.final_output}</p>
+                            </div>
                             {parsed.effort_guide && (
                               <div>
                                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Effort Guide</p>
