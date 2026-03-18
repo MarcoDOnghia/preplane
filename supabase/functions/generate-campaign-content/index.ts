@@ -271,6 +271,7 @@ ${connectionName ? `\nConnection/Recipient: ${connectionName}` : ""}
 ${proofOfWorkTitle ? `\nProof of Work Completed: ${proofOfWorkTitle}` : ""}
 ${proofOfWorkDetails ? `\nProof of Work Details:\n${proofOfWorkDetails}` : ""}
 ${proofOfWorkHook ? `\nOutreach Hook (USE THIS AS THE OPENING LINE — do not replace it):\n${proofOfWorkHook}` : ""}
+${companyIntel ? `\nCompany Intelligence (real research provided by the student):\n${companyIntel}` : ""}
 </USER_CONTEXT>`;
 
     // Define tool schema based on content type
