@@ -184,8 +184,14 @@ const Campaign = () => {
       c.step_cover_letter_done = true;
     }
 
-    // Auto-open the next incomplete step
-    const nextIdx = STEPS.findIndex((s) => !c[s.key]);
+    // Auto-open the next incomplete active step
+    const activeStepDone = [
+      !!(c.company && c.role),
+      c.step_proof_done,
+      c.step_linkedin_done,
+      c.step_outreach_done,
+    ];
+    const nextIdx = activeStepDone.findIndex((done) => !done);
     if (nextIdx >= 0) setOpenSteps(new Set([nextIdx]));
     setLoading(false);
   };
