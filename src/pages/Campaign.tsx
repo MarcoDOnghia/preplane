@@ -93,7 +93,7 @@ const STATUS_OPTIONS = [
 const ACTIVE_STEPS = [
   { key: "step_proof_done", label: "Set your target", weight: 25, icon: Target, subtext: "Define the company and role you're going after." },
   { key: "step_proof_done", label: "Generate your PoW brief", weight: 35, icon: Lightbulb, subtext: "This is the core of your campaign. Build something real that shows you can do the job — before you even apply." },
-  { key: "step_linkedin_done", label: "Post about it on LinkedIn", weight: 20, icon: Users, subtext: "Post before you reach out. Tag the company, mention the space, ask a genuine question. Warm is better than cold." },
+  { key: "step_linkedin_done", label: "Showcase your work before you pitch", weight: 20, icon: Users, subtext: "Post before you reach out. Tag the company, mention the space, ask a genuine question. Warm is better than cold." },
   { key: "step_outreach_done", label: "Find your contact and send outreach", weight: 20, icon: Send, subtext: "Find the right person at the company and reach out with your proof of work." },
 ] as const;
 
@@ -673,6 +673,14 @@ const Campaign = () => {
             onToggle={() => toggleStep(2)}
           >
             <div className="space-y-5">
+              {/* Intro text */}
+              <p style={{ color: '#94A3B8', fontSize: '15px', lineHeight: 1.7, margin: 0 }}>
+                Don't reach out cold. Post about what you built first.
+                <br /><br />
+                When your DM arrives, there's a chance they've already seen your work — that changes the entire conversation.
+                <br /><br />
+                Personal branding isn't vanity. It's your warmest possible introduction.
+              </p>
               {/* New note at the top */}
               <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
                 <p className="text-sm text-foreground font-medium">
