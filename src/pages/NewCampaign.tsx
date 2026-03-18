@@ -358,7 +358,7 @@ const BriefNavigator = ({
 };
 
 
-  const { user, loading: authLoading } = useAuth();
+  const Index = () => {
   const nav = useNavigate();
   const [searchParams] = useSearchParams();
   const [onboardingChecked, setOnboardingChecked] = useState(false);
