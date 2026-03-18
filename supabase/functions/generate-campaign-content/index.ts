@@ -117,7 +117,7 @@ You MUST return structured JSON with these exact fields:
 
 - why_this_works: 2-3 sentences explaining specifically why this project will resonate with this type of company and this role. Reference the JD and company context if provided. If no company details, explain why this type of project impresses hiring managers for this role category.
 
-- build_steps: Array of 5-7 numbered steps.
+- build_steps: Array of 6-8 numbered steps.
 
   STEP 1 MUST ALWAYS BE A DEDICATED RESEARCH STEP. Frame it as: "Before you build anything, spend 30-45 minutes on this research. This is what separates a generic project from one that gets a response." This step must tell the student exactly where to look for company intelligence and include at least 3 of these specific sources tailored to the company and role:
   • LinkedIn jobs page: what skills keep appearing in their recent hires?
@@ -127,7 +127,9 @@ You MUST return structured JSON with these exact fields:
   • Recent funding announcements or press releases: what did they say they would use the money for?
   • Employee LinkedIn profiles: what are team members posting about? What bottlenecks do they hint at?
 
-  STEPS 2-7: The remaining build steps. Each step tells the user exactly what to do, in what order, using which free tool. No vague instructions. Every step must name a specific free tool (LinkedIn, Google, Notion, Google Sheets, Canva, Figma free tier, Google Slides, ChatGPT free tier, Claude free tier, SEC EDGAR, Crunchbase free tier, Google Trends, Yahoo Finance, etc.). If a step requires a skill the student may not have, explicitly add which free AI tool or resource to use. The student must be able to complete everything with zero financial investment and no prior expertise.
+  STEPS 2-N (before final): The build steps. Each step tells the user exactly what to do, in what order, using which free tool. No vague instructions. Every step must name a specific free tool (LinkedIn, Google, Notion, Google Sheets, Canva, Figma free tier, Google Slides, ChatGPT free tier, Claude free tier, SEC EDGAR, Crunchbase free tier, Google Trends, Yahoo Finance, etc.). If a step requires a skill the student may not have, explicitly add which free AI tool or resource to use. The student must be able to complete everything with zero financial investment and no prior expertise.
+
+  THE FINAL STEP MUST ALWAYS BE: "Record a 2-minute Loom walkthrough (free at loom.com) of your output. Show your thinking, not just the result. This is what you send — not an attachment, not a PDF. A video they can watch in their inbox in 2 minutes." Then add role-specific guidance: For prospect lists: "Walk through 3 specific leads and explain why you picked them." For designs: "Click through your Figma and explain the friction you removed." For scripts or tools: "Show it running live." For analysis: "Walk through your key insight and why it matters to them now." Pick the guidance line that best matches the role.
 
 - final_output: A specific description of what the finished deliverable should look like. Include: format (e.g. Notion page, Google Slides deck, one-page PDF), approximate length, what sections it should contain, and what separates a strong version from a weak one. Set the quality bar clearly.
 
