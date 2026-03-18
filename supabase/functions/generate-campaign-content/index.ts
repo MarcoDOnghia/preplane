@@ -246,6 +246,7 @@ serve(async (req) => {
     const proofOfWorkTitle = validateString(body.proofOfWorkTitle, "proofOfWorkTitle", 500);
     const proofOfWorkDetails = validateString(body.proofOfWorkDetails, "proofOfWorkDetails", 5000);
     const proofOfWorkHook = validateString(body.proofOfWorkHook, "proofOfWorkHook", 500);
+    const companyIntel = validateString(body.companyIntel, "companyIntel", 5000);
 
     if (!company || !role) {
       return new Response(JSON.stringify({ error: "Company and role are required" }), {
