@@ -4,8 +4,6 @@ import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/Header";
 import AppFooter from "@/components/AppFooter";
 import { supabase } from "@/integrations/supabase/client";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import {
   PlusCircle, ArrowRight, Target, Clock, RotateCcw, Zap, Check, Lightbulb,
   Loader2, X, AlertTriangle, CalendarDays, FileEdit, CheckCircle2, Circle, Rocket
@@ -26,12 +24,12 @@ const STEPS = [
   { key: "step_followup_done", label: "Follow up", weight: 15 },
 ] as const;
 
-const STATUS_BADGES: Record<string, { label: string; classes: string }> = {
-  targeting: { label: "RESEARCHING", classes: "bg-blue-100 text-blue-700" },
-  applied: { label: "APPLIED", classes: "bg-amber-100 text-amber-700" },
-  followed_up: { label: "FOLLOWING UP", classes: "bg-purple-100 text-purple-700" },
-  response_received: { label: "INTERVIEW", classes: "bg-green-100 text-green-700" },
-  rejected: { label: "CLOSED", classes: "bg-red-100 text-red-700" },
+const STATUS_BADGES: Record<string, { label: string; bg: string; text: string }> = {
+  targeting: { label: "RESEARCHING", bg: "rgba(249,115,22,0.15)", text: "#F97316" },
+  applied: { label: "APPLIED", bg: "rgba(234,179,8,0.15)", text: "#EAB308" },
+  followed_up: { label: "FOLLOWING UP", bg: "rgba(168,85,247,0.15)", text: "#A855F7" },
+  response_received: { label: "INTERVIEW", bg: "rgba(34,197,94,0.15)", text: "#22C55E" },
+  rejected: { label: "CLOSED", bg: "rgba(239,68,68,0.15)", text: "#EF4444" },
 };
 
 interface CampaignRow {
@@ -83,15 +81,6 @@ function getChecklist(c: CampaignRow) {
   return items.slice(0, 2);
 }
 
-interface PowBrief {
-  title: string;
-  why_this_works: string;
-  what_to_build: string[];
-  tools_to_use: string[];
-  time_estimate: string;
-  ai_prompt: string;
-}
-
 const Index = () => {
   const { user, loading: authLoading } = useAuth();
   const nav = useNavigate();
@@ -102,7 +91,6 @@ const Index = () => {
   const [showArchived, setShowArchived] = useState(false);
   const [followupNudgeDismissed, setFollowupNudgeDismissed] = useState(false);
 
-  // First-load PoW auto-generation
   const [powGenerating, setPowGenerating] = useState(false);
   const [powSkipped, setPowSkipped] = useState(false);
 
@@ -163,7 +151,7 @@ const Index = () => {
         setCampaigns(loadedCampaigns);
         setLoading(false);
 
-        // Auto-generate PoW brief for brand-new users — only once
+        // Auto-generate PoW brief for brand-new users
         const alreadyGenerated = localStorage.getItem(POW_GENERATED_KEY) === "true";
         if (!alreadyGenerated && loadedCampaigns.length === 0 && resolvedRole) {
           localStorage.setItem(POW_GENERATED_KEY, "true");
@@ -190,7 +178,6 @@ const Index = () => {
             if (!res.ok) throw new Error("Generation failed");
             const brief = await res.json();
             if (brief && brief.title) {
-              // Save as a campaign immediately so it persists on refresh (FIX 2+3)
               const { data: newCampaign, error: insertErr } = await supabase
                 .from("campaigns")
                 .insert({
@@ -205,13 +192,12 @@ const Index = () => {
                 .select("id")
                 .single();
               if (!insertErr && newCampaign) {
-                // Redirect to the campaign page — uses the same rendering as all campaigns (FIX 3)
                 nav(`/campaign/${newCampaign.id}`, { replace: true });
                 return;
               }
             }
           } catch {
-            // Fail silently — fall through to normal dashboard
+            // Fail silently
           } finally {
             setPowGenerating(false);
           }
@@ -221,7 +207,7 @@ const Index = () => {
 
   if (authLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#FAF9F7]">
+      <div className="flex min-h-screen items-center justify-center" style={{ background: "#111111" }}>
         <div className="animate-spin h-8 w-8 border-4 border-[#F97316] border-t-transparent rounded-full" />
       </div>
     );
@@ -231,7 +217,7 @@ const Index = () => {
   // First-load PoW generating screen
   if (powGenerating && !powSkipped) {
     return (
-      <div className="min-h-screen bg-[#FAF9F7] flex flex-col items-center justify-center px-4">
+      <div className="min-h-screen flex flex-col items-center justify-center px-4" style={{ background: "#111111", fontFamily: "Inter, sans-serif" }}>
         <div className="max-w-md text-center space-y-6">
           <div className="relative mx-auto w-16 h-16">
             <div className="absolute inset-0 rounded-full bg-[#F97316]/20 animate-ping" />
@@ -240,15 +226,16 @@ const Index = () => {
             </div>
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-slate-900">Building your first proof of work brief</h2>
-            <p className="text-slate-500 mt-2">for <span className="font-semibold text-slate-700">{targetRole}</span>...</p>
+            <h2 className="text-2xl font-bold text-white">Building your first proof of work brief</h2>
+            <p className="mt-2" style={{ color: "#94A3B8" }}>for <span className="font-semibold text-white">{targetRole}</span>...</p>
           </div>
-          <div className="h-1.5 w-48 mx-auto bg-slate-200 rounded-full overflow-hidden">
-            <div className="h-full bg-[#F97316] rounded-full animate-[loading_2s_ease-in-out_infinite]" style={{ width: '60%', animation: 'pulse 1.5s ease-in-out infinite' }} />
+          <div className="h-1.5 w-48 mx-auto rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>
+            <div className="h-full bg-[#F97316] rounded-full" style={{ width: '60%', animation: 'pulse 1.5s ease-in-out infinite' }} />
           </div>
           <button
             onClick={() => setPowSkipped(true)}
-            className="text-xs text-slate-400 hover:text-slate-600 underline underline-offset-2 transition-colors"
+            className="text-xs underline underline-offset-2 transition-colors"
+            style={{ color: "#64748B" }}
           >
             Skip for now →
           </button>
@@ -272,20 +259,31 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF9F7] flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{ background: "#111111", fontFamily: "Inter, sans-serif" }}>
       <Header />
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Page title row */}
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">Your campaigns</h1>
-            <p className="text-slate-500 mt-1">Manage and track your target roles</p>
+            <h1 className="text-3xl" style={{ color: "#FFFFFF", fontWeight: 900 }}>Your campaigns</h1>
+            <p style={{ color: "#94A3B8" }} className="mt-1">Manage and track your target roles</p>
           </div>
           <button
             onClick={() => nav("/app/new")}
             disabled={atLimit}
-            className="bg-[#F97316] hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-[#F97316]/20 flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              background: "#F97316",
+              color: "#FFFFFF",
+              fontWeight: 700,
+              padding: "12px 24px",
+              borderRadius: "8px",
+              border: "none",
+              cursor: atLimit ? "not-allowed" : "pointer",
+            }}
+            onMouseEnter={(e) => { if (!atLimit) (e.currentTarget).style.background = "#EA6C0A"; }}
+            onMouseLeave={(e) => { if (!atLimit) (e.currentTarget).style.background = "#F97316"; }}
             title={atLimit ? "You have 10 active campaigns. Complete or archive one first." : undefined}
           >
             <PlusCircle className="w-5 h-5" />
@@ -294,7 +292,7 @@ const Index = () => {
         </div>
 
         {atLimit && (
-          <p className="text-xs text-slate-500 bg-slate-100 rounded-lg px-3 py-2">
+          <p className="text-xs px-3 py-2" style={{ color: "#94A3B8", background: "#1A1A1A", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.08)" }}>
             You have 10 active campaigns. PrepLane is built for focus — complete or archive one before adding a new one.
           </p>
         )}
@@ -305,17 +303,20 @@ const Index = () => {
           </div>
         ) : activeCampaigns.length === 0 && archivedCampaigns.length === 0 ? (
           /* Empty state */
-          <div className="bg-white rounded-2xl border border-dashed border-slate-300 p-12 text-center space-y-4">
+          <div className="p-12 text-center space-y-4" style={{ background: "#1A1A1A", borderRadius: "12px", border: "1px dashed rgba(255,255,255,0.12)" }}>
             <Lightbulb className="h-10 w-10 text-[#F97316] mx-auto" />
             <div>
-              <h3 className="font-bold text-lg text-slate-900">Start by telling us which role you're going after.</h3>
-              <p className="text-sm text-slate-500 mt-1">
+              <h3 className="font-bold text-lg text-white">Start by telling us which role you're going after.</h3>
+              <p className="text-sm mt-1" style={{ color: "#94A3B8" }}>
                 We'll build you a proof of work brief in 60 seconds.
               </p>
             </div>
             <button
               onClick={() => nav("/app/new")}
-              className="bg-[#F97316] hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-[#F97316]/20 inline-flex items-center gap-2 transition-colors"
+              className="inline-flex items-center gap-2 transition-colors"
+              style={{ background: "#F97316", color: "#FFFFFF", fontWeight: 700, padding: "12px 24px", borderRadius: "8px", border: "none", cursor: "pointer" }}
+              onMouseEnter={(e) => (e.currentTarget).style.background = "#EA6C0A"}
+              onMouseLeave={(e) => (e.currentTarget).style.background = "#F97316"}
             >
               Build my first proof of work <ArrowRight className="h-4 w-4" />
             </button>
@@ -330,19 +331,23 @@ const Index = () => {
               if (!nudgeCampaign) return null;
               return (
                 <div
-                  className="bg-white border border-[#F97316]/20 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 cursor-pointer hover:shadow-md transition-shadow"
+                  className="flex flex-col md:flex-row items-center justify-between gap-6 cursor-pointer transition-all"
+                  style={{ background: "#1A1A1A", border: "1px solid rgba(249,115,22,0.2)", borderRadius: "12px", padding: "24px" }}
                   onClick={() => nav(`/campaign/${nudgeCampaign.id}`)}
                 >
                   <div className="flex items-center gap-4">
-                    <div className="bg-[#F97316]/10 p-3 rounded-full shrink-0">
+                    <div className="p-3 rounded-full shrink-0" style={{ background: "rgba(249,115,22,0.15)" }}>
                       <Lightbulb className="w-5 h-5 text-[#F97316]" />
                     </div>
                     <div>
-                      <p className="font-bold text-slate-900">Don't stop at the CV</p>
-                      <p className="text-sm text-slate-600">{nudgeCampaign.company} campaign is missing the steps that actually get responses.</p>
+                      <p className="font-bold text-white">Don't stop at the CV</p>
+                      <p className="text-sm" style={{ color: "#94A3B8" }}>{nudgeCampaign.company} campaign is missing the steps that actually get responses.</p>
                     </div>
                   </div>
-                  <button className="bg-[#F97316] text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-orange-600 transition-colors shrink-0">
+                  <button
+                    className="shrink-0 transition-colors"
+                    style={{ background: "#F97316", color: "#FFFFFF", fontWeight: 600, padding: "10px 20px", borderRadius: "8px", border: "none", cursor: "pointer" }}
+                  >
                     Continue building
                   </button>
                 </div>
@@ -366,36 +371,40 @@ const Index = () => {
               const daysSince = differenceInDays(new Date(), outreachDate);
               if (daysSince < 3) return null;
 
-              let bgClass: string, borderClass: string, textClass: string, message: string, buttonLabel: string;
+              let borderColor: string, message: string, buttonLabel: string;
               if (daysSince >= 14) {
-                bgClass = "bg-red-50"; borderClass = "border-red-200"; textClass = "text-red-700";
+                borderColor = "rgba(239,68,68,0.3)";
                 message = `📬 It's been ${daysSince} days since you reached out to ${c.company}. Send one final follow-up today — then move on with your head high.`;
                 buttonLabel = "Send final follow-up →";
               } else if (daysSince >= 7) {
-                bgClass = "bg-orange-50"; borderClass = "border-orange-200"; textClass = "text-orange-700";
+                borderColor = "rgba(249,115,22,0.3)";
                 message = `🔥 ${c.company} hasn't responded yet — that's normal. Day 7 follow-ups get 3x more responses than day 1. Send yours now.`;
                 buttonLabel = "Write my follow-up →";
               } else {
-                bgClass = "bg-yellow-50"; borderClass = "border-yellow-200"; textClass = "text-yellow-800";
+                borderColor = "rgba(234,179,8,0.3)";
                 message = `⏰ You reached out to ${c.company} ${daysSince} days ago. Most people give up here — don't. A short follow-up today keeps you top of mind.`;
                 buttonLabel = "Write my follow-up →";
               }
 
               return (
                 <div
-                  className={`${bgClass} border ${borderClass} rounded-2xl p-6 shadow-sm flex items-center justify-between gap-4 cursor-pointer hover:shadow-md transition-shadow`}
+                  className="flex items-center justify-between gap-4 cursor-pointer transition-all"
+                  style={{ background: "#1A1A1A", border: `1px solid ${borderColor}`, borderRadius: "12px", padding: "20px 24px" }}
                   onClick={() => nav(`/campaign/${c.id}`)}
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     {daysSince >= 14 ? (
-                      <AlertTriangle className={`h-5 w-5 ${textClass} shrink-0`} />
+                      <AlertTriangle className="h-5 w-5 text-red-400 shrink-0" />
                     ) : (
-                      <Clock className={`h-5 w-5 ${textClass} shrink-0`} />
+                      <Clock className="h-5 w-5 text-[#F97316] shrink-0" />
                     )}
-                    <p className={`text-sm ${textClass}`}>{message}</p>
+                    <p className="text-sm" style={{ color: "#94A3B8" }}>{message}</p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <button className="bg-white border border-slate-200 text-slate-900 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-50 transition-colors">
+                    <button
+                      className="px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+                      style={{ background: "rgba(255,255,255,0.08)", color: "#FFFFFF", border: "1px solid rgba(255,255,255,0.08)" }}
+                    >
                       {buttonLabel}
                     </button>
                     <button
@@ -404,7 +413,7 @@ const Index = () => {
                         localStorage.setItem(dismissKey, today);
                         setFollowupNudgeDismissed(true);
                       }}
-                      className="text-slate-400 hover:text-slate-600"
+                      style={{ color: "#64748B" }}
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -418,21 +427,25 @@ const Index = () => {
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <CalendarDays className="w-5 h-5 text-[#F97316]" />
-                  <h2 className="text-xl font-bold text-slate-900">Today's focus</h2>
+                  <h2 className="text-xl" style={{ color: "#FFFFFF", fontWeight: 900 }}>Today's focus</h2>
                 </div>
-                <div className="bg-[#F97316]/5 border border-[#F97316]/20 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div
+                  className="flex flex-col md:flex-row md:items-center justify-between gap-4"
+                  style={{ background: "#1A1A1A", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "12px", padding: "24px" }}
+                >
                   <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">
+                    <div className="h-12 w-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(249,115,22,0.15)" }}>
                       <FileEdit className="w-5 h-5 text-[#F97316]" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-[#F97316] uppercase tracking-wider">{focusCampaign.company}</p>
-                      <p className="text-lg font-bold text-slate-900">{getNextStep(focusCampaign)}</p>
+                      <p className="text-sm font-medium uppercase tracking-wider" style={{ color: "#F97316" }}>{focusCampaign.company}</p>
+                      <p className="text-lg font-bold text-white">{getNextStep(focusCampaign)}</p>
                     </div>
                   </div>
                   <button
                     onClick={() => nav(`/campaign/${focusCampaign.id}`)}
-                    className="bg-white border border-slate-200 text-slate-900 px-6 py-2 rounded-lg font-semibold hover:bg-slate-50 transition-colors flex items-center gap-2 shrink-0"
+                    className="flex items-center gap-2 shrink-0 transition-colors"
+                    style={{ background: "rgba(255,255,255,0.08)", color: "#FFFFFF", fontWeight: 600, padding: "10px 20px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer" }}
                   >
                     Go to campaign <ArrowRight className="w-4 h-4" />
                   </button>
@@ -443,23 +456,33 @@ const Index = () => {
             {/* Campaign cards grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {activeCampaigns.map((c) => {
-                const strength = getStrength(c);
                 const next = getNextStep(c);
                 const status = STATUS_BADGES[c.status] || STATUS_BADGES.targeting;
                 const checklist = getChecklist(c);
                 return (
                   <div
                     key={c.id}
-                    className="bg-white rounded-2xl border border-slate-200 p-6 flex flex-col hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
+                    className="flex flex-col cursor-pointer group transition-all duration-300"
+                    style={{
+                      background: "#1A1A1A",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      borderRadius: "12px",
+                      padding: "24px",
+                    }}
                     onClick={() => nav(`/campaign/${c.id}`)}
+                    onMouseEnter={(e) => { (e.currentTarget).style.borderColor = "rgba(249,115,22,0.3)"; (e.currentTarget).style.transform = "translateY(-2px)"; }}
+                    onMouseLeave={(e) => { (e.currentTarget).style.borderColor = "rgba(255,255,255,0.08)"; (e.currentTarget).style.transform = "translateY(0)"; }}
                   >
                     {/* Top: role + status */}
                     <div className="flex items-start justify-between gap-2 mb-4">
                       <div className="min-w-0">
-                        <h3 className="text-lg font-bold text-slate-900 group-hover:text-[#F97316] transition-colors truncate">{c.role}</h3>
-                        <p className="text-slate-500 text-sm truncate">{c.company}</p>
+                        <h3 className="text-lg font-bold text-white truncate">{c.role}</h3>
+                        <p className="text-sm truncate" style={{ color: "#94A3B8" }}>{c.company}</p>
                       </div>
-                      <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase shrink-0 ${status.classes}`}>
+                      <span
+                        className="text-xs font-bold px-3 py-1 rounded-full uppercase shrink-0"
+                        style={{ background: status.bg, color: status.text }}
+                      >
                         {status.label}
                       </span>
                     </div>
@@ -471,38 +494,24 @@ const Index = () => {
                           {item.done ? (
                             <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
                           ) : (
-                            <Circle className="w-4 h-4 text-slate-300 shrink-0" />
+                            <Circle className="w-4 h-4 shrink-0" style={{ color: "rgba(255,255,255,0.15)" }} />
                           )}
-                          <span className={`text-sm ${item.done ? "text-slate-600" : "text-slate-400"}`}>{item.label}</span>
+                          <span className="text-sm" style={{ color: item.done ? "#94A3B8" : "#64748B" }}>{item.label}</span>
                         </div>
                       ))}
                     </div>
 
-                    {/* Campaign strength */}
-                    <div className="mb-4">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-bold text-slate-500 uppercase tracking-tight">Application readiness</span>
-                        <span className="text-xs font-bold text-[#F97316]">{strength}%</span>
-                      </div>
-                      <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-[#F97316] rounded-full transition-all duration-500"
-                          style={{ width: `${strength}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Next step */}
-                    <div className="border-t border-slate-100 pt-4 mt-auto">
+                    {/* Next step (replaces readiness bar) */}
+                    <div className="mt-auto pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
                       {next ? (
                         <>
-                          <p className="text-xs text-slate-400 mb-1 uppercase">Next step</p>
-                          <p className="text-sm font-semibold text-slate-800">{next}</p>
+                          <p className="text-xs mb-1 uppercase" style={{ color: "#64748B" }}>Next step</p>
+                          <p className="text-sm font-semibold text-white">{next}</p>
                         </>
                       ) : (
-                        <p className="text-sm font-semibold text-green-600">All steps complete ✓</p>
+                        <p className="text-sm font-semibold text-green-400">All steps complete ✓</p>
                       )}
-                      <p className="text-[10px] text-slate-400 mt-3">
+                      <p className="text-[10px] mt-3" style={{ color: "#64748B" }}>
                         Updated {formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
                       </p>
                     </div>
@@ -516,7 +525,8 @@ const Index = () => {
               <div className="pt-4">
                 <button
                   onClick={() => setShowArchived(!showArchived)}
-                  className="text-xs text-slate-400 hover:text-slate-600 transition-colors underline underline-offset-2"
+                  className="text-xs underline underline-offset-2 transition-colors"
+                  style={{ color: "#64748B" }}
                 >
                   {showArchived ? "Hide archived" : `View archived (${archivedCampaigns.length})`}
                 </button>
@@ -526,18 +536,26 @@ const Index = () => {
                     {archivedCampaigns.map((c) => {
                       const status = STATUS_BADGES[c.status] || STATUS_BADGES.targeting;
                       return (
-                        <div key={c.id} className="bg-white rounded-2xl border border-slate-200 p-4 opacity-60 hover:opacity-80 transition-opacity flex items-center justify-between gap-3">
+                        <div
+                          key={c.id}
+                          className="opacity-60 hover:opacity-80 transition-opacity flex items-center justify-between gap-3"
+                          style={{ background: "#1A1A1A", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.08)", padding: "16px" }}
+                        >
                           <div className="min-w-0 flex items-center gap-3">
                             <div className="min-w-0">
-                              <span className="text-sm font-medium text-slate-900 truncate block">{c.role}</span>
-                              <span className="text-xs text-slate-500 truncate block">{c.company}</span>
+                              <span className="text-sm font-medium text-white truncate block">{c.role}</span>
+                              <span className="text-xs truncate block" style={{ color: "#64748B" }}>{c.company}</span>
                             </div>
-                            <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase shrink-0 ${status.classes}`}>
+                            <span
+                              className="text-xs font-bold px-3 py-1 rounded-full uppercase shrink-0"
+                              style={{ background: status.bg, color: status.text }}
+                            >
                               {status.label}
                             </span>
                           </div>
                           <button
-                            className="text-xs text-slate-400 hover:text-slate-600 flex items-center gap-1 shrink-0"
+                            className="text-xs flex items-center gap-1 shrink-0 transition-colors"
+                            style={{ color: "#64748B" }}
                             onClick={(e) => { e.stopPropagation(); handleUnarchive(c.id); }}
                           >
                             <RotateCcw className="h-3 w-3" /> Unarchive
