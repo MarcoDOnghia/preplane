@@ -1091,8 +1091,11 @@ const Index = () => {
                       {setupIntel.trim() ? 'Your brief will be highly specific' : 'Optional — but makes your brief 10x better'}
                     </span>
                   </label>
-                  <p style={{ color: '#64748B', fontSize: '12px', marginBottom: '8px', lineHeight: 1.5 }}>
+                  <p style={{ color: '#64748B', fontSize: '12px', marginBottom: '4px', lineHeight: 1.5 }}>
                     Paste anything you found — a LinkedIn post from their founder, a job listing, a press release, a G2 review, anything. The more real intelligence you give us, the more specific your brief will be.
+                  </p>
+                  <p style={{ color: '#64748B', fontSize: '12px', marginBottom: '8px', lineHeight: 1.5 }}>
+                    Got a URL? Open it, copy the relevant text, and paste it here — we can't read links directly.
                   </p>
                   <textarea
                     value={setupIntel}
