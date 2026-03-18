@@ -207,10 +207,13 @@ const Campaign = () => {
   }, [id, toast]);
 
   const strengthScore = campaign
-    ? STEPS.reduce((sum, s) => sum + (campaign[s.key] ? s.weight : 0), 0)
+    ? [
+        { done: !!(campaign.company && campaign.role), weight: 25 },
+        { done: campaign.step_proof_done, weight: 35 },
+        { done: campaign.step_linkedin_done, weight: 20 },
+        { done: campaign.step_outreach_done, weight: 20 },
+      ].reduce((sum, s) => sum + (s.done ? s.weight : 0), 0)
     : 0;
-
-  const nextStep = campaign ? STEPS.findIndex((s) => !campaign[s.key]) : -1;
 
   const statusInfo = STATUS_OPTIONS.find((s) => s.value === campaign?.status) || STATUS_OPTIONS[0];
 
