@@ -989,7 +989,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen" style={setupPhase === 'input' ? { background: '#111111', fontFamily: 'Inter, sans-serif' } : undefined}>
+    <div className="min-h-screen" style={(setupPhase === 'input' || setupPhase === 'brief') ? { background: '#111111', fontFamily: 'Inter, sans-serif' } : undefined}>
       {setupPhase !== 'input' && <Header />}
       <main className={setupPhase === 'input' ? '' : 'mx-auto px-4 py-8 max-w-[1200px] space-y-10'}>
 
