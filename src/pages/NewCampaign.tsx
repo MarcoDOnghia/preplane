@@ -192,6 +192,18 @@ const Index = () => {
     }
   };
 
+  const handleBuildBriefClick = () => {
+    if (!setupRole.trim()) {
+      toast({ title: "Please enter a target role", variant: "destructive" });
+      return;
+    }
+    if (!setupCompany.trim()) {
+      setShowNoCompanyWarning(true);
+      return;
+    }
+    generateProofBrief();
+  };
+
   const generateProofBrief = async () => {
     if (!setupRole.trim()) {
       toast({ title: "Please enter a target role", variant: "destructive" });
