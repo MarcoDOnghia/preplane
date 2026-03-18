@@ -987,84 +987,206 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main className="mx-auto px-4 py-8 max-w-[1200px] space-y-10">
+    <div className="min-h-screen" style={setupPhase === 'input' ? { background: '#111111', fontFamily: 'Inter, sans-serif' } : undefined}>
+      {setupPhase !== 'input' && <Header />}
+      <main className={setupPhase === 'input' ? '' : 'mx-auto px-4 py-8 max-w-[1200px] space-y-10'}>
 
-        {/* Phase 1: Setup — role, company, JD */}
+        {/* Phase 1: Setup — role, company (dark themed) */}
         {setupPhase === 'input' && (
-          <div className="max-w-[600px] mx-auto space-y-8">
-            <div className="text-center space-y-2">
-              <Lightbulb className="h-10 w-10 text-primary mx-auto" />
-              <h1 className="text-[28px] font-bold tracking-tight">What role are you going after?</h1>
-              <p className="text-muted-foreground text-sm">
-                We'll build you a specific project that shows you can do the job — before you even apply.
-              </p>
+          <div className="min-h-screen flex items-center justify-center px-4 py-16" style={{ fontFamily: 'Inter, sans-serif' }}>
+            <div className="w-full max-w-[520px] space-y-10">
+              {/* Headline */}
+              <div className="text-center space-y-4">
+                <h1 style={{ color: '#FFFFFF', fontSize: '32px', fontWeight: 900, lineHeight: 1.2, letterSpacing: '-0.02em' }}>
+                  Who are you going after?
+                </h1>
+                <p style={{ color: '#94A3B8', fontSize: '16px', lineHeight: 1.6 }}>
+                  Most students send a CV.<br />
+                  You're going to send something they actually remember.
+                </p>
+              </div>
+
+              {/* Form */}
+              <div className="space-y-5">
+                {/* Field 1: Target role */}
+                <div>
+                  <label style={{ color: '#FFFFFF', fontSize: '13px', fontWeight: 500, display: 'block', marginBottom: '6px' }}>
+                    Target role
+                  </label>
+                  <input
+                    value={setupRole}
+                    onChange={(e) => setSetupRole(e.target.value)}
+                    placeholder="e.g. GTM Intern, VC Analyst, Marketing Intern"
+                    style={{
+                      width: '100%',
+                      background: '#1A1A1A',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: '8px',
+                      color: '#FFFFFF',
+                      padding: '12px 14px',
+                      fontSize: '14px',
+                      outline: 'none',
+                      transition: 'border-color 0.2s',
+                    }}
+                    onFocus={(e) => { e.target.style.borderColor = '#F97316'; }}
+                    onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+                  />
+                </div>
+
+                {/* Field 2: Target company */}
+                <div>
+                  <label style={{ color: '#FFFFFF', fontSize: '13px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                    Target company
+                    <span style={{
+                      background: 'rgba(249,115,22,0.15)',
+                      color: '#F97316',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                      letterSpacing: '0.02em',
+                    }}>
+                      Recommended
+                    </span>
+                  </label>
+                  <input
+                    ref={companyInputRef}
+                    value={setupCompany}
+                    onChange={(e) => setSetupCompany(e.target.value)}
+                    placeholder="e.g. Sequoia Capital"
+                    style={{
+                      width: '100%',
+                      background: '#1A1A1A',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: '8px',
+                      color: '#FFFFFF',
+                      padding: '12px 14px',
+                      fontSize: '14px',
+                      outline: 'none',
+                      transition: 'border-color 0.2s',
+                    }}
+                    onFocus={(e) => { e.target.style.borderColor = '#F97316'; }}
+                    onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+                  />
+                  <p style={{ color: '#64748B', fontSize: '12px', marginTop: '6px' }}>
+                    The more specific you are, the better the brief.
+                  </p>
+                </div>
+
+                {/* CTA Button */}
+                <button
+                  onClick={handleBuildBriefClick}
+                  disabled={generatingBrief || !setupRole.trim()}
+                  style={{
+                    width: '100%',
+                    background: generatingBrief || !setupRole.trim() ? 'rgba(249,115,22,0.5)' : '#F97316',
+                    color: '#FFFFFF',
+                    fontWeight: 700,
+                    fontSize: '16px',
+                    padding: '16px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    cursor: generatingBrief || !setupRole.trim() ? 'not-allowed' : 'pointer',
+                    transition: 'background 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                  }}
+                  onMouseEnter={(e) => { if (!generatingBrief && setupRole.trim()) (e.target as HTMLButtonElement).style.background = '#EA6C0A'; }}
+                  onMouseLeave={(e) => { if (!generatingBrief && setupRole.trim()) (e.target as HTMLButtonElement).style.background = '#F97316'; }}
+                >
+                  {generatingBrief && <Loader2 className="h-5 w-5 animate-spin" />}
+                  {generatingBrief ? 'Generating...' : 'Build my PoW brief →'}
+                </button>
+              </div>
             </div>
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium">Which role are you targeting?</label>
-                <Input
-                  value={setupRole}
-                  onChange={(e) => setSetupRole(e.target.value)}
-                  placeholder="e.g. VC Analyst Internship"
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">
-                  Company name{" "}
-                  <span className="text-muted-foreground font-normal">(recommended — we'll tailor the brief specifically to this company)</span>
-                </label>
-                <Input
-                  value={setupCompany}
-                  onChange={(e) => setSetupCompany(e.target.value)}
-                  placeholder="e.g. Sequoia Capital"
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">
-                  Job posting or URL{" "}
-                  <span className="text-muted-foreground font-normal">(optional — no posting? no problem. we'll build around the company instead)</span>
-                </label>
-                <Textarea
-                  value={setupJd}
-                  onChange={(e) => setSetupJd(e.target.value)}
-                  placeholder="Paste the full job description or a job posting URL..."
-                  rows={6}
-                  className="mt-1"
-                />
-                {jdLooksLikeUrl && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-2 text-xs"
-                    onClick={handleExtractJdUrl}
-                    disabled={jdExtractingUrl}
-                  >
-                    {jdExtractingUrl ? (
-                      <><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Extracting...</>
-                    ) : (
-                      <><Link2 className="h-3 w-3 mr-1" /> Extract job description from URL</>
-                    )}
-                  </Button>
-                )}
-              </div>
-              <Button
-                onClick={generateProofBrief}
-                disabled={generatingBrief || !setupRole.trim()}
-                size="lg"
-                className="w-full font-semibold"
+
+            {/* No-company warning popup */}
+            <Dialog open={showNoCompanyWarning} onOpenChange={setShowNoCompanyWarning}>
+              <DialogContent
+                className="border-0 p-0"
+                style={{
+                  background: '#1A1A1A',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: '16px',
+                  padding: '32px',
+                  maxWidth: '420px',
+                  fontFamily: 'Inter, sans-serif',
+                }}
               >
-                {generatingBrief ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Sparkles className="h-4 w-4 mr-2" />
-                )}
-                Generate my proof of work brief →
-              </Button>
-            </div>
+                <VisuallyHidden><DialogTitle>Company name warning</DialogTitle></VisuallyHidden>
+                <div className="space-y-5">
+                  <span style={{
+                    color: '#F97316',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase' as const,
+                  }}>
+                    HEADS UP
+                  </span>
+                  <h2 style={{ color: '#FFFFFF', fontWeight: 700, fontSize: '20px', lineHeight: 1.3, marginTop: '8px' }}>
+                    Your brief will be 10x weaker without a target company.
+                  </h2>
+                  <ul className="space-y-3" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                    {[
+                      "Without a company, we can't research their actual pain points",
+                      "Generic briefs get generic responses — a targeted PoW gets interviews",
+                      "The best proof of work shows you understand THIS company specifically",
+                    ].map((point, i) => (
+                      <li key={i} style={{ color: '#94A3B8', fontSize: '14px', lineHeight: 1.6, display: 'flex', gap: '10px' }}>
+                        <span style={{ color: '#F97316', flexShrink: 0 }}>•</span>
+                        {point}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="space-y-3 pt-2">
+                    <button
+                      onClick={() => {
+                        setShowNoCompanyWarning(false);
+                        setTimeout(() => companyInputRef.current?.focus(), 100);
+                      }}
+                      style={{
+                        width: '100%',
+                        background: '#F97316',
+                        color: '#FFFFFF',
+                        fontWeight: 700,
+                        fontSize: '15px',
+                        padding: '14px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        cursor: 'pointer',
+                        transition: 'background 0.2s',
+                      }}
+                      onMouseEnter={(e) => (e.target as HTMLButtonElement).style.background = '#EA6C0A'}
+                      onMouseLeave={(e) => (e.target as HTMLButtonElement).style.background = '#F97316'}
+                    >
+                      Add a company name →
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowNoCompanyWarning(false);
+                        generateProofBrief();
+                      }}
+                      style={{
+                        width: '100%',
+                        background: 'transparent',
+                        color: '#64748B',
+                        fontSize: '13px',
+                        fontWeight: 500,
+                        padding: '10px',
+                        border: 'none',
+                        cursor: 'pointer',
+                        textAlign: 'center' as const,
+                      }}
+                    >
+                      Generate anyway (not recommended)
+                    </button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         )}
 
