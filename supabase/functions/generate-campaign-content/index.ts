@@ -282,14 +282,23 @@ ${proofOfWorkHook ? `\nOutreach Hook (USE THIS AS THE OPENING LINE — do not re
       },
       proof_of_work: {
         properties: {
-          project: { type: "string", description: "One sentence: what the project is and who it is for" },
+          project: { type: "string", description: "One sentence: what the project is and who it is for, with role-specific deliverable type" },
           why_this_works: { type: "string", description: "2-3 sentences on why this resonates with this specific company and role" },
-          build_steps: { type: "array", items: { type: "string" }, description: "4-6 numbered step-by-step instructions with specific free tools" },
+          build_steps: { type: "array", items: { type: "string" }, description: "5-7 steps. Step 1 is always dedicated research (30-45 min, 3+ specific sources). Remaining steps use free tools with no skill barrier." },
           final_output: { type: "string", description: "What the finished deliverable should look like — format, length, structure, quality bar" },
+          effort_guide: {
+            type: "object",
+            properties: {
+              minimum: { type: "string", description: "One sentence: bare minimum version that gets noticed" },
+              impressive: { type: "string", description: "One sentence: version that gets forwarded to the whole team" },
+            },
+            required: ["minimum", "impressive"],
+            description: "Effort calibration with minimum and impressive thresholds",
+          },
           key_insight: { type: "string", description: "One specific observation that shows the candidate gets this business" },
           outreach_hook: { type: "string", description: "One sentence outreach opener starting with what was built" },
         },
-        required: ["project", "why_this_works", "build_steps", "final_output", "key_insight", "outreach_hook"],
+        required: ["project", "why_this_works", "build_steps", "final_output", "effort_guide", "key_insight", "outreach_hook"],
       },
       follow_up: {
         properties: {
