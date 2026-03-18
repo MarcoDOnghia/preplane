@@ -1075,6 +1075,48 @@ const Index = () => {
                   </p>
                 </div>
 
+                {/* Field 3: Company intel (optional) */}
+                <div>
+                  <label style={{ color: '#FFFFFF', fontSize: '13px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                    What do you know about them?
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: setupIntel.trim() ? '#22c55e' : '#64748B' }}>
+                      <span style={{
+                        width: '6px',
+                        height: '6px',
+                        borderRadius: '50%',
+                        background: setupIntel.trim() ? '#22c55e' : '#64748B',
+                        display: 'inline-block',
+                        flexShrink: 0,
+                      }} />
+                      {setupIntel.trim() ? 'Your brief will be highly specific' : 'Optional — but makes your brief 10x better'}
+                    </span>
+                  </label>
+                  <p style={{ color: '#64748B', fontSize: '12px', marginBottom: '8px', lineHeight: 1.5 }}>
+                    Paste anything you found — a LinkedIn post from their founder, a job listing, a press release, a G2 review, anything. The more real intelligence you give us, the more specific your brief will be.
+                  </p>
+                  <textarea
+                    value={setupIntel}
+                    onChange={(e) => setSetupIntel(e.target.value)}
+                    placeholder={"e.g. Their CEO posted last week about struggling to break into the German market. They have 3 open SDR roles. Their G2 reviews mention slow onboarding as the main complaint. They raised €2M in January..."}
+                    style={{
+                      width: '100%',
+                      background: '#1A1A1A',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: '8px',
+                      color: '#FFFFFF',
+                      padding: '16px',
+                      fontSize: '14px',
+                      minHeight: '120px',
+                      outline: 'none',
+                      transition: 'border-color 0.2s',
+                      resize: 'vertical',
+                      fontFamily: 'Inter, sans-serif',
+                    }}
+                    onFocus={(e) => { e.target.style.borderColor = '#F97316'; }}
+                    onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+                  />
+                </div>
+
                 {/* CTA Button */}
                 <button
                   onClick={handleBuildBriefClick}
