@@ -20,7 +20,7 @@ import {
   DialogContent,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Loader2, Sparkles, ArrowRight, Lightbulb, Link2, Check } from "lucide-react";
+import { Loader2, Sparkles, ArrowRight, Lightbulb, Link2, Check, ChevronLeft, ChevronRight, Copy } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import type { TailorResult } from "@/lib/types";
 import { parseCvToModel, cvModelToPlainText, aiParsedCvToModel } from "@/lib/cvDataModel";
