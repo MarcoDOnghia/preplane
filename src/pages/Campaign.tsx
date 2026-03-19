@@ -930,17 +930,18 @@ const Campaign = () => {
         {/* Notes */}
         <div className="rounded-xl" style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px' }}>
           <div className="p-6 pb-3">
-            <h3 className="text-sm font-semibold text-white">Notes — what worked, what didn't</h3>
+            <h3 className="text-sm font-semibold text-white">Campaign notes</h3>
           </div>
-          <div className="px-6 pb-6">
+          <div className="px-6 pb-6 space-y-3">
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               onBlur={() => updateCampaign({ notes: notes || null })}
-              rows={4}
-              placeholder="Reflect on this campaign..."
+              rows={5}
+              placeholder={"What did you build?\n\nWhat response did you get?\n\nWhat would you do differently?"}
               className="text-sm"
             />
+            <p style={{ color: '#64748B', fontSize: '12px' }}>Your notes help you improve your next campaign. PrepLane learns from what works.</p>
           </div>
         </div>
       </main>
