@@ -545,7 +545,7 @@ const Campaign = () => {
                               <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">How to Build It — Step by Step</p>
                               <ol className="list-decimal pl-5 space-y-2">
                                 {(parsed.build_steps as string[]).map((step: string, i: number) => (
-                                  <li key={i} className="text-sm">{step}</li>
+                                  <li key={i} className="text-sm text-[#94A3B8]">{step}</li>
                                 ))}
                               </ol>
                               <p className="flex items-center gap-1 text-xs text-green-600 mt-2">
