@@ -573,11 +573,11 @@ const Campaign = () => {
                               </div>
                             )}
                             <div>
-                              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">The Insight to Include</p>
-                              <p className="text-sm italic">{parsed.key_insight}</p>
+                              <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">The Insight to Include</p>
+                              <p className="text-sm italic text-[#94A3B8]">{parsed.key_insight}</p>
                             </div>
                             <div>
-                              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Your Outreach Hook</p>
+                              <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">Your Outreach Hook</p>
                               <div className="relative">
                                 <p className="text-sm bg-primary/5 border border-primary/20 rounded-md p-3 font-medium">{parsed.outreach_hook}</p>
                                 <Button
