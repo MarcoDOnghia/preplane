@@ -491,7 +491,8 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
       <FieldGroup label="Your Loom walkthrough (optional)" helper="45-90 seconds max. Free at loom.com.">
         <Input
           value={loomUrl}
-          onChange={(e) => setLoomUrl(e.target.value)}
+          onChange={(e) => updateField(setLoomUrl, e.target.value, { loomUrl: e.target.value })}
+          onBlur={handleBlurSave}
           placeholder="https://www.loom.com/share/..."
           className="campaign-notes-textarea"
           style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: 'white' }}
