@@ -383,7 +383,8 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
         <p style={{ color: '#64748B', fontSize: '11px', fontStyle: 'italic', marginBottom: '6px' }}>{getRoleExample(role)}</p>
         <Input
           value={oneLiner}
-          onChange={(e) => setOneLiner(e.target.value.slice(0, 140))}
+          onChange={(e) => { const v = e.target.value.slice(0, 140); updateField(setOneLiner, v, { oneLiner: v }); }}
+          onBlur={handleBlurSave}
           placeholder={`I built ... for ${company} to ...`}
           maxLength={140}
           className="campaign-notes-textarea"
