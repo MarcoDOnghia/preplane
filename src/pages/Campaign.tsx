@@ -627,8 +627,8 @@ const Campaign = () => {
             open={openSteps.has(2)}
             onToggle={() => toggleStep(2)}
           >
-            <div className="space-y-5">
-              {/* Intro text */}
+            <div className="space-y-6">
+              {/* Header text */}
               <p style={{ color: '#94A3B8', fontSize: '15px', lineHeight: 1.7, margin: 0 }}>
                 Don't reach out cold. Post about what you built first.
                 <br /><br />
@@ -636,17 +636,50 @@ const Campaign = () => {
                 <br /><br />
                 Personal branding isn't vanity. It's your warmest possible introduction.
               </p>
-              {/* New note at the top */}
-              <div className="rounded-xl px-4 py-3" style={{ backgroundColor: 'rgba(249,116,22,0.08)', border: '1px solid rgba(249,116,22,0.2)', borderRadius: '12px' }}>
-                <p className="text-sm text-white font-medium">
-                  ✍️ Write this yourself — authenticity is everything. We give you the angle, you write the words.
+
+              {/* DO THIS FIRST section */}
+              <div>
+                <p style={{ color: '#F97416', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '16px' }}>Do this first</p>
+
+                {/* Card 1 */}
+                <div style={{ backgroundColor: '#242424', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', padding: '16px', marginBottom: '10px' }}>
+                  <p style={{ color: '#ffffff', fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>Send the connection request first</p>
+                  <p style={{ color: '#94A3B8', fontSize: '13px', lineHeight: 1.6 }}>
+                    Find the person you're targeting at <strong style={{ color: '#ffffff' }}>{campaign.company}</strong> on LinkedIn and send a connection request before you post. When your post goes live, they'll see it in their feed. Your outreach won't be cold — they'll already know your name.
+                  </p>
+                </div>
+
+                {/* Card 2 */}
+                <div style={{ backgroundColor: '#242424', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', padding: '16px', marginBottom: '10px' }}>
+                  <p style={{ color: '#ffffff', fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>Warm up your feed before you post</p>
+                  <p style={{ color: '#94A3B8', fontSize: '13px', lineHeight: 1.6 }}>
+                    Leave 2-3 genuine comments on posts related to your target role in the next 24 hours. For SDR roles: comment on startup founder posts, sales strategy posts, or outbound content. This signals to the LinkedIn algorithm what you're about and puts your name in front of the right people before your post lands.
+                  </p>
+                </div>
+
+                {/* Dynamic role hint */}
+                <p style={{ color: '#64748B', fontSize: '12px', fontStyle: 'italic', marginTop: '4px' }}>
+                  {(() => {
+                    const role = (campaign.role || '').toLowerCase();
+                    if (role.includes('sdr') || role.includes('sales') || role.includes('bdr') || role.includes('account executive'))
+                      return 'Look for posts about outbound strategy, startup sales, or pipeline building';
+                    if (role.includes('marketing') || role.includes('growth'))
+                      return 'Look for posts about growth strategy, content marketing, or startup GTM';
+                    if (role.includes('product') || role.includes('design') || role.includes('ux'))
+                      return 'Look for posts about product thinking, UX, or startup building';
+                    if (role.includes('finance') || role.includes('vc') || role.includes('venture') || role.includes('analyst'))
+                      return 'Look for posts about venture capital, deal flow, or startup investing';
+                    if (role.includes('engineer') || role.includes('developer') || role.includes('software'))
+                      return 'Look for posts about technical challenges, system design, or startup engineering';
+                    return 'Look for posts related to your target industry and role';
+                  })()}
                 </p>
               </div>
 
-              {/* AI-generated angles */}
+              {/* WHAT TO WRITE ABOUT section */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider">What to write about</p>
+                  <p style={{ color: '#F97416', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>What to write about</p>
                   <Button
                     size="sm"
                     variant="outline"
@@ -660,40 +693,53 @@ const Campaign = () => {
                   </Button>
                 </div>
                 {!proofSuggestion && (
-                  <p className="text-xs text-[#94A3B8]">Complete your proof of work first — we need it to suggest specific angles.</p>
+                  <p style={{ color: '#94A3B8', fontSize: '12px' }}>Complete your proof of work first — we need it to suggest specific angles.</p>
                 )}
                 {(() => {
-                  let angles: string[] | null = null;
+                  let angles: any[] | null = null;
                   try { angles = JSON.parse(campaign.linkedin_angles || "null"); } catch {}
                   if (!angles) return null;
                   return (
-                    <ul className="space-y-2">
-                      {angles.map((angle: string, i: number) => (
-                        <li key={i} className="flex items-start gap-2 text-sm text-[#94A3B8]">
-                          <span className="mt-0.5 h-5 w-5 rounded-full bg-[#F97416]/10 text-[#F97416] flex items-center justify-center text-xs font-bold shrink-0">{i + 1}</span>
-                          {angle}
-                        </li>
-                      ))}
-                    </ul>
+                    <div className="space-y-2.5">
+                      {angles.map((angle: any, i: number) => {
+                        const isString = typeof angle === 'string';
+                        const title = isString ? `Angle ${i + 1}` : angle.title;
+                        const desc = isString ? angle : angle.description;
+                        return (
+                          <div key={i} style={{ backgroundColor: '#242424', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', padding: '16px' }}>
+                            <p style={{ color: '#ffffff', fontSize: '14px', fontWeight: 700, marginBottom: '6px' }}>{title}</p>
+                            <p style={{ color: '#94A3B8', fontSize: '13px', lineHeight: 1.6 }}>{desc}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
                   );
                 })()}
               </div>
 
+              {/* Important note */}
+              <div style={{ backgroundColor: 'rgba(249,116,22,0.08)', border: '1px solid rgba(249,116,22,0.2)', borderRadius: '8px', padding: '16px' }}>
+                <p style={{ color: '#94A3B8', fontSize: '13px', lineHeight: 1.6 }}>
+                  <strong style={{ color: '#ffffff' }}>Write this yourself</strong> — authenticity is everything. AI-written posts get ignored. We give you the angle, you write the words.
+                </p>
+              </div>
+
               {/* Playbook */}
               <div className="space-y-3">
-                <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider">PrepLane's LinkedIn playbook</p>
-                <div className="rounded-xl p-4 space-y-3 text-sm text-[#94A3B8]" style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px' }}>
-                  <p>✍️ <strong>Write it yourself</strong> — authenticity is detectable. AI-written posts get ignored.</p>
-                  <p>🕐 <strong>Post in real time, never schedule</strong> — scheduled posts get less reach</p>
-                  <p>💬 <strong>Answer every comment within the first hour</strong> — early interaction is gold for the algorithm</p>
-                  <p>🔗 <strong>Put links in the comments, never in the post</strong> — LinkedIn suppresses posts with external links</p>
-                  <p>🏷️ <strong>Use 3–5 relevant hashtags</strong> — no more, no less</p>
-                  <p>👥 <strong>Tag people mentioned in your work</strong> — but only if it adds value, not just for reach</p>
-                  <p>📅 <strong>Post consistently</strong> — once a week minimum, same days if possible</p>
-                  <p>💡 <strong>Leave genuine comments on others' posts daily</strong> — this increases your own reach significantly</p>
+                <p style={{ color: '#F97416', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>PrepLane's LinkedIn playbook</p>
+                <div style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '16px' }} className="space-y-3">
+                  <p style={{ color: '#94A3B8', fontSize: '13px' }}><strong style={{ color: '#ffffff' }}>Write it yourself</strong> — authenticity is detectable. AI-written posts get ignored.</p>
+                  <p style={{ color: '#94A3B8', fontSize: '13px' }}><strong style={{ color: '#ffffff' }}>Post in real time, never schedule</strong> — scheduled posts get less reach.</p>
+                  <p style={{ color: '#94A3B8', fontSize: '13px' }}><strong style={{ color: '#ffffff' }}>Answer every comment within the first hour</strong> — early interaction is gold for the algorithm.</p>
+                  <p style={{ color: '#94A3B8', fontSize: '13px' }}><strong style={{ color: '#ffffff' }}>Put links in the comments, never in the post</strong> — LinkedIn suppresses posts with external links.</p>
+                  <p style={{ color: '#94A3B8', fontSize: '13px' }}><strong style={{ color: '#ffffff' }}>Use 3–5 relevant hashtags</strong> — no more, no less.</p>
+                  <p style={{ color: '#94A3B8', fontSize: '13px' }}><strong style={{ color: '#ffffff' }}>Tag people mentioned in your work</strong> — but only if it adds value, not just for reach.</p>
+                  <p style={{ color: '#94A3B8', fontSize: '13px' }}><strong style={{ color: '#ffffff' }}>Post consistently</strong> — once a week minimum, same days if possible.</p>
+                  <p style={{ color: '#94A3B8', fontSize: '13px' }}><strong style={{ color: '#ffffff' }}>Leave genuine comments on others' posts daily</strong> — this increases your own reach significantly.</p>
                 </div>
               </div>
 
+              {/* CTA */}
               {campaign.step_linkedin_done ? (
                 <div className="flex items-center gap-2 text-success font-medium text-sm">
                   <Check className="h-5 w-5" />
