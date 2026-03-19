@@ -208,6 +208,26 @@ const BriefNavigator = ({ proofBrief, company, onStartBuilding, onContinueCampai
                 );
               })}
             </div>
+            {/* Loom explainer card */}
+            <div style={{
+              background: '#242424',
+              border: '1px solid rgba(255,255,255,0.06)',
+              borderRadius: '8px',
+              padding: '16px',
+              marginTop: '12px',
+            }}>
+              <p style={{ color: '#FFFFFF', fontSize: '13px', fontWeight: 600, marginBottom: '8px' }}>What is Loom?</p>
+              <p style={{ color: '#94A3B8', fontSize: '13px', lineHeight: 1.6 }}>
+                Loom is a free screen recording tool. You record your screen while talking through what you built. It takes 2 minutes and gives you a link to share instantly — no editing needed.
+              </p>
+              <p style={{ color: '#94A3B8', fontSize: '13px', lineHeight: 1.6, marginTop: '8px' }}>
+                Why it works: a founder watching you explain your thinking is 10x more compelling than a document they have to open and read.
+              </p>
+              <p style={{ color: '#94A3B8', fontSize: '13px', lineHeight: 1.6, marginTop: '8px' }}>
+                → Get Loom free at{' '}
+                <a href="https://www.loom.com" target="_blank" rel="noopener noreferrer" style={{ color: '#F97316', fontWeight: 600, textDecoration: 'none' }}>loom.com</a>
+              </p>
+            </div>
             <p style={{ color: '#22c55e', fontSize: '13px', marginTop: '20px', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Check className="h-3.5 w-3.5" style={{ color: '#22c55e' }} />
               All tools listed are free or freemium — no budget needed.
