@@ -238,8 +238,11 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
       return;
     }
     const { data: urlData } = supabase.storage.from("proof-cards").getPublicUrl(path);
-    setImageUrl(urlData.publicUrl);
+    const newUrl = urlData.publicUrl;
+    setImageUrl(newUrl);
     setUploading(false);
+    // Auto-save after image upload
+    setTimeout(() => saveDraft({ ...getCurrentFields(), imageUrl: newUrl }), 0);
   };
 
   const handleGenerate = async () => {
