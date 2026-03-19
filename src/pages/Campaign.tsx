@@ -246,9 +246,10 @@ const Campaign = () => {
 
   const strengthScore = campaign
     ? [
-        { done: !!campaign.proof_suggestion, weight: 25 },
-        { done: campaign.step_proof_done, weight: 35 },
-        { done: campaign.step_linkedin_done, weight: 20 },
+        { done: !!campaign.proof_suggestion, weight: 20 },
+        { done: campaign.step_proof_done, weight: 30 },
+        { done: campaign.step_linkedin_done, weight: 15 },
+        { done: completedSteps.has(3), weight: 15 },
         { done: campaign.step_outreach_done, weight: 20 },
       ].reduce((sum, s) => sum + (s.done ? s.weight : 0), 0)
     : 0;
