@@ -43,6 +43,8 @@ import {
   ArrowRight,
   Archive,
   Hammer,
+  Pencil,
+  Copy,
 } from "lucide-react";
 
 interface CampaignData {
@@ -500,7 +502,7 @@ const Campaign = () => {
         >
           {currentStep === 0 && <Step1Content campaign={campaign} proofSuggestion={proofSuggestion} generating={generating} generateContent={generateContent} toast={toast} updateCampaign={updateCampaign} />}
           {currentStep === 1 && <Step2Content campaign={campaign} proofSuggestion={proofSuggestion} getProofHook={getProofHook} getProofTitle={getProofTitle} />}
-          {currentStep === 2 && <Step3Content campaign={campaign} proofSuggestion={proofSuggestion} generating={generating} generateContent={generateContent} />}
+          {currentStep === 2 && <Step3Content campaign={campaign} proofSuggestion={proofSuggestion} generating={generating} generateContent={generateContent} getProofHook={getProofHook} toast={toast} />}
           {currentStep === 3 && <Step4Content campaign={campaign} connectionName={connectionName} setConnectionName={setConnectionName} connectionUrl={connectionUrl} setConnectionUrl={setConnectionUrl} outreachMessage={outreachMessage} setOutreachMessage={setOutreachMessage} companyInput={companyInput} setCompanyInput={setCompanyInput} generating={generating} generateContent={generateContent} updateCampaign={updateCampaign} getProofHook={getProofHook} toast={toast} />}
         </div>
 
@@ -659,7 +661,45 @@ function Step2Content({ campaign, proofSuggestion, getProofHook, getProofTitle }
 }
 
 // ==================== STEP 3: LinkedIn ====================
-function Step3Content({ campaign, proofSuggestion, generating, generateContent }: any) {
+const WRITING_STYLES = ["Direct and punchy", "Conversational", "Formal", "Casual and personal"];
+
+function Step3Content({ campaign, proofSuggestion, generating, generateContent, getProofHook, toast }: any) {
+  const [selectedStyle, setSelectedStyle] = useState("Direct and punchy");
+  const [selectedAngle, setSelectedAngle] = useState<string | null>(null);
+  const [generatedPost, setGeneratedPost] = useState("");
+  const [generatingPost, setGeneratingPost] = useState(false);
+
+  const handleGeneratePost = async () => {
+    const hook = getProofHook();
+    if (!hook) {
+      toast({ title: "Complete your proof of work first", variant: "destructive" });
+      return;
+    }
+    setGeneratingPost(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-linkedin-post", {
+        body: {
+          company: campaign.company,
+          role: campaign.role,
+          outreachHook: hook,
+          writingStyle: selectedStyle,
+          selectedAngle: selectedAngle || undefined,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setGeneratedPost(data.post || "");
+    } catch (e: any) {
+      toast({ title: e.message || "Failed to generate post", variant: "destructive" });
+    } finally {
+      setGeneratingPost(false);
+    }
+  };
+
+  // Parse angles for selection
+  let angles: any[] | null = null;
+  try { angles = JSON.parse(campaign.linkedin_angles || "null"); } catch {}
+
   return (
     <div className="space-y-6">
       <div>
@@ -707,28 +747,131 @@ function Step3Content({ campaign, proofSuggestion, generating, generateContent }
           <p style={{ color: '#F97416', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>What to write about</p>
           <Button size="sm" variant="outline" className="bg-transparent text-white border-white/15 hover:bg-white/5" style={{ borderRadius: '8px' }} onClick={() => generateContent("linkedin_angles")} disabled={!!generating || !proofSuggestion}>
             {generating === "linkedin_angles" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
-            {(() => { try { return JSON.parse(campaign.linkedin_angles || "null") ? "Regenerate angles" : "Generate angles"; } catch { return "Generate angles"; } })()}
+            {angles ? "Regenerate angles" : "Generate angles"}
           </Button>
         </div>
         {!proofSuggestion && <p style={{ color: '#94A3B8', fontSize: '12px' }}>Complete your proof of work first.</p>}
-        {(() => {
-          let angles: any[] | null = null;
-          try { angles = JSON.parse(campaign.linkedin_angles || "null"); } catch {}
-          if (!angles) return null;
-          return (
-            <div className="space-y-2.5">
-              {angles.map((angle: any, i: number) => {
-                const isString = typeof angle === 'string';
-                return (
-                  <div key={i} style={{ backgroundColor: '#242424', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', padding: '16px' }}>
-                    <p style={{ color: '#ffffff', fontSize: '14px', fontWeight: 700, marginBottom: '6px' }}>{isString ? `Angle ${i + 1}` : angle.title}</p>
-                    <p style={{ color: '#94A3B8', fontSize: '13px', lineHeight: 1.6 }}>{isString ? angle : angle.description}</p>
-                  </div>
-                );
-              })}
+        {angles && (
+          <div className="space-y-2.5">
+            {angles.map((angle: any, i: number) => {
+              const isString = typeof angle === 'string';
+              const title = isString ? `Angle ${i + 1}` : angle.title;
+              const description = isString ? angle : angle.description;
+              const isSelected = selectedAngle === (isString ? angle : angle.title + ": " + angle.description);
+              return (
+                <button
+                  key={i}
+                  onClick={() => setSelectedAngle(isSelected ? null : (isString ? angle : angle.title + ": " + angle.description))}
+                  style={{
+                    backgroundColor: isSelected ? 'rgba(249,116,22,0.12)' : '#242424',
+                    border: isSelected ? '1px solid #F97416' : '1px solid rgba(255,255,255,0.06)',
+                    borderRadius: '8px',
+                    padding: '16px',
+                    width: '100%',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <p style={{ color: '#ffffff', fontSize: '14px', fontWeight: 700, marginBottom: '6px' }}>{title}</p>
+                  <p style={{ color: '#94A3B8', fontSize: '13px', lineHeight: 1.6 }}>{description}</p>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* GENERATE A DRAFT POST */}
+      <div style={{ marginTop: '24px' }}>
+        <p style={{ color: '#F97416', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '16px' }}>Generate a draft post</p>
+
+        <div style={{ marginBottom: '16px' }}>
+          <label style={{ color: '#ffffff', fontSize: '13px', fontWeight: 500, display: 'block', marginBottom: '10px' }}>
+            How would you describe your writing style?
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {WRITING_STYLES.map((style) => (
+              <button
+                key={style}
+                onClick={() => setSelectedStyle(style)}
+                style={{
+                  backgroundColor: selectedStyle === style ? '#F97416' : '#242424',
+                  color: selectedStyle === style ? '#ffffff' : '#94A3B8',
+                  border: 'none',
+                  borderRadius: '20px',
+                  padding: '8px 16px',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                {style}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <Button
+          onClick={handleGeneratePost}
+          disabled={generatingPost || !proofSuggestion}
+          style={{ backgroundColor: '#F97416', borderRadius: '8px' }}
+          className="text-white font-bold"
+        >
+          {generatingPost ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+          Generate my draft post →
+        </Button>
+
+        {generatedPost && (
+          <div style={{ marginTop: '20px' }} className="space-y-4">
+            {/* Warning card */}
+            <div style={{
+              backgroundColor: 'rgba(249,116,22,0.12)',
+              border: '2px solid #F97416',
+              borderRadius: '8px',
+              padding: '16px',
+              display: 'flex',
+              gap: '12px',
+              alignItems: 'flex-start',
+            }}>
+              <Pencil className="h-5 w-5 flex-shrink-0" style={{ color: '#F97416', marginTop: '2px' }} />
+              <p style={{ color: '#ffffff', fontSize: '14px', fontWeight: 600, lineHeight: 1.6 }}>
+                This is a starting point — not your post.
+                Rewrite it in your own words before you publish. Authentic posts get 10x more engagement than AI-written ones.
+                The angle is right. The words should be yours.
+              </p>
             </div>
-          );
-        })()}
+
+            {/* Generated post textarea */}
+            <Textarea
+              value={generatedPost}
+              onChange={(e) => setGeneratedPost(e.target.value)}
+              className="campaign-notes-textarea"
+              style={{
+                backgroundColor: '#1A1A1A',
+                border: '1px solid #F97416',
+                borderRadius: '8px',
+                padding: '16px',
+                color: 'white',
+                fontSize: '14px',
+                lineHeight: 1.7,
+                minHeight: '200px',
+              }}
+            />
+
+            {/* Copy button */}
+            <Button
+              variant="outline"
+              className="bg-transparent text-white border-white/15 hover:bg-white/5"
+              style={{ borderRadius: '8px' }}
+              onClick={() => { navigator.clipboard.writeText(generatedPost); toast({ title: "Draft copied!" }); }}
+            >
+              <Copy className="h-4 w-4 mr-2" />
+              Copy draft →
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Important note */}
