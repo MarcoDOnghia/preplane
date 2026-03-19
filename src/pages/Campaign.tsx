@@ -348,7 +348,7 @@ const Campaign = () => {
 
   if (loading || !campaign) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen" style={{ backgroundColor: '#111111' }}>
         <Header />
         <div className="flex items-center justify-center py-20">
           <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
