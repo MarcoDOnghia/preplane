@@ -43,6 +43,8 @@ import {
   ArrowRight,
   Archive,
   Hammer,
+  Pencil,
+  Copy,
 } from "lucide-react";
 
 interface CampaignData {
