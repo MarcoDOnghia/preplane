@@ -468,14 +468,14 @@ const Campaign = () => {
             onToggle={() => toggleStep(0)}
           >
             <div className="space-y-3">
-              <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+              <div className="rounded-xl p-4 space-y-2" style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px' }}>
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Company</p>
-                  <p className="text-sm font-semibold">{campaign.company || "Not set"}</p>
+                  <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">Company</p>
+                  <p className="text-sm font-semibold text-white">{campaign.company || "Not set"}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Role</p>
-                  <p className="text-sm font-semibold">{campaign.role || "Not set"}</p>
+                  <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">Role</p>
+                  <p className="text-sm font-semibold text-white">{campaign.role || "Not set"}</p>
                 </div>
                 {campaign.match_score > 0 && (
                   <div>
