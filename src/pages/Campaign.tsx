@@ -431,9 +431,9 @@ const Campaign = () => {
 
         {/* Pre-apply banner */}
         {!bannerDismissed && (
-          <div className="relative rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 px-4 py-3 flex items-start gap-3">
-            <Info className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
-            <p className="text-sm text-blue-800 dark:text-blue-200 flex-1">
+          <div className="relative rounded-xl px-4 py-3 flex items-start gap-3" style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px' }}>
+            <Info className="h-4 w-4 text-[#F97416] mt-0.5 shrink-0" />
+            <p className="text-sm text-[#94A3B8] flex-1">
               These steps are designed to be completed before you formally apply. A warm introduction and a proof of work will make your application 10x more memorable than a cold CV submission.
             </p>
             <button onClick={dismissBanner} className="text-blue-400 hover:text-blue-600 shrink-0">
