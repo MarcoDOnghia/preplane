@@ -93,29 +93,9 @@ const Onboarding = () => {
       setReady(true);
       return;
     }
-    // Logged-in user — check if onboarding done
-    supabase
-      .from("profiles")
-      .select("onboarding_completed, target_role, target_location, target_start")
-      .eq("user_id", user.id)
-      .single()
-      .then(({ data }) => {
-        if (!data) { setReady(true); return; }
-        const d = data as any;
-        if (d.onboarding_completed) {
-          setIsReturning(true);
-          setStep(2); // Let them edit target
-          if (d.target_role) setTargetRole(d.target_role);
-          if (d.target_location) setTargetLocation(d.target_location);
-          if (d.target_start) setTargetStart(d.target_start);
-        } else {
-          // Logged in but didn't finish onboarding — start fresh
-          if (d.target_role) setTargetRole(d.target_role);
-          if (d.target_location) setTargetLocation(d.target_location);
-          if (d.target_start) setTargetStart(d.target_start);
-        }
-        setReady(true);
-      });
+    // Logged-in user — redirect to dashboard
+    navigate("/app", { replace: true });
+    return;
   }, [user, sessionLoading]);
 
   // After OAuth sign-in, user state changes — save target and go to app
