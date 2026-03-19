@@ -526,10 +526,10 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
       <FieldGroup label="Key assumption" helper='One sentence: this works if...'>
         <Input
           value={assumption}
-          onChange={(e) => setAssumption(e.target.value.slice(0, 140))}
+          onChange={(e) => { const v = e.target.value.slice(0, 140); updateField(setAssumption, v, { assumption: v }); }}
+          onBlur={handleBlurSave}
           maxLength={140}
           placeholder={`This works if ${company} is prioritizing...`}
-          className="campaign-notes-textarea"
           style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: 'white' }}
         />
         <p style={{ color: '#64748B', fontSize: '11px', textAlign: 'right', marginTop: '4px' }}>{assumption.length}/140</p>
