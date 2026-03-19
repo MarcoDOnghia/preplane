@@ -479,7 +479,7 @@ const Campaign = () => {
                 </div>
                 {campaign.match_score > 0 && (
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Match Score</p>
+                    <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">Match Score</p>
                     <p className={`text-sm font-semibold ${campaign.match_score >= 80 ? "text-success" : campaign.match_score >= 60 ? "text-yellow-500" : "text-destructive"}`}>
                       {campaign.match_score}%
                     </p>
