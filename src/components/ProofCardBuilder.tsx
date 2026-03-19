@@ -549,10 +549,10 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
           <div>
             <Textarea
               value={next48h}
-              onChange={(e) => setNext48h(e.target.value)}
+              onChange={(e) => updateField(setNext48h, e.target.value, { next48h: e.target.value })}
+              onBlur={handleBlurSave}
               rows={3}
               className="campaign-notes-textarea"
-              style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: 'white', fontSize: '14px' }}
             />
             {!next48hValid && next48h.length > 0 && (
               <p style={{ color: '#eab308', fontSize: '12px', marginTop: '4px' }}>Include a specific deliverable (list, variants, plan, model, repo, file, demo, etc.)</p>
