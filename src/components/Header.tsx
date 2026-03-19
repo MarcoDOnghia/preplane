@@ -74,6 +74,13 @@ const Header = () => {
             >
               My Campaigns
             </button>
+            <span
+              className="text-sm font-medium flex items-center gap-1.5 px-4 py-2"
+              style={{ color: '#64748B', cursor: 'default' }}
+            >
+              CV Workspace
+              <span style={{ background: 'rgba(249,116,22,0.15)', color: '#F97416', fontSize: '10px', borderRadius: '4px', padding: '2px 6px', fontWeight: 600 }}>Soon</span>
+            </span>
           </nav>
         )}
 
