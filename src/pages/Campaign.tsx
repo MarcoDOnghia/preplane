@@ -955,8 +955,8 @@ const Campaign = () => {
               placeholder="Reflect on this campaign..."
               className="text-sm"
             />
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </main>
     </div>
   );
