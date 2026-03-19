@@ -559,7 +559,7 @@ const Campaign = () => {
                             </div>
                             {parsed.effort_guide && (
                               <div>
-                                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Effort Guide</p>
+                                <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-2">Effort Guide</p>
                                 <div className="space-y-2">
                                   <div className="rounded-md border border-[rgba(255,255,255,0.08)] p-3" style={{ background: "#1A1A1A" }}>
                                     <p className="text-xs font-semibold text-[#F97316] mb-0.5">Minimum (gets noticed)</p>
