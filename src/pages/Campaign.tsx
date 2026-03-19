@@ -212,13 +212,25 @@ const Campaign = () => {
     if (c.step_proof_done) done.add(1);
     // Step 2: LinkedIn posted
     if (c.step_linkedin_done) done.add(2);
-    // Step 3: Outreach sent
-    if (c.step_outreach_done) done.add(3);
+    // Step 3: Proof Card — check if a proof card exists for this campaign
+    // (will be checked async below)
+    // Step 4: Outreach sent
+    if (c.step_outreach_done) done.add(4);
     setCompletedSteps(done);
 
+    // Check if proof card exists
+    const { data: proofCard } = await supabase
+      .from("proof_cards")
+      .select("id, published")
+      .eq("campaign_id", c.id)
+      .eq("user_id", c.user_id)
+      .maybeSingle();
+    if (proofCard) done.add(3);
+    setCompletedSteps(new Set(done));
+
     // Auto-navigate to next incomplete step
-    const nextIncomplete = [0, 1, 2, 3].find((i) => !done.has(i));
-    setCurrentStep(nextIncomplete ?? 3);
+    const nextIncomplete = [0, 1, 2, 3, 4].find((i) => !done.has(i));
+    setCurrentStep(nextIncomplete ?? 4);
     setLoading(false);
   };
 
