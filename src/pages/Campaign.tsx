@@ -940,6 +940,48 @@ function Step3Content({ campaign, proofSuggestion, generating, generateContent, 
 
 // ==================== STEP 4: Outreach ====================
 function Step4Content({ campaign, connectionName, setConnectionName, connectionUrl, setConnectionUrl, outreachMessage, setOutreachMessage, companyInput, setCompanyInput, generating, generateContent, updateCampaign, getProofHook, toast }: any) {
+  const { user } = useAuth();
+  const [proofCard, setProofCard] = useState<any>(null);
+  const [proofCardLoading, setProofCardLoading] = useState(true);
+  const [selectedSubject, setSelectedSubject] = useState(0);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("proof_cards")
+      .select("*")
+      .eq("campaign_id", campaign.id)
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data && data.published) setProofCard(data);
+        setProofCardLoading(false);
+      });
+  }, [campaign.id, user]);
+
+  const proofCardUrl = proofCard ? `${window.location.origin}/p/${proofCard.slug}` : null;
+  const contactName = connectionName || "{Name}";
+  const oneLiner = proofCard?.one_liner || "{deliverable}";
+  // Extract outcome from one-liner if possible (after "to ")
+  const outcomeMatch = oneLiner.match(/\bto\s+(.+)/i);
+  const outcome = outcomeMatch ? outcomeMatch[1].replace(/[."]+$/, "") : "{outcome}";
+
+  const connectionNote = `Hey ${contactName} — I built ${oneLiner.startsWith("I built") ? oneLiner.slice(8) : oneLiner} for ${campaign.company}. Would love to share what I found and get your take.`;
+
+  const dmMessage = `Hey ${contactName} — I built ${oneLiner.startsWith("I built") ? oneLiner.slice(8) : oneLiner} for ${campaign.company} focused on ${outcome}.\n\n60-sec proof card: ${proofCardUrl || "[add your Proof Card link here]"}\n\nCould you reply with 1 piece of feedback — what's the biggest flaw?\n\nIf irrelevant, I'll disappear.`;
+
+  const subjectOptions = [
+    `Proof of Work for ${campaign.company} (quick feedback?)`,
+    `60-sec PoW for ${campaign.company}`,
+  ];
+
+  const copyText = (text: string, field: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -948,6 +990,47 @@ function Step4Content({ campaign, connectionName, setConnectionName, connectionU
           Find the right person at {campaign.company} and reach out with your proof of work.
         </p>
       </div>
+
+      {/* Proof Card status */}
+      {!proofCardLoading && !proofCard && (
+        <div style={{ backgroundColor: 'rgba(249,116,22,0.08)', border: '1px solid rgba(249,116,22,0.2)', borderRadius: '8px', padding: '14px' }}>
+          <p style={{ color: '#F97416', fontSize: '13px' }}>
+            Build your Proof Card first — it becomes the centerpiece of your outreach. ↑ Step 4
+          </p>
+        </div>
+      )}
+
+      {proofCard && proofCardUrl && (
+        <div style={{ backgroundColor: '#1A1A1A', border: '1px solid #F97416', borderRadius: '8px', padding: '12px 16px' }}>
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <p style={{ color: '#ffffff', fontSize: '13px' }}>
+              Your Proof Card: <strong>{proofCardUrl.replace(window.location.origin, 'preplane.co')}</strong>
+            </p>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(`60-sec proof card (no login): ${proofCardUrl}`);
+                setCopiedField("proof-link");
+                setTimeout(() => setCopiedField(null), 2000);
+              }}
+              style={{
+                backgroundColor: 'transparent',
+                border: '1px solid #F97416',
+                color: '#F97416',
+                borderRadius: '8px',
+                padding: '6px 12px',
+                fontSize: '12px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+              }}
+            >
+              {copiedField === "proof-link" ? <><Check className="h-3 w-3" /> Copied!</> : <><Copy className="h-3 w-3" /> Copy link + description</>}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Who to look for */}
       <div className="space-y-3">
@@ -977,28 +1060,61 @@ function Step4Content({ campaign, connectionName, setConnectionName, connectionU
         </div>
       </div>
 
-      {/* Outreach message */}
+      {/* VERSION 1 — Connection request note */}
       <div className="space-y-3">
-        <p style={{ color: '#F97416', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>Your outreach message</p>
-        {!getProofHook() ? (
-          <div style={{ backgroundColor: 'rgba(249,116,22,0.08)', border: '1px solid rgba(249,116,22,0.2)', borderRadius: '8px', padding: '16px' }}>
-            <p className="font-semibold text-white text-sm">Generate your Proof of Work first — your outreach needs to lead with something real.</p>
-            <p className="text-[#94A3B8] text-xs mt-1">Your PoW brief includes an outreach hook that becomes the opening line.</p>
-          </div>
-        ) : (
-          <Button size="sm" onClick={() => generateContent("outreach")} disabled={!!generating}>
-            {generating === "outreach" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
-            Generate outreach message
-          </Button>
-        )}
-        {outreachMessage && (
-          <div className="space-y-2">
-            <Textarea value={outreachMessage} onChange={(e) => setOutreachMessage(e.target.value)} onBlur={() => updateCampaign({ outreach_message: outreachMessage })} rows={5} className="text-sm" />
-            <Button size="sm" variant="outline" className="bg-transparent text-white border-white/15 hover:bg-white/5" style={{ borderRadius: '8px' }} onClick={() => { navigator.clipboard.writeText(outreachMessage); toast({ title: "Copied to clipboard!" }); }}>
-              Copy message
-            </Button>
-          </div>
-        )}
+        <p style={{ color: '#F97416', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>CONNECTION REQUEST NOTE</p>
+        <p style={{ color: '#64748B', fontSize: '12px', lineHeight: 1.5 }}>
+          Send with your connection request. No link — LinkedIn limits notes to 300 characters. Just the hook.
+        </p>
+        <div style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '14px' }}>
+          <p style={{ color: '#ffffff', fontSize: '14px', lineHeight: 1.7 }}>{connectionNote}</p>
+        </div>
+        <Button size="sm" variant="outline" className="bg-transparent text-white border-white/15 hover:bg-white/5" style={{ borderRadius: '8px' }} onClick={() => copyText(connectionNote, "conn")}>
+          {copiedField === "conn" ? <><Check className="h-4 w-4 mr-1" /> Copied!</> : <><Copy className="h-4 w-4 mr-1" /> Copy note</>}
+        </Button>
+      </div>
+
+      {/* VERSION 2 — DM after connecting */}
+      <div className="space-y-3">
+        <p style={{ color: '#F97416', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>DM AFTER THEY ACCEPT</p>
+        <p style={{ color: '#64748B', fontSize: '12px', lineHeight: 1.5 }}>
+          Send once they accept. This is your main message.
+        </p>
+        <div style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '14px' }}>
+          <p style={{ color: '#ffffff', fontSize: '14px', lineHeight: 1.7, whiteSpace: 'pre-line' }}>{dmMessage}</p>
+        </div>
+        <Button size="sm" variant="outline" className="bg-transparent text-white border-white/15 hover:bg-white/5" style={{ borderRadius: '8px' }} onClick={() => copyText(dmMessage, "dm")}>
+          {copiedField === "dm" ? <><Check className="h-4 w-4 mr-1" /> Copied!</> : <><Copy className="h-4 w-4 mr-1" /> Copy message</>}
+        </Button>
+      </div>
+
+      {/* EMAIL SUBJECT OPTIONS */}
+      <div className="space-y-3">
+        <p style={{ color: '#F97416', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>EMAIL SUBJECT</p>
+        <div className="flex flex-wrap gap-2">
+          {subjectOptions.map((subj, i) => (
+            <button
+              key={i}
+              onClick={() => setSelectedSubject(i)}
+              style={{
+                backgroundColor: selectedSubject === i ? '#F97416' : '#242424',
+                color: selectedSubject === i ? '#ffffff' : '#94A3B8',
+                border: 'none',
+                borderRadius: '20px',
+                padding: '8px 16px',
+                fontSize: '13px',
+                fontWeight: 500,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              {subj}
+            </button>
+          ))}
+        </div>
+        <Button size="sm" variant="outline" className="bg-transparent text-white border-white/15 hover:bg-white/5" style={{ borderRadius: '8px' }} onClick={() => copyText(subjectOptions[selectedSubject], "subj")}>
+          {copiedField === "subj" ? <><Check className="h-4 w-4 mr-1" /> Copied!</> : <><Copy className="h-4 w-4 mr-1" /> Copy subject</>}
+        </Button>
       </div>
     </div>
   );
