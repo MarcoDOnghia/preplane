@@ -421,9 +421,9 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
               onChange={(e) => {
                 const next = [...findings];
                 next[i] = e.target.value.slice(0, 120);
-                setFindings(next);
+                updateField(setFindings, next, { findings: next });
               }}
-              maxLength={120}
+              onBlur={handleBlurSave}
               placeholder={`Finding ${i + 1}`}
               className="campaign-notes-textarea"
               style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: 'white' }}
