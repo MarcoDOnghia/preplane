@@ -596,13 +596,13 @@ const Campaign = () => {
                       // Legacy format
                       return (
                         <div className="space-y-4 rounded-xl p-4" style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px' }}>
-                          <h4 className="font-semibold text-base">{parsed.title}</h4>
+                          <h4 className="font-semibold text-base text-white">{parsed.title}</h4>
                           <div>
-                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Why this works</p>
-                            <p className="text-sm">{parsed.why_this_works}</p>
+                            <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">Why this works</p>
+                            <p className="text-sm text-[#94A3B8]">{parsed.why_this_works}</p>
                           </div>
                           <div>
-                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">What to build</p>
+                            <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">What to build</p>
                             <ul className="list-disc pl-5 space-y-1">
                               {(parsed.what_to_build as string[]).map((b: string, i: number) => (
                                 <li key={i} className="text-sm">{b}</li>
