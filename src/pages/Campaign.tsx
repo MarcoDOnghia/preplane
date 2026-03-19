@@ -554,8 +554,8 @@ const Campaign = () => {
                               </p>
                             </div>
                             <div>
-                              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">What the Final Output Should Look Like</p>
-                              <p className="text-sm">{parsed.final_output}</p>
+                              <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">What the Final Output Should Look Like</p>
+                              <p className="text-sm text-[#94A3B8]">{parsed.final_output}</p>
                             </div>
                             {parsed.effort_guide && (
                               <div>
