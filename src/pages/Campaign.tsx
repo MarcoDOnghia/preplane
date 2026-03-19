@@ -786,12 +786,12 @@ function Step4Content({ campaign, connectionName, setConnectionName, connectionU
       {/* Contact inputs */}
       <div className="space-y-3">
         <div>
-          <label style={{ color: '#ffffff', fontSize: '14px', fontWeight: 500 }}>Name of someone at {campaign.company}</label>
-          <Input value={connectionName} onChange={(e) => setConnectionName(e.target.value)} onBlur={() => updateCampaign({ connection_name: connectionName || null })} placeholder="e.g. Sarah Chen" className="mt-1" />
+          <label style={{ color: '#ffffff', fontSize: '13px', fontWeight: 500 }}>Name of someone at {campaign.company}</label>
+          <Input value={connectionName} onChange={(e) => setConnectionName(e.target.value)} onBlur={() => updateCampaign({ connection_name: connectionName || null })} placeholder="e.g. Sarah Chen" className="mt-1 campaign-notes-textarea" style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: 'white' }} />
         </div>
         <div>
-          <label style={{ color: '#ffffff', fontSize: '14px', fontWeight: 500 }}>Their LinkedIn URL (optional)</label>
-          <Input value={connectionUrl} onChange={(e) => setConnectionUrl(e.target.value)} onBlur={() => updateCampaign({ connection_url: connectionUrl || null })} placeholder="https://linkedin.com/in/..." className="mt-1" />
+          <label style={{ color: '#ffffff', fontSize: '13px', fontWeight: 500 }}>Their LinkedIn URL (optional)</label>
+          <Input value={connectionUrl} onChange={(e) => setConnectionUrl(e.target.value)} onBlur={() => updateCampaign({ connection_url: connectionUrl || null })} placeholder="https://linkedin.com/in/..." className="mt-1 campaign-notes-textarea" style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: 'white' }} />
         </div>
       </div>
 
