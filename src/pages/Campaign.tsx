@@ -531,18 +531,18 @@ const Campaign = () => {
                     try { parsed = JSON.parse(proofSuggestion); } catch { /* legacy plain text */ }
                     if (parsed && (parsed.project || parsed.title) && (parsed.build_steps || parsed.what_to_build)) {
                       if (parsed.build_steps) {
-                        return (
-                          <div className="space-y-5 rounded-lg border p-4 bg-muted/30">
+                      return (
+                          <div className="space-y-5 rounded-xl p-4" style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px' }}>
                             <div>
-                              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">The Project</p>
-                              <p className="text-sm font-semibold">{parsed.project}</p>
+                              <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">The Project</p>
+                              <p className="text-sm font-semibold text-white">{parsed.project}</p>
                             </div>
                             <div>
-                              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Why This Works</p>
-                              <p className="text-sm">{parsed.why_this_works}</p>
+                              <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">Why This Works</p>
+                              <p className="text-sm text-[#94A3B8]">{parsed.why_this_works}</p>
                             </div>
                             <div>
-                              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">How to Build It — Step by Step</p>
+                              <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">How to Build It — Step by Step</p>
                               <ol className="list-decimal pl-5 space-y-2">
                                 {(parsed.build_steps as string[]).map((step: string, i: number) => (
                                   <li key={i} className="text-sm">{step}</li>
