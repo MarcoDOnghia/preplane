@@ -89,6 +89,7 @@ const WIZARD_STEPS = [
   { label: "PoW Brief", icon: Lightbulb },
   { label: "Build It", icon: Hammer },
   { label: "LinkedIn", icon: Users },
+  { label: "Proof Card", icon: CreditCard },
   { label: "Outreach", icon: Send },
 ];
 
@@ -114,6 +115,13 @@ const STEP_CONFIRMATIONS = [
     confirmLabel: "Yes, I posted it →",
     confirmColor: "#22c55e",
     cancelLabel: "I'll skip this time",
+  },
+  {
+    headline: "Did you create your Proof Card?",
+    subtext: "This is the link you'll send. Without it, your outreach has no artifact to scan.",
+    confirmLabel: "Yes, my card is ready →",
+    confirmColor: "#F97416",
+    cancelLabel: "Let me finish it first",
   },
   {
     headline: "Did you send your outreach?",
