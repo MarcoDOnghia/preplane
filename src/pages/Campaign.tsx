@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import { supabase } from "@/integrations/supabase/client";
 import { getAuthHeader } from "@/lib/auth";
 import BriefNavigator from "@/components/BriefNavigator";
+import ProofCardBuilder from "@/components/ProofCardBuilder";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,7 @@ import {
   Hammer,
   Pencil,
   Copy,
+  CreditCard,
 } from "lucide-react";
 
 interface CampaignData {
@@ -87,6 +89,7 @@ const WIZARD_STEPS = [
   { label: "PoW Brief", icon: Lightbulb },
   { label: "Build It", icon: Hammer },
   { label: "LinkedIn", icon: Users },
+  { label: "Proof Card", icon: CreditCard },
   { label: "Outreach", icon: Send },
 ];
 
@@ -112,6 +115,13 @@ const STEP_CONFIRMATIONS = [
     confirmLabel: "Yes, I posted it →",
     confirmColor: "#22c55e",
     cancelLabel: "I'll skip this time",
+  },
+  {
+    headline: "Did you create your Proof Card?",
+    subtext: "This is the link you'll send. Without it, your outreach has no artifact to scan.",
+    confirmLabel: "Yes, my card is ready →",
+    confirmColor: "#F97416",
+    cancelLabel: "Let me finish it first",
   },
   {
     headline: "Did you send your outreach?",
@@ -202,13 +212,25 @@ const Campaign = () => {
     if (c.step_proof_done) done.add(1);
     // Step 2: LinkedIn posted
     if (c.step_linkedin_done) done.add(2);
-    // Step 3: Outreach sent
-    if (c.step_outreach_done) done.add(3);
+    // Step 3: Proof Card — check if a proof card exists for this campaign
+    // (will be checked async below)
+    // Step 4: Outreach sent
+    if (c.step_outreach_done) done.add(4);
     setCompletedSteps(done);
 
+    // Check if proof card exists
+    const { data: proofCard } = await supabase
+      .from("proof_cards")
+      .select("id, published")
+      .eq("campaign_id", c.id)
+      .eq("user_id", user!.id)
+      .maybeSingle();
+    if (proofCard) done.add(3);
+    setCompletedSteps(new Set(done));
+
     // Auto-navigate to next incomplete step
-    const nextIncomplete = [0, 1, 2, 3].find((i) => !done.has(i));
-    setCurrentStep(nextIncomplete ?? 3);
+    const nextIncomplete = [0, 1, 2, 3, 4].find((i) => !done.has(i));
+    setCurrentStep(nextIncomplete ?? 4);
     setLoading(false);
   };
 
@@ -224,9 +246,10 @@ const Campaign = () => {
 
   const strengthScore = campaign
     ? [
-        { done: !!campaign.proof_suggestion, weight: 25 },
-        { done: campaign.step_proof_done, weight: 35 },
-        { done: campaign.step_linkedin_done, weight: 20 },
+        { done: !!campaign.proof_suggestion, weight: 20 },
+        { done: campaign.step_proof_done, weight: 30 },
+        { done: campaign.step_linkedin_done, weight: 15 },
+        { done: completedSteps.has(3), weight: 15 },
         { done: campaign.step_outreach_done, weight: 20 },
       ].reduce((sum, s) => sum + (s.done ? s.weight : 0), 0)
     : 0;
@@ -342,7 +365,8 @@ const Campaign = () => {
       0: "targeting",
       1: "pow_ready",
       2: "posted",
-      3: "applied",
+      3: "posted",
+      4: "applied",
     };
     const newStatus = statusMap[stepIndex];
 
@@ -351,6 +375,9 @@ const Campaign = () => {
     } else if (stepIndex === 2) {
       await updateCampaign({ step_linkedin_done: true, status: newStatus } as any);
     } else if (stepIndex === 3) {
+      // Proof card step — no campaign field update needed, card already saved
+      await updateCampaign({ status: newStatus });
+    } else if (stepIndex === 4) {
       const followDate = new Date();
       followDate.setDate(followDate.getDate() + 7);
       await updateCampaign({
@@ -368,7 +395,7 @@ const Campaign = () => {
     }
 
     // Advance to next step
-    if (stepIndex < 3) {
+    if (stepIndex < 4) {
       setTimeout(() => setCurrentStep(stepIndex + 1), 600);
     }
     setShowConfirmModal(false);
@@ -477,7 +504,7 @@ const Campaign = () => {
             );
           })}
         </div>
-        <p style={{ color: '#64748B', fontSize: '13px', textAlign: 'center' }}>Step {currentStep + 1} of 4</p>
+        <p style={{ color: '#64748B', fontSize: '13px', textAlign: 'center' }}>Step {currentStep + 1} of 5</p>
 
         {/* Campaign progress bar */}
         <div style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '16px' }}>
@@ -504,7 +531,8 @@ const Campaign = () => {
           {currentStep === 0 && <Step1Content campaign={campaign} proofSuggestion={proofSuggestion} generating={generating} generateContent={generateContent} toast={toast} updateCampaign={updateCampaign} />}
           {currentStep === 1 && <Step2Content campaign={campaign} proofSuggestion={proofSuggestion} getProofHook={getProofHook} getProofTitle={getProofTitle} />}
           {currentStep === 2 && <Step3Content campaign={campaign} proofSuggestion={proofSuggestion} generating={generating} generateContent={generateContent} getProofHook={getProofHook} toast={toast} />}
-          {currentStep === 3 && <Step4Content campaign={campaign} connectionName={connectionName} setConnectionName={setConnectionName} connectionUrl={connectionUrl} setConnectionUrl={setConnectionUrl} outreachMessage={outreachMessage} setOutreachMessage={setOutreachMessage} companyInput={companyInput} setCompanyInput={setCompanyInput} generating={generating} generateContent={generateContent} updateCampaign={updateCampaign} getProofHook={getProofHook} toast={toast} />}
+          {currentStep === 3 && <ProofCardBuilder campaignId={campaign.id} company={campaign.company} role={campaign.role} toast={toast} />}
+          {currentStep === 4 && <Step4Content campaign={campaign} connectionName={connectionName} setConnectionName={setConnectionName} connectionUrl={connectionUrl} setConnectionUrl={setConnectionUrl} outreachMessage={outreachMessage} setOutreachMessage={setOutreachMessage} companyInput={companyInput} setCompanyInput={setCompanyInput} generating={generating} generateContent={generateContent} updateCampaign={updateCampaign} getProofHook={getProofHook} toast={toast} />}
         </div>
 
         {/* Navigation buttons */}
@@ -519,10 +547,10 @@ const Campaign = () => {
           </Button>
           <Button
             onClick={handleNext}
-            style={{ backgroundColor: currentStep >= 2 ? '#22c55e' : '#F97416' }}
+            style={{ backgroundColor: currentStep >= 3 ? '#22c55e' : '#F97416' }}
             className="text-white font-semibold hover:opacity-90"
           >
-            {currentStep === 3 ? "Complete" : "Next"} <ArrowRight className="h-4 w-4 ml-1" />
+            {currentStep === 4 ? "Complete" : "Next"} <ArrowRight className="h-4 w-4 ml-1" />
           </Button>
         </div>
 
