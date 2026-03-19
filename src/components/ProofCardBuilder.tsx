@@ -424,7 +424,7 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
                 updateField(setFindings, next, { findings: next });
               }}
               onBlur={handleBlurSave}
-              placeholder={`Finding ${i + 1}`}
+              maxLength={120}
               className="campaign-notes-textarea"
               style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: 'white' }}
             />
