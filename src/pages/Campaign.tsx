@@ -503,7 +503,7 @@ const Campaign = () => {
             );
           })}
         </div>
-        <p style={{ color: '#64748B', fontSize: '13px', textAlign: 'center' }}>Step {currentStep + 1} of 4</p>
+        <p style={{ color: '#64748B', fontSize: '13px', textAlign: 'center' }}>Step {currentStep + 1} of 5</p>
 
         {/* Campaign progress bar */}
         <div style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '16px' }}>
