@@ -535,7 +535,7 @@ const Campaign = () => {
               onBlur={() => updateCampaign({ notes: notes || null })}
               rows={5}
               placeholder={"What did you build?\n\nWhat response did you get?\n\nWhat would you do differently?"}
-              className="text-sm"
+              className="text-sm campaign-notes-textarea"
               style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: 'white' }}
             />
             <p style={{ color: '#64748B', fontSize: '12px' }}>Your notes help you improve your next campaign. PrepLane learns from what works.</p>
