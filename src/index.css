@@ -204,3 +204,7 @@
 .cv-editor-content .tiptap em {
   font-style: italic;
 }
+
+.campaign-notes-textarea::placeholder {
+  color: #475569;
+}
