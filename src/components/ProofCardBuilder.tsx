@@ -230,7 +230,7 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
       return;
     }
     setUploading(true);
-    const path = `proof-cards/${campaignId}/${Date.now()}.${ext}`;
+    const path = `${user.id}/${campaignId}/${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from("proof-cards").upload(path, file);
     if (error) {
       toast({ title: "Upload failed", description: error.message, variant: "destructive" });
