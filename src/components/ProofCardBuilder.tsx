@@ -65,6 +65,8 @@ function generateSlug(company: string, role: string, firstName: string): string 
     .replace(/^-|-$/g, "");
 }
 
+type SaveStatus = "idle" | "saving" | "saved" | "error";
+
 export default function ProofCardBuilder({ campaignId, company, role, toast }: ProofCardBuilderProps) {
   const { user } = useAuth();
 
@@ -85,8 +87,92 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
   const [descCopied, setDescCopied] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
+  const [loaded, setLoaded] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const existingCardRef = useRef(existingCard);
+
+  useEffect(() => { existingCardRef.current = existingCard; }, [existingCard]);
+
+  // Auto-save draft to Supabase
+  const saveDraft = useCallback(async (fields: {
+    oneLiner: string; ask: string; findings: string[]; imageUrl: string | null;
+    loomUrl: string; docUrl: string; assumption: string; next48h: string;
+  }) => {
+    if (!user) return;
+    const card = existingCardRef.current;
+    setSaveStatus("saving");
+    try {
+      const firstName = user.user_metadata?.display_name?.split(" ")[0] || user.email?.split("@")[0] || "user";
+      const slug = card?.slug || generateSlug(company, role, firstName);
+
+      const cardData = {
+        campaign_id: campaignId,
+        user_id: user.id,
+        slug,
+        one_liner: fields.oneLiner,
+        ask: fields.ask,
+        insights: fields.findings,
+        image_url: fields.imageUrl,
+        loom_url: fields.loomUrl || null,
+        doc_url: fields.docUrl || null,
+        assumption: fields.assumption || null,
+        next_48h: fields.next48h,
+        published: card?.published || false,
+      };
+
+      if (card) {
+        const { data, error } = await supabase.from("proof_cards").update(cardData).eq("id", card.id).select().single();
+        if (error) throw error;
+        setExistingCard((prev: any) => ({ ...prev, ...data }));
+      } else {
+        // Check slug uniqueness for new card
+        const { data: existingSlugs } = await supabase.from("proof_cards").select("slug").like("slug", `${slug}%`);
+        let finalSlug = slug;
+        if (existingSlugs && existingSlugs.length > 0) {
+          const slugSet = new Set(existingSlugs.map((e: any) => e.slug));
+          if (slugSet.has(slug)) {
+            let i = 2;
+            while (slugSet.has(`${slug}-${i}`)) i++;
+            finalSlug = `${slug}-${i}`;
+          }
+        }
+        const { data, error } = await supabase.from("proof_cards").insert({ ...cardData, slug: finalSlug }).select().single();
+        if (error) throw error;
+        setExistingCard(data);
+      }
+
+      setSaveStatus("saved");
+      setTimeout(() => setSaveStatus((s) => s === "saved" ? "idle" : s), 3000);
+    } catch {
+      setSaveStatus("error");
+    }
+  }, [user, campaignId, company, role]);
+
+  const scheduleSave = useCallback((fields: Parameters<typeof saveDraft>[0]) => {
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => saveDraft(fields), 300);
+  }, [saveDraft]);
+
+  const getCurrentFields = () => ({ oneLiner, ask, findings, imageUrl, loomUrl, docUrl, assumption, next48h });
+
+  const handleBlurSave = () => {
+    if (!loaded) return;
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    saveDraft(getCurrentFields());
+  };
+
+  // Wrapped setters that trigger debounced save
+  const updateField = <T,>(setter: React.Dispatch<React.SetStateAction<T>>, value: T, overrides: Partial<ReturnType<typeof getCurrentFields>> = {}) => {
+    setter(value);
+    // We need to schedule save with the NEW value; use a microtask so state is committed
+    setTimeout(() => {
+      const fields = { ...getCurrentFields(), ...overrides };
+      scheduleSave(fields);
+    }, 0);
+  };
 
   // Load existing card
   useEffect(() => {
@@ -101,18 +187,19 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
         if (data) {
           setExistingCard(data);
           setOneLiner(data.one_liner || "");
-          setAsk(data.ask || ask);
+          setAsk(data.ask || "Could you reply with 1 piece of feedback — what's the biggest flaw or missing piece? A yes/no is enough.");
           const ins = data.insights as string[] | null;
           if (ins && ins.length === 3) setFindings(ins);
           setImageUrl(data.image_url || null);
           setLoomUrl(data.loom_url || "");
           setDocUrl(data.doc_url || "");
           setAssumption(data.assumption || "");
-          setNext48h(data.next_48h || next48h);
+          setNext48h(data.next_48h || get48hDefault(role));
           if (data.published) {
             setPublishedUrl(`${window.location.origin}/p/${data.slug}`);
           }
         }
+        setLoaded(true);
       });
   }, [campaignId, user]);
 
