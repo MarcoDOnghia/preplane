@@ -223,7 +223,7 @@ const Campaign = () => {
       .from("proof_cards")
       .select("id, published")
       .eq("campaign_id", c.id)
-      .eq("user_id", c.user_id)
+      .eq("user_id", user!.id)
       .maybeSingle();
     if (proofCard) done.add(3);
     setCompletedSteps(new Set(done));
