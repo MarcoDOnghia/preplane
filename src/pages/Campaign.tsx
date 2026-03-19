@@ -705,7 +705,7 @@ function Step3Content({ campaign, proofSuggestion, generating, generateContent }
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <p style={{ color: '#F97416', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>What to write about</p>
-          <Button size="sm" variant="outline" onClick={() => generateContent("linkedin_angles")} disabled={!!generating || !proofSuggestion}>
+          <Button size="sm" variant="outline" className="bg-transparent text-white border-white/15 hover:bg-white/5" style={{ borderRadius: '8px' }} onClick={() => generateContent("linkedin_angles")} disabled={!!generating || !proofSuggestion}>
             {generating === "linkedin_angles" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
             {(() => { try { return JSON.parse(campaign.linkedin_angles || "null") ? "Regenerate angles" : "Generate angles"; } catch { return "Generate angles"; } })()}
           </Button>
@@ -775,7 +775,7 @@ function Step4Content({ campaign, connectionName, setConnectionName, connectionU
             Look for someone at <strong style={{ color: '#ffffff' }}>{campaign.company}</strong> who is the hiring manager, a team lead, or a recruiter for the <strong style={{ color: '#ffffff' }}>{campaign.role}</strong> role.
           </p>
         </div>
-        <Button size="sm" variant="outline" onClick={() => {
+        <Button size="sm" variant="outline" className="bg-transparent text-white border-white/15 hover:bg-white/5" style={{ borderRadius: '8px' }} onClick={() => {
           const query = encodeURIComponent(`${campaign.company} ${campaign.role}`);
           window.open(`https://www.linkedin.com/search/results/people/?keywords=${query}`, "_blank");
         }}>
@@ -812,7 +812,7 @@ function Step4Content({ campaign, connectionName, setConnectionName, connectionU
         {outreachMessage && (
           <div className="space-y-2">
             <Textarea value={outreachMessage} onChange={(e) => setOutreachMessage(e.target.value)} onBlur={() => updateCampaign({ outreach_message: outreachMessage })} rows={5} className="text-sm" />
-            <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(outreachMessage); toast({ title: "Copied to clipboard!" }); }}>
+            <Button size="sm" variant="outline" className="bg-transparent text-white border-white/15 hover:bg-white/5" style={{ borderRadius: '8px' }} onClick={() => { navigator.clipboard.writeText(outreachMessage); toast({ title: "Copied to clipboard!" }); }}>
               Copy message
             </Button>
           </div>
