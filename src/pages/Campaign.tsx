@@ -856,9 +856,9 @@ const Campaign = () => {
                 ) : (
                   <>
                     {!getProofHook() ? (
-                      <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 space-y-1">
-                        <p className="font-semibold">Generate your Proof of Work first — your outreach needs to lead with something real.</p>
-                        <p className="text-amber-800/80 text-xs">Your PoW brief includes an outreach hook that becomes the opening line of your message. Without it, outreach is generic.</p>
+                      <div className="rounded-xl px-4 py-3 text-sm space-y-1" style={{ backgroundColor: 'rgba(249,116,22,0.08)', border: '1px solid rgba(249,116,22,0.2)', borderRadius: '12px' }}>
+                        <p className="font-semibold text-white">Generate your Proof of Work first — your outreach needs to lead with something real.</p>
+                        <p className="text-[#94A3B8] text-xs">Your PoW brief includes an outreach hook that becomes the opening line of your message. Without it, outreach is generic.</p>
                       </div>
                     ) : (
                       <Button
