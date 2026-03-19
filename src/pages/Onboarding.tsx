@@ -93,29 +93,9 @@ const Onboarding = () => {
       setReady(true);
       return;
     }
-    // Logged-in user — check if onboarding done
-    supabase
-      .from("profiles")
-      .select("onboarding_completed, target_role, target_location, target_start")
-      .eq("user_id", user.id)
-      .single()
-      .then(({ data }) => {
-        if (!data) { setReady(true); return; }
-        const d = data as any;
-        if (d.onboarding_completed) {
-          setIsReturning(true);
-          setStep(2); // Let them edit target
-          if (d.target_role) setTargetRole(d.target_role);
-          if (d.target_location) setTargetLocation(d.target_location);
-          if (d.target_start) setTargetStart(d.target_start);
-        } else {
-          // Logged in but didn't finish onboarding — start fresh
-          if (d.target_role) setTargetRole(d.target_role);
-          if (d.target_location) setTargetLocation(d.target_location);
-          if (d.target_start) setTargetStart(d.target_start);
-        }
-        setReady(true);
-      });
+    // Logged-in user — redirect to dashboard
+    navigate("/app", { replace: true });
+    return;
   }, [user, sessionLoading]);
 
   // After OAuth sign-in, user state changes — save target and go to app
@@ -274,6 +254,20 @@ const Onboarding = () => {
   if (step === 1) {
     return (
       <div className="relative min-h-screen overflow-hidden flex flex-col items-center" style={{ background: "#111111", fontFamily: "Inter, sans-serif" }}>
+        {/* Sign in link - top right */}
+        <div className="fixed top-0 right-0 z-50" style={{ padding: "20px 24px" }}>
+          <span style={{ color: "#64748B", fontSize: "13px" }}>
+            Already have an account?{" "}
+            <button
+              onClick={() => navigate("/onboarding?step=4&mode=login")}
+              className="hover:underline"
+              style={{ color: "#F97316", fontWeight: 600, cursor: "pointer", background: "none", border: "none", fontSize: "13px" }}
+            >
+              Sign in
+            </button>
+          </span>
+        </div>
+
         {/* Background glow blobs */}
         <div className="fixed top-0 left-0 rounded-full pointer-events-none" style={{ width: "40vw", height: "40vw", background: "#f97415", opacity: 0.08, filter: "blur(120px)", zIndex: -1 }} />
         <div className="fixed bottom-0 right-0 rounded-full pointer-events-none" style={{ width: "40vw", height: "40vw", background: "#f97415", opacity: 0.04, filter: "blur(120px)", zIndex: -1 }} />
