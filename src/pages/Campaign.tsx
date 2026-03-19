@@ -785,7 +785,7 @@ const Campaign = () => {
                     <li>A team lead or senior IC in the same department</li>
                     <li>A recruiter who recently posted about this team or role</li>
                   </ul>
-                  <p className="text-xs text-muted-foreground mt-2">
+                  <p className="text-xs text-[#94A3B8]/70 mt-2">
                     Search LinkedIn for "{campaign.company} {campaign.role}" — look for someone 1–2 levels above the role you're targeting.
                   </p>
                 </div>
