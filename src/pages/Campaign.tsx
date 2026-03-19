@@ -888,25 +888,8 @@ const Campaign = () => {
           </StepCard>
         </div>
 
-        {/* ===== COMING SOON CARDS ===== */}
-        <div className="space-y-3 mt-8">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-[#F97416] px-1">More tools — coming soon</p>
-          {COMING_SOON_STEPS.map((step) => {
-            const Icon = step.icon;
-            return (
-              <div key={step.label} className="opacity-50 cursor-default rounded-xl p-4" style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px' }}>
-                <div className="text-sm flex items-center gap-2">
-                  <span className="h-6 w-6 rounded-full flex items-center justify-center bg-white/5 text-[#94A3B8] text-xs">—</span>
-                  <Icon className="h-4 w-4 text-[#94A3B8]" />
-                  <span className="flex-1 text-[#94A3B8]">{step.label}</span>
-                  <Badge className="bg-[#F97416]/15 text-[#F97416] border-[#F97416]/30 hover:bg-[#F97416]/15 text-xs">
-                    Coming soon
-                  </Badge>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+
+
 
         {/* Notes */}
         <div className="rounded-xl" style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px' }}>
