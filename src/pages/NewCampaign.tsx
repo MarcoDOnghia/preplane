@@ -1243,7 +1243,7 @@ const Index = () => {
         {setupPhase === 'brief' && proofBrief && proofBrief.build_steps && (
           <BriefNavigator
             proofBrief={proofBrief}
-            setupCompany={setupCompany}
+            company={setupCompany}
             onStartBuilding={handleStartBuilding}
             onContinueCampaign={handleContinueCampaign}
             toast={toast}
