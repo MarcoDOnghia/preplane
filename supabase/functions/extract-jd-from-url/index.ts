@@ -14,6 +14,13 @@ function isPrivate172(hostname: string): boolean {
   return second >= 16 && second <= 31;
 }
 
+function isCgnat(hostname: string): boolean {
+  const parts = hostname.split(".");
+  if (parts.length !== 4 || parts[0] !== "100") return false;
+  const second = parseInt(parts[1], 10);
+  return second >= 64 && second <= 127;
+}
+
 function isValidUrl(urlString: string): boolean {
   try {
     const parsed = new URL(urlString);
@@ -22,11 +29,15 @@ function isValidUrl(urlString: string): boolean {
     if (
       hostname === "localhost" ||
       hostname === "127.0.0.1" ||
+      hostname === "0.0.0.0" ||
       hostname.startsWith("192.168.") ||
       hostname.startsWith("10.") ||
       isPrivate172(hostname) ||
+      isCgnat(hostname) ||
       hostname.startsWith("169.254.") ||
-      hostname === "[::1]"
+      hostname === "[::1]" ||
+      /^::ffff:/i.test(hostname) ||
+      /^f[cd][0-9a-f]{2}:/i.test(hostname)
     ) return false;
     return true;
   } catch {
