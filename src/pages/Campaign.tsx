@@ -629,7 +629,7 @@ const Campaign = () => {
                             <div>
                               <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">Ready-to-use AI prompt</p>
                               <div className="relative">
-                                <pre className="text-xs bg-muted rounded-md p-3 whitespace-pre-wrap font-sans">{parsed.ai_prompt}</pre>
+                                <pre className="text-xs rounded-md p-3 whitespace-pre-wrap font-sans text-[#94A3B8]" style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}>{parsed.ai_prompt}</pre>
                                 <Button variant="ghost" size="sm" className="absolute top-1 right-1 h-7 text-xs"
                                   onClick={() => { navigator.clipboard.writeText(parsed.ai_prompt); toast({ title: "Prompt copied!" }); }}>Copy</Button>
                               </div>
