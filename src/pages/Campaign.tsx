@@ -605,7 +605,7 @@ const Campaign = () => {
                             <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">What to build</p>
                             <ul className="list-disc pl-5 space-y-1">
                               {(parsed.what_to_build as string[]).map((b: string, i: number) => (
-                                <li key={i} className="text-sm">{b}</li>
+                                <li key={i} className="text-sm text-[#94A3B8]">{b}</li>
                               ))}
                             </ul>
                           </div>
