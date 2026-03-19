@@ -680,8 +680,8 @@ const Campaign = () => {
                 Personal branding isn't vanity. It's your warmest possible introduction.
               </p>
               {/* New note at the top */}
-              <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
-                <p className="text-sm text-foreground font-medium">
+              <div className="rounded-xl px-4 py-3" style={{ backgroundColor: 'rgba(249,116,22,0.08)', border: '1px solid rgba(249,116,22,0.2)', borderRadius: '12px' }}>
+                <p className="text-sm text-white font-medium">
                   ✍️ Write this yourself — authenticity is everything. We give you the angle, you write the words.
                 </p>
               </div>
