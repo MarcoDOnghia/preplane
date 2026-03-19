@@ -942,11 +942,11 @@ const Campaign = () => {
         </div>
 
         {/* Notes */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm">Notes — what worked, what didn't</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <div className="rounded-xl" style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px' }}>
+          <div className="p-6 pb-3">
+            <h3 className="text-sm font-semibold text-white">Notes — what worked, what didn't</h3>
+          </div>
+          <div className="px-6 pb-6">
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
