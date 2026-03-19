@@ -627,7 +627,7 @@ const Campaign = () => {
                           </div>
                           {parsed.ai_prompt && (
                             <div>
-                              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Ready-to-use AI prompt</p>
+                              <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">Ready-to-use AI prompt</p>
                               <div className="relative">
                                 <pre className="text-xs bg-muted rounded-md p-3 whitespace-pre-wrap font-sans">{parsed.ai_prompt}</pre>
                                 <Button variant="ghost" size="sm" className="absolute top-1 right-1 h-7 text-xs"
