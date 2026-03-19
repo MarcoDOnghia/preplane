@@ -814,7 +814,7 @@ const Campaign = () => {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium">Their LinkedIn URL (optional)</label>
+                  <label className="text-sm font-medium text-white">Their LinkedIn URL (optional)</label>
                   <Input
                     value={connectionUrl}
                     onChange={(e) => setConnectionUrl(e.target.value)}
