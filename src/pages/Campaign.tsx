@@ -777,10 +777,10 @@ const Campaign = () => {
               <div className="space-y-3">
                 <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider">Who to look for</p>
                 <div className="rounded-xl p-4 space-y-2" style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px' }}>
-                  <p className="text-sm">
-                    Look for someone at <span className="font-semibold">{campaign.company}</span> who is either:
+                  <p className="text-sm text-[#94A3B8]">
+                    Look for someone at <span className="font-semibold text-white">{campaign.company}</span> who is either:
                   </p>
-                  <ul className="list-disc pl-5 space-y-1 text-sm">
+                  <ul className="list-disc pl-5 space-y-1 text-sm text-[#94A3B8]">
                     <li>The hiring manager for the <span className="font-semibold">{campaign.role}</span> role</li>
                     <li>A team lead or senior IC in the same department</li>
                     <li>A recruiter who recently posted about this team or role</li>
