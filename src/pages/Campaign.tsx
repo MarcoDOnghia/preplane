@@ -530,7 +530,8 @@ const Campaign = () => {
           {currentStep === 0 && <Step1Content campaign={campaign} proofSuggestion={proofSuggestion} generating={generating} generateContent={generateContent} toast={toast} updateCampaign={updateCampaign} />}
           {currentStep === 1 && <Step2Content campaign={campaign} proofSuggestion={proofSuggestion} getProofHook={getProofHook} getProofTitle={getProofTitle} />}
           {currentStep === 2 && <Step3Content campaign={campaign} proofSuggestion={proofSuggestion} generating={generating} generateContent={generateContent} getProofHook={getProofHook} toast={toast} />}
-          {currentStep === 3 && <Step4Content campaign={campaign} connectionName={connectionName} setConnectionName={setConnectionName} connectionUrl={connectionUrl} setConnectionUrl={setConnectionUrl} outreachMessage={outreachMessage} setOutreachMessage={setOutreachMessage} companyInput={companyInput} setCompanyInput={setCompanyInput} generating={generating} generateContent={generateContent} updateCampaign={updateCampaign} getProofHook={getProofHook} toast={toast} />}
+          {currentStep === 3 && <ProofCardBuilder campaignId={campaign.id} company={campaign.company} role={campaign.role} toast={toast} />}
+          {currentStep === 4 && <Step4Content campaign={campaign} connectionName={connectionName} setConnectionName={setConnectionName} connectionUrl={connectionUrl} setConnectionUrl={setConnectionUrl} outreachMessage={outreachMessage} setOutreachMessage={setOutreachMessage} companyInput={companyInput} setCompanyInput={setCompanyInput} generating={generating} generateContent={generateContent} updateCampaign={updateCampaign} getProofHook={getProofHook} toast={toast} />}
         </div>
 
         {/* Navigation buttons */}
