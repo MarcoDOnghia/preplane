@@ -595,7 +595,7 @@ const Campaign = () => {
                       }
                       // Legacy format
                       return (
-                        <div className="space-y-4 rounded-lg border p-4 bg-muted/30">
+                        <div className="space-y-4 rounded-xl p-4" style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px' }}>
                           <h4 className="font-semibold text-base">{parsed.title}</h4>
                           <div>
                             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Why this works</p>
