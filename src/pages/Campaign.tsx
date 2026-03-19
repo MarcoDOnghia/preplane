@@ -369,8 +369,8 @@ const Campaign = () => {
         {/* Top: Company + Role + Status + Archive */}
         <div className="flex items-start justify-between flex-wrap gap-3">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">{campaign.role}</h1>
-            <p className="text-muted-foreground">{campaign.company}</p>
+            <h1 className="text-2xl font-bold tracking-tight text-white">{campaign.role}</h1>
+            <p className="text-[#94A3B8]">{campaign.company}</p>
           </div>
           <div className="flex items-center gap-2">
             <Select
