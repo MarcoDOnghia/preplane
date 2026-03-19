@@ -7,6 +7,7 @@ import ResultsSection from "@/components/ResultsSection";
 import CampaignBanner from "@/components/CampaignBanner";
 import AlignmentBanner from "@/components/AlignmentBanner";
 import ApplicationTrackingModal from "@/components/ApplicationTrackingModal";
+import BriefNavigator from "@/components/BriefNavigator";
 import { supabase } from "@/integrations/supabase/client";
 
 import { useToast } from "@/hooks/use-toast";
