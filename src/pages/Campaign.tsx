@@ -705,7 +705,7 @@ function Step3Content({ campaign, proofSuggestion, generating, generateContent }
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <p style={{ color: '#F97416', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>What to write about</p>
-          <Button size="sm" variant="outline" onClick={() => generateContent("linkedin_angles")} disabled={!!generating || !proofSuggestion}>
+          <Button size="sm" variant="outline" className="bg-transparent text-white border-white/15 hover:bg-white/5" style={{ borderRadius: '8px' }} onClick={() => generateContent("linkedin_angles")} disabled={!!generating || !proofSuggestion}>
             {generating === "linkedin_angles" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
             {(() => { try { return JSON.parse(campaign.linkedin_angles || "null") ? "Regenerate angles" : "Generate angles"; } catch { return "Generate angles"; } })()}
           </Button>
