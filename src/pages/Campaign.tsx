@@ -436,7 +436,7 @@ const Campaign = () => {
             <p className="text-sm text-[#94A3B8] flex-1">
               These steps are designed to be completed before you formally apply. A warm introduction and a proof of work will make your application 10x more memorable than a cold CV submission.
             </p>
-            <button onClick={dismissBanner} className="text-blue-400 hover:text-blue-600 shrink-0">
+            <button onClick={dismissBanner} className="text-[#94A3B8] hover:text-white shrink-0">
               <X className="h-4 w-4" />
             </button>
           </div>
