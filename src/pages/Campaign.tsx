@@ -812,7 +812,7 @@ function Step4Content({ campaign, connectionName, setConnectionName, connectionU
         {outreachMessage && (
           <div className="space-y-2">
             <Textarea value={outreachMessage} onChange={(e) => setOutreachMessage(e.target.value)} onBlur={() => updateCampaign({ outreach_message: outreachMessage })} rows={5} className="text-sm" />
-            <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(outreachMessage); toast({ title: "Copied to clipboard!" }); }}>
+            <Button size="sm" variant="outline" className="bg-transparent text-white border-white/15 hover:bg-white/5" style={{ borderRadius: '8px' }} onClick={() => { navigator.clipboard.writeText(outreachMessage); toast({ title: "Copied to clipboard!" }); }}>
               Copy message
             </Button>
           </div>
