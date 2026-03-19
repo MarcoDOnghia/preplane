@@ -566,8 +566,8 @@ const Campaign = () => {
                                     <p className="text-sm text-[#94A3B8]">{parsed.effort_guide.minimum}</p>
                                   </div>
                                   <div className="rounded-md border border-[rgba(255,255,255,0.08)] p-3" style={{ background: "#1A1A1A" }}>
-                                    <p className="text-xs font-semibold text-[#F97316] mb-0.5">Impressive (gets forwarded)</p>
-                                    <p className="text-sm">{parsed.effort_guide.impressive}</p>
+                                    <p className="text-xs font-semibold text-[#F97416] mb-0.5">Impressive (gets forwarded)</p>
+                                    <p className="text-sm text-[#94A3B8]">{parsed.effort_guide.impressive}</p>
                                   </div>
                                 </div>
                               </div>
