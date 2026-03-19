@@ -775,7 +775,7 @@ function Step4Content({ campaign, connectionName, setConnectionName, connectionU
             Look for someone at <strong style={{ color: '#ffffff' }}>{campaign.company}</strong> who is the hiring manager, a team lead, or a recruiter for the <strong style={{ color: '#ffffff' }}>{campaign.role}</strong> role.
           </p>
         </div>
-        <Button size="sm" variant="outline" onClick={() => {
+        <Button size="sm" variant="outline" className="bg-transparent text-white border-white/15 hover:bg-white/5" style={{ borderRadius: '8px' }} onClick={() => {
           const query = encodeURIComponent(`${campaign.company} ${campaign.role}`);
           window.open(`https://www.linkedin.com/search/results/people/?keywords=${query}`, "_blank");
         }}>
