@@ -336,14 +336,26 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h2 style={{ color: '#ffffff', fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>Your Proof Card</h2>
-        <p style={{ color: '#94A3B8', fontSize: '14px', lineHeight: 1.6 }}>
-          A founder scans this in 60 seconds. This is what you send — not your brief, not your Notion doc. Just this link.
-        </p>
-        <p style={{ color: '#64748B', fontSize: '12px', marginTop: '8px' }}>
-          Public page. No login required. No downloads. Safe to send.
-        </p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h2 style={{ color: '#ffffff', fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>Your Proof Card</h2>
+          <p style={{ color: '#94A3B8', fontSize: '14px', lineHeight: 1.6 }}>
+            A founder scans this in 60 seconds. This is what you send — not your brief, not your Notion doc. Just this link.
+          </p>
+          <p style={{ color: '#64748B', fontSize: '12px', marginTop: '8px' }}>
+            Public page. No login required. No downloads. Safe to send.
+          </p>
+        </div>
+        {loaded && saveStatus !== "idle" && (
+          <span style={{
+            fontSize: '11px',
+            fontWeight: 500,
+            whiteSpace: 'nowrap',
+            color: saveStatus === "saving" ? '#64748B' : saveStatus === "saved" ? '#22c55e' : '#ef4444',
+          }}>
+            {saveStatus === "saving" ? "Saving..." : saveStatus === "saved" ? "Saved ✓" : "Save failed"}
+          </span>
+        )}
       </div>
 
       {/* Published URL display */}
