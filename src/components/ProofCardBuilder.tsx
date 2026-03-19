@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -65,6 +65,8 @@ function generateSlug(company: string, role: string, firstName: string): string 
     .replace(/^-|-$/g, "");
 }
 
+type SaveStatus = "idle" | "saving" | "saved" | "error";
+
 export default function ProofCardBuilder({ campaignId, company, role, toast }: ProofCardBuilderProps) {
   const { user } = useAuth();
 
@@ -85,8 +87,92 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
   const [descCopied, setDescCopied] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
+  const [loaded, setLoaded] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const existingCardRef = useRef(existingCard);
+
+  useEffect(() => { existingCardRef.current = existingCard; }, [existingCard]);
+
+  // Auto-save draft to Supabase
+  const saveDraft = useCallback(async (fields: {
+    oneLiner: string; ask: string; findings: string[]; imageUrl: string | null;
+    loomUrl: string; docUrl: string; assumption: string; next48h: string;
+  }) => {
+    if (!user) return;
+    const card = existingCardRef.current;
+    setSaveStatus("saving");
+    try {
+      const firstName = user.user_metadata?.display_name?.split(" ")[0] || user.email?.split("@")[0] || "user";
+      const slug = card?.slug || generateSlug(company, role, firstName);
+
+      const cardData = {
+        campaign_id: campaignId,
+        user_id: user.id,
+        slug,
+        one_liner: fields.oneLiner,
+        ask: fields.ask,
+        insights: fields.findings,
+        image_url: fields.imageUrl,
+        loom_url: fields.loomUrl || null,
+        doc_url: fields.docUrl || null,
+        assumption: fields.assumption || null,
+        next_48h: fields.next48h,
+        published: card?.published || false,
+      };
+
+      if (card) {
+        const { data, error } = await supabase.from("proof_cards").update(cardData).eq("id", card.id).select().single();
+        if (error) throw error;
+        setExistingCard((prev: any) => ({ ...prev, ...data }));
+      } else {
+        // Check slug uniqueness for new card
+        const { data: existingSlugs } = await supabase.from("proof_cards").select("slug").like("slug", `${slug}%`);
+        let finalSlug = slug;
+        if (existingSlugs && existingSlugs.length > 0) {
+          const slugSet = new Set(existingSlugs.map((e: any) => e.slug));
+          if (slugSet.has(slug)) {
+            let i = 2;
+            while (slugSet.has(`${slug}-${i}`)) i++;
+            finalSlug = `${slug}-${i}`;
+          }
+        }
+        const { data, error } = await supabase.from("proof_cards").insert({ ...cardData, slug: finalSlug }).select().single();
+        if (error) throw error;
+        setExistingCard(data);
+      }
+
+      setSaveStatus("saved");
+      setTimeout(() => setSaveStatus((s) => s === "saved" ? "idle" : s), 3000);
+    } catch {
+      setSaveStatus("error");
+    }
+  }, [user, campaignId, company, role]);
+
+  const scheduleSave = useCallback((fields: Parameters<typeof saveDraft>[0]) => {
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => saveDraft(fields), 300);
+  }, [saveDraft]);
+
+  const getCurrentFields = () => ({ oneLiner, ask, findings, imageUrl, loomUrl, docUrl, assumption, next48h });
+
+  const handleBlurSave = () => {
+    if (!loaded) return;
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    saveDraft(getCurrentFields());
+  };
+
+  // Wrapped setters that trigger debounced save
+  const updateField = <T,>(setter: React.Dispatch<React.SetStateAction<T>>, value: T, overrides: Partial<ReturnType<typeof getCurrentFields>> = {}) => {
+    setter(value);
+    // We need to schedule save with the NEW value; use a microtask so state is committed
+    setTimeout(() => {
+      const fields = { ...getCurrentFields(), ...overrides };
+      scheduleSave(fields);
+    }, 0);
+  };
 
   // Load existing card
   useEffect(() => {
@@ -101,18 +187,19 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
         if (data) {
           setExistingCard(data);
           setOneLiner(data.one_liner || "");
-          setAsk(data.ask || ask);
+          setAsk(data.ask || "Could you reply with 1 piece of feedback — what's the biggest flaw or missing piece? A yes/no is enough.");
           const ins = data.insights as string[] | null;
           if (ins && ins.length === 3) setFindings(ins);
           setImageUrl(data.image_url || null);
           setLoomUrl(data.loom_url || "");
           setDocUrl(data.doc_url || "");
           setAssumption(data.assumption || "");
-          setNext48h(data.next_48h || next48h);
+          setNext48h(data.next_48h || get48hDefault(role));
           if (data.published) {
             setPublishedUrl(`${window.location.origin}/p/${data.slug}`);
           }
         }
+        setLoaded(true);
       });
   }, [campaignId, user]);
 
@@ -151,8 +238,11 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
       return;
     }
     const { data: urlData } = supabase.storage.from("proof-cards").getPublicUrl(path);
-    setImageUrl(urlData.publicUrl);
+    const newUrl = urlData.publicUrl;
+    setImageUrl(newUrl);
     setUploading(false);
+    // Auto-save after image upload
+    setTimeout(() => saveDraft({ ...getCurrentFields(), imageUrl: newUrl }), 0);
   };
 
   const handleGenerate = async () => {
@@ -249,14 +339,26 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h2 style={{ color: '#ffffff', fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>Your Proof Card</h2>
-        <p style={{ color: '#94A3B8', fontSize: '14px', lineHeight: 1.6 }}>
-          A founder scans this in 60 seconds. This is what you send — not your brief, not your Notion doc. Just this link.
-        </p>
-        <p style={{ color: '#64748B', fontSize: '12px', marginTop: '8px' }}>
-          Public page. No login required. No downloads. Safe to send.
-        </p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h2 style={{ color: '#ffffff', fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>Your Proof Card</h2>
+          <p style={{ color: '#94A3B8', fontSize: '14px', lineHeight: 1.6 }}>
+            A founder scans this in 60 seconds. This is what you send — not your brief, not your Notion doc. Just this link.
+          </p>
+          <p style={{ color: '#64748B', fontSize: '12px', marginTop: '8px' }}>
+            Public page. No login required. No downloads. Safe to send.
+          </p>
+        </div>
+        {loaded && saveStatus !== "idle" && (
+          <span style={{
+            fontSize: '11px',
+            fontWeight: 500,
+            whiteSpace: 'nowrap',
+            color: saveStatus === "saving" ? '#64748B' : saveStatus === "saved" ? '#22c55e' : '#ef4444',
+          }}>
+            {saveStatus === "saving" ? "Saving..." : saveStatus === "saved" ? "Saved ✓" : "Save failed"}
+          </span>
+        )}
       </div>
 
       {/* Published URL display */}
@@ -284,7 +386,8 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
         <p style={{ color: '#64748B', fontSize: '11px', fontStyle: 'italic', marginBottom: '6px' }}>{getRoleExample(role)}</p>
         <Input
           value={oneLiner}
-          onChange={(e) => setOneLiner(e.target.value.slice(0, 140))}
+          onChange={(e) => { const v = e.target.value.slice(0, 140); updateField(setOneLiner, v, { oneLiner: v }); }}
+          onBlur={handleBlurSave}
           placeholder={`I built ... for ${company} to ...`}
           maxLength={140}
           className="campaign-notes-textarea"
@@ -297,7 +400,8 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
       <FieldGroup label="Your feedback ask" helper="This is the CTA on the card. Small ask = more replies." required>
         <Textarea
           value={ask}
-          onChange={(e) => setAsk(e.target.value.slice(0, 160))}
+          onChange={(e) => { const v = e.target.value.slice(0, 160); updateField(setAsk, v, { ask: v }); }}
+          onBlur={handleBlurSave}
           maxLength={160}
           rows={2}
           className="campaign-notes-textarea"
@@ -320,8 +424,9 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
               onChange={(e) => {
                 const next = [...findings];
                 next[i] = e.target.value.slice(0, 120);
-                setFindings(next);
+                updateField(setFindings, next, { findings: next });
               }}
+              onBlur={handleBlurSave}
               maxLength={120}
               placeholder={`Finding ${i + 1}`}
               className="campaign-notes-textarea"
@@ -390,7 +495,8 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
       <FieldGroup label="Your Loom walkthrough (optional)" helper="45-90 seconds max. Free at loom.com.">
         <Input
           value={loomUrl}
-          onChange={(e) => setLoomUrl(e.target.value)}
+          onChange={(e) => updateField(setLoomUrl, e.target.value, { loomUrl: e.target.value })}
+          onBlur={handleBlurSave}
           placeholder="https://www.loom.com/share/..."
           className="campaign-notes-textarea"
           style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: 'white' }}
@@ -409,7 +515,8 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
       <FieldGroup label="Your full deliverable" helper="Notion, Google Sheets, Figma, GitHub — link to the full work." required>
         <Input
           value={docUrl}
-          onChange={(e) => setDocUrl(e.target.value)}
+          onChange={(e) => updateField(setDocUrl, e.target.value, { docUrl: e.target.value })}
+          onBlur={handleBlurSave}
           placeholder="https://..."
           className="campaign-notes-textarea"
           style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: 'white' }}
@@ -423,7 +530,8 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
       <FieldGroup label="Key assumption" helper='One sentence: this works if...'>
         <Input
           value={assumption}
-          onChange={(e) => setAssumption(e.target.value.slice(0, 140))}
+          onChange={(e) => { const v = e.target.value.slice(0, 140); updateField(setAssumption, v, { assumption: v }); }}
+          onBlur={handleBlurSave}
           maxLength={140}
           placeholder={`This works if ${company} is prioritizing...`}
           className="campaign-notes-textarea"
@@ -446,7 +554,8 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
           <div>
             <Textarea
               value={next48h}
-              onChange={(e) => setNext48h(e.target.value)}
+              onChange={(e) => updateField(setNext48h, e.target.value, { next48h: e.target.value })}
+              onBlur={handleBlurSave}
               rows={3}
               className="campaign-notes-textarea"
               style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: 'white', fontSize: '14px' }}
