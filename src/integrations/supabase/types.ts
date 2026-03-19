@@ -558,6 +558,68 @@ export type Database = {
         }
         Relationships: []
       }
+      proof_cards: {
+        Row: {
+          ask: string | null
+          assumption: string | null
+          campaign_id: string
+          created_at: string | null
+          doc_url: string | null
+          id: string
+          image_url: string | null
+          insights: Json | null
+          loom_url: string | null
+          next_48h: string | null
+          one_liner: string | null
+          published: boolean | null
+          slug: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          ask?: string | null
+          assumption?: string | null
+          campaign_id: string
+          created_at?: string | null
+          doc_url?: string | null
+          id?: string
+          image_url?: string | null
+          insights?: Json | null
+          loom_url?: string | null
+          next_48h?: string | null
+          one_liner?: string | null
+          published?: boolean | null
+          slug: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          ask?: string | null
+          assumption?: string | null
+          campaign_id?: string
+          created_at?: string | null
+          doc_url?: string | null
+          id?: string
+          image_url?: string | null
+          insights?: Json | null
+          loom_url?: string | null
+          next_48h?: string | null
+          one_liner?: string | null
+          published?: boolean | null
+          slug?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proof_cards_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       usage_limits: {
         Row: {
           count: number
