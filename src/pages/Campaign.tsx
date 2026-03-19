@@ -827,7 +827,7 @@ const Campaign = () => {
 
               {/* Section B: Outreach message */}
               <div className="space-y-3">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Your outreach message</p>
+                <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider">Your outreach message</p>
 
                 {!campaign.company || campaign.company.trim() === "" ? (
                   <div className="space-y-2">
