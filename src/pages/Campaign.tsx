@@ -724,8 +724,8 @@ const Campaign = () => {
 
               {/* Playbook */}
               <div className="space-y-3">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">PrepLane's LinkedIn playbook</p>
-                <div className="rounded-lg border bg-muted/30 p-4 space-y-3 text-sm">
+                <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider">PrepLane's LinkedIn playbook</p>
+                <div className="rounded-xl p-4 space-y-3 text-sm text-[#94A3B8]" style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px' }}>
                   <p>✍️ <strong>Write it yourself</strong> — authenticity is detectable. AI-written posts get ignored.</p>
                   <p>🕐 <strong>Post in real time, never schedule</strong> — scheduled posts get less reach</p>
                   <p>💬 <strong>Answer every comment within the first hour</strong> — early interaction is gold for the algorithm</p>
