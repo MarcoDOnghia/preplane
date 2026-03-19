@@ -579,7 +579,7 @@ const Campaign = () => {
                             <div>
                               <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">Your Outreach Hook</p>
                               <div className="relative">
-                                <p className="text-sm bg-primary/5 border border-primary/20 rounded-md p-3 font-medium">{parsed.outreach_hook}</p>
+                                <p className="text-sm rounded-md p-3 font-medium text-white" style={{ backgroundColor: 'rgba(249,116,22,0.08)', border: '1px solid rgba(249,116,22,0.2)' }}>{parsed.outreach_hook}</p>
                                 <Button
                                   variant="ghost"
                                   size="sm"
