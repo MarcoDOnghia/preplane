@@ -982,30 +982,30 @@ function StepCard({
 }) {
   const Icon = step.icon;
   return (
-    <Card id={`step-${index}`} className={done ? "border-success/30" : ""}>
-      <CardHeader
-        className="pb-0 cursor-pointer select-none"
+    <div id={`step-${index}`} className="rounded-xl" style={{ backgroundColor: '#1A1A1A', border: done ? '1px solid rgba(34,197,94,0.3)' : '1px solid rgba(255,255,255,0.08)', borderRadius: '12px' }}>
+      <div
+        className="pb-0 cursor-pointer select-none p-6"
         onClick={onToggle}
       >
-        <CardTitle className="text-sm flex items-center gap-2">
-          <span className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold ${done ? "bg-success text-success-foreground" : "bg-muted text-muted-foreground"}`}>
+        <div className="text-sm flex items-center gap-2">
+          <span className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold ${done ? "bg-success text-success-foreground" : "bg-white/10 text-[#94A3B8]"}`}>
             {done ? <Check className="h-3.5 w-3.5" /> : index + 1}
           </span>
-          <Icon className="h-4 w-4 text-muted-foreground" />
+          <Icon className="h-4 w-4 text-[#94A3B8]" />
           <span className="flex-1">
-            {step.label}
+            <span className="text-white font-semibold">{step.label}</span>
             {step.subtext && (
-              <span className="block text-xs font-normal text-muted-foreground mt-0.5">{step.subtext}</span>
+              <span className="block text-xs font-normal text-[#94A3B8] mt-0.5">{step.subtext}</span>
             )}
           </span>
           {!isOutcome && (
-            <span className="text-xs text-muted-foreground font-normal">{step.weight}%</span>
+            <span className="text-xs text-[#94A3B8] font-normal">{step.weight}%</span>
           )}
-          {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-        </CardTitle>
-      </CardHeader>
-      {open && <CardContent className="pt-4">{children}</CardContent>}
-    </Card>
+          {open ? <ChevronDown className="h-4 w-4 text-[#94A3B8]" /> : <ChevronRight className="h-4 w-4 text-[#94A3B8]" />}
+        </div>
+      </div>
+      {open && <div className="px-6 pb-6 pt-0">{children}</div>}
+    </div>
   );
 }
 
