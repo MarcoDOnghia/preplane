@@ -775,8 +775,8 @@ const Campaign = () => {
             <div className="space-y-6">
               {/* Section A: Who to look for */}
               <div className="space-y-3">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Who to look for</p>
-                <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+                <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider">Who to look for</p>
+                <div className="rounded-xl p-4 space-y-2" style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px' }}>
                   <p className="text-sm">
                     Look for someone at <span className="font-semibold">{campaign.company}</span> who is either:
                   </p>
