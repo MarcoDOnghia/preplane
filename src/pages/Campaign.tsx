@@ -459,41 +459,8 @@ const Campaign = () => {
         {/* ===== ACTIVE STEPS (Beta: 4 steps) ===== */}
         <div className="space-y-3">
 
-          {/* STEP 1 — Set your target (kept as-is: company + role are shown in header) */}
-          <StepCard
-            index={0}
-            step={ACTIVE_STEPS[0]}
-            done={!!(campaign.company && campaign.role)}
-            open={openSteps.has(0)}
-            onToggle={() => toggleStep(0)}
-          >
-            <div className="space-y-3">
-              <div className="rounded-xl p-4 space-y-2" style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px' }}>
-                <div>
-                  <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">Company</p>
-                  <p className="text-sm font-semibold text-white">{campaign.company || "Not set"}</p>
-                </div>
-                <div>
-                  <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">Role</p>
-                  <p className="text-sm font-semibold text-white">{campaign.role || "Not set"}</p>
-                </div>
-                {campaign.match_score > 0 && (
-                  <div>
-                    <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">Match Score</p>
-                    <p className={`text-sm font-semibold ${campaign.match_score >= 80 ? "text-success" : campaign.match_score >= 60 ? "text-yellow-500" : "text-destructive"}`}>
-                      {campaign.match_score}%
-                    </p>
-                  </div>
-                )}
-              </div>
-              {campaign.company && campaign.role && (
-                <div className="flex items-center gap-2 text-success font-medium text-sm">
-                  <Check className="h-5 w-5" />
-                  <span>Target set — {campaign.company}, {campaign.role}</span>
-                </div>
-              )}
-            </div>
-          </StepCard>
+
+
 
           {/* STEP 2 — Generate your PoW brief (visually prominent) */}
           <div id="step-1" className="rounded-xl" style={{ backgroundColor: '#1A1A1A', border: campaign.step_proof_done ? '1px solid rgba(34,197,94,0.3)' : '2px solid rgba(249,116,22,0.4)', borderRadius: '12px' }}>
