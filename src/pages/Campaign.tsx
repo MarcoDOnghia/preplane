@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import { supabase } from "@/integrations/supabase/client";
 import { getAuthHeader } from "@/lib/auth";
 import BriefNavigator from "@/components/BriefNavigator";
+import ProofCardBuilder from "@/components/ProofCardBuilder";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
