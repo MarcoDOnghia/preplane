@@ -610,7 +610,7 @@ const Campaign = () => {
                             </ul>
                           </div>
                           <div>
-                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Tools to use</p>
+                            <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">Tools to use</p>
                             <div className="flex flex-wrap gap-1.5">
                               {(parsed.tools_to_use as string[]).map((t: string, i: number) => (
                                 <span key={i} className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">{t}</span>
