@@ -2,6 +2,28 @@ import { useState } from "react";
 import { Check, ChevronLeft, ChevronRight, Copy, ArrowRight } from "lucide-react";
 
 const SECTION_LABELS = ["Your Hook", "The Mission", "How to Build It", "The Output", "The Insight"];
+
+/** Parse a build step string to extract numbered sub-points (e.g. "1. ...", "2. ...") */
+function parseStepWithSubPoints(step: string): { main: string; subPoints: string[] } {
+  // Match patterns like "1. text 2. text 3. text" within the step
+  const numberedPattern = /(?:^|\s)(\d+)\.\s+/g;
+  const matches = [...step.matchAll(numberedPattern)];
+  if (matches.length < 2) return { main: step, subPoints: [] };
+
+  // The main text is everything before the first numbered item
+  const firstIdx = matches[0].index! + (matches[0][0].startsWith(' ') ? 1 : 0);
+  const main = step.slice(0, firstIdx).trim();
+
+  const subPoints: string[] = [];
+  for (let i = 0; i < matches.length; i++) {
+    const start = matches[i].index! + matches[i][0].length;
+    const end = i < matches.length - 1 ? matches[i + 1].index! : step.length;
+    const text = step.slice(start, end).trim();
+    if (text) subPoints.push(text);
+  }
+
+  return { main: main || subPoints.shift() || step, subPoints };
+}
 const NEXT_LABELS = ["See the project →", "How to build it →", "See the output →", "The key insight →", ""];
 
 interface BriefNavigatorProps {
