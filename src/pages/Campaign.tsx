@@ -831,7 +831,7 @@ const Campaign = () => {
 
                 {!campaign.company || campaign.company.trim() === "" ? (
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Which company are you targeting with this outreach?</label>
+                    <label className="text-sm font-medium text-white">Which company are you targeting with this outreach?</label>
                     <div className="flex gap-2">
                       <Input
                         value={companyInput}
