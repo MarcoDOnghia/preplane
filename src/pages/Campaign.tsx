@@ -81,11 +81,11 @@ interface CampaignData {
 }
 
 const STATUS_OPTIONS = [
-  { value: "targeting", label: "Researching", color: "bg-blue-500/10 text-blue-600 border-blue-500/20" },
-  { value: "applied", label: "Formally Applied", color: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20" },
-  { value: "followed_up", label: "Following Up", color: "bg-purple-500/10 text-purple-600 border-purple-500/20" },
-  { value: "response_received", label: "In Conversation", color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" },
-  { value: "rejected", label: "Not This Time", color: "bg-destructive/10 text-destructive border-destructive/20" },
+  { value: "targeting", label: "Building my PoW", color: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
+  { value: "applied", label: "Outreach sent", color: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20" },
+  { value: "followed_up", label: "Following up", color: "bg-purple-500/10 text-purple-400 border-purple-500/20" },
+  { value: "response_received", label: "In conversation", color: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
+  { value: "rejected", label: "Not this time", color: "bg-red-500/10 text-red-400 border-red-500/20" },
 ];
 
 // Step order: Set target → PoW → LinkedIn → Contact+Outreach
@@ -377,14 +377,20 @@ const Campaign = () => {
               value={campaign.status}
               onValueChange={handleStatusChange}
             >
-              <SelectTrigger className="w-auto">
+              <SelectTrigger className="w-auto border-0 bg-transparent p-0 h-auto shadow-none focus:ring-0">
                 <Badge variant="outline" className={statusInfo.color}>
                   {statusInfo.label}
                 </Badge>
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px' }}>
                 {STATUS_OPTIONS.map((s) => (
-                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                  <SelectItem
+                    key={s.value}
+                    value={s.value}
+                    className="text-white hover:bg-[#242424] focus:bg-[#242424] focus:text-[#F97416] data-[state=checked]:text-[#F97416]"
+                  >
+                    {s.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
