@@ -689,7 +689,7 @@ const Campaign = () => {
               {/* AI-generated angles */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">What to write about</p>
+                  <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider">What to write about</p>
                   <Button
                     size="sm"
                     variant="outline"
