@@ -47,6 +47,17 @@ import {
   Hammer,
   Pencil,
   Copy,
+  CreditCard,
+  Check,
+  Loader2,
+  Sparkles,
+  Target,
+  ArrowLeft,
+  ArrowRight,
+  Archive,
+  Hammer,
+  Pencil,
+  Copy,
 } from "lucide-react";
 
 interface CampaignData {
