@@ -2,6 +2,28 @@ import { useState } from "react";
 import { Check, ChevronLeft, ChevronRight, Copy, ArrowRight } from "lucide-react";
 
 const SECTION_LABELS = ["Your Hook", "The Mission", "How to Build It", "The Output", "The Insight"];
+
+/** Parse a build step string to extract numbered sub-points (e.g. "1. ...", "2. ...") */
+function parseStepWithSubPoints(step: string): { main: string; subPoints: string[] } {
+  // Match patterns like "1. text 2. text 3. text" within the step
+  const numberedPattern = /(?:^|\s)(\d+)\.\s+/g;
+  const matches = [...step.matchAll(numberedPattern)];
+  if (matches.length < 2) return { main: step, subPoints: [] };
+
+  // The main text is everything before the first numbered item
+  const firstIdx = matches[0].index! + (matches[0][0].startsWith(' ') ? 1 : 0);
+  const main = step.slice(0, firstIdx).trim();
+
+  const subPoints: string[] = [];
+  for (let i = 0; i < matches.length; i++) {
+    const start = matches[i].index! + matches[i][0].length;
+    const end = i < matches.length - 1 ? matches[i + 1].index! : step.length;
+    const text = step.slice(start, end).trim();
+    if (text) subPoints.push(text);
+  }
+
+  return { main: main || subPoints.shift() || step, subPoints };
+}
 const NEXT_LABELS = ["See the project →", "How to build it →", "See the output →", "The key insight →", ""];
 
 interface BriefNavigatorProps {
@@ -156,22 +178,37 @@ const BriefNavigator = ({ proofBrief, company, onStartBuilding, onContinueCampai
         {/* Section 3: How to Build It */}
         {currentSection === 2 && (
           <div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {(proofBrief.build_steps as string[]).map((step: string, i: number) => (
-                <div key={i} style={{
-                  background: '#1C1C1C',
-                  border: '1px solid rgba(255,255,255,0.06)',
-                  borderRadius: '8px',
-                  padding: '20px 24px',
-                  display: 'flex',
-                  gap: '14px',
-                }}>
-                  <span style={{ color: '#F97316', fontWeight: 900, fontSize: '24px', flexShrink: 0, lineHeight: 1.2 }}>{i + 1}</span>
-                  <span style={{ color: '#E2E8F0', fontSize: '14px', lineHeight: 1.7 }}>{step}</span>
-                </div>
-              ))}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {(proofBrief.build_steps as string[]).map((step: string, i: number) => {
+                const parsed = parseStepWithSubPoints(step);
+                return (
+                  <div key={i} style={{
+                    background: '#1C1C1C',
+                    border: '1px solid rgba(255,255,255,0.06)',
+                    borderRadius: '8px',
+                    padding: '20px 24px',
+                    display: 'flex',
+                    gap: '14px',
+                  }}>
+                    <span style={{ color: '#F97316', fontWeight: 900, fontSize: '24px', flexShrink: 0, lineHeight: 1.2 }}>{i + 1}</span>
+                    <div style={{ flex: 1 }}>
+                      <span style={{ color: '#E2E8F0', fontSize: '14px', lineHeight: 1.8 }}>{parsed.main}</span>
+                      {parsed.subPoints.length > 0 && (
+                        <div style={{ marginTop: '12px', marginLeft: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          {parsed.subPoints.map((sp, j) => (
+                            <div key={j} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                              <span style={{ color: '#F97316', fontSize: '13px', lineHeight: 1.6, flexShrink: 0 }}>→</span>
+                              <span style={{ color: '#94A3B8', fontSize: '13px', lineHeight: 1.6 }}>{sp}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-            <p style={{ color: '#22c55e', fontSize: '13px', marginTop: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <p style={{ color: '#22c55e', fontSize: '13px', marginTop: '20px', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Check className="h-3.5 w-3.5" style={{ color: '#22c55e' }} />
               All tools listed are free or freemium — no budget needed.
             </p>
