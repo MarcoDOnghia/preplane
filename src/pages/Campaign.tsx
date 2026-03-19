@@ -497,24 +497,24 @@ const Campaign = () => {
 
           {/* STEP 2 — Generate your PoW brief (visually prominent) */}
           <div id="step-1" className="rounded-xl" style={{ backgroundColor: '#1A1A1A', border: campaign.step_proof_done ? '1px solid rgba(34,197,94,0.3)' : '2px solid rgba(249,116,22,0.4)', borderRadius: '12px' }}>
-            <CardHeader
-              className="pb-0 cursor-pointer select-none"
+            <div
+              className="pb-0 cursor-pointer select-none p-6"
               onClick={() => toggleStep(1)}
             >
-              <CardTitle className="text-sm flex items-center gap-2">
-                <span className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold ${campaign.step_proof_done ? "bg-success text-success-foreground" : "bg-primary text-primary-foreground"}`}>
+              <div className="text-sm flex items-center gap-2">
+                <span className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold ${campaign.step_proof_done ? "bg-success text-success-foreground" : "bg-[#F97416] text-white"}`}>
                   {campaign.step_proof_done ? <Check className="h-4 w-4" /> : 2}
                 </span>
-                <Lightbulb className={`h-5 w-5 ${campaign.step_proof_done ? "text-muted-foreground" : "text-primary"}`} />
+                <Lightbulb className={`h-5 w-5 ${campaign.step_proof_done ? "text-[#94A3B8]" : "text-[#F97416]"}`} />
                 <span className="flex-1">
-                  <span className={`${campaign.step_proof_done ? "" : "text-primary font-bold"}`}>Generate your PoW brief</span>
-                  <span className="block text-xs font-normal text-muted-foreground mt-0.5">
+                  <span className={`font-semibold ${campaign.step_proof_done ? "text-white" : "text-[#F97416] font-bold"}`}>Generate your PoW brief</span>
+                  <span className="block text-xs font-normal text-[#94A3B8] mt-0.5">
                     This is the core of your campaign. Build something real that shows you can do the job — before you even apply.
                   </span>
                 </span>
-                {openSteps.has(1) ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-              </CardTitle>
-            </CardHeader>
+                {openSteps.has(1) ? <ChevronDown className="h-4 w-4 text-[#94A3B8]" /> : <ChevronRight className="h-4 w-4 text-[#94A3B8]" />}
+              </div>
+            </div>
             {openSteps.has(1) && (
               <CardContent className="pt-4">
                 <div className="space-y-3">
