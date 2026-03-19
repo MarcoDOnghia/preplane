@@ -358,7 +358,7 @@ const Campaign = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen" style={{ backgroundColor: '#111111', color: '#ffffff' }}>
       <Header />
       <main className="mx-auto px-4 py-8 max-w-[800px] space-y-6">
         {/* Back button */}
