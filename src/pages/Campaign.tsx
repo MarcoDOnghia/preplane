@@ -804,7 +804,7 @@ const Campaign = () => {
               {/* Contact info inputs */}
               <div className="space-y-3">
                 <div>
-                  <label className="text-sm font-medium">Name of someone at {campaign.company}</label>
+                  <label className="text-sm font-medium text-white">Name of someone at {campaign.company}</label>
                   <Input
                     value={connectionName}
                     onChange={(e) => setConnectionName(e.target.value)}
