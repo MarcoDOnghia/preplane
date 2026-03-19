@@ -364,7 +364,8 @@ const Campaign = () => {
       0: "targeting",
       1: "pow_ready",
       2: "posted",
-      3: "applied",
+      3: "posted",
+      4: "applied",
     };
     const newStatus = statusMap[stepIndex];
 
@@ -373,6 +374,9 @@ const Campaign = () => {
     } else if (stepIndex === 2) {
       await updateCampaign({ step_linkedin_done: true, status: newStatus } as any);
     } else if (stepIndex === 3) {
+      // Proof card step — no campaign field update needed, card already saved
+      await updateCampaign({ status: newStatus });
+    } else if (stepIndex === 4) {
       const followDate = new Date();
       followDate.setDate(followDate.getDate() + 7);
       await updateCampaign({
@@ -390,7 +394,7 @@ const Campaign = () => {
     }
 
     // Advance to next step
-    if (stepIndex < 3) {
+    if (stepIndex < 4) {
       setTimeout(() => setCurrentStep(stepIndex + 1), 600);
     }
     setShowConfirmModal(false);
