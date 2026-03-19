@@ -496,7 +496,7 @@ const Campaign = () => {
           </StepCard>
 
           {/* STEP 2 — Generate your PoW brief (visually prominent) */}
-          <Card id="step-1" className={`${campaign.step_proof_done ? "border-success/30" : "border-primary/40 ring-2 ring-primary/20"}`}>
+          <div id="step-1" className="rounded-xl" style={{ backgroundColor: '#1A1A1A', border: campaign.step_proof_done ? '1px solid rgba(34,197,94,0.3)' : '2px solid rgba(249,116,22,0.4)', borderRadius: '12px' }}>
             <CardHeader
               className="pb-0 cursor-pointer select-none"
               onClick={() => toggleStep(1)}
