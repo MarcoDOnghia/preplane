@@ -348,7 +348,7 @@ const Campaign = () => {
 
   if (loading || !campaign) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen" style={{ backgroundColor: '#111111' }}>
         <Header />
         <div className="flex items-center justify-center py-20">
           <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
@@ -358,19 +358,19 @@ const Campaign = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen" style={{ backgroundColor: '#111111', color: '#ffffff' }}>
       <Header />
       <main className="mx-auto px-4 py-8 max-w-[800px] space-y-6">
         {/* Back button */}
-        <Button variant="ghost" size="sm" onClick={() => navigate("/app")} className="text-muted-foreground">
+        <Button variant="ghost" size="sm" onClick={() => navigate("/app")} className="text-[#94A3B8] hover:text-white">
           <ArrowLeft className="h-4 w-4 mr-1" /> Back to dashboard
         </Button>
 
         {/* Top: Company + Role + Status + Archive */}
         <div className="flex items-start justify-between flex-wrap gap-3">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">{campaign.role}</h1>
-            <p className="text-muted-foreground">{campaign.company}</p>
+            <h1 className="text-2xl font-bold tracking-tight text-white">{campaign.role}</h1>
+            <p className="text-[#94A3B8]">{campaign.company}</p>
           </div>
           <div className="flex items-center gap-2">
             <Select
@@ -431,32 +431,30 @@ const Campaign = () => {
 
         {/* Pre-apply banner */}
         {!bannerDismissed && (
-          <div className="relative rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 px-4 py-3 flex items-start gap-3">
-            <Info className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
-            <p className="text-sm text-blue-800 dark:text-blue-200 flex-1">
+          <div className="relative rounded-xl px-4 py-3 flex items-start gap-3" style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px' }}>
+            <Info className="h-4 w-4 text-[#F97416] mt-0.5 shrink-0" />
+            <p className="text-sm text-[#94A3B8] flex-1">
               These steps are designed to be completed before you formally apply. A warm introduction and a proof of work will make your application 10x more memorable than a cold CV submission.
             </p>
-            <button onClick={dismissBanner} className="text-blue-400 hover:text-blue-600 shrink-0">
+            <button onClick={dismissBanner} className="text-[#94A3B8] hover:text-white shrink-0">
               <X className="h-4 w-4" />
             </button>
           </div>
         )}
 
         {/* Campaign Strength — simplified for beta */}
-        <Card>
-          <CardContent className="pt-6">
+        <div style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '24px' }}>
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <Target className="h-5 w-5 text-primary" />
-                <span className="font-semibold">Campaign Progress</span>
+                <Target className="h-5 w-5 text-[#F97416]" />
+                <span className="font-semibold text-white">Campaign Progress</span>
               </div>
-              <span className={`text-2xl font-bold ${strengthScore >= 80 ? "text-success" : strengthScore >= 50 ? "text-yellow-500" : "text-muted-foreground"}`}>
+              <span className={`text-2xl font-bold ${strengthScore >= 80 ? "text-success" : strengthScore >= 50 ? "text-yellow-500" : "text-[#94A3B8]"}`}>
                 {strengthScore}%
               </span>
             </div>
-            <Progress value={strengthScore} className="h-3" />
-          </CardContent>
-        </Card>
+            <Progress value={strengthScore} className="h-3 bg-white/10 [&>div]:bg-[#F97416]" />
+        </div>
 
         {/* ===== ACTIVE STEPS (Beta: 4 steps) ===== */}
         <div className="space-y-3">
@@ -470,18 +468,18 @@ const Campaign = () => {
             onToggle={() => toggleStep(0)}
           >
             <div className="space-y-3">
-              <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+              <div className="rounded-xl p-4 space-y-2" style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px' }}>
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Company</p>
-                  <p className="text-sm font-semibold">{campaign.company || "Not set"}</p>
+                  <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">Company</p>
+                  <p className="text-sm font-semibold text-white">{campaign.company || "Not set"}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Role</p>
-                  <p className="text-sm font-semibold">{campaign.role || "Not set"}</p>
+                  <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">Role</p>
+                  <p className="text-sm font-semibold text-white">{campaign.role || "Not set"}</p>
                 </div>
                 {campaign.match_score > 0 && (
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Match Score</p>
+                    <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">Match Score</p>
                     <p className={`text-sm font-semibold ${campaign.match_score >= 80 ? "text-success" : campaign.match_score >= 60 ? "text-yellow-500" : "text-destructive"}`}>
                       {campaign.match_score}%
                     </p>
@@ -498,27 +496,27 @@ const Campaign = () => {
           </StepCard>
 
           {/* STEP 2 — Generate your PoW brief (visually prominent) */}
-          <Card id="step-1" className={`${campaign.step_proof_done ? "border-success/30" : "border-primary/40 ring-2 ring-primary/20"}`}>
-            <CardHeader
-              className="pb-0 cursor-pointer select-none"
+          <div id="step-1" className="rounded-xl" style={{ backgroundColor: '#1A1A1A', border: campaign.step_proof_done ? '1px solid rgba(34,197,94,0.3)' : '2px solid rgba(249,116,22,0.4)', borderRadius: '12px' }}>
+            <div
+              className="pb-0 cursor-pointer select-none p-6"
               onClick={() => toggleStep(1)}
             >
-              <CardTitle className="text-sm flex items-center gap-2">
-                <span className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold ${campaign.step_proof_done ? "bg-success text-success-foreground" : "bg-primary text-primary-foreground"}`}>
+              <div className="text-sm flex items-center gap-2">
+                <span className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold ${campaign.step_proof_done ? "bg-success text-success-foreground" : "bg-[#F97416] text-white"}`}>
                   {campaign.step_proof_done ? <Check className="h-4 w-4" /> : 2}
                 </span>
-                <Lightbulb className={`h-5 w-5 ${campaign.step_proof_done ? "text-muted-foreground" : "text-primary"}`} />
+                <Lightbulb className={`h-5 w-5 ${campaign.step_proof_done ? "text-[#94A3B8]" : "text-[#F97416]"}`} />
                 <span className="flex-1">
-                  <span className={`${campaign.step_proof_done ? "" : "text-primary font-bold"}`}>Generate your PoW brief</span>
-                  <span className="block text-xs font-normal text-muted-foreground mt-0.5">
+                  <span className={`font-semibold ${campaign.step_proof_done ? "text-white" : "text-[#F97416] font-bold"}`}>Generate your PoW brief</span>
+                  <span className="block text-xs font-normal text-[#94A3B8] mt-0.5">
                     This is the core of your campaign. Build something real that shows you can do the job — before you even apply.
                   </span>
                 </span>
-                {openSteps.has(1) ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-              </CardTitle>
-            </CardHeader>
+                {openSteps.has(1) ? <ChevronDown className="h-4 w-4 text-[#94A3B8]" /> : <ChevronRight className="h-4 w-4 text-[#94A3B8]" />}
+              </div>
+            </div>
             {openSteps.has(1) && (
-              <CardContent className="pt-4">
+              <div className="px-6 pb-6 pt-0">
                 <div className="space-y-3">
                   <Button
                     size="sm"
@@ -533,21 +531,21 @@ const Campaign = () => {
                     try { parsed = JSON.parse(proofSuggestion); } catch { /* legacy plain text */ }
                     if (parsed && (parsed.project || parsed.title) && (parsed.build_steps || parsed.what_to_build)) {
                       if (parsed.build_steps) {
-                        return (
-                          <div className="space-y-5 rounded-lg border p-4 bg-muted/30">
+                      return (
+                          <div className="space-y-5 rounded-xl p-4" style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px' }}>
                             <div>
-                              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">The Project</p>
-                              <p className="text-sm font-semibold">{parsed.project}</p>
+                              <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">The Project</p>
+                              <p className="text-sm font-semibold text-white">{parsed.project}</p>
                             </div>
                             <div>
-                              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Why This Works</p>
-                              <p className="text-sm">{parsed.why_this_works}</p>
+                              <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">Why This Works</p>
+                              <p className="text-sm text-[#94A3B8]">{parsed.why_this_works}</p>
                             </div>
                             <div>
-                              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">How to Build It — Step by Step</p>
+                              <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">How to Build It — Step by Step</p>
                               <ol className="list-decimal pl-5 space-y-2">
                                 {(parsed.build_steps as string[]).map((step: string, i: number) => (
-                                  <li key={i} className="text-sm">{step}</li>
+                                  <li key={i} className="text-sm text-[#94A3B8]">{step}</li>
                                 ))}
                               </ol>
                               <p className="flex items-center gap-1 text-xs text-green-600 mt-2">
@@ -556,32 +554,32 @@ const Campaign = () => {
                               </p>
                             </div>
                             <div>
-                              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">What the Final Output Should Look Like</p>
-                              <p className="text-sm">{parsed.final_output}</p>
+                              <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">What the Final Output Should Look Like</p>
+                              <p className="text-sm text-[#94A3B8]">{parsed.final_output}</p>
                             </div>
                             {parsed.effort_guide && (
                               <div>
-                                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Effort Guide</p>
+                                <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-2">Effort Guide</p>
                                 <div className="space-y-2">
                                   <div className="rounded-md border border-[rgba(255,255,255,0.08)] p-3" style={{ background: "#1A1A1A" }}>
-                                    <p className="text-xs font-semibold text-[#F97316] mb-0.5">Minimum (gets noticed)</p>
-                                    <p className="text-sm">{parsed.effort_guide.minimum}</p>
+                                    <p className="text-xs font-semibold text-[#F97416] mb-0.5">Minimum (gets noticed)</p>
+                                    <p className="text-sm text-[#94A3B8]">{parsed.effort_guide.minimum}</p>
                                   </div>
                                   <div className="rounded-md border border-[rgba(255,255,255,0.08)] p-3" style={{ background: "#1A1A1A" }}>
-                                    <p className="text-xs font-semibold text-[#F97316] mb-0.5">Impressive (gets forwarded)</p>
-                                    <p className="text-sm">{parsed.effort_guide.impressive}</p>
+                                    <p className="text-xs font-semibold text-[#F97416] mb-0.5">Impressive (gets forwarded)</p>
+                                    <p className="text-sm text-[#94A3B8]">{parsed.effort_guide.impressive}</p>
                                   </div>
                                 </div>
                               </div>
                             )}
                             <div>
-                              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">The Insight to Include</p>
-                              <p className="text-sm italic">{parsed.key_insight}</p>
+                              <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">The Insight to Include</p>
+                              <p className="text-sm italic text-[#94A3B8]">{parsed.key_insight}</p>
                             </div>
                             <div>
-                              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Your Outreach Hook</p>
+                              <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">Your Outreach Hook</p>
                               <div className="relative">
-                                <p className="text-sm bg-primary/5 border border-primary/20 rounded-md p-3 font-medium">{parsed.outreach_hook}</p>
+                                <p className="text-sm rounded-md p-3 font-medium text-white" style={{ backgroundColor: 'rgba(249,116,22,0.08)', border: '1px solid rgba(249,116,22,0.2)' }}>{parsed.outreach_hook}</p>
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -597,22 +595,22 @@ const Campaign = () => {
                       }
                       // Legacy format
                       return (
-                        <div className="space-y-4 rounded-lg border p-4 bg-muted/30">
-                          <h4 className="font-semibold text-base">{parsed.title}</h4>
+                        <div className="space-y-4 rounded-xl p-4" style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px' }}>
+                          <h4 className="font-semibold text-base text-white">{parsed.title}</h4>
                           <div>
-                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Why this works</p>
-                            <p className="text-sm">{parsed.why_this_works}</p>
+                            <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">Why this works</p>
+                            <p className="text-sm text-[#94A3B8]">{parsed.why_this_works}</p>
                           </div>
                           <div>
-                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">What to build</p>
+                            <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">What to build</p>
                             <ul className="list-disc pl-5 space-y-1">
                               {(parsed.what_to_build as string[]).map((b: string, i: number) => (
-                                <li key={i} className="text-sm">{b}</li>
+                                <li key={i} className="text-sm text-[#94A3B8]">{b}</li>
                               ))}
                             </ul>
                           </div>
                           <div>
-                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Tools to use</p>
+                            <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">Tools to use</p>
                             <div className="flex flex-wrap gap-1.5">
                               {(parsed.tools_to_use as string[]).map((t: string, i: number) => (
                                 <span key={i} className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">{t}</span>
@@ -624,14 +622,14 @@ const Campaign = () => {
                             </p>
                           </div>
                           <div>
-                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Time estimate</p>
-                            <p className="text-sm">{parsed.time_estimate}</p>
+                            <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">Time estimate</p>
+                            <p className="text-sm text-[#94A3B8]">{parsed.time_estimate}</p>
                           </div>
                           {parsed.ai_prompt && (
                             <div>
-                              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Ready-to-use AI prompt</p>
+                              <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider mb-1">Ready-to-use AI prompt</p>
                               <div className="relative">
-                                <pre className="text-xs bg-muted rounded-md p-3 whitespace-pre-wrap font-sans">{parsed.ai_prompt}</pre>
+                                <pre className="text-xs rounded-md p-3 whitespace-pre-wrap font-sans text-[#94A3B8]" style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}>{parsed.ai_prompt}</pre>
                                 <Button variant="ghost" size="sm" className="absolute top-1 right-1 h-7 text-xs"
                                   onClick={() => { navigator.clipboard.writeText(parsed.ai_prompt); toast({ title: "Prompt copied!" }); }}>Copy</Button>
                               </div>
@@ -657,12 +655,12 @@ const Campaign = () => {
                       checked={campaign.step_proof_done}
                       onCheckedChange={(checked) => updateCampaign({ step_proof_done: !!checked, proof_in_progress: false, proof_suggestion: proofSuggestion || null } as any)}
                     />
-                    <label htmlFor="proof-done" className="text-sm">I've completed this</label>
+                    <label htmlFor="proof-done" className="text-sm text-[#94A3B8]">I've completed this</label>
                   </div>
                 </div>
-              </CardContent>
+              </div>
             )}
-          </Card>
+          </div>
 
           {/* STEP 3 — Post about it on LinkedIn */}
           <StepCard
@@ -682,8 +680,8 @@ const Campaign = () => {
                 Personal branding isn't vanity. It's your warmest possible introduction.
               </p>
               {/* New note at the top */}
-              <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
-                <p className="text-sm text-foreground font-medium">
+              <div className="rounded-xl px-4 py-3" style={{ backgroundColor: 'rgba(249,116,22,0.08)', border: '1px solid rgba(249,116,22,0.2)', borderRadius: '12px' }}>
+                <p className="text-sm text-white font-medium">
                   ✍️ Write this yourself — authenticity is everything. We give you the angle, you write the words.
                 </p>
               </div>
@@ -691,7 +689,7 @@ const Campaign = () => {
               {/* AI-generated angles */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">What to write about</p>
+                  <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider">What to write about</p>
                   <Button
                     size="sm"
                     variant="outline"
@@ -705,7 +703,7 @@ const Campaign = () => {
                   </Button>
                 </div>
                 {!proofSuggestion && (
-                  <p className="text-xs text-muted-foreground">Complete your proof of work first — we need it to suggest specific angles.</p>
+                  <p className="text-xs text-[#94A3B8]">Complete your proof of work first — we need it to suggest specific angles.</p>
                 )}
                 {(() => {
                   let angles: string[] | null = null;
@@ -714,8 +712,8 @@ const Campaign = () => {
                   return (
                     <ul className="space-y-2">
                       {angles.map((angle: string, i: number) => (
-                        <li key={i} className="flex items-start gap-2 text-sm">
-                          <span className="mt-0.5 h-5 w-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">{i + 1}</span>
+                        <li key={i} className="flex items-start gap-2 text-sm text-[#94A3B8]">
+                          <span className="mt-0.5 h-5 w-5 rounded-full bg-[#F97416]/10 text-[#F97416] flex items-center justify-center text-xs font-bold shrink-0">{i + 1}</span>
                           {angle}
                         </li>
                       ))}
@@ -726,8 +724,8 @@ const Campaign = () => {
 
               {/* Playbook */}
               <div className="space-y-3">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">PrepLane's LinkedIn playbook</p>
-                <div className="rounded-lg border bg-muted/30 p-4 space-y-3 text-sm">
+                <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider">PrepLane's LinkedIn playbook</p>
+                <div className="rounded-xl p-4 space-y-3 text-sm text-[#94A3B8]" style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px' }}>
                   <p>✍️ <strong>Write it yourself</strong> — authenticity is detectable. AI-written posts get ignored.</p>
                   <p>🕐 <strong>Post in real time, never schedule</strong> — scheduled posts get less reach</p>
                   <p>💬 <strong>Answer every comment within the first hour</strong> — early interaction is gold for the algorithm</p>
@@ -777,17 +775,17 @@ const Campaign = () => {
             <div className="space-y-6">
               {/* Section A: Who to look for */}
               <div className="space-y-3">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Who to look for</p>
-                <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
-                  <p className="text-sm">
-                    Look for someone at <span className="font-semibold">{campaign.company}</span> who is either:
+                <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider">Who to look for</p>
+                <div className="rounded-xl p-4 space-y-2" style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px' }}>
+                  <p className="text-sm text-[#94A3B8]">
+                    Look for someone at <span className="font-semibold text-white">{campaign.company}</span> who is either:
                   </p>
-                  <ul className="list-disc pl-5 space-y-1 text-sm">
+                  <ul className="list-disc pl-5 space-y-1 text-sm text-[#94A3B8]">
                     <li>The hiring manager for the <span className="font-semibold">{campaign.role}</span> role</li>
                     <li>A team lead or senior IC in the same department</li>
                     <li>A recruiter who recently posted about this team or role</li>
                   </ul>
-                  <p className="text-xs text-muted-foreground mt-2">
+                  <p className="text-xs text-[#94A3B8]/70 mt-2">
                     Search LinkedIn for "{campaign.company} {campaign.role}" — look for someone 1–2 levels above the role you're targeting.
                   </p>
                 </div>
@@ -806,7 +804,7 @@ const Campaign = () => {
               {/* Contact info inputs */}
               <div className="space-y-3">
                 <div>
-                  <label className="text-sm font-medium">Name of someone at {campaign.company}</label>
+                  <label className="text-sm font-medium text-white">Name of someone at {campaign.company}</label>
                   <Input
                     value={connectionName}
                     onChange={(e) => setConnectionName(e.target.value)}
@@ -816,7 +814,7 @@ const Campaign = () => {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium">Their LinkedIn URL (optional)</label>
+                  <label className="text-sm font-medium text-white">Their LinkedIn URL (optional)</label>
                   <Input
                     value={connectionUrl}
                     onChange={(e) => setConnectionUrl(e.target.value)}
@@ -829,11 +827,11 @@ const Campaign = () => {
 
               {/* Section B: Outreach message */}
               <div className="space-y-3">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Your outreach message</p>
+                <p className="text-[11px] font-medium text-[#F97416] uppercase tracking-wider">Your outreach message</p>
 
                 {!campaign.company || campaign.company.trim() === "" ? (
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Which company are you targeting with this outreach?</label>
+                    <label className="text-sm font-medium text-white">Which company are you targeting with this outreach?</label>
                     <div className="flex gap-2">
                       <Input
                         value={companyInput}
@@ -858,9 +856,9 @@ const Campaign = () => {
                 ) : (
                   <>
                     {!getProofHook() ? (
-                      <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 space-y-1">
-                        <p className="font-semibold">Generate your Proof of Work first — your outreach needs to lead with something real.</p>
-                        <p className="text-amber-800/80 text-xs">Your PoW brief includes an outreach hook that becomes the opening line of your message. Without it, outreach is generic.</p>
+                      <div className="rounded-xl px-4 py-3 text-sm space-y-1" style={{ backgroundColor: 'rgba(249,116,22,0.08)', border: '1px solid rgba(249,116,22,0.2)', borderRadius: '12px' }}>
+                        <p className="font-semibold text-white">Generate your Proof of Work first — your outreach needs to lead with something real.</p>
+                        <p className="text-[#94A3B8] text-xs">Your PoW brief includes an outreach hook that becomes the opening line of your message. Without it, outreach is generic.</p>
                       </div>
                     ) : (
                       <Button
@@ -925,32 +923,30 @@ const Campaign = () => {
 
         {/* ===== COMING SOON CARDS ===== */}
         <div className="space-y-3 mt-8">
-          <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground px-1">More tools — coming soon</p>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-[#F97416] px-1">More tools — coming soon</p>
           {COMING_SOON_STEPS.map((step) => {
             const Icon = step.icon;
             return (
-              <Card key={step.label} className="opacity-50 cursor-default">
-                <CardHeader className="pb-0">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <span className="h-6 w-6 rounded-full flex items-center justify-center bg-muted text-muted-foreground text-xs">—</span>
-                    <Icon className="h-4 w-4 text-muted-foreground" />
-                    <span className="flex-1 text-muted-foreground">{step.label}</span>
-                    <Badge className="bg-[#F97316]/15 text-[#F97316] border-[#F97316]/30 hover:bg-[#F97316]/15 text-xs">
-                      Coming soon
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-              </Card>
+              <div key={step.label} className="opacity-50 cursor-default rounded-xl p-4" style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px' }}>
+                <div className="text-sm flex items-center gap-2">
+                  <span className="h-6 w-6 rounded-full flex items-center justify-center bg-white/5 text-[#94A3B8] text-xs">—</span>
+                  <Icon className="h-4 w-4 text-[#94A3B8]" />
+                  <span className="flex-1 text-[#94A3B8]">{step.label}</span>
+                  <Badge className="bg-[#F97416]/15 text-[#F97416] border-[#F97416]/30 hover:bg-[#F97416]/15 text-xs">
+                    Coming soon
+                  </Badge>
+                </div>
+              </div>
             );
           })}
         </div>
 
         {/* Notes */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm">Notes — what worked, what didn't</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <div className="rounded-xl" style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px' }}>
+          <div className="p-6 pb-3">
+            <h3 className="text-sm font-semibold text-white">Notes — what worked, what didn't</h3>
+          </div>
+          <div className="px-6 pb-6">
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -959,8 +955,8 @@ const Campaign = () => {
               placeholder="Reflect on this campaign..."
               className="text-sm"
             />
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </main>
     </div>
   );
@@ -986,30 +982,30 @@ function StepCard({
 }) {
   const Icon = step.icon;
   return (
-    <Card id={`step-${index}`} className={done ? "border-success/30" : ""}>
-      <CardHeader
-        className="pb-0 cursor-pointer select-none"
+    <div id={`step-${index}`} className="rounded-xl" style={{ backgroundColor: '#1A1A1A', border: done ? '1px solid rgba(34,197,94,0.3)' : '1px solid rgba(255,255,255,0.08)', borderRadius: '12px' }}>
+      <div
+        className="pb-0 cursor-pointer select-none p-6"
         onClick={onToggle}
       >
-        <CardTitle className="text-sm flex items-center gap-2">
-          <span className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold ${done ? "bg-success text-success-foreground" : "bg-muted text-muted-foreground"}`}>
+        <div className="text-sm flex items-center gap-2">
+          <span className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold ${done ? "bg-success text-success-foreground" : "bg-white/10 text-[#94A3B8]"}`}>
             {done ? <Check className="h-3.5 w-3.5" /> : index + 1}
           </span>
-          <Icon className="h-4 w-4 text-muted-foreground" />
+          <Icon className="h-4 w-4 text-[#94A3B8]" />
           <span className="flex-1">
-            {step.label}
+            <span className="text-white font-semibold">{step.label}</span>
             {step.subtext && (
-              <span className="block text-xs font-normal text-muted-foreground mt-0.5">{step.subtext}</span>
+              <span className="block text-xs font-normal text-[#94A3B8] mt-0.5">{step.subtext}</span>
             )}
           </span>
           {!isOutcome && (
-            <span className="text-xs text-muted-foreground font-normal">{step.weight}%</span>
+            <span className="text-xs text-[#94A3B8] font-normal">{step.weight}%</span>
           )}
-          {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-        </CardTitle>
-      </CardHeader>
-      {open && <CardContent className="pt-4">{children}</CardContent>}
-    </Card>
+          {open ? <ChevronDown className="h-4 w-4 text-[#94A3B8]" /> : <ChevronRight className="h-4 w-4 text-[#94A3B8]" />}
+        </div>
+      </div>
+      {open && <div className="px-6 pb-6 pt-0">{children}</div>}
+    </div>
   );
 }
 
