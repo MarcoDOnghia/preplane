@@ -516,7 +516,7 @@ const Campaign = () => {
               </div>
             </div>
             {openSteps.has(1) && (
-              <CardContent className="pt-4">
+              <div className="px-6 pb-6 pt-0">
                 <div className="space-y-3">
                   <Button
                     size="sm"
