@@ -658,9 +658,9 @@ const Campaign = () => {
                     <label htmlFor="proof-done" className="text-sm text-[#94A3B8]">I've completed this</label>
                   </div>
                 </div>
-              </CardContent>
+              </div>
             )}
-          </Card>
+          </div>
 
           {/* STEP 3 — Post about it on LinkedIn */}
           <StepCard
