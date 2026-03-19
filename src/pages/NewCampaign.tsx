@@ -39,9 +39,6 @@ const LOADING_STEPS = [
 const TARGET_KEY = "preplane_onboarding_target";
 const ONBOARDING_KEY = "preplane_onboarding_done";
 
-const SECTION_LABELS = ["Your Hook", "The Mission", "How to Build It", "The Output", "The Insight"];
-const NEXT_LABELS = ["See the project →", "How to build it →", "See the output →", "The key insight →", ""];
-
 const BriefNavigator = ({
   proofBrief,
   setupCompany,
