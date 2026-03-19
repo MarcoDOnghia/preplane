@@ -208,3 +208,9 @@
 .campaign-notes-textarea::placeholder {
   color: #475569;
 }
+
+.campaign-notes-textarea:focus {
+  border-color: #F97416 !important;
+  outline: none;
+  box-shadow: none;
+}
