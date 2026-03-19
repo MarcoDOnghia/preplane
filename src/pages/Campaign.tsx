@@ -703,7 +703,7 @@ const Campaign = () => {
                   </Button>
                 </div>
                 {!proofSuggestion && (
-                  <p className="text-xs text-muted-foreground">Complete your proof of work first — we need it to suggest specific angles.</p>
+                  <p className="text-xs text-[#94A3B8]">Complete your proof of work first — we need it to suggest specific angles.</p>
                 )}
                 {(() => {
                   let angles: string[] | null = null;
