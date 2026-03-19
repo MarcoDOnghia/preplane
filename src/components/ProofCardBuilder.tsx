@@ -428,6 +428,7 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
               }}
               onBlur={handleBlurSave}
               maxLength={120}
+              placeholder={`Finding ${i + 1}`}
               className="campaign-notes-textarea"
               style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: 'white' }}
             />
