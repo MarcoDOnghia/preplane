@@ -397,7 +397,8 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
       <FieldGroup label="Your feedback ask" helper="This is the CTA on the card. Small ask = more replies." required>
         <Textarea
           value={ask}
-          onChange={(e) => setAsk(e.target.value.slice(0, 160))}
+          onChange={(e) => { const v = e.target.value.slice(0, 160); updateField(setAsk, v, { ask: v }); }}
+          onBlur={handleBlurSave}
           maxLength={160}
           rows={2}
           className="campaign-notes-textarea"
