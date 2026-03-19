@@ -546,10 +546,10 @@ const Campaign = () => {
           </Button>
           <Button
             onClick={handleNext}
-            style={{ backgroundColor: currentStep >= 2 ? '#22c55e' : '#F97416' }}
+            style={{ backgroundColor: currentStep >= 3 ? '#22c55e' : '#F97416' }}
             className="text-white font-semibold hover:opacity-90"
           >
-            {currentStep === 3 ? "Complete" : "Next"} <ArrowRight className="h-4 w-4 ml-1" />
+            {currentStep === 4 ? "Complete" : "Next"} <ArrowRight className="h-4 w-4 ml-1" />
           </Button>
         </div>
 
