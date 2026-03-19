@@ -649,7 +649,45 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_proof_cards: {
+        Row: {
+          ask: string | null
+          assumption: string | null
+          doc_url: string | null
+          image_url: string | null
+          insights: Json | null
+          loom_url: string | null
+          next_48h: string | null
+          one_liner: string | null
+          published: boolean | null
+          slug: string | null
+        }
+        Insert: {
+          ask?: string | null
+          assumption?: string | null
+          doc_url?: string | null
+          image_url?: string | null
+          insights?: Json | null
+          loom_url?: string | null
+          next_48h?: string | null
+          one_liner?: string | null
+          published?: boolean | null
+          slug?: string | null
+        }
+        Update: {
+          ask?: string | null
+          assumption?: string | null
+          doc_url?: string | null
+          image_url?: string | null
+          insights?: Json | null
+          loom_url?: string | null
+          next_48h?: string | null
+          one_liner?: string | null
+          published?: boolean | null
+          slug?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       check_and_increment_usage: {

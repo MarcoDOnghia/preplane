@@ -30,10 +30,9 @@ export default function ProofCard() {
   useEffect(() => {
     if (!slug) return;
     supabase
-      .from("proof_cards")
+      .from("public_proof_cards")
       .select("*")
       .eq("slug", slug)
-      .eq("published", true)
       .maybeSingle()
       .then(({ data, error }) => {
         if (!data || error) {
