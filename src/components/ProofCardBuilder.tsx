@@ -511,7 +511,8 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
       <FieldGroup label="Your full deliverable" helper="Notion, Google Sheets, Figma, GitHub — link to the full work." required>
         <Input
           value={docUrl}
-          onChange={(e) => setDocUrl(e.target.value)}
+          onChange={(e) => updateField(setDocUrl, e.target.value, { docUrl: e.target.value })}
+          onBlur={handleBlurSave}
           placeholder="https://..."
           className="campaign-notes-textarea"
           style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: 'white' }}
