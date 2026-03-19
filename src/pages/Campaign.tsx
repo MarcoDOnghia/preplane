@@ -362,7 +362,7 @@ const Campaign = () => {
       <Header />
       <main className="mx-auto px-4 py-8 max-w-[800px] space-y-6">
         {/* Back button */}
-        <Button variant="ghost" size="sm" onClick={() => navigate("/app")} className="text-muted-foreground">
+        <Button variant="ghost" size="sm" onClick={() => navigate("/app")} className="text-[#94A3B8] hover:text-white">
           <ArrowLeft className="h-4 w-4 mr-1" /> Back to dashboard
         </Button>
 
