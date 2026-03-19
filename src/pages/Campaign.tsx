@@ -443,20 +443,18 @@ const Campaign = () => {
         )}
 
         {/* Campaign Strength — simplified for beta */}
-        <Card>
-          <CardContent className="pt-6">
+        <div style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '24px' }}>
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <Target className="h-5 w-5 text-primary" />
-                <span className="font-semibold">Campaign Progress</span>
+                <Target className="h-5 w-5 text-[#F97416]" />
+                <span className="font-semibold text-white">Campaign Progress</span>
               </div>
-              <span className={`text-2xl font-bold ${strengthScore >= 80 ? "text-success" : strengthScore >= 50 ? "text-yellow-500" : "text-muted-foreground"}`}>
+              <span className={`text-2xl font-bold ${strengthScore >= 80 ? "text-success" : strengthScore >= 50 ? "text-yellow-500" : "text-[#94A3B8]"}`}>
                 {strengthScore}%
               </span>
             </div>
-            <Progress value={strengthScore} className="h-3" />
-          </CardContent>
-        </Card>
+            <Progress value={strengthScore} className="h-3 bg-white/10 [&>div]:bg-[#F97416]" />
+        </div>
 
         {/* ===== ACTIVE STEPS (Beta: 4 steps) ===== */}
         <div className="space-y-3">
