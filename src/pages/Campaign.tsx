@@ -712,8 +712,8 @@ const Campaign = () => {
                   return (
                     <ul className="space-y-2">
                       {angles.map((angle: string, i: number) => (
-                        <li key={i} className="flex items-start gap-2 text-sm">
-                          <span className="mt-0.5 h-5 w-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">{i + 1}</span>
+                        <li key={i} className="flex items-start gap-2 text-sm text-[#94A3B8]">
+                          <span className="mt-0.5 h-5 w-5 rounded-full bg-[#F97416]/10 text-[#F97416] flex items-center justify-center text-xs font-bold shrink-0">{i + 1}</span>
                           {angle}
                         </li>
                       ))}
