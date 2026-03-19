@@ -377,14 +377,20 @@ const Campaign = () => {
               value={campaign.status}
               onValueChange={handleStatusChange}
             >
-              <SelectTrigger className="w-auto">
+              <SelectTrigger className="w-auto border-0 bg-transparent p-0 h-auto shadow-none focus:ring-0">
                 <Badge variant="outline" className={statusInfo.color}>
                   {statusInfo.label}
                 </Badge>
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px' }}>
                 {STATUS_OPTIONS.map((s) => (
-                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                  <SelectItem
+                    key={s.value}
+                    value={s.value}
+                    className="text-white hover:bg-[#242424] focus:bg-[#242424] focus:text-[#F97416] data-[state=checked]:text-[#F97416]"
+                  >
+                    {s.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
