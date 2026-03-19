@@ -596,13 +596,19 @@ const Campaign = () => {
 
 // ==================== STEP 1: Generate PoW Brief ====================
 function Step1Content({ campaign, proofSuggestion, generating, generateContent, toast, updateCampaign }: any) {
+  let parsed: any = null;
+  try { parsed = JSON.parse(proofSuggestion || ""); } catch {}
+  const hasStructuredBrief = parsed && (parsed.project || parsed.title) && parsed.build_steps;
+
   return (
     <div className="space-y-6">
       <div>
         <h2 style={{ color: '#ffffff', fontSize: '22px', fontWeight: 700, marginBottom: '8px' }}>Generate your PoW brief</h2>
-        <p style={{ color: '#94A3B8', fontSize: '15px', lineHeight: 1.7 }}>
-          This is the core of your campaign. Everything else builds on this.
-        </p>
+        {!proofSuggestion && (
+          <p style={{ color: '#94A3B8', fontSize: '15px', lineHeight: 1.7 }}>
+            This is the core of your campaign. Everything else builds on this.
+          </p>
+        )}
       </div>
 
       <Button
@@ -613,10 +619,14 @@ function Step1Content({ campaign, proofSuggestion, generating, generateContent, 
         className="text-white"
       >
         {generating === "proof_of_work" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
-        Generate proof of work idea
+        {proofSuggestion ? "Regenerate proof of work idea" : "Generate proof of work idea"}
       </Button>
 
-      {proofSuggestion && <PowBriefDisplay proofSuggestion={proofSuggestion} toast={toast} />}
+      {hasStructuredBrief ? (
+        <BriefNavigator proofBrief={parsed} company={campaign.company} toast={toast} />
+      ) : proofSuggestion ? (
+        <PowBriefDisplay proofSuggestion={proofSuggestion} toast={toast} />
+      ) : null}
     </div>
   );
 }
