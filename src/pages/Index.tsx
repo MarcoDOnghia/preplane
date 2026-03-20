@@ -6,13 +6,12 @@ import AppFooter from "@/components/AppFooter";
 import { supabase } from "@/integrations/supabase/client";
 import {
   PlusCircle, ArrowRight, Target, Clock, RotateCcw, Zap, Check, Lightbulb,
-  Loader2, X, AlertTriangle, CalendarDays, FileEdit, CheckCircle2, Circle, Rocket
+  Loader2, X, AlertTriangle, CalendarDays, FileEdit, CheckCircle2, Circle
 } from "lucide-react";
 import { formatDistanceToNow, differenceInDays } from "date-fns";
 
 const TARGET_KEY = "preplane_onboarding_target";
 const ONBOARDING_KEY = "preplane_onboarding_done";
-const POW_GENERATED_KEY = "preplane_pow_generated";
 
 const STEPS = [
   { key: "step_proof_done", label: "Build proof of work", weight: 20 },
@@ -91,9 +90,6 @@ const Index = () => {
   const [showArchived, setShowArchived] = useState(false);
   const [followupNudgeDismissed, setFollowupNudgeDismissed] = useState(false);
 
-  const [powGenerating, setPowGenerating] = useState(false);
-  const [powSkipped, setPowSkipped] = useState(false);
-
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
@@ -150,58 +146,6 @@ const Index = () => {
         const loadedCampaigns = (campData as any as CampaignRow[]) || [];
         setCampaigns(loadedCampaigns);
         setLoading(false);
-
-        // Auto-generate PoW brief for brand-new users
-        const alreadyGenerated = localStorage.getItem(POW_GENERATED_KEY) === "true";
-        if (!alreadyGenerated && loadedCampaigns.length === 0 && resolvedRole) {
-          localStorage.setItem(POW_GENERATED_KEY, "true");
-          setPowGenerating(true);
-          try {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) throw new Error("No session");
-            const res = await fetch(
-              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-campaign-content`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${session.access_token}`,
-                  apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-                },
-                body: JSON.stringify({
-                  contentType: "proof_of_work",
-                  company: "your target company",
-                  role: resolvedRole,
-                }),
-              }
-            );
-            if (!res.ok) throw new Error("Generation failed");
-            const brief = await res.json();
-            if (brief && brief.title) {
-              const { data: newCampaign, error: insertErr } = await supabase
-                .from("campaigns")
-                .insert({
-                  user_id: user.id,
-                  company: "General",
-                  role: resolvedRole,
-                  jd_text: "",
-                  proof_suggestion: JSON.stringify(brief),
-                  proof_in_progress: true,
-                  status: "targeting",
-                } as any)
-                .select("id")
-                .single();
-              if (!insertErr && newCampaign) {
-                nav(`/campaign/${newCampaign.id}`, { replace: true });
-                return;
-              }
-            }
-          } catch {
-            // Fail silently
-          } finally {
-            setPowGenerating(false);
-          }
-        }
       });
   }, [user, authLoading, nav]);
 
@@ -214,35 +158,8 @@ const Index = () => {
   }
   if (!user) return <Navigate to="/onboarding" replace />;
 
-  // First-load PoW generating screen
-  if (powGenerating && !powSkipped) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-4" style={{ background: "#111111", fontFamily: "Inter, sans-serif" }}>
-        <div className="max-w-md text-center space-y-6">
-          <div className="relative mx-auto w-16 h-16">
-            <div className="absolute inset-0 rounded-full bg-[#F97316]/20 animate-ping" />
-            <div className="relative flex items-center justify-center w-16 h-16 rounded-full bg-[#F97316]/10">
-              <Rocket className="w-8 h-8 text-[#F97316] animate-pulse" />
-            </div>
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-white">Building your first proof of work brief</h2>
-            <p className="mt-2" style={{ color: "#94A3B8" }}>for <span className="font-semibold text-white">{targetRole}</span>...</p>
-          </div>
-          <div className="h-1.5 w-48 mx-auto rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>
-            <div className="h-full bg-[#F97316] rounded-full" style={{ width: '60%', animation: 'pulse 1.5s ease-in-out infinite' }} />
-          </div>
-          <button
-            onClick={() => setPowSkipped(true)}
-            className="text-xs underline underline-offset-2 transition-colors"
-            style={{ color: "#64748B" }}
-          >
-            Skip for now →
-          </button>
-        </div>
-      </div>
-    );
-  }
+
+
 
   const activeCampaigns = campaigns.filter((c) => !c.archived);
   const archivedCampaigns = campaigns.filter((c) => c.archived);
