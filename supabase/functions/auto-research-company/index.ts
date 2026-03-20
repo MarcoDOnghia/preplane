@@ -3,6 +3,33 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+function parseSignals(text: string): { type: string; text: string }[] {
+  const signals: { type: string; text: string }[] = [];
+  const sections = [
+    { key: "WHAT THEY DO", type: "company" },
+    { key: "RECENT NEWS", type: "funding" },
+    { key: "OPEN ROLES", type: "hiring" },
+    { key: "CUSTOMER SIGNALS", type: "customer" },
+    { key: "BEST POW ANGLE", type: "pow_angle" },
+  ];
+  for (const section of sections) {
+    const upper = text.toUpperCase();
+    const idx = upper.indexOf(section.key);
+    if (idx === -1) continue;
+    const afterHeader = text.slice(idx + section.key.length);
+    const nextIdx = sections
+      .map(s => upper.indexOf(s.key, idx + section.key.length))
+      .filter(i => i > idx)
+      .sort((a, b) => a - b)[0];
+    const raw = nextIdx ? text.slice(idx + section.key.length, nextIdx) : afterHeader;
+    const content = raw.trim();
+    if (content && content.toLowerCase() !== "not found") {
+      signals.push({ type: section.type, text: content });
+    }
+  }
+  return signals;
+}
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
