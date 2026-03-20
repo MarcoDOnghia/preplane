@@ -1020,24 +1020,55 @@ const Index = () => {
                   <label style={{ color: '#FFFFFF', fontSize: '13px', fontWeight: 500, display: 'block', marginBottom: '6px' }}>
                     Target role
                   </label>
-                  <input
-                    value={setupRole}
-                    onChange={(e) => setSetupRole(e.target.value)}
-                    placeholder="e.g. GTM Intern, VC Analyst, Marketing Intern"
-                    style={{
-                      width: '100%',
-                      background: '#1A1A1A',
-                      border: '1px solid rgba(255,255,255,0.08)',
-                      borderRadius: '8px',
-                      color: '#FFFFFF',
-                      padding: '12px 14px',
-                      fontSize: '14px',
-                      outline: 'none',
-                      transition: 'border-color 0.2s',
-                    }}
-                    onFocus={(e) => { e.target.style.borderColor = '#F97316'; }}
-                    onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.08)'; }}
-                  />
+                  <div className="flex flex-wrap gap-2">
+                    {[...UNLOCKED_ROLES, ...Object.keys(LOCKED_ROLES)].map((role) => {
+                      const locked = isRoleLocked(role);
+                      const selected = setupRole === role;
+                      return (
+                        <button
+                          key={role}
+                          type="button"
+                          onClick={() => {
+                            if (locked) {
+                              setWaitlistRole(role);
+                              setShowWaitlistModal(true);
+                            } else {
+                              setSetupRole(role);
+                            }
+                          }}
+                          className="transition-colors"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '8px 14px',
+                            borderRadius: '8px',
+                            fontSize: '13px',
+                            fontWeight: 500,
+                            cursor: 'pointer',
+                            background: selected ? '#F97316' : 'rgba(30,41,59,0.5)',
+                            color: selected ? 'white' : locked ? '#64748B' : '#CBD5E1',
+                            border: selected ? '1px solid #F97316' : '1px solid rgba(255,255,255,0.08)',
+                          }}
+                        >
+                          {locked && <Lock className="w-3 h-3" style={{ flexShrink: 0 }} />}
+                          {role}
+                          {locked && (
+                            <span style={{
+                              background: 'rgba(249,116,22,0.15)',
+                              color: '#F97316',
+                              fontSize: '10px',
+                              fontWeight: 600,
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                            }}>
+                              Waitlist
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 {/* Field 2: Target company */}
