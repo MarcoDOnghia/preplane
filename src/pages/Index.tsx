@@ -144,58 +144,6 @@ const Index = () => {
         const loadedCampaigns = (campData as any as CampaignRow[]) || [];
         setCampaigns(loadedCampaigns);
         setLoading(false);
-
-        // Auto-generate PoW brief for brand-new users
-        const alreadyGenerated = localStorage.getItem(POW_GENERATED_KEY) === "true";
-        if (!alreadyGenerated && loadedCampaigns.length === 0 && resolvedRole) {
-          localStorage.setItem(POW_GENERATED_KEY, "true");
-          setPowGenerating(true);
-          try {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) throw new Error("No session");
-            const res = await fetch(
-              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-campaign-content`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${session.access_token}`,
-                  apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-                },
-                body: JSON.stringify({
-                  contentType: "proof_of_work",
-                  company: "your target company",
-                  role: resolvedRole,
-                }),
-              }
-            );
-            if (!res.ok) throw new Error("Generation failed");
-            const brief = await res.json();
-            if (brief && brief.title) {
-              const { data: newCampaign, error: insertErr } = await supabase
-                .from("campaigns")
-                .insert({
-                  user_id: user.id,
-                  company: "General",
-                  role: resolvedRole,
-                  jd_text: "",
-                  proof_suggestion: JSON.stringify(brief),
-                  proof_in_progress: true,
-                  status: "targeting",
-                } as any)
-                .select("id")
-                .single();
-              if (!insertErr && newCampaign) {
-                nav(`/campaign/${newCampaign.id}`, { replace: true });
-                return;
-              }
-            }
-          } catch {
-            // Fail silently
-          } finally {
-            setPowGenerating(false);
-          }
-        }
       });
   }, [user, authLoading, nav]);
 
