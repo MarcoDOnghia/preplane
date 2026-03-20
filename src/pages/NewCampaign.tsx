@@ -217,7 +217,11 @@ const Index = () => {
   ];
 
   const handleAutoResearch = async () => {
-    if (!setupCompany.trim()) return;
+    if (!setupCompany.trim()) {
+      setCompanyError("Enter a company name first");
+      companyInputRef.current?.focus();
+      return;
+    }
 
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
@@ -228,17 +232,20 @@ const Index = () => {
 
     setAutoResearching(true);
     setAutoResearchStep(0);
-    setAutoResearchInsights([]);
     setAutoResearchDone(false);
+    setAutoResearchSuccess(false);
+    setCompanyError("");
 
-    // Animate through steps
-    for (let i = 0; i < AUTO_RESEARCH_STEPS.length; i++) {
-      setAutoResearchStep(i);
-      await new Promise(r => setTimeout(r, 1200));
-    }
+    // Animate through steps in sync with real API call
+    const stepPromise = (async () => {
+      for (let i = 0; i < AUTO_RESEARCH_STEPS.length; i++) {
+        setAutoResearchStep(i);
+        await new Promise(r => setTimeout(r, 1500));
+      }
+    })();
 
     try {
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/suggest-companies`;
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/auto-research-company`;
       const response = await fetch(url, {
         method: "POST",
         headers: {
@@ -249,9 +256,11 @@ const Index = () => {
         body: JSON.stringify({
           company: setupCompany.trim(),
           role: setupRole.trim(),
-          mode: "research",
         }),
       });
+
+      // Wait for step animation to finish
+      await stepPromise;
 
       if (!response.ok) {
         if (response.status === 429) {
@@ -263,25 +272,21 @@ const Index = () => {
       }
 
       const data = await response.json();
-      const insights = (data.insights || data.suggestions || []).map((item: any) => ({
-        text: typeof item === "string" ? item : item.text || item.insight || item.suggestion || "",
-        source: typeof item === "string" ? "Website" : item.source || "Research",
-        selected: true,
-      })).filter((i: any) => i.text);
+      if (data.error) throw new Error(data.error);
 
-      if (insights.length === 0) {
-        // Fallback: generate placeholder insights from company name
-        setAutoResearchInsights([
-          { text: `${setupCompany.trim()} is actively hiring for roles related to ${setupRole.trim()}.`, source: "Careers", selected: true },
-          { text: `Research their latest product updates and company news for specific hooks.`, source: "Website", selected: true },
-        ]);
-      } else {
-        setAutoResearchInsights(insights);
-      }
+      const research = data.research || "";
+      if (!research) throw new Error("No research returned");
+
+      // Populate textarea and open manual section
+      setManualNotes(research);
+      setShowManualSection(true);
       setAutoResearchDone(true);
+      setAutoResearchSuccess(true);
     } catch (e: any) {
-      toast({ title: "Research failed", description: "Try adding notes manually instead.", variant: "destructive" });
-      setAutoResearchInsights([]);
+      setAutoResearchDone(true);
+      setAutoResearchSuccess(false);
+      setCompanyError("Research unavailable — add your own notes below to continue.");
+      setShowManualSection(true);
     } finally {
       setAutoResearching(false);
     }
