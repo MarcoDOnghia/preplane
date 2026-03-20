@@ -21,7 +21,7 @@ import {
   DialogContent,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Loader2, Sparkles, ArrowRight, Lightbulb, Link2, Check, ChevronLeft, ChevronRight, Copy, Lock } from "lucide-react";
+import { Loader2, Sparkles, ArrowRight, Lightbulb, Link2, Check, ChevronLeft, ChevronRight, Copy, Lock, Search, Globe, Newspaper, BriefcaseBusiness, Star, LayoutTemplate, CheckCircle2 } from "lucide-react";
 import RoleWaitlistModal, { isRoleLocked, LOCKED_ROLES, UNLOCKED_ROLES } from "@/components/RoleWaitlistModal";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import type { TailorResult } from "@/lib/types";
@@ -60,11 +60,20 @@ const Index = () => {
   const [proofBrief, setProofBrief] = useState<any>(null);
   const [generatingBrief, setGeneratingBrief] = useState(false);
   const [jdExtractingUrl, setJdExtractingUrl] = useState(false);
-  const [showNoCompanyWarning, setShowNoCompanyWarning] = useState(false);
+  
   const [setupIntel, setSetupIntel] = useState("");
   const [showWaitlistModal, setShowWaitlistModal] = useState(false);
   const [waitlistRole, setWaitlistRole] = useState("");
   const companyInputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-research state
+  const [autoResearching, setAutoResearching] = useState(false);
+  const [autoResearchStep, setAutoResearchStep] = useState(0);
+  const [autoResearchInsights, setAutoResearchInsights] = useState<{ text: string; source: string; selected: boolean }[]>([]);
+  const [autoResearchDone, setAutoResearchDone] = useState(false);
+  const [manualNotes, setManualNotes] = useState("");
+  const [manualUrl, setManualUrl] = useState("");
+  const [showManualSection, setShowManualSection] = useState(false);
 
   // Check onboarding status and save any pending target from onboarding
   useEffect(() => {
@@ -198,15 +207,106 @@ const Index = () => {
     }
   };
 
+  const AUTO_RESEARCH_STEPS = [
+    "Scanning founder LinkedIn signals…",
+    "Pulling recent news…",
+    "Checking job listings…",
+    "Mining reviews (G2/Trustpilot)…",
+    "Extracting website positioning…",
+  ];
+
+  const handleAutoResearch = async () => {
+    if (!setupCompany.trim()) return;
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast({ title: "Your session expired. Please sign in again.", variant: "destructive" });
+      nav("/onboarding");
+      return;
+    }
+
+    setAutoResearching(true);
+    setAutoResearchStep(0);
+    setAutoResearchInsights([]);
+    setAutoResearchDone(false);
+
+    // Animate through steps
+    for (let i = 0; i < AUTO_RESEARCH_STEPS.length; i++) {
+      setAutoResearchStep(i);
+      await new Promise(r => setTimeout(r, 1200));
+    }
+
+    try {
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/suggest-companies`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({
+          company: setupCompany.trim(),
+          role: setupRole.trim(),
+          mode: "research",
+        }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 429) {
+          toast({ title: "Daily research limit reached. Try again tomorrow.", variant: "destructive" });
+          setAutoResearching(false);
+          return;
+        }
+        throw new Error("Research failed");
+      }
+
+      const data = await response.json();
+      const insights = (data.insights || data.suggestions || []).map((item: any) => ({
+        text: typeof item === "string" ? item : item.text || item.insight || item.suggestion || "",
+        source: typeof item === "string" ? "Website" : item.source || "Research",
+        selected: true,
+      })).filter((i: any) => i.text);
+
+      if (insights.length === 0) {
+        // Fallback: generate placeholder insights from company name
+        setAutoResearchInsights([
+          { text: `${setupCompany.trim()} is actively hiring for roles related to ${setupRole.trim()}.`, source: "Careers", selected: true },
+          { text: `Research their latest product updates and company news for specific hooks.`, source: "Website", selected: true },
+        ]);
+      } else {
+        setAutoResearchInsights(insights);
+      }
+      setAutoResearchDone(true);
+    } catch (e: any) {
+      toast({ title: "Research failed", description: "Try adding notes manually instead.", variant: "destructive" });
+      setAutoResearchInsights([]);
+    } finally {
+      setAutoResearching(false);
+    }
+  };
+
+  const selectedInsightsCount = autoResearchInsights.filter(i => i.selected).length;
+  const hasResearchContent = selectedInsightsCount > 0 || manualNotes.trim().length > 0;
+
   const handleBuildBriefClick = () => {
     if (!setupRole.trim()) {
       toast({ title: "Please enter a target role", variant: "destructive" });
       return;
     }
     if (!setupCompany.trim()) {
-      setShowNoCompanyWarning(true);
+      toast({ title: "Add a company to generate a tailored PoW.", variant: "destructive" });
+      companyInputRef.current?.focus();
       return;
     }
+    if (!hasResearchContent) {
+      toast({ title: "Run auto-research or add some notes first.", variant: "destructive" });
+      return;
+    }
+    // Combine selected insights + manual notes into setupIntel
+    const selectedTexts = autoResearchInsights.filter(i => i.selected).map(i => `[${i.source}] ${i.text}`);
+    const combined = [...selectedTexts, manualNotes.trim()].filter(Boolean).join("\n\n");
+    setSetupIntel(combined);
     generateProofBrief();
   };
 
@@ -1084,13 +1184,20 @@ const Index = () => {
                       borderRadius: '4px',
                       letterSpacing: '0.02em',
                     }}>
-                      Recommended
+                      Needed
                     </span>
                   </label>
                   <input
                     ref={companyInputRef}
                     value={setupCompany}
-                    onChange={(e) => setSetupCompany(e.target.value)}
+                    onChange={(e) => {
+                      setSetupCompany(e.target.value);
+                      // Reset auto-research when company changes
+                      if (autoResearchDone) {
+                        setAutoResearchDone(false);
+                        setAutoResearchInsights([]);
+                      }
+                    }}
                     placeholder="e.g. Sequoia Capital"
                     style={{
                       width: '100%',
@@ -1107,169 +1214,284 @@ const Index = () => {
                     onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.08)'; }}
                   />
                   <p style={{ color: '#64748B', fontSize: '12px', marginTop: '6px' }}>
-                    The more specific you are, the better the brief.
+                    Needed — we tailor everything to the company you enter.
                   </p>
                 </div>
 
-                {/* Field 3: Company intel */}
-                <div>
-                  <label style={{ color: '#FFFFFF', fontSize: '13px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                    Drop your research here before we build
-                    {(() => {
-                      const len = setupIntel.trim().length;
-                      const dot = len >= 150 ? '#22c55e' : len >= 50 ? '#eab308' : len >= 1 ? '#64748B' : '#ef4444';
-                      const msg = len >= 150 ? 'Your brief will be highly specific' : len >= 50 ? 'Good start — more detail will sharpen your brief' : len >= 1 ? 'Keep going — add more context for a specific brief' : 'No research yet — your brief will be generic';
-                      return (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: dot }}>
-                          <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: dot, display: 'inline-block', flexShrink: 0 }} />
-                          {msg}
-                        </span>
-                      );
-                    })()}
-                  </label>
-                  <p style={{ color: '#64748B', fontSize: '12px', marginBottom: '4px', lineHeight: 1.5, whiteSpace: 'pre-line' }}>
-                    {"This is the most important field on this page. 30 minutes of research here = a brief that gets responses. Skip it and your brief will be generic.\n\nWhere to look:\n→ Founder LinkedIn posts\n→ Google company name + recent news\n→ Job listings on LinkedIn\n→ G2 or Trustpilot reviews\n→ Their website copy\n\nPaste raw notes. We turn them into your brief."}
-                  </p>
-                  <p style={{ color: '#64748B', fontSize: '12px', marginBottom: '8px', lineHeight: 1.5 }}>
-                    Got a URL? Open it, copy the relevant text, and paste it here — we can't read links directly.
-                  </p>
-                  <textarea
-                    value={setupIntel}
-                    onChange={(e) => setSetupIntel(e.target.value)}
-                    placeholder={"e.g. Their CEO posted last week about struggling to break into the German market. They have 3 open SDR roles. Their G2 reviews mention slow onboarding as the main complaint. They raised €2M in January..."}
-                    style={{
-                      width: '100%',
-                      background: '#1A1A1A',
-                      border: '1px solid rgba(255,255,255,0.08)',
-                      borderRadius: '8px',
-                      color: '#FFFFFF',
-                      padding: '16px',
-                      fontSize: '14px',
-                      minHeight: '120px',
-                      outline: 'none',
-                      transition: 'border-color 0.2s',
-                      resize: 'vertical',
-                      fontFamily: 'Inter, sans-serif',
-                    }}
-                    onFocus={(e) => { e.target.style.borderColor = '#F97316'; }}
-                    onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.08)'; }}
-                  />
-                </div>
+                {/* Research section */}
+                <div style={{
+                  background: 'rgba(255,255,255,0.02)',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  borderRadius: '12px',
+                  padding: '24px',
+                }}>
+                  <div style={{ marginBottom: '4px' }}>
+                    <h3 style={{ color: '#FFFFFF', fontSize: '15px', fontWeight: 700, marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Search className="w-4 h-4" style={{ color: '#F97316' }} />
+                      Let PrepLane do the research
+                    </h3>
+                    <p style={{ color: '#64748B', fontSize: '13px', lineHeight: 1.6 }}>
+                      We'll scan the web, recent news, and job boards to find specific hooks for your brief. No hallucinations. No generic fluff.
+                    </p>
+                  </div>
 
-                {/* CTA Button */}
-                <button
-                  onClick={handleBuildBriefClick}
-                  disabled={generatingBrief || !setupRole.trim()}
-                  style={{
-                    width: '100%',
-                    background: generatingBrief || !setupRole.trim() ? 'rgba(249,115,22,0.5)' : '#F97316',
-                    color: '#FFFFFF',
-                    fontWeight: 700,
-                    fontSize: '16px',
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    cursor: generatingBrief || !setupRole.trim() ? 'not-allowed' : 'pointer',
-                    transition: 'background 0.2s',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                  }}
-                  onMouseEnter={(e) => { if (!generatingBrief && setupRole.trim()) (e.target as HTMLButtonElement).style.background = '#EA6C0A'; }}
-                  onMouseLeave={(e) => { if (!generatingBrief && setupRole.trim()) (e.target as HTMLButtonElement).style.background = '#F97316'; }}
-                >
-                  {generatingBrief && <Loader2 className="h-5 w-5 animate-spin" />}
-                  {generatingBrief ? 'Generating...' : 'Build my PoW brief →'}
-                </button>
-              </div>
-            </div>
+                  {/* A) Auto-research button */}
+                  <div style={{ marginTop: '16px' }}>
+                    {!autoResearching && !autoResearchDone && (
+                      <button
+                        onClick={handleAutoResearch}
+                        disabled={!setupCompany.trim()}
+                        style={{
+                          width: '100%',
+                          background: !setupCompany.trim() ? 'rgba(249,115,22,0.3)' : '#F97316',
+                          color: '#FFFFFF',
+                          fontWeight: 700,
+                          fontSize: '15px',
+                          padding: '14px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          cursor: !setupCompany.trim() ? 'not-allowed' : 'pointer',
+                          transition: 'background 0.2s',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                        }}
+                        onMouseEnter={(e) => { if (setupCompany.trim()) (e.target as HTMLButtonElement).style.background = '#EA6C0A'; }}
+                        onMouseLeave={(e) => { if (setupCompany.trim()) (e.target as HTMLButtonElement).style.background = '#F97316'; }}
+                      >
+                        <Globe className="w-4 h-4" />
+                        Auto-Research Company
+                      </button>
+                    )}
 
-            {/* No-company warning popup */}
-            <Dialog open={showNoCompanyWarning} onOpenChange={setShowNoCompanyWarning}>
-              <DialogContent
-                className="border-0 p-0"
-                style={{
-                  background: '#1A1A1A',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: '16px',
-                  padding: '32px',
-                  maxWidth: '420px',
-                  fontFamily: 'Inter, sans-serif',
-                }}
-              >
-                <VisuallyHidden><DialogTitle>Company name warning</DialogTitle></VisuallyHidden>
-                <div className="space-y-5">
-                  <span style={{
-                    color: '#F97316',
-                    fontSize: '12px',
-                    fontWeight: 700,
-                    letterSpacing: '0.08em',
-                    textTransform: 'uppercase' as const,
-                  }}>
-                    HEADS UP
-                  </span>
-                  <h2 style={{ color: '#FFFFFF', fontWeight: 700, fontSize: '20px', lineHeight: 1.3, marginTop: '8px' }}>
-                    Your brief will be 10x weaker without a target company.
-                  </h2>
-                  <ul className="space-y-3" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                    {[
-                      "Without a company, we can't research their actual pain points",
-                      "Generic briefs get generic responses — a targeted PoW gets interviews",
-                      "The best proof of work shows you understand THIS company specifically",
-                    ].map((point, i) => (
-                      <li key={i} style={{ color: '#94A3B8', fontSize: '14px', lineHeight: 1.6, display: 'flex', gap: '10px' }}>
-                        <span style={{ color: '#F97316', flexShrink: 0 }}>•</span>
-                        {point}
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="space-y-3 pt-2">
+                    {/* Research progress */}
+                    {autoResearching && (
+                      <div style={{ padding: '16px 0' }}>
+                        <div className="space-y-3">
+                          {AUTO_RESEARCH_STEPS.map((stepText, i) => (
+                            <div key={i} className="flex items-center gap-3" style={{
+                              opacity: i <= autoResearchStep ? 1 : 0.3,
+                              transition: 'opacity 0.4s ease',
+                            }}>
+                              {i < autoResearchStep ? (
+                                <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: '#22c55e' }} />
+                              ) : i === autoResearchStep ? (
+                                <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin" style={{ color: '#F97316' }} />
+                              ) : (
+                                <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }} />
+                              )}
+                              <span style={{ color: i <= autoResearchStep ? '#E2E8F0' : '#475569', fontSize: '13px' }}>
+                                {stepText}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Research results — selectable insight cards */}
+                    {autoResearchDone && autoResearchInsights.length > 0 && (
+                      <div style={{ marginTop: '12px' }}>
+                        <p style={{ color: '#94A3B8', fontSize: '12px', marginBottom: '10px' }}>
+                          {selectedInsightsCount} of {autoResearchInsights.length} insights selected — deselect any that don't fit.
+                        </p>
+                        <div className="space-y-2">
+                          {autoResearchInsights.map((insight, i) => {
+                            const sourceIcon: Record<string, typeof Newspaper> = {
+                              LinkedIn: Sparkles, News: Newspaper, Careers: BriefcaseBusiness,
+                              Reviews: Star, Website: LayoutTemplate, Research: Search,
+                            };
+                            const Icon = sourceIcon[insight.source] || Globe;
+                            return (
+                              <button
+                                key={i}
+                                type="button"
+                                onClick={() => {
+                                  setAutoResearchInsights(prev => prev.map((ins, idx) =>
+                                    idx === i ? { ...ins, selected: !ins.selected } : ins
+                                  ));
+                                }}
+                                style={{
+                                  width: '100%',
+                                  display: 'flex',
+                                  alignItems: 'flex-start',
+                                  gap: '10px',
+                                  padding: '12px 14px',
+                                  borderRadius: '8px',
+                                  background: insight.selected ? 'rgba(249,115,22,0.08)' : '#1A1A1A',
+                                  border: insight.selected ? '1px solid rgba(249,115,22,0.3)' : '1px solid rgba(255,255,255,0.06)',
+                                  cursor: 'pointer',
+                                  textAlign: 'left' as const,
+                                  transition: 'all 0.2s',
+                                }}
+                              >
+                                <div style={{
+                                  width: '18px', height: '18px', borderRadius: '4px', flexShrink: 0, marginTop: '1px',
+                                  background: insight.selected ? '#F97316' : 'transparent',
+                                  border: insight.selected ? 'none' : '1px solid rgba(255,255,255,0.15)',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                }}>
+                                  {insight.selected && <Check className="w-3 h-3 text-white" />}
+                                </div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <p style={{ color: '#E2E8F0', fontSize: '13px', lineHeight: 1.5, margin: 0 }}>{insight.text}</p>
+                                  <span style={{
+                                    display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '6px',
+                                    color: '#64748B', fontSize: '11px', fontWeight: 500,
+                                  }}>
+                                    <Icon className="w-3 h-3" />
+                                    {insight.source}
+                                  </span>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {/* Re-run button */}
+                        <button
+                          onClick={handleAutoResearch}
+                          style={{
+                            marginTop: '10px', background: 'transparent', border: 'none',
+                            color: '#64748B', fontSize: '12px', cursor: 'pointer', padding: '4px 0',
+                          }}
+                        >
+                          ↻ Re-run research
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* B) Manual notes section */}
+                  <div style={{ marginTop: '20px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '16px' }}>
                     <button
-                      onClick={() => {
-                        setShowNoCompanyWarning(false);
-                        setTimeout(() => companyInputRef.current?.focus(), 100);
-                      }}
+                      type="button"
+                      onClick={() => setShowManualSection(!showManualSection)}
                       style={{
-                        width: '100%',
-                        background: '#F97316',
-                        color: '#FFFFFF',
-                        fontWeight: 700,
-                        fontSize: '15px',
-                        padding: '14px',
-                        borderRadius: '8px',
-                        border: 'none',
-                        cursor: 'pointer',
-                        transition: 'background 0.2s',
-                      }}
-                      onMouseEnter={(e) => (e.target as HTMLButtonElement).style.background = '#EA6C0A'}
-                      onMouseLeave={(e) => (e.target as HTMLButtonElement).style.background = '#F97316'}
-                    >
-                      Add a company name →
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowNoCompanyWarning(false);
-                        generateProofBrief();
-                      }}
-                      style={{
-                        width: '100%',
-                        background: 'transparent',
-                        color: '#64748B',
-                        fontSize: '13px',
-                        fontWeight: 500,
-                        padding: '10px',
-                        border: 'none',
-                        cursor: 'pointer',
-                        textAlign: 'center' as const,
+                        background: 'none', border: 'none', color: '#94A3B8', fontSize: '13px',
+                        fontWeight: 500, cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: '6px',
                       }}
                     >
-                      Generate anyway (not recommended)
+                      <Lightbulb className="w-3.5 h-3.5" />
+                      Prefer to add your own notes?
+                      <span style={{ fontSize: '11px', color: '#475569' }}>(optional)</span>
                     </button>
+
+                    {showManualSection && (
+                      <div className="space-y-3" style={{ marginTop: '12px' }}>
+                        <p style={{ color: '#64748B', fontSize: '12px', lineHeight: 1.6 }}>
+                          If you already have context, paste it — we'll turn it into your PoW brief.
+                        </p>
+                        <div style={{ marginBottom: '8px' }}>
+                          <p style={{ color: '#94A3B8', fontSize: '12px', fontWeight: 600, marginBottom: '6px' }}>Where to look:</p>
+                          <div className="space-y-1">
+                            {[
+                              "Founder LinkedIn posts",
+                              "Google company name + recent news",
+                              "Job listings on LinkedIn",
+                              "G2 or Trustpilot reviews",
+                              "Their website copy",
+                            ].map((tip) => (
+                              <p key={tip} style={{ color: '#64748B', fontSize: '12px', lineHeight: 1.5 }}>→ {tip}</p>
+                            ))}
+                          </div>
+                        </div>
+                        <textarea
+                          value={manualNotes}
+                          onChange={(e) => setManualNotes(e.target.value)}
+                          placeholder="e.g. Their CEO posted last week about struggling to break into the German market. They have 3 open SDR roles..."
+                          style={{
+                            width: '100%',
+                            background: '#1A1A1A',
+                            border: '1px solid rgba(255,255,255,0.08)',
+                            borderRadius: '8px',
+                            color: '#FFFFFF',
+                            padding: '12px 16px',
+                            fontSize: '14px',
+                            minHeight: '80px',
+                            outline: 'none',
+                            transition: 'border-color 0.2s',
+                            resize: 'vertical',
+                            fontFamily: 'Inter, sans-serif',
+                          }}
+                          onFocus={(e) => { e.target.style.borderColor = '#F97316'; }}
+                          onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+                        />
+                        <input
+                          value={manualUrl}
+                          onChange={(e) => setManualUrl(e.target.value)}
+                          placeholder="Paste a job description or article URL (optional)"
+                          style={{
+                            width: '100%',
+                            background: '#1A1A1A',
+                            border: '1px solid rgba(255,255,255,0.08)',
+                            borderRadius: '8px',
+                            color: '#FFFFFF',
+                            padding: '12px 14px',
+                            fontSize: '13px',
+                            outline: 'none',
+                            transition: 'border-color 0.2s',
+                          }}
+                          onFocus={(e) => { e.target.style.borderColor = '#F97316'; }}
+                          onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+                        />
+                        <p style={{ color: '#475569', fontSize: '11px' }}>
+                          If link import isn't available, paste the key text above.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
-              </DialogContent>
-            </Dialog>
+
+                {/* Status nudge */}
+                <p style={{ fontSize: '12px', lineHeight: 1.5, textAlign: 'center' as const, color: !setupCompany.trim() ? '#64748B' : hasResearchContent ? '#22c55e' : '#94A3B8' }}>
+                  {!setupCompany.trim()
+                    ? 'Add a company to unlock tailored research.'
+                    : hasResearchContent
+                      ? 'Add 2–3 real signals and your PoW gets dramatically sharper.'
+                      : 'Add 2–3 real signals and your PoW gets dramatically sharper.'}
+                </p>
+
+                {/* CTA Button */}
+                {(() => {
+                  const ctaDisabled = generatingBrief || !setupRole.trim() || !setupCompany.trim() || !hasResearchContent;
+                  return (
+                    <div>
+                      <button
+                        onClick={handleBuildBriefClick}
+                        disabled={ctaDisabled}
+                        style={{
+                          width: '100%',
+                          background: ctaDisabled ? 'rgba(249,115,22,0.3)' : '#F97316',
+                          color: '#FFFFFF',
+                          fontWeight: 700,
+                          fontSize: '16px',
+                          padding: '16px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          cursor: ctaDisabled ? 'not-allowed' : 'pointer',
+                          transition: 'background 0.2s',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                        }}
+                        onMouseEnter={(e) => { if (!ctaDisabled) (e.target as HTMLButtonElement).style.background = '#EA6C0A'; }}
+                        onMouseLeave={(e) => { if (!ctaDisabled) (e.target as HTMLButtonElement).style.background = '#F97316'; }}
+                      >
+                        {generatingBrief && <Loader2 className="h-5 w-5 animate-spin" />}
+                        {generatingBrief ? 'Generating...' : 'Build my PoW brief →'}
+                      </button>
+                      {ctaDisabled && !generatingBrief && (
+                        <p style={{ color: '#475569', fontSize: '12px', textAlign: 'center' as const, marginTop: '8px' }}>
+                          {!setupCompany.trim() ? 'Add a company to generate a tailored PoW.' : !hasResearchContent ? 'Run auto-research or add notes to continue.' : ''}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
           </div>
         )}
 
