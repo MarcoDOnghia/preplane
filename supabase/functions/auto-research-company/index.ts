@@ -11,15 +11,15 @@ function parseSignals(text: string): { type: string; text: string }[] {
   const today = new Date().toISOString().split("T")[0];
 
   const sections: { key: string; type: string }[] = [
-    { key: "WHAT THEY DO", type: "company" },
-    { key: "RECENT NEWS", type: "funding" },
-    { key: "OPEN ROLES", type: "hiring" },
-    { key: "CUSTOMER SIGNALS", type: "customer" },
-    { key: "BEST POW ANGLE", type: "pow_angle" },
+    { key: "What they do", type: "company" },
+    { key: "Recent news", type: "funding" },
+    { key: "Open roles", type: "hiring" },
+    { key: "Customer signals", type: "customer" },
+    { key: "Best PoW angle", type: "pow_angle" },
   ];
 
   for (const section of sections) {
-    const regex = new RegExp(`${section.key}\\s*\\n([\\s\\S]*?)(?=\\n[A-Z ]{4,}\\n|$)`, "i");
+    const regex = new RegExp(`\\*{0,2}${section.key}\\*{0,2}\\s*\\n([\\s\\S]*?)(?=\\n\\*{0,2}[A-Z][a-z]|$)`, "i");
     const match = text.match(regex);
     if (match && match[1]) {
       const content = match[1].trim();
