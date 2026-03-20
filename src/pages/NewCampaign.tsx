@@ -344,7 +344,7 @@ const Index = () => {
           company: setupCompany.trim() || "a company in this space",
           role: setupRole.trim(),
           jdText: setupJd.trim() || undefined,
-          companyIntel: setupIntel.trim() || undefined,
+          companyIntel: (intelOverride ?? setupIntel).trim() || undefined,
         }),
       });
 
