@@ -210,11 +210,10 @@ const Index = () => {
   };
 
   const AUTO_RESEARCH_STEPS = [
-    "Scanning founder LinkedIn signals…",
-    "Pulling recent news…",
-    "Checking job listings…",
-    "Mining reviews (G2/Trustpilot)…",
-    "Extracting website positioning…",
+    "Searching recent news...",
+    "Finding company positioning...",
+    "Researching market context...",
+    "Building your research notes...",
   ];
 
   const handleAutoResearch = async () => {
