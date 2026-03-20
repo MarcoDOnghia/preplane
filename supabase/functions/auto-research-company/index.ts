@@ -8,9 +8,8 @@ const corsHeaders = {
 
 function parseSignals(text: string): { type: string; text: string }[] {
   const signals: { type: string; text: string }[] = [];
-  const today = new Date().toISOString().split("T")[0];
 
-  const sections: { key: string; type: string }[] = [
+  const sections = [
     { key: "What they do", type: "company" },
     { key: "Recent news", type: "funding" },
     { key: "Open roles", type: "hiring" },
@@ -19,15 +18,16 @@ function parseSignals(text: string): { type: string; text: string }[] {
   ];
 
   for (const section of sections) {
-    const regex = new RegExp(`\\*{0,2}${section.key}\\*{0,2}\\s*\\n([\\s\\S]*?)(?=\\n\\*{0,2}[A-Z][a-z]|$)`, "i");
+    const escapedKey = section.key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(
+      `\\*{0,2}${escapedKey}\\*{0,2}[^\\n]*\\n([\\s\\S]*?)(?=\\n\\*{0,2}[A-Z]|$)`,
+      "i"
+    );
     const match = text.match(regex);
     if (match && match[1]) {
       const content = match[1].trim();
       if (content && content.toLowerCase() !== "not found") {
-        signals.push({
-          type: section.type,
-          text: content,
-        });
+        signals.push({ type: section.type, text: content });
       }
     }
   }
