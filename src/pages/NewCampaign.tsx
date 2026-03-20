@@ -60,7 +60,7 @@ const Index = () => {
   const [proofBrief, setProofBrief] = useState<any>(null);
   const [generatingBrief, setGeneratingBrief] = useState(false);
   const [jdExtractingUrl, setJdExtractingUrl] = useState(false);
-  const [showNoCompanyWarning, setShowNoCompanyWarning] = useState(false);
+  
   const [setupIntel, setSetupIntel] = useState("");
   const [showWaitlistModal, setShowWaitlistModal] = useState(false);
   const [waitlistRole, setWaitlistRole] = useState("");
