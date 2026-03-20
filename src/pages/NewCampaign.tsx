@@ -261,14 +261,10 @@ const Index = () => {
       }
 
       const data = await response.json();
-      if (data?.error) throw new Error(data.error);
-      // Support both new (project) and legacy (title) formats
-      if (data.project || data.title) {
-        setProofBrief(data);
-        setSetupPhase('brief');
-      } else {
-        throw new Error("Unexpected response format");
-      }
+      if (data?.error && data?.type !== "ERROR_FALLBACK") throw new Error(data.error);
+      const validated = validateBriefResponse(data);
+      setProofBrief(validated);
+      setSetupPhase('brief');
     } catch (e: any) {
       toast({ title: "Generation failed", description: e.message, variant: "destructive" });
     } finally {
