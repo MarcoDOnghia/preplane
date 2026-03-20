@@ -158,35 +158,8 @@ const Index = () => {
   }
   if (!user) return <Navigate to="/onboarding" replace />;
 
-  // First-load PoW generating screen
-  if (powGenerating && !powSkipped) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-4" style={{ background: "#111111", fontFamily: "Inter, sans-serif" }}>
-        <div className="max-w-md text-center space-y-6">
-          <div className="relative mx-auto w-16 h-16">
-            <div className="absolute inset-0 rounded-full bg-[#F97316]/20 animate-ping" />
-            <div className="relative flex items-center justify-center w-16 h-16 rounded-full bg-[#F97316]/10">
-              <Rocket className="w-8 h-8 text-[#F97316] animate-pulse" />
-            </div>
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-white">Building your first proof of work brief</h2>
-            <p className="mt-2" style={{ color: "#94A3B8" }}>for <span className="font-semibold text-white">{targetRole}</span>...</p>
-          </div>
-          <div className="h-1.5 w-48 mx-auto rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>
-            <div className="h-full bg-[#F97316] rounded-full" style={{ width: '60%', animation: 'pulse 1.5s ease-in-out infinite' }} />
-          </div>
-          <button
-            onClick={() => setPowSkipped(true)}
-            className="text-xs underline underline-offset-2 transition-colors"
-            style={{ color: "#64748B" }}
-          >
-            Skip for now →
-          </button>
-        </div>
-      </div>
-    );
-  }
+
+
 
   const activeCampaigns = campaigns.filter((c) => !c.archived);
   const archivedCampaigns = campaigns.filter((c) => c.archived);
