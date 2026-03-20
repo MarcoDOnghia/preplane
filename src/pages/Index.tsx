@@ -235,7 +235,7 @@ const Index = () => {
               onMouseEnter={(e) => (e.currentTarget).style.background = "#EA6C0A"}
               onMouseLeave={(e) => (e.currentTarget).style.background = "#F97316"}
             >
-              Build my first proof of work <ArrowRight className="h-4 w-4" />
+              Start my first campaign <ArrowRight className="h-4 w-4" />
             </button>
           </div>
         ) : (
