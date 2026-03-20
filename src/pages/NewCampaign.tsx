@@ -25,6 +25,8 @@ import { Loader2, Sparkles, ArrowRight, Lightbulb, Link2, Check, ChevronLeft, Ch
 import RoleWaitlistModal, { isRoleLocked, LOCKED_ROLES, UNLOCKED_ROLES } from "@/components/RoleWaitlistModal";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import type { TailorResult } from "@/lib/types";
+import { validateBriefResponse } from "@/lib/briefContract";
+import type { BriefResponse, FullBrief } from "@/lib/briefContract";
 import { parseCvToModel, cvModelToPlainText, aiParsedCvToModel } from "@/lib/cvDataModel";
 import type { CvDataModel } from "@/lib/cvDataModel";
 import { calculateAtsScore } from "@/lib/atsScore";

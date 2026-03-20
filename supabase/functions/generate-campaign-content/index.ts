@@ -427,7 +427,11 @@ ${companyIntel ? `\nCompany Intelligence (real research provided by the student)
   } catch (error) {
     console.error("generate-campaign-content error:", error);
     return new Response(
-      JSON.stringify({ error: "Something went wrong. Please try again." }),
+      JSON.stringify({
+        type: "ERROR_FALLBACK",
+        message: "Something went wrong. Please try again.",
+        debugId: `${Date.now()}-catch`,
+      }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
