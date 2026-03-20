@@ -6,7 +6,7 @@ import AppFooter from "@/components/AppFooter";
 import { supabase } from "@/integrations/supabase/client";
 import {
   PlusCircle, ArrowRight, Target, Clock, RotateCcw, Zap, Check, Lightbulb,
-  Loader2, X, AlertTriangle, CalendarDays, FileEdit, CheckCircle2, Circle, Rocket
+  Loader2, X, AlertTriangle, CalendarDays, FileEdit, CheckCircle2, Circle
 } from "lucide-react";
 import { formatDistanceToNow, differenceInDays } from "date-fns";
 
