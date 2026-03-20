@@ -1412,12 +1412,10 @@ const Index = () => {
                 </div>
 
                 {/* Status nudge */}
-                <p style={{ fontSize: '12px', lineHeight: 1.5, textAlign: 'center' as const, color: !setupCompany.trim() ? '#64748B' : hasResearchContent ? '#22c55e' : '#94A3B8' }}>
+                <p style={{ fontSize: '12px', lineHeight: 1.5, textAlign: 'center' as const, color: !setupCompany.trim() ? '#64748B' : '#94A3B8' }}>
                   {!setupCompany.trim()
                     ? 'Add a company to unlock tailored research.'
-                    : hasResearchContent
-                      ? 'Add 2–3 real signals and your PoW gets dramatically sharper.'
-                      : 'Add 2–3 real signals and your PoW gets dramatically sharper.'}
+                    : 'The more context you give us, the sharper your brief will be.'}
                 </p>
 
                 {/* CTA Button */}
