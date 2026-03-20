@@ -305,17 +305,10 @@ const Campaign = () => {
       if (contentType === "outreach" && data.message) {
         setOutreachMessage(data.message);
         await updateCampaign({ outreach_message: data.message });
-      } else if (contentType === "proof_of_work") {
-        // Validate with contract — only accept if it has project/title
-        if (data.project || data.title) {
-          const structured = JSON.stringify(data);
-          setProofSuggestion(structured);
-          await updateCampaign({ proof_suggestion: structured });
-        } else if (data.type === "ERROR_FALLBACK") {
-          throw new Error(data.message || "Brief generation failed");
-        } else {
-          throw new Error("Unexpected response format");
-        }
+      } else if (contentType === "proof_of_work" && (data.project || data.title)) {
+        const structured = JSON.stringify(data);
+        setProofSuggestion(structured);
+        await updateCampaign({ proof_suggestion: structured });
       } else if (contentType === "linkedin_angles" && data.angles) {
         const anglesJson = JSON.stringify(data.angles);
         await updateCampaign({ linkedin_angles: anglesJson } as any);

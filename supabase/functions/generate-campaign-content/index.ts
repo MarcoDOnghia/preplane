@@ -405,21 +405,10 @@ ${companyIntel ? `\nCompany Intelligence (real research provided by the student)
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
 
     if (!toolCall?.function?.arguments) {
-      return new Response(JSON.stringify({
-        type: "ERROR_FALLBACK",
-        message: "We hit an issue generating your brief. Please try again.",
-        debugId: `${Date.now()}-noargs`,
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      throw new Error("No structured response from AI");
     }
 
     const result = JSON.parse(toolCall.function.arguments);
-
-    // Inject type field based on contentType
-    if (contentType === "proof_of_work") {
-      result.type = "FULL_BRIEF";
-    }
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -427,11 +416,7 @@ ${companyIntel ? `\nCompany Intelligence (real research provided by the student)
   } catch (error) {
     console.error("generate-campaign-content error:", error);
     return new Response(
-      JSON.stringify({
-        type: "ERROR_FALLBACK",
-        message: "Something went wrong. Please try again.",
-        debugId: `${Date.now()}-catch`,
-      }),
+      JSON.stringify({ error: "Something went wrong. Please try again." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
