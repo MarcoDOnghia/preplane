@@ -1078,6 +1078,13 @@ const Onboarding = () => {
           )}
         </div>
       </div>
+
+      <RoleWaitlistModal
+        open={showWaitlistModal}
+        onOpenChange={setShowWaitlistModal}
+        role={waitlistRole}
+        userId={user?.id || ""}
+      />
     </div>
   );
 };
