@@ -74,6 +74,8 @@ const Index = () => {
   const [manualNotes, setManualNotes] = useState("");
   const [manualUrl, setManualUrl] = useState("");
   const [showManualSection, setShowManualSection] = useState(false);
+  const [companyError, setCompanyError] = useState("");
+  const [autoResearchSuccess, setAutoResearchSuccess] = useState(false);
 
   // Check onboarding status and save any pending target from onboarding
   useEffect(() => {
