@@ -1238,7 +1238,7 @@ const Index = () => {
                   <div style={{ marginBottom: '4px' }}>
                     <h3 style={{ color: '#FFFFFF', fontSize: '15px', fontWeight: 700, marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <Search className="w-4 h-4" style={{ color: '#F97316' }} />
-                      Let PrepLane do the research
+                      Let Preplane do the research
                     </h3>
                     <p style={{ color: '#64748B', fontSize: '13px', lineHeight: 1.6 }}>
                       We'll scan the web, recent news, and job boards to find specific hooks for your brief. No hallucinations. No generic fluff.
