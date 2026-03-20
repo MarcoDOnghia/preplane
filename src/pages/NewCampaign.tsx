@@ -62,6 +62,8 @@ const Index = () => {
   const [jdExtractingUrl, setJdExtractingUrl] = useState(false);
   const [showNoCompanyWarning, setShowNoCompanyWarning] = useState(false);
   const [setupIntel, setSetupIntel] = useState("");
+  const [showWaitlistModal, setShowWaitlistModal] = useState(false);
+  const [waitlistRole, setWaitlistRole] = useState("");
   const companyInputRef = useRef<HTMLInputElement>(null);
 
   // Check onboarding status and save any pending target from onboarding
