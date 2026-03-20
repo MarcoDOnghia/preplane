@@ -645,26 +645,58 @@ const Onboarding = () => {
                     </p>
                   </div>
 
-                  {/* Target role input */}
+                  {/* Target role selector */}
                   <div className="space-y-2">
                     <label className="block font-medium" style={{ color: "#cbd5e1", fontSize: "13px" }}>Target role</label>
-                    <input
-                      type="text"
-                      value={targetRole}
-                      onChange={(e) => setTargetRole(e.target.value)}
-                      placeholder="e.g. GTM Intern, VC Analyst, Marketing Intern"
-                      className="w-full focus:outline-none transition-colors"
-                      style={{
-                        background: "rgba(15,23,42,0.5)",
-                        border: "1px solid rgba(255,255,255,0.08)",
-                        borderRadius: "8px",
-                        padding: "12px 16px",
-                        color: "white",
-                        fontSize: "14px",
-                      }}
-                      onFocus={(e) => { e.target.style.borderColor = "#f97415"; e.target.style.boxShadow = "0 0 0 1px #f97415"; }}
-                      onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.08)"; e.target.style.boxShadow = "none"; }}
-                    />
+                    <div className="flex flex-wrap gap-2">
+                      {[...UNLOCKED_ROLES, ...Object.keys(LOCKED_ROLES)].map((role) => {
+                        const locked = isRoleLocked(role);
+                        const selected = targetRole === role;
+                        return (
+                          <button
+                            key={role}
+                            type="button"
+                            onClick={() => {
+                              if (locked) {
+                                setWaitlistRole(role);
+                                setShowWaitlistModal(true);
+                              } else {
+                                setTargetRole(role);
+                              }
+                            }}
+                            className="transition-colors"
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '8px 14px',
+                              borderRadius: '8px',
+                              fontSize: '13px',
+                              fontWeight: 500,
+                              cursor: 'pointer',
+                              background: selected ? '#F97316' : 'rgba(30,41,59,0.5)',
+                              color: selected ? 'white' : locked ? '#64748B' : '#CBD5E1',
+                              border: selected ? '1px solid #F97316' : '1px solid rgba(255,255,255,0.08)',
+                            }}
+                          >
+                            {locked && <Lock className="w-3 h-3" style={{ flexShrink: 0 }} />}
+                            {role}
+                            {locked && (
+                              <span style={{
+                                background: 'rgba(249,116,22,0.15)',
+                                color: '#F97316',
+                                fontSize: '10px',
+                                fontWeight: 600,
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                              }}>
+                                Waitlist
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
 
                   {/* Target company type */}
