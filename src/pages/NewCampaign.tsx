@@ -260,8 +260,8 @@ const Index = () => {
 
       const data = await response.json();
       if (data?.error) throw new Error(data.error);
-      // Support pre_brief mode, new (project) and legacy (title) formats
-      if (data.mode === 'pre_brief' || data.project || data.title) {
+      // Support typed responses (FULL_BRIEF, PRE_BRIEF, GATE_BLOCKED) and legacy formats
+      if (data.type === 'GATE_BLOCKED' || data.type === 'PRE_BRIEF' || data.type === 'FULL_BRIEF' || data.mode === 'pre_brief' || data.project || data.title) {
         setProofBrief(data);
         setSetupPhase('brief');
       } else {
