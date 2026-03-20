@@ -26,9 +26,9 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-sonnet-4-5",
         max_tokens: 1500,
-        tools: [{ type: "web_search_20260209", name: "web_search", max_uses: 5 }],
+        tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 5 }],
         system: `You are a research assistant for Preplane. Research the company using web search. Never invent facts. If not found write "Not found".
 
 Return in this EXACT format:
