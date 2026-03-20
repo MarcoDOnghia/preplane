@@ -422,13 +422,47 @@ const Onboarding = () => {
                             <p className="text-slate-500 text-sm">What job title are you aiming for?</p>
                           </div>
                         </div>
-                        <input
-                          type="text"
-                          placeholder="e.g. Senior Frontend Developer or Product Designer"
-                          value={targetRole}
-                          onChange={(e) => setTargetRole(e.target.value)}
-                          className="w-full h-14 px-4 rounded-xl border border-slate-200 bg-[#F8F7F5] focus:border-[#F97316] focus:ring-[#F97316] focus:ring-2 focus:outline-none text-slate-900 placeholder:text-slate-400 mt-6"
-                        />
+                        <div className="flex flex-wrap gap-2 mt-6">
+                          {[...UNLOCKED_ROLES, ...Object.keys(LOCKED_ROLES)].map((role) => {
+                            const locked = isRoleLocked(role);
+                            const selected = targetRole === role;
+                            return (
+                              <button
+                                key={role}
+                                type="button"
+                                onClick={() => {
+                                  if (locked) {
+                                    setWaitlistRole(role);
+                                    setShowWaitlistModal(true);
+                                  } else {
+                                    setTargetRole(role);
+                                  }
+                                }}
+                                className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                                  selected
+                                    ? "border-2 border-[#F97316] text-[#F97316] bg-orange-50 shadow-sm"
+                                    : "border border-slate-200 bg-[#F8F7F5] hover:border-slate-300"
+                                }`}
+                                style={{ color: selected ? '#F97316' : locked ? '#94a3b8' : '#374151' }}
+                              >
+                                {locked && <Lock className="w-3 h-3" style={{ flexShrink: 0 }} />}
+                                {role}
+                                {locked && (
+                                  <span style={{
+                                    background: 'rgba(249,116,22,0.15)',
+                                    color: '#F97316',
+                                    fontSize: '10px',
+                                    fontWeight: 600,
+                                    padding: '2px 6px',
+                                    borderRadius: '4px',
+                                  }}>
+                                    Waitlist
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
 
                       {/* Card 2 — Location (Europe toggle) */}
