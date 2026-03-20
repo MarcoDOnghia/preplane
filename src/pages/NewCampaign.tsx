@@ -1408,6 +1408,15 @@ const Index = () => {
         jobTitle={lastJobTitle}
         company={lastCompany}
       />
+
+      {user && (
+        <RoleWaitlistModal
+          open={showWaitlistModal}
+          onOpenChange={setShowWaitlistModal}
+          role={waitlistRole}
+          userId={user.id}
+        />
+      )}
     </div>
   );
 };
