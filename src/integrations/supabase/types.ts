@@ -620,6 +620,51 @@ export type Database = {
           },
         ]
       }
+      role_waitlist: {
+        Row: {
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      role_waitlist_insights: {
+        Row: {
+          created_at: string
+          id: string
+          insight: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          insight: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          insight?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       usage_limits: {
         Row: {
           count: number
