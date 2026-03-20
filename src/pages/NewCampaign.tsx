@@ -1272,7 +1272,7 @@ const Index = () => {
         )}
 
         {/* Phase 2: Proof of work brief — step-by-step navigator */}
-        {setupPhase === 'brief' && proofBrief && proofBrief.build_steps && (
+        {setupPhase === 'brief' && proofBrief && proofBrief.type === 'FULL_BRIEF' && (
           <BriefNavigator
             proofBrief={proofBrief}
             company={setupCompany}
@@ -1281,43 +1281,121 @@ const Index = () => {
             toast={toast}
           />
         )}
-        {/* Legacy brief format fallback */}
-        {setupPhase === 'brief' && proofBrief && !proofBrief.build_steps && (
-          <div style={{ maxWidth: '720px', margin: '0 auto' }}>
+        {/* ERROR_FALLBACK UI */}
+        {setupPhase === 'brief' && proofBrief && proofBrief.type === 'ERROR_FALLBACK' && (
+          <div style={{ maxWidth: '720px', margin: '0 auto', textAlign: 'center', padding: '60px 24px' }}>
             <div style={{
               background: '#1A1A1A',
               border: '1px solid rgba(255,255,255,0.08)',
               borderRadius: '16px',
-              padding: '40px',
+              padding: '48px 32px',
             }}>
-              <h3 style={{ color: '#FFFFFF', fontSize: '20px', fontWeight: 700, marginBottom: '20px' }}>{proofBrief.title}</h3>
-              <div style={{ marginBottom: '20px' }}>
-                <p style={{ color: '#F97316', fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>Why this works</p>
-                <p style={{ color: '#E2E8F0', fontSize: '15px', lineHeight: 1.7 }}>{proofBrief.why_this_works}</p>
-              </div>
-              <div style={{ marginBottom: '20px' }}>
-                <p style={{ color: '#F97316', fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>What to build</p>
-                <ul style={{ paddingLeft: '20px', margin: 0 }}>
-                  {(proofBrief.what_to_build as string[]).map((b: string, i: number) => (
-                    <li key={i} style={{ color: '#E2E8F0', fontSize: '15px', lineHeight: 1.7, marginBottom: '4px' }}>{b}</li>
-                  ))}
-                </ul>
-              </div>
-              <div style={{ marginBottom: '20px' }}>
-                <p style={{ color: '#F97316', fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>Tools to use</p>
-                <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '6px' }}>
-                  {(proofBrief.tools_to_use as string[]).map((t: string, i: number) => (
-                    <span key={i} style={{ background: 'rgba(249,115,22,0.15)', color: '#F97316', fontSize: '12px', fontWeight: 500, padding: '4px 10px', borderRadius: '999px' }}>{t}</span>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '32px' }} className="sm:flex-row">
-              <button onClick={handleStartBuilding} style={{ flex: 1, background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: '#FFFFFF', borderRadius: '8px', padding: '12px 24px', fontSize: '14px', cursor: 'pointer', fontWeight: 500 }}>
-                Start building — I'll be back when it's done
+              <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
+              <h3 style={{ color: '#FFFFFF', fontSize: '20px', fontWeight: 700, marginBottom: '12px' }}>
+                Something went wrong
+              </h3>
+              <p style={{ color: '#94A3B8', fontSize: '15px', lineHeight: 1.7, marginBottom: '24px' }}>
+                {proofBrief.message}
+              </p>
+              <button
+                onClick={() => { setProofBrief(null); setSetupPhase('input'); }}
+                style={{
+                  background: '#F97316',
+                  color: '#FFFFFF',
+                  fontWeight: 700,
+                  borderRadius: '8px',
+                  padding: '12px 28px',
+                  fontSize: '14px',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                Try again
               </button>
-              <button onClick={handleContinueCampaign} style={{ flex: 1, background: '#F97316', color: '#FFFFFF', fontWeight: 700, borderRadius: '8px', padding: '12px 28px', fontSize: '14px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                Continue setting up my campaign →
+              <p style={{ color: '#475569', fontSize: '11px', marginTop: '16px' }}>
+                Debug ID: {proofBrief.debugId}
+              </p>
+            </div>
+          </div>
+        )}
+        {/* GATE_BLOCKED UI */}
+        {setupPhase === 'brief' && proofBrief && proofBrief.type === 'GATE_BLOCKED' && (
+          <div style={{ maxWidth: '720px', margin: '0 auto', textAlign: 'center', padding: '60px 24px' }}>
+            <div style={{
+              background: '#1A1A1A',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '16px',
+              padding: '48px 32px',
+            }}>
+              <div style={{ fontSize: '48px', marginBottom: '16px' }}>🚧</div>
+              <h3 style={{ color: '#FFFFFF', fontSize: '20px', fontWeight: 700, marginBottom: '12px' }}>
+                {proofBrief.reason}
+              </h3>
+              <p style={{ color: '#94A3B8', fontSize: '15px', lineHeight: 1.7, marginBottom: '24px' }}>
+                {proofBrief.guidance}
+              </p>
+              <button
+                onClick={() => { setProofBrief(null); setSetupPhase('input'); }}
+                style={{
+                  background: 'transparent',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  color: '#FFFFFF',
+                  borderRadius: '8px',
+                  padding: '12px 24px',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  fontWeight: 500,
+                }}
+              >
+                Go back and add more context
+              </button>
+            </div>
+          </div>
+        )}
+        {/* PRE_BRIEF UI */}
+        {setupPhase === 'brief' && proofBrief && proofBrief.type === 'PRE_BRIEF' && (
+          <div style={{ maxWidth: '720px', margin: '0 auto', padding: '40px 24px' }}>
+            <div style={{
+              background: '#1A1A1A',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '16px',
+              padding: '40px 32px',
+            }}>
+              <p style={{ color: '#F97316', fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, marginBottom: '16px' }}>Pre-Brief — More Research Needed</p>
+              <div style={{ marginBottom: '20px' }}>
+                <p style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600, marginBottom: '8px' }}>Option A</p>
+                <p style={{ color: '#94A3B8', fontSize: '15px', lineHeight: 1.7 }}>{proofBrief.optionA}</p>
+              </div>
+              <div style={{ marginBottom: '20px' }}>
+                <p style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600, marginBottom: '8px' }}>Option B</p>
+                <p style={{ color: '#94A3B8', fontSize: '15px', lineHeight: 1.7 }}>{proofBrief.optionB}</p>
+              </div>
+              {proofBrief.checklist?.length > 0 && (
+                <div>
+                  <p style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Before You Build — Checklist</p>
+                  <ul style={{ paddingLeft: '20px', margin: 0 }}>
+                    {proofBrief.checklist.map((item: string, i: number) => (
+                      <li key={i} style={{ color: '#94A3B8', fontSize: '14px', lineHeight: 1.7, marginBottom: '4px' }}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              <button
+                onClick={() => { setProofBrief(null); setSetupPhase('input'); }}
+                style={{
+                  background: '#F97316',
+                  color: '#FFFFFF',
+                  fontWeight: 700,
+                  borderRadius: '8px',
+                  padding: '12px 28px',
+                  fontSize: '14px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  marginTop: '24px',
+                  width: '100%',
+                }}
+              >
+                Add more research and regenerate
               </button>
             </div>
           </div>
