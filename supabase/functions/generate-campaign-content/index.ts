@@ -479,6 +479,28 @@ ${companyIntel ? `\nCompany Intelligence (real research provided by the student)
 
     const result = JSON.parse(toolCall.function.arguments);
 
+    // Normalize response with explicit type field
+    if (contentType === "proof_of_work") {
+      if (result.mode === "pre_brief") {
+        result.type = "PRE_BRIEF";
+        // Ensure arrays are always arrays
+        result.before_you_build = Array.isArray(result.before_you_build) ? result.before_you_build : [];
+      } else if (result.build_steps || result.project) {
+        result.type = "FULL_BRIEF";
+        result.mode = "full_brief";
+        // Ensure arrays are always arrays
+        result.build_steps = Array.isArray(result.build_steps) ? result.build_steps : [];
+      } else {
+        // AI returned something unexpected — treat as gate blocked
+        result.type = "GATE_BLOCKED";
+        result.gate = {
+          title: "We couldn't generate a brief",
+          message: "The AI response was incomplete. Try adding more research context and regenerating.",
+          missing: ["Sufficient context to generate a brief"],
+        };
+      }
+    }
+
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

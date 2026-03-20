@@ -260,8 +260,8 @@ const Index = () => {
 
       const data = await response.json();
       if (data?.error) throw new Error(data.error);
-      // Support pre_brief mode, new (project) and legacy (title) formats
-      if (data.mode === 'pre_brief' || data.project || data.title) {
+      // Support typed responses (FULL_BRIEF, PRE_BRIEF, GATE_BLOCKED) and legacy formats
+      if (data.type === 'GATE_BLOCKED' || data.type === 'PRE_BRIEF' || data.type === 'FULL_BRIEF' || data.mode === 'pre_brief' || data.project || data.title) {
         setProofBrief(data);
         setSetupPhase('brief');
       } else {
@@ -1273,8 +1273,84 @@ const Index = () => {
           </div>
         )}
 
+        {/* Phase 2: GATE_BLOCKED — show gate blocked UI */}
+        {setupPhase === 'brief' && proofBrief && proofBrief.type === 'GATE_BLOCKED' && (
+          <div style={{ maxWidth: '720px', margin: '0 auto', padding: '0 16px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+              <h1 style={{ color: '#FFFFFF', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.02em', marginBottom: '8px' }}>
+                {proofBrief.gate?.title || "We need more context"}
+              </h1>
+              <p style={{ color: '#94A3B8', fontSize: '15px', lineHeight: 1.7 }}>
+                {proofBrief.gate?.message || "Add more research to generate a high-quality brief."}
+              </p>
+            </div>
+
+            {proofBrief.gate?.missing && proofBrief.gate.missing.length > 0 && (
+              <div style={{
+                background: 'rgba(239,68,68,0.08)',
+                border: '1px solid rgba(239,68,68,0.2)',
+                borderRadius: '12px',
+                padding: '20px 24px',
+                marginBottom: '24px',
+              }}>
+                <p style={{ color: '#ef4444', fontSize: '14px', fontWeight: 600, marginBottom: '10px' }}>Missing:</p>
+                <ul style={{ margin: 0, paddingLeft: '18px' }}>
+                  {proofBrief.gate.missing.map((item: string, i: number) => (
+                    <li key={i} style={{ color: '#E2E8F0', fontSize: '14px', lineHeight: 1.6, marginBottom: '4px' }}>{item}</li>
+                  ))}
+                </ul>
+                <p style={{ color: '#94A3B8', fontSize: '13px', fontStyle: 'italic', marginTop: '12px' }}>
+                  This is normal — paste 5 concrete facts and we'll lock a high-quality bet.
+                </p>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <button
+                onClick={() => setSetupPhase('input')}
+                style={{
+                  width: '100%',
+                  background: '#F97316',
+                  color: '#FFFFFF',
+                  fontWeight: 700,
+                  fontSize: '15px',
+                  padding: '14px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'background 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                }}
+                onMouseEnter={(e) => (e.target as HTMLButtonElement).style.background = '#EA6C0A'}
+                onMouseLeave={(e) => (e.target as HTMLButtonElement).style.background = '#F97316'}
+              >
+                <ChevronLeft className="h-4 w-4" /> Add more context
+              </button>
+              <button
+                onClick={() => generateProofBrief()}
+                style={{
+                  width: '100%',
+                  background: 'transparent',
+                  color: '#64748B',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  padding: '10px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  textAlign: 'center' as const,
+                }}
+              >
+                Generate anyway
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Phase 2a: Pre-brief (thin research mode) */}
-        {setupPhase === 'brief' && proofBrief && proofBrief.mode === 'pre_brief' && (
+        {setupPhase === 'brief' && proofBrief && (proofBrief.type === 'PRE_BRIEF' || proofBrief.mode === 'pre_brief') && proofBrief.type !== 'GATE_BLOCKED' && (
           <div style={{ maxWidth: '720px', margin: '0 auto', padding: '0 16px' }}>
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
               <h1 style={{ color: '#FFFFFF', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.02em', marginBottom: '8px' }}>
@@ -1332,7 +1408,7 @@ const Index = () => {
             )}
 
             {/* Before You Build checklist */}
-            {proofBrief.before_you_build && proofBrief.before_you_build.length > 0 && (
+            {Array.isArray(proofBrief.before_you_build) && proofBrief.before_you_build.length > 0 && (
               <div style={{
                 background: '#1A1A1A',
                 border: '1px solid rgba(255,255,255,0.08)',
@@ -1389,7 +1465,7 @@ const Index = () => {
         )}
 
         {/* Phase 2b: Full proof of work brief — step-by-step navigator */}
-        {setupPhase === 'brief' && proofBrief && proofBrief.mode !== 'pre_brief' && proofBrief.build_steps && (
+        {setupPhase === 'brief' && proofBrief && (proofBrief.type === 'FULL_BRIEF' || (proofBrief.mode !== 'pre_brief' && proofBrief.type !== 'GATE_BLOCKED')) && Array.isArray(proofBrief.build_steps) && (
           <BriefNavigator
             proofBrief={proofBrief}
             company={setupCompany}
@@ -1398,8 +1474,8 @@ const Index = () => {
             toast={toast}
           />
         )}
-        {/* Legacy brief format fallback */}
-        {setupPhase === 'brief' && proofBrief && !proofBrief.build_steps && (
+        {/* Legacy brief format fallback — only when we have title but no build_steps and not a typed response */}
+        {setupPhase === 'brief' && proofBrief && !proofBrief.type && !proofBrief.build_steps && proofBrief.title && (
           <div style={{ maxWidth: '720px', margin: '0 auto' }}>
             <div style={{
               background: '#1A1A1A',
@@ -1415,7 +1491,7 @@ const Index = () => {
               <div style={{ marginBottom: '20px' }}>
                 <p style={{ color: '#F97316', fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>What to build</p>
                 <ul style={{ paddingLeft: '20px', margin: 0 }}>
-                  {(proofBrief.what_to_build as string[]).map((b: string, i: number) => (
+                  {(Array.isArray(proofBrief.what_to_build) ? proofBrief.what_to_build : []).map((b: string, i: number) => (
                     <li key={i} style={{ color: '#E2E8F0', fontSize: '15px', lineHeight: 1.7, marginBottom: '4px' }}>{b}</li>
                   ))}
                 </ul>
@@ -1423,7 +1499,7 @@ const Index = () => {
               <div style={{ marginBottom: '20px' }}>
                 <p style={{ color: '#F97316', fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>Tools to use</p>
                 <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '6px' }}>
-                  {(proofBrief.tools_to_use as string[]).map((t: string, i: number) => (
+                  {(Array.isArray(proofBrief.tools_to_use) ? proofBrief.tools_to_use : []).map((t: string, i: number) => (
                     <span key={i} style={{ background: 'rgba(249,115,22,0.15)', color: '#F97316', fontSize: '12px', fontWeight: 500, padding: '4px 10px', borderRadius: '999px' }}>{t}</span>
                   ))}
                 </div>
