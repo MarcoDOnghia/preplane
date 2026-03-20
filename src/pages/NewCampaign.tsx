@@ -313,10 +313,10 @@ const Index = () => {
     const selectedTexts = autoResearchInsights.filter(i => i.selected).map(i => `[${i.source}] ${i.text}`);
     const combined = [...selectedTexts, manualNotes.trim()].filter(Boolean).join("\n\n");
     setSetupIntel(combined);
-    generateProofBrief();
+    generateProofBrief(combined);
   };
 
-  const generateProofBrief = async () => {
+  const generateProofBrief = async (intelOverride?: string) => {
     if (!setupRole.trim()) {
       toast({ title: "Please enter a target role", variant: "destructive" });
       return;
@@ -344,7 +344,7 @@ const Index = () => {
           company: setupCompany.trim() || "a company in this space",
           role: setupRole.trim(),
           jdText: setupJd.trim() || undefined,
-          companyIntel: setupIntel.trim() || undefined,
+          companyIntel: (intelOverride ?? setupIntel).trim() || undefined,
         }),
       });
 
