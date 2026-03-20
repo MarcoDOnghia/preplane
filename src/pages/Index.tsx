@@ -225,7 +225,7 @@ const Index = () => {
             <div>
               <h3 className="font-bold text-lg text-white">Start by telling us which role you're going after.</h3>
               <p className="text-sm mt-1" style={{ color: "#94A3B8" }}>
-                We'll build you a proof of work brief in 60 seconds.
+                Pick a company. We'll build your campaign around proof of work.
               </p>
             </div>
             <button
