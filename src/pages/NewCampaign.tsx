@@ -74,6 +74,8 @@ const Index = () => {
   const [manualNotes, setManualNotes] = useState("");
   const [manualUrl, setManualUrl] = useState("");
   const [showManualSection, setShowManualSection] = useState(false);
+  const [companyError, setCompanyError] = useState("");
+  const [autoResearchSuccess, setAutoResearchSuccess] = useState(false);
 
   // Check onboarding status and save any pending target from onboarding
   useEffect(() => {
@@ -208,15 +210,18 @@ const Index = () => {
   };
 
   const AUTO_RESEARCH_STEPS = [
-    "Scanning founder LinkedIn signals…",
-    "Pulling recent news…",
-    "Checking job listings…",
-    "Mining reviews (G2/Trustpilot)…",
-    "Extracting website positioning…",
+    "Searching recent news...",
+    "Finding company positioning...",
+    "Researching market context...",
+    "Building your research notes...",
   ];
 
   const handleAutoResearch = async () => {
-    if (!setupCompany.trim()) return;
+    if (!setupCompany.trim()) {
+      setCompanyError("Enter a company name first");
+      companyInputRef.current?.focus();
+      return;
+    }
 
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
@@ -227,17 +232,20 @@ const Index = () => {
 
     setAutoResearching(true);
     setAutoResearchStep(0);
-    setAutoResearchInsights([]);
     setAutoResearchDone(false);
+    setAutoResearchSuccess(false);
+    setCompanyError("");
 
-    // Animate through steps
-    for (let i = 0; i < AUTO_RESEARCH_STEPS.length; i++) {
-      setAutoResearchStep(i);
-      await new Promise(r => setTimeout(r, 1200));
-    }
+    // Animate through steps in sync with real API call
+    const stepPromise = (async () => {
+      for (let i = 0; i < AUTO_RESEARCH_STEPS.length; i++) {
+        setAutoResearchStep(i);
+        await new Promise(r => setTimeout(r, 1500));
+      }
+    })();
 
     try {
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/suggest-companies`;
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/auto-research-company`;
       const response = await fetch(url, {
         method: "POST",
         headers: {
@@ -248,9 +256,11 @@ const Index = () => {
         body: JSON.stringify({
           company: setupCompany.trim(),
           role: setupRole.trim(),
-          mode: "research",
         }),
       });
+
+      // Wait for step animation to finish
+      await stepPromise;
 
       if (!response.ok) {
         if (response.status === 429) {
@@ -262,25 +272,21 @@ const Index = () => {
       }
 
       const data = await response.json();
-      const insights = (data.insights || data.suggestions || []).map((item: any) => ({
-        text: typeof item === "string" ? item : item.text || item.insight || item.suggestion || "",
-        source: typeof item === "string" ? "Website" : item.source || "Research",
-        selected: true,
-      })).filter((i: any) => i.text);
+      if (data.error) throw new Error(data.error);
 
-      if (insights.length === 0) {
-        // Fallback: generate placeholder insights from company name
-        setAutoResearchInsights([
-          { text: `${setupCompany.trim()} is actively hiring for roles related to ${setupRole.trim()}.`, source: "Careers", selected: true },
-          { text: `Research their latest product updates and company news for specific hooks.`, source: "Website", selected: true },
-        ]);
-      } else {
-        setAutoResearchInsights(insights);
-      }
+      const research = data.research || "";
+      if (!research) throw new Error("No research returned");
+
+      // Populate textarea and open manual section
+      setManualNotes(research);
+      setShowManualSection(true);
       setAutoResearchDone(true);
+      setAutoResearchSuccess(true);
     } catch (e: any) {
-      toast({ title: "Research failed", description: "Try adding notes manually instead.", variant: "destructive" });
-      setAutoResearchInsights([]);
+      setAutoResearchDone(true);
+      setAutoResearchSuccess(false);
+      setCompanyError("Research unavailable — add your own notes below to continue.");
+      setShowManualSection(true);
     } finally {
       setAutoResearching(false);
     }
@@ -1192,10 +1198,12 @@ const Index = () => {
                     value={setupCompany}
                     onChange={(e) => {
                       setSetupCompany(e.target.value);
+                      setCompanyError("");
                       // Reset auto-research when company changes
                       if (autoResearchDone) {
                         setAutoResearchDone(false);
                         setAutoResearchInsights([]);
+                        setAutoResearchSuccess(false);
                       }
                     }}
                     placeholder="e.g. Sequoia Capital"
@@ -1213,9 +1221,11 @@ const Index = () => {
                     onFocus={(e) => { e.target.style.borderColor = '#F97316'; }}
                     onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.08)'; }}
                   />
-                  <p style={{ color: '#64748B', fontSize: '12px', marginTop: '6px' }}>
-                    Needed — we tailor everything to the company you enter.
-                  </p>
+                  {companyError && (
+                    <p style={{ color: '#ef4444', fontSize: '13px', marginTop: '6px' }}>
+                      {companyError}
+                    </p>
+                  )}
                 </div>
 
                 {/* Research section */}
@@ -1228,7 +1238,7 @@ const Index = () => {
                   <div style={{ marginBottom: '4px' }}>
                     <h3 style={{ color: '#FFFFFF', fontSize: '15px', fontWeight: 700, marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <Search className="w-4 h-4" style={{ color: '#F97316' }} />
-                      Let PrepLane do the research
+                      Let Preplane do the research
                     </h3>
                     <p style={{ color: '#64748B', fontSize: '13px', lineHeight: 1.6 }}>
                       We'll scan the web, recent news, and job boards to find specific hooks for your brief. No hallucinations. No generic fluff.
@@ -1290,65 +1300,23 @@ const Index = () => {
                       </div>
                     )}
 
-                    {/* Research results — selectable insight cards */}
-                    {autoResearchDone && autoResearchInsights.length > 0 && (
+                    {/* Research success banner */}
+                    {autoResearchDone && autoResearchSuccess && (
                       <div style={{ marginTop: '12px' }}>
-                        <p style={{ color: '#94A3B8', fontSize: '12px', marginBottom: '10px' }}>
-                          {selectedInsightsCount} of {autoResearchInsights.length} insights selected — deselect any that don't fit.
-                        </p>
-                        <div className="space-y-2">
-                          {autoResearchInsights.map((insight, i) => {
-                            const sourceIcon: Record<string, typeof Newspaper> = {
-                              LinkedIn: Sparkles, News: Newspaper, Careers: BriefcaseBusiness,
-                              Reviews: Star, Website: LayoutTemplate, Research: Search,
-                            };
-                            const Icon = sourceIcon[insight.source] || Globe;
-                            return (
-                              <button
-                                key={i}
-                                type="button"
-                                onClick={() => {
-                                  setAutoResearchInsights(prev => prev.map((ins, idx) =>
-                                    idx === i ? { ...ins, selected: !ins.selected } : ins
-                                  ));
-                                }}
-                                style={{
-                                  width: '100%',
-                                  display: 'flex',
-                                  alignItems: 'flex-start',
-                                  gap: '10px',
-                                  padding: '12px 14px',
-                                  borderRadius: '8px',
-                                  background: insight.selected ? 'rgba(249,115,22,0.08)' : '#1A1A1A',
-                                  border: insight.selected ? '1px solid rgba(249,115,22,0.3)' : '1px solid rgba(255,255,255,0.06)',
-                                  cursor: 'pointer',
-                                  textAlign: 'left' as const,
-                                  transition: 'all 0.2s',
-                                }}
-                              >
-                                <div style={{
-                                  width: '18px', height: '18px', borderRadius: '4px', flexShrink: 0, marginTop: '1px',
-                                  background: insight.selected ? '#F97316' : 'transparent',
-                                  border: insight.selected ? 'none' : '1px solid rgba(255,255,255,0.15)',
-                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                }}>
-                                  {insight.selected && <Check className="w-3 h-3 text-white" />}
-                                </div>
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                  <p style={{ color: '#E2E8F0', fontSize: '13px', lineHeight: 1.5, margin: 0 }}>{insight.text}</p>
-                                  <span style={{
-                                    display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '6px',
-                                    color: '#64748B', fontSize: '11px', fontWeight: 500,
-                                  }}>
-                                    <Icon className="w-3 h-3" />
-                                    {insight.source}
-                                  </span>
-                                </div>
-                              </button>
-                            );
-                          })}
+                        <div style={{
+                          background: 'rgba(34,197,94,0.1)',
+                          border: '1px solid rgba(34,197,94,0.2)',
+                          borderRadius: '8px',
+                          padding: '12px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                        }}>
+                          <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: '#22c55e' }} />
+                          <p style={{ color: '#22c55e', fontSize: '13px', margin: 0 }}>
+                            Research complete — review and edit before generating your brief.
+                          </p>
                         </div>
-                        {/* Re-run button */}
                         <button
                           onClick={handleAutoResearch}
                           style={{
@@ -1444,47 +1412,45 @@ const Index = () => {
                 </div>
 
                 {/* Status nudge */}
-                <p style={{ fontSize: '12px', lineHeight: 1.5, textAlign: 'center' as const, color: !setupCompany.trim() ? '#64748B' : hasResearchContent ? '#22c55e' : '#94A3B8' }}>
+                <p style={{ fontSize: '12px', lineHeight: 1.5, textAlign: 'center' as const, color: !setupCompany.trim() ? '#64748B' : '#94A3B8' }}>
                   {!setupCompany.trim()
                     ? 'Add a company to unlock tailored research.'
-                    : hasResearchContent
-                      ? 'Add 2–3 real signals and your PoW gets dramatically sharper.'
-                      : 'Add 2–3 real signals and your PoW gets dramatically sharper.'}
+                    : 'The more context you give us, the sharper your brief will be.'}
                 </p>
 
                 {/* CTA Button */}
                 {(() => {
-                  const ctaDisabled = generatingBrief || !setupRole.trim() || !setupCompany.trim() || !hasResearchContent;
+                  const ctaVisuallyDisabled = generatingBrief || !setupCompany.trim();
                   return (
                     <div>
                       <button
                         onClick={handleBuildBriefClick}
-                        disabled={ctaDisabled}
+                        disabled={generatingBrief}
                         style={{
                           width: '100%',
-                          background: ctaDisabled ? 'rgba(249,115,22,0.3)' : '#F97316',
-                          color: '#FFFFFF',
+                          background: ctaVisuallyDisabled ? '#242424' : '#F97316',
+                          color: ctaVisuallyDisabled ? '#64748B' : '#FFFFFF',
                           fontWeight: 700,
                           fontSize: '16px',
                           padding: '16px',
                           borderRadius: '8px',
                           border: 'none',
-                          cursor: ctaDisabled ? 'not-allowed' : 'pointer',
+                          cursor: ctaVisuallyDisabled ? 'not-allowed' : 'pointer',
                           transition: 'background 0.2s',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           gap: '8px',
                         }}
-                        onMouseEnter={(e) => { if (!ctaDisabled) (e.target as HTMLButtonElement).style.background = '#EA6C0A'; }}
-                        onMouseLeave={(e) => { if (!ctaDisabled) (e.target as HTMLButtonElement).style.background = '#F97316'; }}
+                        onMouseEnter={(e) => { if (!ctaVisuallyDisabled) (e.target as HTMLButtonElement).style.background = '#EA6C0A'; }}
+                        onMouseLeave={(e) => { if (!ctaVisuallyDisabled) (e.target as HTMLButtonElement).style.background = '#F97316'; }}
                       >
                         {generatingBrief && <Loader2 className="h-5 w-5 animate-spin" />}
                         {generatingBrief ? 'Generating...' : 'Build my PoW brief →'}
                       </button>
-                      {ctaDisabled && !generatingBrief && (
+                      {!setupCompany.trim() && !generatingBrief && (
                         <p style={{ color: '#475569', fontSize: '12px', textAlign: 'center' as const, marginTop: '8px' }}>
-                          {!setupCompany.trim() ? 'Add a company to generate a tailored PoW.' : !hasResearchContent ? 'Run auto-research or add notes to continue.' : ''}
+                          Add a company to generate a tailored PoW.
                         </p>
                       )}
                     </div>

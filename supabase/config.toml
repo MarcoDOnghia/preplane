@@ -1,6 +1,8 @@
 project_id = "mracpuniwyrymqdkthml"
 
 [functions]
+  [functions.auto-research-company]
+    verify_jwt = false
   [functions.auth-email-hook]
     verify_jwt = false
   [functions.check-alignment]

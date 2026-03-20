@@ -7,9 +7,10 @@ import { supabase } from "@/integrations/supabase/client";
 const LOCKED_ROLES: Record<string, string> = {
   "Software Engineer": "Software Engineer",
   "Product Manager": "Product Manager",
-  "Designer / Product Design": "Designer / Product Design",
-  "Finance / VC Analyst": "Finance / VC Analyst",
+  "Designer": "Designer",
+  "Finance / VC": "Finance / VC",
   "Operations": "Operations",
+  "Other": "Other",
 };
 
 const UNLOCKED_ROLES = [
