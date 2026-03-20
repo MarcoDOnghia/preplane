@@ -1300,65 +1300,23 @@ const Index = () => {
                       </div>
                     )}
 
-                    {/* Research results — selectable insight cards */}
-                    {autoResearchDone && autoResearchInsights.length > 0 && (
+                    {/* Research success banner */}
+                    {autoResearchDone && autoResearchSuccess && (
                       <div style={{ marginTop: '12px' }}>
-                        <p style={{ color: '#94A3B8', fontSize: '12px', marginBottom: '10px' }}>
-                          {selectedInsightsCount} of {autoResearchInsights.length} insights selected — deselect any that don't fit.
-                        </p>
-                        <div className="space-y-2">
-                          {autoResearchInsights.map((insight, i) => {
-                            const sourceIcon: Record<string, typeof Newspaper> = {
-                              LinkedIn: Sparkles, News: Newspaper, Careers: BriefcaseBusiness,
-                              Reviews: Star, Website: LayoutTemplate, Research: Search,
-                            };
-                            const Icon = sourceIcon[insight.source] || Globe;
-                            return (
-                              <button
-                                key={i}
-                                type="button"
-                                onClick={() => {
-                                  setAutoResearchInsights(prev => prev.map((ins, idx) =>
-                                    idx === i ? { ...ins, selected: !ins.selected } : ins
-                                  ));
-                                }}
-                                style={{
-                                  width: '100%',
-                                  display: 'flex',
-                                  alignItems: 'flex-start',
-                                  gap: '10px',
-                                  padding: '12px 14px',
-                                  borderRadius: '8px',
-                                  background: insight.selected ? 'rgba(249,115,22,0.08)' : '#1A1A1A',
-                                  border: insight.selected ? '1px solid rgba(249,115,22,0.3)' : '1px solid rgba(255,255,255,0.06)',
-                                  cursor: 'pointer',
-                                  textAlign: 'left' as const,
-                                  transition: 'all 0.2s',
-                                }}
-                              >
-                                <div style={{
-                                  width: '18px', height: '18px', borderRadius: '4px', flexShrink: 0, marginTop: '1px',
-                                  background: insight.selected ? '#F97316' : 'transparent',
-                                  border: insight.selected ? 'none' : '1px solid rgba(255,255,255,0.15)',
-                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                }}>
-                                  {insight.selected && <Check className="w-3 h-3 text-white" />}
-                                </div>
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                  <p style={{ color: '#E2E8F0', fontSize: '13px', lineHeight: 1.5, margin: 0 }}>{insight.text}</p>
-                                  <span style={{
-                                    display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '6px',
-                                    color: '#64748B', fontSize: '11px', fontWeight: 500,
-                                  }}>
-                                    <Icon className="w-3 h-3" />
-                                    {insight.source}
-                                  </span>
-                                </div>
-                              </button>
-                            );
-                          })}
+                        <div style={{
+                          background: 'rgba(34,197,94,0.1)',
+                          border: '1px solid rgba(34,197,94,0.2)',
+                          borderRadius: '8px',
+                          padding: '12px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                        }}>
+                          <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: '#22c55e' }} />
+                          <p style={{ color: '#22c55e', fontSize: '13px', margin: 0 }}>
+                            Research complete — review and edit before generating your brief.
+                          </p>
                         </div>
-                        {/* Re-run button */}
                         <button
                           onClick={handleAutoResearch}
                           style={{
