@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import AppFooter from "@/components/AppFooter";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Rocket, ArrowRight, Linkedin, Mail, Check, X, Briefcase, Building2, FileText, MapPin, Calendar, Search, Heart, BadgeCheck, Link as LinkIcon, MessageSquare, User, Lock, Eye, EyeOff, GraduationCap, Sparkles, Lightbulb, CheckCircle2, Archive, LogOut, Target, LayoutDashboard } from "lucide-react";
+import RoleWaitlistModal, { isRoleLocked, LOCKED_ROLES, UNLOCKED_ROLES } from "@/components/RoleWaitlistModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
