@@ -103,6 +103,11 @@ If a fact is not in the student's context and you are not 100% certain it is tru
 A brief with 5 verified facts beats a brief with 10 impressive invented ones.
 The student will send this to a real founder. One wrong fact kills the entire opportunity.
 
+GLOBAL ANTI-HALLUCINATION RULES:
+Rule 1-10: See above (never invent facts, flag uncertainty, etc.)
+Rule 11: Never invent company strategy, expansion plans, or positioning claims not present in student's pasted text. Use [Verify: confirm this claim] instead.
+Rule 12: Never invent demographic claims about a company's target audience (e.g. "they target Gen Z", "they're expanding to Spain") unless explicitly stated in student text.
+
 PRINCIPLE 1 — ROLE-SPECIFIC DELIVERABLE (MANDATORY):
 Before generating anything, identify the role type from the user input and select the correct deliverable type. The deliverable MUST match the role. Never generate a generic "playbook" when a more specific output type exists.
 
@@ -120,9 +125,66 @@ If the role doesn't fit these categories, infer the closest match and pick the m
 PRINCIPLE 2 — NO SKILL BARRIER (MANDATORY):
 Every build step must be achievable by a student with no technical background using only free tools and AI assistance. If a step requires a specific skill, add: "Use [specific AI tool or free tool] to do this — no experience needed."
 
+--- RESEARCH QUALITY ANALYSIS FRAMEWORK ---
+
+Before generating the brief, you MUST analyze the student's pasted research (companyIntel field) by extracting these signal categories:
+
+1. FeatureFact: A specific product feature, capability, or technical detail mentioned in the student's text. Must be a concrete, verifiable claim.
+2. AudienceSignal: A specific audience segment, customer type, geographic market, or user demographic mentioned in the student's text. Must include at least a subgroup or location.
+3. TimingSignals: Recent events, launches, hiring pushes, funding rounds, or news mentions from the student's text that create urgency. Must include a time anchor (date, "recently", "last week", etc.).
+4. ChannelSignals: Marketing channels, distribution methods, or platforms mentioned in the student's text.
+
+EVIDENCE CITATION RULES (MANDATORY FOR ALL EVIDENCE BULLETS):
+Evidence bullets must cite ONLY using one of these formats:
+- Option A (preferred): Direct verbatim quote from student text: "→ [claim] — your research states: '[verbatim quote from pasted text]'"
+- Option B (when text is long or unclean): Near-quote requiring at least 8 consecutive words appearing verbatim in student's pasted text: "→ [claim] — your research notes: '[8+ consecutive verbatim words...]'"
+- If neither A nor B is possible: "→ [Verify: find direct evidence for this before sending]"
+No paraphrase allowed in evidence bullets. No invented groundedness. Verbatim quote must be an exact substring of the student's pasted research field.
+
+CHANNEL FORMAT MAPPING:
+When analyzing ChannelSignals, use this explicit mapping:
+PaidSocialFormats (use defaults when detected): "TikTok Ads", "Spark Ads", "In-Feed Ads", "Meta Ads", "Instagram Ads", "Reels Ads", "Stories Ads", "Snap Ads", "YouTube Shorts Ads", "paid social", "sponsored content", "boosted posts"
+OrganicSocialFormats (no defaults — student must provide specifics): "Reels", "TikTok", "LinkedIn posts", "Instagram Stories", "YouTube Shorts", "organic", "content", "posts"
+For organic formats: use "Define baseline after first small pilot (assumption)" as the baseline.
+If ChannelSignals is empty: "Define baseline after first small pilot — no channel detected (assumption)"
+
+--- MODE DETERMINATION ---
+
+After extracting signals, determine the output mode:
+
+THIN RESEARCH MODE (output a Pre-Brief):
+Trigger: FeatureFact OR AudienceSignal is missing or incoherent from the student's research.
+In thin mode, output ONLY a Pre-Brief containing:
+1. option_a: A specific project option the student could build
+2. option_b: An alternative project option
+3. before_you_build: An array of 5 checklist items the student must research before regenerating
+Set mode to "pre_brief".
+Do NOT generate: project, why_this_works, build_steps, final_output, effort_guide, key_insight, outreach_hook, or any other full brief sections.
+
+COHERENCE CHECK — TIMING SIGNAL EXCEPTION:
+If FeatureFact + AudienceSignal connect coherently but TimingSignals are missing or all marked [Verify]:
+- Do NOT downgrade to thin mode.
+- Generate the full brief but:
+  - Set the timing-related content to: "[Verify: identify a timing signal before sending — recent launch, hiring push, or news mention]"
+  - Include at least one [Verify] placeholder evidence bullet
+  - This signals honest uncertainty without blocking the student
+
+FULL BRIEF MODE:
+Trigger: FeatureFact AND AudienceSignal are both present and coherent.
+Generate the complete brief with all fields.
+
+--- GATE FAILURE MESSAGE ---
+When outputting a pre_brief (thin mode), include this in the gate_failure_message field:
+First line: A specific message about what's missing (e.g. "Missing: specific audience segment and feature detail").
+Second line: "This is normal — paste 5 concrete facts and we'll lock a high-quality bet."
+
+--- FULL BRIEF GENERATION (when mode = "full_brief") ---
+
 Generate a complete, buildable proof-of-work brief for a candidate targeting this role and company. Every section must reference the specific company, role, and job description if provided. If no JD is provided, infer context from the role title and company type.
 
 You MUST return structured JSON with these exact fields:
+
+- mode: "full_brief"
 
 - project: One sentence. What the project is and who it is for. The deliverable type MUST match the role category per Principle 1. Be specific if company is provided, use "your target company" if not. Example with company: "A GTM expansion brief for Flowdesk's entry into the Southern European market." Example without: "A GTM expansion brief mapping untapped segments in Southern Europe for your target company."
 
@@ -317,6 +379,13 @@ ${companyIntel ? `\nCompany Intelligence (real research provided by the student)
       },
       proof_of_work: {
         properties: {
+          mode: { type: "string", enum: ["pre_brief", "full_brief"], description: "Output mode: 'pre_brief' when research is insufficient (missing FeatureFact or AudienceSignal), 'full_brief' when research is sufficient" },
+          // Pre-brief fields (used when mode = pre_brief)
+          option_a: { type: "string", description: "Pre-brief only: First project option the student could build" },
+          option_b: { type: "string", description: "Pre-brief only: Second/alternative project option" },
+          before_you_build: { type: "array", items: { type: "string" }, description: "Pre-brief only: Array of 5 checklist items the student must research" },
+          gate_failure_message: { type: "string", description: "Pre-brief only: Specific message about what research is missing" },
+          // Full brief fields (used when mode = full_brief)
           project: { type: "string", description: "One sentence: what the project is and who it is for, with role-specific deliverable type" },
           why_this_works: { type: "string", description: "2-3 sentences on why this resonates with this specific company and role" },
           build_steps: { type: "array", items: { type: "string" }, description: "5-7 steps. Step 1 is always dedicated research (30-45 min, 3+ specific sources). Remaining steps use free tools with no skill barrier." },
@@ -333,7 +402,7 @@ ${companyIntel ? `\nCompany Intelligence (real research provided by the student)
           key_insight: { type: "string", description: "One specific observation that shows the candidate gets this business" },
           outreach_hook: { type: "string", description: "One sentence outreach opener starting with what was built" },
         },
-        required: ["project", "why_this_works", "build_steps", "final_output", "effort_guide", "key_insight", "outreach_hook"],
+        required: ["mode"],
       },
       follow_up: {
         properties: {
