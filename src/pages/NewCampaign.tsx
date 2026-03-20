@@ -1198,10 +1198,12 @@ const Index = () => {
                     value={setupCompany}
                     onChange={(e) => {
                       setSetupCompany(e.target.value);
+                      setCompanyError("");
                       // Reset auto-research when company changes
                       if (autoResearchDone) {
                         setAutoResearchDone(false);
                         setAutoResearchInsights([]);
+                        setAutoResearchSuccess(false);
                       }
                     }}
                     placeholder="e.g. Sequoia Capital"
