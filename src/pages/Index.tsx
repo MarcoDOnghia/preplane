@@ -87,6 +87,8 @@ const Index = () => {
   const [targetLocation, setTargetLocation] = useState<string | null>(null);
   const [campaigns, setCampaigns] = useState<CampaignRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showArchived, setShowArchived] = useState(false);
+  const [followupNudgeDismissed, setFollowupNudgeDismissed] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
