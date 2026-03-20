@@ -1221,9 +1221,11 @@ const Index = () => {
                     onFocus={(e) => { e.target.style.borderColor = '#F97316'; }}
                     onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.08)'; }}
                   />
-                  <p style={{ color: '#64748B', fontSize: '12px', marginTop: '6px' }}>
-                    Needed — we tailor everything to the company you enter.
-                  </p>
+                  {companyError && (
+                    <p style={{ color: '#ef4444', fontSize: '13px', marginTop: '6px' }}>
+                      {companyError}
+                    </p>
+                  )}
                 </div>
 
                 {/* Research section */}
