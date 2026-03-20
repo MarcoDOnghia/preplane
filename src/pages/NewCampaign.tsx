@@ -1081,17 +1081,17 @@ const Index = () => {
                 <div>
                   <label style={{ color: '#FFFFFF', fontSize: '13px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                     Drop your research here before we build
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: setupIntel.trim() ? '#22c55e' : '#ef4444' }}>
-                      <span style={{
-                        width: '6px',
-                        height: '6px',
-                        borderRadius: '50%',
-                        background: setupIntel.trim() ? '#22c55e' : '#ef4444',
-                        display: 'inline-block',
-                        flexShrink: 0,
-                      }} />
-                      {setupIntel.trim() ? 'Your brief will be highly specific' : 'No research yet — your brief will be generic'}
-                    </span>
+                    {(() => {
+                      const len = setupIntel.trim().length;
+                      const dot = len >= 150 ? '#22c55e' : len >= 50 ? '#eab308' : len >= 1 ? '#64748B' : '#ef4444';
+                      const msg = len >= 150 ? 'Your brief will be highly specific' : len >= 50 ? 'Good start — more detail will sharpen your brief' : len >= 1 ? 'Keep going — add more context for a specific brief' : 'No research yet — your brief will be generic';
+                      return (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: dot }}>
+                          <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: dot, display: 'inline-block', flexShrink: 0 }} />
+                          {msg}
+                        </span>
+                      );
+                    })()}
                   </label>
                   <p style={{ color: '#64748B', fontSize: '12px', marginBottom: '4px', lineHeight: 1.5, whiteSpace: 'pre-line' }}>
                     {"This is the most important field on this page. 30 minutes of research here = a brief that gets responses. Skip it and your brief will be generic.\n\nWhere to look:\n→ Founder LinkedIn posts\n→ Google company name + recent news\n→ Job listings on LinkedIn\n→ G2 or Trustpilot reviews\n→ Their website copy\n\nPaste raw notes. We turn them into your brief."}
