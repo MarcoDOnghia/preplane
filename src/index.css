@@ -126,7 +126,7 @@
   height: 0;
 }
 .tiptap mark {
-  background-color: hsl(48 96% 89%);
+  background-color: hsl(24 95% 53% / 0.25);
   border-radius: 2px;
   padding: 1px 2px;
 }
