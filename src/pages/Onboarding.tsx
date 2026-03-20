@@ -46,6 +46,8 @@ const Onboarding = () => {
   const [targetStart, setTargetStart] = useState("");
   const [companySizes, setCompanySizes] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [showWaitlistModal, setShowWaitlistModal] = useState(false);
+  const [waitlistRole, setWaitlistRole] = useState("");
   const [isReturning, setIsReturning] = useState(false);
   const [ready, setReady] = useState(false);
 
