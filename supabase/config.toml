@@ -1,34 +1,27 @@
 project_id = "mracpuniwyrymqdkthml"
 
-[functions.tailor-cv]
-verify_jwt = false
-
-[functions.generate-keyword-bullet]
-verify_jwt = false
-
-[functions.extract-jd-from-url]
-verify_jwt = false
-
-[functions.parse-cv]
-verify_jwt = false
-
-[functions.generate-campaign-content]
-verify_jwt = false
-
-[functions.suggest-companies]
-verify_jwt = false
-
-[functions.check-alignment]
-verify_jwt = false
-
-[functions.generate-outreach]
-verify_jwt = false
-
-[functions.generate-insights]
-verify_jwt = false
-
-[functions.generate-cold-cover-letter]
-verify_jwt = false
-
-[functions.process-email-queue]
-verify_jwt = true
+[functions]
+  [functions.auth-email-hook]
+    verify_jwt = false
+  [functions.check-alignment]
+    verify_jwt = false
+  [functions.extract-jd-from-url]
+    verify_jwt = false
+  [functions.generate-campaign-content]
+    verify_jwt = false
+  [functions.generate-cold-cover-letter]
+    verify_jwt = false
+  [functions.generate-insights]
+    verify_jwt = false
+  [functions.generate-keyword-bullet]
+    verify_jwt = false
+  [functions.generate-outreach]
+    verify_jwt = false
+  [functions.parse-cv]
+    verify_jwt = false
+  [functions.process-email-queue]
+    verify_jwt = true
+  [functions.suggest-companies]
+    verify_jwt = false
+  [functions.tailor-cv]
+    verify_jwt = false
