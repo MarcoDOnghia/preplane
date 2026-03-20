@@ -1446,7 +1446,7 @@ const Index = () => {
                         onMouseLeave={(e) => { if (!ctaVisuallyDisabled) (e.target as HTMLButtonElement).style.background = '#F97316'; }}
                       >
                         {generatingBrief && <Loader2 className="h-5 w-5 animate-spin" />}
-                        {generatingBrief ? 'Generating...' : 'Build my PoW brief →'}
+                        {generatingBrief ? 'Generating...' : 'Generate my brief →'}
                       </button>
                       {!setupCompany.trim() && !generatingBrief && (
                         <p style={{ color: '#475569', fontSize: '12px', textAlign: 'center' as const, marginTop: '8px' }}>
