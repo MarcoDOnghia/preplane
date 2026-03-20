@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Upload, X, Copy, Check, AlertTriangle, Image as ImageIcon, ExternalLink } from "lucide-react";
 
 interface ProofCardBuilderProps {
@@ -30,6 +31,23 @@ const ROLE_48H: Record<string, string> = {
   venture: "If you reply, I'll send the complete model with 3 scenario variations within 48 hours.",
 };
 
+const ROLE_ASSUMPTIONS: Record<string, string> = {
+  sdr: "This works if {company} is currently prioritizing top-of-funnel volume over deal quality.",
+  sales: "This works if {company} is currently prioritizing top-of-funnel volume over deal quality.",
+  bdr: "This works if {company} is currently prioritizing top-of-funnel volume over deal quality.",
+  marketing: "This works if the current hero is the primary conversion bottleneck.",
+  growth: "This works if the current hero is the primary conversion bottleneck.",
+  product: "This works if the friction point I identified is on the critical user path.",
+  design: "This works if the friction point I identified is on the critical user path.",
+  ux: "This works if the friction point I identified is on the critical user path.",
+  engineer: "This works if this task is currently done manually by the team.",
+  developer: "This works if this task is currently done manually by the team.",
+  software: "This works if this task is currently done manually by the team.",
+  finance: "This works if the assumptions in the model hold for your specific market.",
+  vc: "This works if the assumptions in the model hold for your specific market.",
+  venture: "This works if the assumptions in the model hold for your specific market.",
+};
+
 const ROLE_EXAMPLES: Record<string, string> = {
   sdr: 'e.g. "I built a 50-lead prospect list for JetHR to increase top-of-funnel pipeline."',
   sales: 'e.g. "I built a competitive teardown for Acme to reposition against their top 3 competitors."',
@@ -48,6 +66,14 @@ function get48hDefault(role: string): string {
     if (r.includes(key)) return val;
   }
   return "If you reply, I'll deliver [specific next step] within 48 hours.";
+}
+
+function getAssumptionDefault(role: string, company: string): string {
+  const r = role.toLowerCase();
+  for (const [key, val] of Object.entries(ROLE_ASSUMPTIONS)) {
+    if (r.includes(key)) return val.replace("{company}", company);
+  }
+  return "This works if [your core assumption] holds.";
 }
 
 function getRoleExample(role: string): string {
@@ -79,6 +105,8 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
   const [loomUrl, setLoomUrl] = useState("");
   const [docUrl, setDocUrl] = useState("");
   const [assumption, setAssumption] = useState("");
+  const [assumptionEditing, setAssumptionEditing] = useState(false);
+  const [assumptionInitialized, setAssumptionInitialized] = useState(false);
   const [next48h, setNext48h] = useState(get48hDefault(role));
   const [next48hEditing, setNext48hEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -87,10 +115,16 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
   const [descCopied, setDescCopied] = useState(false);
+  const [dmCopied, setDmCopied] = useState(false);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [loaded, setLoaded] = useState(false);
 
+  // FIX 4 — Visual gating state
+  const [showImageGate, setShowImageGate] = useState(false);
+  const [imageGateChecked, setImageGateChecked] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageFieldRef = useRef<HTMLDivElement>(null);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const existingCardRef = useRef(existingCard);
 
@@ -167,7 +201,6 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
   // Wrapped setters that trigger debounced save
   const updateField = <T,>(setter: React.Dispatch<React.SetStateAction<T>>, value: T, overrides: Partial<ReturnType<typeof getCurrentFields>> = {}) => {
     setter(value);
-    // We need to schedule save with the NEW value; use a microtask so state is committed
     setTimeout(() => {
       const fields = { ...getCurrentFields(), ...overrides };
       scheduleSave(fields);
@@ -194,10 +227,15 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
           setLoomUrl(data.loom_url || "");
           setDocUrl(data.doc_url || "");
           setAssumption(data.assumption || "");
+          setAssumptionInitialized(true);
           setNext48h(data.next_48h || get48hDefault(role));
           if (data.published) {
             setPublishedUrl(`${window.location.origin}/p/${data.slug}`);
           }
+        } else {
+          // Pre-fill assumption for new cards
+          setAssumption(getAssumptionDefault(role, company));
+          setAssumptionInitialized(true);
         }
         setLoaded(true);
       });
@@ -241,7 +279,6 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
     const newUrl = urlData.publicUrl;
     setImageUrl(newUrl);
     setUploading(false);
-    // Auto-save after image upload
     setTimeout(() => saveDraft({ ...getCurrentFields(), imageUrl: newUrl }), 0);
   };
 
@@ -252,7 +289,6 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
       const firstName = user.user_metadata?.display_name?.split(" ")[0] || user.email?.split("@")[0] || "user";
       let slug = generateSlug(company, role, firstName);
 
-      // Check slug uniqueness
       const { data: existing } = await supabase
         .from("proof_cards")
         .select("slug")
@@ -305,6 +341,16 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
     }
   };
 
+  // FIX 4 — Gated publish
+  const handlePublishClick = () => {
+    if (!imageUrl) {
+      setShowImageGate(true);
+      setImageGateChecked(false);
+    } else {
+      handlePublish();
+    }
+  };
+
   const handlePublish = async () => {
     if (!existingCard) return;
     const { error } = await supabase
@@ -319,6 +365,7 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
     const url = `${window.location.origin}/p/${existingCard.slug}`;
     setPublishedUrl(url);
     setShowPreview(false);
+    setShowImageGate(false);
     toast({ title: "Proof Card published!" });
   };
 
@@ -334,6 +381,16 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
     navigator.clipboard.writeText(`60-sec proof card (no login): ${publishedUrl}`);
     setDescCopied(true);
     setTimeout(() => setDescCopied(false), 2000);
+  };
+
+  // FIX 5 — Copy LinkedIn DM
+  const copyLinkedInDM = () => {
+    if (!publishedUrl) return;
+    const summary = oneLiner.slice(0, 60);
+    const text = `Hey [Name] — I built ${summary}.\n\n60-sec proof card: ${publishedUrl}\n\nCould you reply with 1 piece of feedback — what's the biggest flaw or missing piece?\n\nIf irrelevant, I'll disappear.`;
+    navigator.clipboard.writeText(text);
+    setDmCopied(true);
+    setTimeout(() => setDmCopied(false), 3000);
   };
 
   return (
@@ -375,25 +432,52 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
               {descCopied ? "Copied!" : "Copy link + description"}
             </Button>
           </div>
+          {/* FIX 5 — Copy LinkedIn DM button */}
+          <button
+            onClick={copyLinkedInDM}
+            style={{
+              width: '100%',
+              marginTop: '10px',
+              backgroundColor: 'transparent',
+              border: '1px solid #F97416',
+              color: '#F97416',
+              fontWeight: 700,
+              fontSize: '13px',
+              borderRadius: '8px',
+              padding: '10px 16px',
+              cursor: 'pointer',
+              position: 'relative',
+            }}
+          >
+            {dmCopied ? "Copied — replace [Name] before sending" : "Copy LinkedIn DM →"}
+          </button>
+          {dmCopied && (
+            <p style={{ color: '#22c55e', fontSize: '12px', marginTop: '6px', textAlign: 'center' }}>
+              Copied — replace [Name] before sending
+            </p>
+          )}
           <p style={{ color: '#64748B', fontSize: '12px', marginTop: '10px' }}>
             Use 'Copy link + description' in LinkedIn DMs — gives context so founders know what to expect.
           </p>
         </div>
       )}
 
-      {/* FIELD 1 — One-liner */}
+      {/* FIELD 1 — One-liner (FIX 3: max 100 chars) */}
       <FieldGroup label="What you built" helper='Format: I built {deliverable} for {company} to {outcome}.' required>
         <p style={{ color: '#64748B', fontSize: '11px', fontStyle: 'italic', marginBottom: '6px' }}>{getRoleExample(role)}</p>
         <Input
           value={oneLiner}
-          onChange={(e) => { const v = e.target.value.slice(0, 140); updateField(setOneLiner, v, { oneLiner: v }); }}
+          onChange={(e) => { const v = e.target.value.slice(0, 100); updateField(setOneLiner, v, { oneLiner: v }); }}
           onBlur={handleBlurSave}
           placeholder={`I built ... for ${company} to ...`}
-          maxLength={140}
+          maxLength={100}
           className="campaign-notes-textarea"
           style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: 'white' }}
         />
-        <p style={{ color: '#64748B', fontSize: '11px', textAlign: 'right', marginTop: '4px' }}>{oneLiner.length}/140</p>
+        <p style={{ color: '#64748B', fontSize: '11px', marginTop: '4px' }}>
+          Keep it under 15 words. Founders scan the first line in 2 seconds.
+        </p>
+        <p style={{ color: oneLiner.length > 100 ? '#ef4444' : '#64748B', fontSize: '11px', textAlign: 'right', marginTop: '2px' }}>{oneLiner.length}/100</p>
       </FieldGroup>
 
       {/* FIELD 2 — The Ask */}
@@ -438,58 +522,60 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
       </FieldGroup>
 
       {/* FIELD 4 — Visual upload */}
-      <FieldGroup label="Your visual" helper="Before/after, table, or screenshot. Remove all personal data before uploading.">
-        {imageUrl ? (
-          <div className="space-y-2">
-            <img src={imageUrl} alt="Proof visual" style={{ maxHeight: '200px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }} />
-            <Button size="sm" variant="outline" onClick={() => { setImageUrl(null); fileInputRef.current?.click(); }} className="bg-transparent text-white border-white/15 hover:bg-white/5" style={{ borderRadius: '8px' }}>
-              Replace image
-            </Button>
-          </div>
-        ) : (
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            style={{
-              width: '100%',
-              padding: '24px',
-              border: '2px dashed rgba(255,255,255,0.15)',
-              borderRadius: '8px',
-              backgroundColor: 'transparent',
-              cursor: 'pointer',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '8px',
+      <div ref={imageFieldRef}>
+        <FieldGroup label="Your visual" helper="Before/after, table, or screenshot. Remove all personal data before uploading.">
+          {imageUrl ? (
+            <div className="space-y-2">
+              <img src={imageUrl} alt="Proof visual" style={{ maxHeight: '200px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }} />
+              <Button size="sm" variant="outline" onClick={() => { setImageUrl(null); fileInputRef.current?.click(); }} className="bg-transparent text-white border-white/15 hover:bg-white/5" style={{ borderRadius: '8px' }}>
+                Replace image
+              </Button>
+            </div>
+          ) : (
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              style={{
+                width: '100%',
+                padding: '24px',
+                border: '2px dashed rgba(255,255,255,0.15)',
+                borderRadius: '8px',
+                backgroundColor: 'transparent',
+                cursor: 'pointer',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
+              {uploading ? (
+                <p style={{ color: '#94A3B8', fontSize: '13px' }}>Uploading...</p>
+              ) : (
+                <>
+                  <Upload style={{ color: '#64748B', width: '24px', height: '24px' }} />
+                  <p style={{ color: '#94A3B8', fontSize: '13px' }}>Click to upload (PNG, JPG, WebP · Max 10MB)</p>
+                </>
+              )}
+            </button>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".png,.jpg,.jpeg,.webp"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleImageUpload(file);
             }}
-          >
-            {uploading ? (
-              <p style={{ color: '#94A3B8', fontSize: '13px' }}>Uploading...</p>
-            ) : (
-              <>
-                <Upload style={{ color: '#64748B', width: '24px', height: '24px' }} />
-                <p style={{ color: '#94A3B8', fontSize: '13px' }}>Click to upload (PNG, JPG, WebP · Max 10MB)</p>
-              </>
-            )}
-          </button>
-        )}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".png,.jpg,.jpeg,.webp"
-          className="hidden"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) handleImageUpload(file);
-          }}
-        />
-        {!imageUrl && (
-          <p style={{ color: '#eab308', fontSize: '13px', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <AlertTriangle style={{ width: '14px', height: '14px' }} />
-            Cards with visuals get 2x more responses.
-          </p>
-        )}
-      </FieldGroup>
+          />
+          {!imageUrl && (
+            <p style={{ color: '#eab308', fontSize: '13px', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <AlertTriangle style={{ width: '14px', height: '14px' }} />
+              Cards with visuals get 2x more responses.
+            </p>
+          )}
+        </FieldGroup>
+      </div>
 
       {/* FIELD 5 — Loom link */}
       <FieldGroup label="Your Loom walkthrough (optional)" helper="45-90 seconds max. Free at loom.com.">
@@ -526,19 +612,78 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
         )}
       </FieldGroup>
 
-      {/* FIELD 7 — Assumption */}
-      <FieldGroup label="Key assumption" helper='One sentence: this works if...'>
-        <Input
-          value={assumption}
-          onChange={(e) => { const v = e.target.value.slice(0, 140); updateField(setAssumption, v, { assumption: v }); }}
-          onBlur={handleBlurSave}
-          maxLength={140}
-          placeholder={`This works if ${company} is prioritizing...`}
-          className="campaign-notes-textarea"
-          style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: 'white' }}
-        />
-        <p style={{ color: '#64748B', fontSize: '11px', textAlign: 'right', marginTop: '4px' }}>{assumption.length}/140</p>
-      </FieldGroup>
+      {/* FIELD 7 — Key Assumption (FIX 1: role-based auto-gen with approve/edit) */}
+      <div>
+        <label style={{ color: '#ffffff', fontSize: '13px', fontWeight: 500, display: 'block', marginBottom: '4px' }}>
+          Key assumption
+        </label>
+        <p style={{ color: '#64748B', fontSize: '12px', marginBottom: '8px', lineHeight: 1.5 }}>
+          Shows judgment. Signals you've thought about where this could fail.
+        </p>
+        {!assumptionEditing ? (
+          <div style={{ backgroundColor: '#242424', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', padding: '14px' }}>
+            <p style={{ color: '#ffffff', fontSize: '14px', lineHeight: 1.6 }}>{assumption || getAssumptionDefault(role, company)}</p>
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={() => {
+                  if (!assumption) {
+                    const v = getAssumptionDefault(role, company);
+                    updateField(setAssumption, v, { assumption: v });
+                  }
+                }}
+                style={{
+                  backgroundColor: 'rgba(34,197,94,0.15)',
+                  border: '1px solid rgba(34,197,94,0.3)',
+                  color: '#22c55e',
+                  fontSize: '12px',
+                  borderRadius: '6px',
+                  padding: '6px 12px',
+                  cursor: 'pointer',
+                  fontWeight: 500,
+                }}
+              >
+                Looks good ✓
+              </button>
+              <button
+                onClick={() => {
+                  if (!assumption) {
+                    setAssumption(getAssumptionDefault(role, company));
+                  }
+                  setAssumptionEditing(true);
+                }}
+                style={{
+                  backgroundColor: 'transparent',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  color: '#ffffff',
+                  fontSize: '12px',
+                  borderRadius: '6px',
+                  padding: '6px 12px',
+                  cursor: 'pointer',
+                  fontWeight: 500,
+                }}
+              >
+                Edit
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <Input
+              value={assumption}
+              onChange={(e) => { const v = e.target.value.slice(0, 140); updateField(setAssumption, v, { assumption: v }); }}
+              onBlur={handleBlurSave}
+              maxLength={140}
+              placeholder={`This works if ${company} is prioritizing...`}
+              className="campaign-notes-textarea"
+              style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', color: 'white' }}
+            />
+            <div className="flex justify-between mt-1">
+              <Button size="sm" onClick={() => setAssumptionEditing(false)} variant="outline" style={{ borderRadius: '8px' }}>Done</Button>
+              <p style={{ color: '#64748B', fontSize: '11px' }}>{assumption.length}/140</p>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* FIELD 8 — 48-hour CTA */}
       <FieldGroup label="Your next step offer" helper="Name a specific deliverable." required>
@@ -617,7 +762,7 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
 
             <div className="flex gap-3 mt-6">
               <button
-                onClick={handlePublish}
+                onClick={handlePublishClick}
                 style={{ flex: 1, backgroundColor: '#F97416', color: '#fff', fontWeight: 700, borderRadius: '8px', padding: '14px', border: 'none', cursor: 'pointer', fontSize: '15px' }}
               >
                 Publish and get link →
@@ -629,6 +774,110 @@ export default function ProofCardBuilder({ campaignId, company, role, toast }: P
                 Edit first
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* FIX 4 — Image gating modal */}
+      {showImageGate && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center"
+          style={{ backgroundColor: 'rgba(0,0,0,0.9)' }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowImageGate(false); }}
+        >
+          <div style={{
+            backgroundColor: '#1A1A1A',
+            border: '1px solid #ef4444',
+            borderRadius: '16px',
+            padding: '32px',
+            maxWidth: '420px',
+            width: '90%',
+          }}>
+            <h3 style={{ color: '#ffffff', fontWeight: 700, fontSize: '20px', marginBottom: '12px' }}>
+              Your card has no visual.
+            </h3>
+            <p style={{ color: '#94A3B8', fontSize: '14px', lineHeight: 1.7 }}>
+              A screenshot, table, or before/after is what makes this feel like real work — not a well-written post.
+            </p>
+            <p style={{ color: '#94A3B8', fontSize: '14px', lineHeight: 1.7, marginTop: '12px' }}>
+              Founders scan visuals in 2 seconds. Text takes 20.
+            </p>
+
+            <button
+              onClick={() => {
+                setShowImageGate(false);
+                setShowPreview(false);
+                setTimeout(() => {
+                  imageFieldRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  fileInputRef.current?.click();
+                }, 200);
+              }}
+              style={{
+                width: '100%',
+                marginTop: '24px',
+                backgroundColor: '#F97416',
+                color: '#ffffff',
+                fontWeight: 700,
+                borderRadius: '8px',
+                padding: '14px',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '14px',
+              }}
+            >
+              Add image now →
+            </button>
+
+            <button
+              onClick={() => setImageGateChecked((prev) => !prev ? true : prev)}
+              style={{
+                width: '100%',
+                marginTop: '10px',
+                backgroundColor: 'transparent',
+                border: '1px solid rgba(255,255,255,0.15)',
+                color: '#64748B',
+                fontSize: '13px',
+                borderRadius: '8px',
+                padding: '10px',
+                cursor: 'pointer',
+              }}
+            >
+              I don't have a visual yet
+            </button>
+
+            {imageGateChecked && (
+              <div style={{ marginTop: '12px' }}>
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer' }}>
+                  <Checkbox
+                    checked={imageGateChecked}
+                    onCheckedChange={(v) => setImageGateChecked(!!v)}
+                    className="mt-0.5"
+                  />
+                  <span style={{ color: '#94A3B8', fontSize: '13px', lineHeight: 1.5 }}>
+                    I understand this will reduce my reply rate significantly.
+                  </span>
+                </label>
+                {imageGateChecked && (
+                  <button
+                    onClick={handlePublish}
+                    style={{
+                      width: '100%',
+                      marginTop: '10px',
+                      backgroundColor: 'transparent',
+                      border: '1px solid rgba(255,255,255,0.15)',
+                      color: '#64748B',
+                      fontSize: '13px',
+                      fontWeight: 500,
+                      borderRadius: '8px',
+                      padding: '10px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Publish anyway
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -655,7 +904,7 @@ function MiniPreview({ oneLiner, ask, findings, imageUrl, loomUrl, docUrl, assum
       <div style={{ backgroundColor: '#1A1A1A', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '10px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ color: '#64748B', fontSize: '12px' }}>🚀 PrepLane Proof of Work</span>
       </div>
-      <p style={{ color: '#64748B', fontSize: '11px', textAlign: 'center', padding: '6px 0' }}>Public page · No login · No downloads · ~45 sec read</p>
+      <p style={{ color: '#64748B', fontSize: '11px', textAlign: 'center', padding: '6px 0' }}>Public page · No login · No attachments · No downloads · ~45 sec read</p>
 
       {/* One-liner */}
       <p style={{ color: '#ffffff', fontSize: '18px', fontWeight: 700, lineHeight: 1.3, padding: '16px 20px 12px' }}>{oneLiner}</p>

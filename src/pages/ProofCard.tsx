@@ -91,7 +91,7 @@ export default function ProofCard() {
           <span style={{ color: '#64748B', fontSize: '12px' }}>Built by {firstName || "someone"}</span>
         </div>
         <p style={{ color: '#64748B', fontSize: '11px', textAlign: 'center', padding: '8px 0' }}>
-          Public page · No login · No downloads · ~45 sec read
+          Public page · No login · No attachments · No downloads · ~45 sec read
         </p>
 
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
