@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import AppFooter from "@/components/AppFooter";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Rocket, ArrowRight, Linkedin, Mail, Check, X, Briefcase, Building2, FileText, MapPin, Calendar, Search, Heart, BadgeCheck, Link as LinkIcon, MessageSquare, User, Lock, Eye, EyeOff, GraduationCap, Sparkles, Lightbulb, CheckCircle2, Archive, LogOut, Target, LayoutDashboard } from "lucide-react";
+import RoleWaitlistModal, { isRoleLocked, LOCKED_ROLES, UNLOCKED_ROLES } from "@/components/RoleWaitlistModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,6 +46,8 @@ const Onboarding = () => {
   const [targetStart, setTargetStart] = useState("");
   const [companySizes, setCompanySizes] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [showWaitlistModal, setShowWaitlistModal] = useState(false);
+  const [waitlistRole, setWaitlistRole] = useState("");
   const [isReturning, setIsReturning] = useState(false);
   const [ready, setReady] = useState(false);
 
@@ -419,13 +422,47 @@ const Onboarding = () => {
                             <p className="text-slate-500 text-sm">What job title are you aiming for?</p>
                           </div>
                         </div>
-                        <input
-                          type="text"
-                          placeholder="e.g. Senior Frontend Developer or Product Designer"
-                          value={targetRole}
-                          onChange={(e) => setTargetRole(e.target.value)}
-                          className="w-full h-14 px-4 rounded-xl border border-slate-200 bg-[#F8F7F5] focus:border-[#F97316] focus:ring-[#F97316] focus:ring-2 focus:outline-none text-slate-900 placeholder:text-slate-400 mt-6"
-                        />
+                        <div className="flex flex-wrap gap-2 mt-6">
+                          {[...UNLOCKED_ROLES, ...Object.keys(LOCKED_ROLES)].map((role) => {
+                            const locked = isRoleLocked(role);
+                            const selected = targetRole === role;
+                            return (
+                              <button
+                                key={role}
+                                type="button"
+                                onClick={() => {
+                                  if (locked) {
+                                    setWaitlistRole(role);
+                                    setShowWaitlistModal(true);
+                                  } else {
+                                    setTargetRole(role);
+                                  }
+                                }}
+                                className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                                  selected
+                                    ? "border-2 border-[#F97316] text-[#F97316] bg-orange-50 shadow-sm"
+                                    : "border border-slate-200 bg-[#F8F7F5] hover:border-slate-300"
+                                }`}
+                                style={{ color: selected ? '#F97316' : locked ? '#94a3b8' : '#374151' }}
+                              >
+                                {locked && <Lock className="w-3 h-3" style={{ flexShrink: 0 }} />}
+                                {role}
+                                {locked && (
+                                  <span style={{
+                                    background: 'rgba(249,116,22,0.15)',
+                                    color: '#F97316',
+                                    fontSize: '10px',
+                                    fontWeight: 600,
+                                    padding: '2px 6px',
+                                    borderRadius: '4px',
+                                  }}>
+                                    Waitlist
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
 
                       {/* Card 2 — Location (Europe toggle) */}
@@ -642,26 +679,58 @@ const Onboarding = () => {
                     </p>
                   </div>
 
-                  {/* Target role input */}
+                  {/* Target role selector */}
                   <div className="space-y-2">
                     <label className="block font-medium" style={{ color: "#cbd5e1", fontSize: "13px" }}>Target role</label>
-                    <input
-                      type="text"
-                      value={targetRole}
-                      onChange={(e) => setTargetRole(e.target.value)}
-                      placeholder="e.g. GTM Intern, VC Analyst, Marketing Intern"
-                      className="w-full focus:outline-none transition-colors"
-                      style={{
-                        background: "rgba(15,23,42,0.5)",
-                        border: "1px solid rgba(255,255,255,0.08)",
-                        borderRadius: "8px",
-                        padding: "12px 16px",
-                        color: "white",
-                        fontSize: "14px",
-                      }}
-                      onFocus={(e) => { e.target.style.borderColor = "#f97415"; e.target.style.boxShadow = "0 0 0 1px #f97415"; }}
-                      onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.08)"; e.target.style.boxShadow = "none"; }}
-                    />
+                    <div className="flex flex-wrap gap-2">
+                      {[...UNLOCKED_ROLES, ...Object.keys(LOCKED_ROLES)].map((role) => {
+                        const locked = isRoleLocked(role);
+                        const selected = targetRole === role;
+                        return (
+                          <button
+                            key={role}
+                            type="button"
+                            onClick={() => {
+                              if (locked) {
+                                setWaitlistRole(role);
+                                setShowWaitlistModal(true);
+                              } else {
+                                setTargetRole(role);
+                              }
+                            }}
+                            className="transition-colors"
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '8px 14px',
+                              borderRadius: '8px',
+                              fontSize: '13px',
+                              fontWeight: 500,
+                              cursor: 'pointer',
+                              background: selected ? '#F97316' : 'rgba(30,41,59,0.5)',
+                              color: selected ? 'white' : locked ? '#64748B' : '#CBD5E1',
+                              border: selected ? '1px solid #F97316' : '1px solid rgba(255,255,255,0.08)',
+                            }}
+                          >
+                            {locked && <Lock className="w-3 h-3" style={{ flexShrink: 0 }} />}
+                            {role}
+                            {locked && (
+                              <span style={{
+                                background: 'rgba(249,116,22,0.15)',
+                                color: '#F97316',
+                                fontSize: '10px',
+                                fontWeight: 600,
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                              }}>
+                                Waitlist
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
 
                   {/* Target company type */}
@@ -1043,6 +1112,13 @@ const Onboarding = () => {
           )}
         </div>
       </div>
+
+      <RoleWaitlistModal
+        open={showWaitlistModal}
+        onOpenChange={setShowWaitlistModal}
+        role={waitlistRole}
+        userId={user?.id || ""}
+      />
     </div>
   );
 };
