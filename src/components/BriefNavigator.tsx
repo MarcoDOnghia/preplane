@@ -41,10 +41,6 @@ interface BriefNavigatorProps {
   onStartBuilding?: () => void;
   onContinueCampaign?: () => void;
 }
-  toast: any;
-  onStartBuilding?: () => void;
-  onContinueCampaign?: () => void;
-}
 
 const BriefNavigator = ({ proofBrief, company, onStartBuilding, onContinueCampaign, toast }: BriefNavigatorProps) => {
   const [currentSection, setCurrentSection] = useState(0);
