@@ -260,8 +260,8 @@ const Index = () => {
 
       const data = await response.json();
       if (data?.error) throw new Error(data.error);
-      // Support pre_brief mode, new (project) and legacy (title) formats
-      if (data.mode === 'pre_brief' || data.project || data.title) {
+      // Support both new (project) and legacy (title) formats
+      if (data.project || data.title) {
         setProofBrief(data);
         setSetupPhase('brief');
       } else {
@@ -1273,123 +1273,8 @@ const Index = () => {
           </div>
         )}
 
-        {/* Phase 2a: Pre-brief (thin research mode) */}
-        {setupPhase === 'brief' && proofBrief && proofBrief.mode === 'pre_brief' && (
-          <div style={{ maxWidth: '720px', margin: '0 auto', padding: '0 16px' }}>
-            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-              <h1 style={{ color: '#FFFFFF', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.02em', marginBottom: '8px' }}>
-                Your pre-brief
-              </h1>
-              <p style={{ color: '#94A3B8', fontSize: '15px' }}>
-                We need a bit more research before we can lock a high-quality brief{setupCompany ? ` for ${setupCompany}` : ''}.
-              </p>
-            </div>
-
-            {/* Gate failure message */}
-            {proofBrief.gate_failure_message && (
-              <div style={{
-                background: 'rgba(239,68,68,0.08)',
-                border: '1px solid rgba(239,68,68,0.2)',
-                borderRadius: '12px',
-                padding: '20px 24px',
-                marginBottom: '24px',
-              }}>
-                <p style={{ color: '#ef4444', fontSize: '14px', fontWeight: 600, marginBottom: '6px' }}>
-                  {proofBrief.gate_failure_message}
-                </p>
-                <p style={{ color: '#94A3B8', fontSize: '13px', fontStyle: 'italic' }}>
-                  This is normal — paste 5 concrete facts and we'll lock a high-quality bet.
-                </p>
-              </div>
-            )}
-
-            {/* Option A */}
-            {proofBrief.option_a && (
-              <div style={{
-                background: '#1A1A1A',
-                border: '1px solid rgba(255,255,255,0.08)',
-                borderRadius: '12px',
-                padding: '24px',
-                marginBottom: '16px',
-              }}>
-                <p style={{ color: '#F97316', fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: '8px' }}>Option A</p>
-                <p style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600, lineHeight: 1.6 }}>{proofBrief.option_a}</p>
-              </div>
-            )}
-
-            {/* Option B */}
-            {proofBrief.option_b && (
-              <div style={{
-                background: '#1A1A1A',
-                border: '1px solid rgba(255,255,255,0.08)',
-                borderRadius: '12px',
-                padding: '24px',
-                marginBottom: '28px',
-              }}>
-                <p style={{ color: '#F97316', fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: '8px' }}>Option B</p>
-                <p style={{ color: '#FFFFFF', fontSize: '16px', fontWeight: 600, lineHeight: 1.6 }}>{proofBrief.option_b}</p>
-              </div>
-            )}
-
-            {/* Before You Build checklist */}
-            {proofBrief.before_you_build && proofBrief.before_you_build.length > 0 && (
-              <div style={{
-                background: '#1A1A1A',
-                border: '1px solid rgba(255,255,255,0.08)',
-                borderRadius: '12px',
-                padding: '28px',
-                marginBottom: '20px',
-              }}>
-                <p style={{ color: '#F97316', fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: '16px' }}>
-                  Before You Build
-                </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {(proofBrief.before_you_build as string[]).map((item: string, i: number) => (
-                    <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-                      <span style={{
-                        width: '16px', height: '16px', borderRadius: '3px',
-                        border: '1.5px solid rgba(255,255,255,0.2)',
-                        flexShrink: 0, marginTop: '2px',
-                      }} />
-                      <span style={{ color: '#E2E8F0', fontSize: '14px', lineHeight: 1.6 }}>{item}</span>
-                    </div>
-                  ))}
-                </div>
-                <p style={{ color: '#94A3B8', fontSize: '13px', marginTop: '20px', lineHeight: 1.6 }}>
-                  Add these to your research field and regenerate. This is normal — paste 5 concrete facts and we'll lock a high-quality bet.
-                </p>
-              </div>
-            )}
-
-            {/* Back to input button */}
-            <button
-              onClick={() => setSetupPhase('input')}
-              style={{
-                width: '100%',
-                background: '#F97316',
-                color: '#FFFFFF',
-                fontWeight: 700,
-                fontSize: '15px',
-                padding: '14px',
-                borderRadius: '8px',
-                border: 'none',
-                cursor: 'pointer',
-                transition: 'background 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-              }}
-              onMouseEnter={(e) => (e.target as HTMLButtonElement).style.background = '#EA6C0A'}
-              onMouseLeave={(e) => (e.target as HTMLButtonElement).style.background = '#F97316'}
-            >
-              <ChevronLeft className="h-4 w-4" /> Add research and regenerate
-            </button>
-          </div>
-        )}
-
-        {/* Phase 2b: Full proof of work brief — step-by-step navigator */}
-        {setupPhase === 'brief' && proofBrief && proofBrief.mode !== 'pre_brief' && proofBrief.build_steps && (
+        {/* Phase 2: Proof of work brief — step-by-step navigator */}
+        {setupPhase === 'brief' && proofBrief && proofBrief.build_steps && (
           <BriefNavigator
             proofBrief={proofBrief}
             company={setupCompany}
