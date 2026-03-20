@@ -91,7 +91,8 @@ BEST POW ANGLE
       .map((b: { text: string }) => b.text)
       .join("\n") || "";
     if (!content) throw new Error("No content returned");
-    return new Response(JSON.stringify({ research: content }), {
+    const signals = parseSignals(content);
+    return new Response(JSON.stringify({ research: content, signals }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e: unknown) {
