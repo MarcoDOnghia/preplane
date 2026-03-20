@@ -1420,37 +1420,37 @@ const Index = () => {
 
                 {/* CTA Button */}
                 {(() => {
-                  const ctaDisabled = generatingBrief || !setupRole.trim() || !setupCompany.trim() || !hasResearchContent;
+                  const ctaVisuallyDisabled = generatingBrief || !setupCompany.trim();
                   return (
                     <div>
                       <button
                         onClick={handleBuildBriefClick}
-                        disabled={ctaDisabled}
+                        disabled={generatingBrief}
                         style={{
                           width: '100%',
-                          background: ctaDisabled ? 'rgba(249,115,22,0.3)' : '#F97316',
-                          color: '#FFFFFF',
+                          background: ctaVisuallyDisabled ? '#242424' : '#F97316',
+                          color: ctaVisuallyDisabled ? '#64748B' : '#FFFFFF',
                           fontWeight: 700,
                           fontSize: '16px',
                           padding: '16px',
                           borderRadius: '8px',
                           border: 'none',
-                          cursor: ctaDisabled ? 'not-allowed' : 'pointer',
+                          cursor: ctaVisuallyDisabled ? 'not-allowed' : 'pointer',
                           transition: 'background 0.2s',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           gap: '8px',
                         }}
-                        onMouseEnter={(e) => { if (!ctaDisabled) (e.target as HTMLButtonElement).style.background = '#EA6C0A'; }}
-                        onMouseLeave={(e) => { if (!ctaDisabled) (e.target as HTMLButtonElement).style.background = '#F97316'; }}
+                        onMouseEnter={(e) => { if (!ctaVisuallyDisabled) (e.target as HTMLButtonElement).style.background = '#EA6C0A'; }}
+                        onMouseLeave={(e) => { if (!ctaVisuallyDisabled) (e.target as HTMLButtonElement).style.background = '#F97316'; }}
                       >
                         {generatingBrief && <Loader2 className="h-5 w-5 animate-spin" />}
                         {generatingBrief ? 'Generating...' : 'Build my PoW brief →'}
                       </button>
-                      {ctaDisabled && !generatingBrief && (
+                      {!setupCompany.trim() && !generatingBrief && (
                         <p style={{ color: '#475569', fontSize: '12px', textAlign: 'center' as const, marginTop: '8px' }}>
-                          {!setupCompany.trim() ? 'Add a company to generate a tailored PoW.' : !hasResearchContent ? 'Run auto-research or add notes to continue.' : ''}
+                          Add a company to generate a tailored PoW.
                         </p>
                       )}
                     </div>
