@@ -27,8 +27,20 @@ function parseStepWithSubPoints(step: string): { main: string; subPoints: string
 const NEXT_LABELS = ["See the project →", "How to build it →", "See the output →", "The key insight →", ""];
 
 interface BriefNavigatorProps {
-  proofBrief: any;
+  proofBrief: {
+    outreach_hook: string;
+    project: string;
+    why_this_works: string;
+    build_steps: string[];
+    final_output: string;
+    effort_guide?: { minimum: string; impressive: string };
+    key_insight: string;
+  };
   company?: string;
+  toast: any;
+  onStartBuilding?: () => void;
+  onContinueCampaign?: () => void;
+}
   toast: any;
   onStartBuilding?: () => void;
   onContinueCampaign?: () => void;
