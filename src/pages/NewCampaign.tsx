@@ -66,6 +66,15 @@ const Index = () => {
   const [waitlistRole, setWaitlistRole] = useState("");
   const companyInputRef = useRef<HTMLInputElement>(null);
 
+  // Auto-research state
+  const [autoResearching, setAutoResearching] = useState(false);
+  const [autoResearchStep, setAutoResearchStep] = useState(0);
+  const [autoResearchInsights, setAutoResearchInsights] = useState<{ text: string; source: string; selected: boolean }[]>([]);
+  const [autoResearchDone, setAutoResearchDone] = useState(false);
+  const [manualNotes, setManualNotes] = useState("");
+  const [manualUrl, setManualUrl] = useState("");
+  const [showManualSection, setShowManualSection] = useState(false);
+
   // Check onboarding status and save any pending target from onboarding
   useEffect(() => {
     if (authLoading) return;
