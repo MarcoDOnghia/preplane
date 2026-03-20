@@ -16,12 +16,26 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Loader2, Sparkles, ArrowRight, Lightbulb, Link2, Check, ChevronLeft, ChevronRight, Copy, Lock, Search, Globe, Newspaper, BriefcaseBusiness, Star, LayoutTemplate, CheckCircle2 } from "lucide-react";
+  Loader2,
+  Sparkles,
+  ArrowRight,
+  Lightbulb,
+  Link2,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Copy,
+  Lock,
+  Search,
+  Globe,
+  Newspaper,
+  BriefcaseBusiness,
+  Star,
+  LayoutTemplate,
+  CheckCircle2,
+} from "lucide-react";
 import RoleWaitlistModal, { isRoleLocked, LOCKED_ROLES, UNLOCKED_ROLES } from "@/components/RoleWaitlistModal";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import type { TailorResult } from "@/lib/types";
@@ -41,7 +55,6 @@ const LOADING_STEPS = [
 const TARGET_KEY = "preplane_onboarding_target";
 const ONBOARDING_KEY = "preplane_onboarding_done";
 
-
 const Index = () => {
   const { user, loading: authLoading } = useAuth();
   const nav = useNavigate();
@@ -49,18 +62,22 @@ const Index = () => {
   const [onboardingChecked, setOnboardingChecked] = useState(false);
   const [targetRole, setTargetRole] = useState<string | null>(null);
   const [targetLocation, setTargetLocation] = useState<string | null>(null);
-  const [alignmentData, setAlignmentData] = useState<{ alignment: "strong" | "partial" | "weak"; reason: string; targetRole: string } | null>(null);
+  const [alignmentData, setAlignmentData] = useState<{
+    alignment: "strong" | "partial" | "weak";
+    reason: string;
+    targetRole: string;
+  } | null>(null);
 
   // --- Setup phase state ---
-  const initialPhase = searchParams.get("phase") === "cv_tailoring" ? "cv_tailoring" as const : "input" as const;
-  const [setupPhase, setSetupPhase] = useState<'input' | 'brief' | 'cv_tailoring'>(initialPhase);
+  const initialPhase = searchParams.get("phase") === "cv_tailoring" ? ("cv_tailoring" as const) : ("input" as const);
+  const [setupPhase, setSetupPhase] = useState<"input" | "brief" | "cv_tailoring">(initialPhase);
   const [setupRole, setSetupRole] = useState(searchParams.get("role") || "");
   const [setupCompany, setSetupCompany] = useState(searchParams.get("company") || "");
   const [setupJd, setSetupJd] = useState(searchParams.get("jd") || "");
   const [proofBrief, setProofBrief] = useState<any>(null);
   const [generatingBrief, setGeneratingBrief] = useState(false);
   const [jdExtractingUrl, setJdExtractingUrl] = useState(false);
-  
+
   const [setupIntel, setSetupIntel] = useState("");
   const [showWaitlistModal, setShowWaitlistModal] = useState(false);
   const [waitlistRole, setWaitlistRole] = useState("");
@@ -69,7 +86,9 @@ const Index = () => {
   // Auto-research state
   const [autoResearching, setAutoResearching] = useState(false);
   const [autoResearchStep, setAutoResearchStep] = useState(0);
-  const [autoResearchInsights, setAutoResearchInsights] = useState<{ text: string; source: string; selected: boolean }[]>([]);
+  const [autoResearchInsights, setAutoResearchInsights] = useState<
+    { text: string; source: string; selected: boolean }[]
+  >([]);
   const [autoResearchDone, setAutoResearchDone] = useState(false);
   const [manualNotes, setManualNotes] = useState("");
   const [manualUrl, setManualUrl] = useState("");
@@ -169,7 +188,9 @@ const Index = () => {
 
   // Ref to always hold the latest cvModel (fixes stale closure bug)
   const cvModelRef = useRef<CvDataModel | null>(null);
-  useEffect(() => { cvModelRef.current = cvModel; }, [cvModel]);
+  useEffect(() => {
+    cvModelRef.current = cvModel;
+  }, [cvModel]);
 
   // Pre-fill setup role from profile target
   useEffect(() => {
@@ -182,7 +203,9 @@ const Index = () => {
   const handleExtractJdUrl = async () => {
     if (!setupJd.trim()) return;
 
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (!session) {
       toast({ title: "Your session expired. Please sign in again.", variant: "destructive" });
       nav("/onboarding");
@@ -223,7 +246,9 @@ const Index = () => {
       return;
     }
 
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (!session) {
       toast({ title: "Your session expired. Please sign in again.", variant: "destructive" });
       nav("/onboarding");
@@ -240,7 +265,7 @@ const Index = () => {
     const stepPromise = (async () => {
       for (let i = 0; i < AUTO_RESEARCH_STEPS.length; i++) {
         setAutoResearchStep(i);
-        await new Promise(r => setTimeout(r, 1500));
+        await new Promise((r) => setTimeout(r, 1500));
       }
     })();
 
@@ -292,7 +317,7 @@ const Index = () => {
     }
   };
 
-  const selectedInsightsCount = autoResearchInsights.filter(i => i.selected).length;
+  const selectedInsightsCount = autoResearchInsights.filter((i) => i.selected).length;
   const hasResearchContent = selectedInsightsCount > 0 || manualNotes.trim().length > 0;
 
   const handleBuildBriefClick = () => {
@@ -310,19 +335,21 @@ const Index = () => {
       return;
     }
     // Combine selected insights + manual notes into setupIntel
-    const selectedTexts = autoResearchInsights.filter(i => i.selected).map(i => `[${i.source}] ${i.text}`);
+    const selectedTexts = autoResearchInsights.filter((i) => i.selected).map((i) => `[${i.source}] ${i.text}`);
     const combined = [...selectedTexts, manualNotes.trim()].filter(Boolean).join("\n\n");
     setSetupIntel(combined);
-    generateProofBrief(combined);
+    generateProofBrief();
   };
 
-  const generateProofBrief = async (intelOverride?: string) => {
+  const generateProofBrief = async () => {
     if (!setupRole.trim()) {
       toast({ title: "Please enter a target role", variant: "destructive" });
       return;
     }
 
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (!session) {
       toast({ title: "Your session expired. Please sign in again.", variant: "destructive" });
       nav("/onboarding");
@@ -344,7 +371,7 @@ const Index = () => {
           company: setupCompany.trim() || "a company in this space",
           role: setupRole.trim(),
           jdText: setupJd.trim() || undefined,
-          companyIntel: (intelOverride ?? setupIntel).trim() || undefined,
+          companyIntel: setupIntel.trim() || undefined,
         }),
       });
 
@@ -354,7 +381,10 @@ const Index = () => {
           nav("/onboarding");
           return;
         } else if (response.status === 429) {
-          toast({ title: "You have reached your daily limit for proof of work generation. Come back tomorrow.", variant: "destructive" });
+          toast({
+            title: "You have reached your daily limit for proof of work generation. Come back tomorrow.",
+            variant: "destructive",
+          });
           return;
         } else if (response.status === 500) {
           toast({ title: "Something went wrong on our end. Please try again in a moment.", variant: "destructive" });
@@ -369,7 +399,7 @@ const Index = () => {
       // Support both new (project) and legacy (title) formats
       if (data.project || data.title) {
         setProofBrief(data);
-        setSetupPhase('brief');
+        setSetupPhase("brief");
       } else {
         throw new Error("Unexpected response format");
       }
@@ -398,7 +428,11 @@ const Index = () => {
         .single();
       if (error) {
         if (error.message?.includes("10 active campaigns")) {
-          toast({ title: "Campaign limit reached", description: "Complete or archive one first.", variant: "destructive" });
+          toast({
+            title: "Campaign limit reached",
+            description: "Complete or archive one first.",
+            variant: "destructive",
+          });
         } else throw error;
         return;
       }
@@ -427,7 +461,11 @@ const Index = () => {
         .single();
       if (error) {
         if (error.message?.includes("10 active campaigns")) {
-          toast({ title: "Campaign limit reached", description: "Complete or archive one first.", variant: "destructive" });
+          toast({
+            title: "Campaign limit reached",
+            description: "Complete or archive one first.",
+            variant: "destructive",
+          });
         } else throw error;
         return;
       }
@@ -438,27 +476,41 @@ const Index = () => {
     }
   };
 
-
   const saveCvToDb = useCallback(async (model: CvDataModel, applied: number[]) => {
     if (!lastAppIdRef.current) return;
     setSaveStatus("saving");
     try {
       const plainText = cvModelToPlainText(model);
-      await supabase.from("applications").update({
-        current_cv: plainText, applied_suggestions: applied, last_edited: new Date().toISOString(),
-      } as any).eq("id", lastAppIdRef.current);
+      await supabase
+        .from("applications")
+        .update({
+          current_cv: plainText,
+          applied_suggestions: applied,
+          last_edited: new Date().toISOString(),
+        } as any)
+        .eq("id", lastAppIdRef.current);
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 2000);
-    } catch { setSaveStatus("error"); }
+    } catch {
+      setSaveStatus("error");
+    }
   }, []);
 
-  const debouncedSave = useCallback((model: CvDataModel, applied: number[]) => {
-    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
-    autosaveTimerRef.current = setTimeout(() => saveCvToDb(model, applied), 3000);
-  }, [saveCvToDb]);
+  const debouncedSave = useCallback(
+    (model: CvDataModel, applied: number[]) => {
+      if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+      autosaveTimerRef.current = setTimeout(() => saveCvToDb(model, applied), 3000);
+    },
+    [saveCvToDb],
+  );
 
   useEffect(() => {
-    const handler = (e: BeforeUnloadEvent) => { if (isDirty) { e.preventDefault(); e.returnValue = ""; } };
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
   }, [isDirty]);
@@ -478,7 +530,12 @@ const Index = () => {
     if (downloadCountRef.current === 1) setShowTrackingModal(true);
   };
 
-  const handleTrackingSave = async (data: { status: string; applicationMethod?: string; appliedDate?: string; followUpDate?: string | null; }) => {
+  const handleTrackingSave = async (data: {
+    status: string;
+    applicationMethod?: string;
+    appliedDate?: string;
+    followUpDate?: string | null;
+  }) => {
     if (!lastAppIdRef.current) return;
     const updates: Record<string, any> = { status: data.status };
     if (data.applicationMethod) updates.application_method = data.applicationMethod;
@@ -487,7 +544,10 @@ const Index = () => {
     await supabase.from("applications").update(updates).eq("id", lastAppIdRef.current);
     toast({
       title: data.status === "applied" ? "Marked as Applied!" : "Saved for Later",
-      description: data.status === "applied" ? "Good luck! We'll track this for you." : "You can apply later from your History page.",
+      description:
+        data.status === "applied"
+          ? "Good luck! We'll track this for you."
+          : "You can apply later from your History page.",
     });
   };
 
@@ -528,30 +588,45 @@ const Index = () => {
   };
 
   // --- Suggestion handlers (opt-in only) ---
-  const applySuggestionToModel = (model: CvDataModel, original: string, suggested: string, sectionHint?: string): CvDataModel => {
+  const applySuggestionToModel = (
+    model: CvDataModel,
+    original: string,
+    suggested: string,
+    sectionHint?: string,
+  ): CvDataModel => {
     const clone: CvDataModel = JSON.parse(JSON.stringify(model));
-    const hint = (sectionHint || '').toLowerCase();
-    const matchPrefix = original.replace(/\.{3,}$/, '').slice(0, 60).toLowerCase();
-    const shortPrefix = original.replace(/\.{3,}$/, '').slice(0, 40).toLowerCase();
-    const veryShortPrefix = original.replace(/\.{3,}$/, '').slice(0, 30).toLowerCase();
+    const hint = (sectionHint || "").toLowerCase();
+    const matchPrefix = original
+      .replace(/\.{3,}$/, "")
+      .slice(0, 60)
+      .toLowerCase();
+    const shortPrefix = original
+      .replace(/\.{3,}$/, "")
+      .slice(0, 40)
+      .toLowerCase();
+    const veryShortPrefix = original
+      .replace(/\.{3,}$/, "")
+      .slice(0, 30)
+      .toLowerCase();
     const fuzzyMatch = (text: string) => {
-      const lower = text.replace(/\.{3,}$/, '').toLowerCase();
+      const lower = text.replace(/\.{3,}$/, "").toLowerCase();
       return lower.includes(matchPrefix) || lower.includes(shortPrefix) || lower.includes(veryShortPrefix);
     };
 
-
     // STEP 5: If section hint targets summary/profile, bypass fuzzy match
-    if (hint.includes('summary') || hint.includes('profile')) {
+    if (hint.includes("summary") || hint.includes("profile")) {
       clone.summary = suggested;
       return clone;
     }
 
     // STEP 5: If section hint targets skills, replace only the matching subsection
-    if (hint.includes('skill')) {
-      
+    if (hint.includes("skill")) {
       // Split skills into lines and find which line the original matches
-      const skillLines = clone.skills.split('\n');
-      const origLower = original.replace(/\.{3,}$/, '').toLowerCase().trim();
+      const skillLines = clone.skills.split("\n");
+      const origLower = original
+        .replace(/\.{3,}$/, "")
+        .toLowerCase()
+        .trim();
       const origPrefix = origLower.slice(0, 30);
       let matchedLineIdx = -1;
       for (let li = 0; li < skillLines.length; li++) {
@@ -563,9 +638,9 @@ const Index = () => {
       }
       if (matchedLineIdx >= 0 && skillLines.length > 1) {
         // Replace only the matched line, preserve all others
-        
+
         skillLines[matchedLineIdx] = suggested;
-        clone.skills = skillLines.join('\n');
+        clone.skills = skillLines.join("\n");
       } else {
         // Single line or no match — replace entirely
         clone.skills = suggested;
@@ -574,33 +649,28 @@ const Index = () => {
     }
 
     // STEP 4: If section hint targets education, bypass fuzzy match
-    if (hint.includes('education') || hint.includes('coursework') || hint.includes('degree')) {
+    if (hint.includes("education") || hint.includes("coursework") || hint.includes("degree")) {
       for (const edu of clone.education) {
-        if (hint.includes('coursework') || hint.includes('relevant')) {
-          
+        if (hint.includes("coursework") || hint.includes("relevant")) {
           edu.coursework = suggested;
           return clone;
         }
-        if (hint.includes('degree')) {
-          
+        if (hint.includes("degree")) {
           edu.degree = suggested;
           return clone;
         }
         // Generic education hint — try coursework first, then degree
         if (edu.coursework && fuzzyMatch(edu.coursework)) {
-          
           edu.coursework = suggested;
           return clone;
         }
         if (edu.degree && fuzzyMatch(edu.degree)) {
-          
           edu.degree = suggested;
           return clone;
         }
       }
       // If we have education hint but couldn't match specific field, replace first education's coursework
       if (clone.education.length > 0) {
-        
         clone.education[0].coursework = suggested;
         return clone;
       }
@@ -616,25 +686,31 @@ const Index = () => {
     for (const exp of clone.experience) {
       for (let j = 0; j < exp.bullets.length; j++) {
         if (fuzzyMatch(exp.bullets[j])) {
-          
           exp.bullets.splice(j, 1, suggested);
           return clone;
         }
       }
       // Strip parenthesized portion before building match prefix for role
-      const roleOnly = exp.role.replace(/\s*\(.*$/, '').toLowerCase();
-      const origRoleOnly = original.replace(/\s*\(.*$/, '').slice(0, 60).toLowerCase();
+      const roleOnly = exp.role.replace(/\s*\(.*$/, "").toLowerCase();
+      const origRoleOnly = original
+        .replace(/\s*\(.*$/, "")
+        .slice(0, 60)
+        .toLowerCase();
       if (roleOnly.includes(origRoleOnly) || exp.role.toLowerCase().includes(matchPrefix)) {
-        
-        const datePattern = /\s+(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+\d{4}\s*[-–—].*$/i;
+        const datePattern =
+          /\s+(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+\d{4}\s*[-–—].*$/i;
         const datePattern2 = /\s+\d{4}\s*[-–—]\s*(?:present|\d{4}).*$/i;
-        let cleanRole = suggested.replace(datePattern, '').replace(datePattern2, '').trim();
+        let cleanRole = suggested.replace(datePattern, "").replace(datePattern2, "").trim();
         const dashParts = cleanRole.split(/\s*[—–]\s*/);
-        if (dashParts.length > 1 && exp.company && dashParts[dashParts.length - 1].toLowerCase().includes(exp.company.toLowerCase())) {
-          cleanRole = dashParts.slice(0, -1).join(' — ').trim();
+        if (
+          dashParts.length > 1 &&
+          exp.company &&
+          dashParts[dashParts.length - 1].toLowerCase().includes(exp.company.toLowerCase())
+        ) {
+          cleanRole = dashParts.slice(0, -1).join(" — ").trim();
         }
         if (exp.company) {
-          cleanRole = cleanRole.replace(/\s*\([^)]*\)\s*$/, '').trim();
+          cleanRole = cleanRole.replace(/\s*\([^)]*\)\s*$/, "").trim();
         }
         exp.role = cleanRole;
         return clone;
@@ -643,7 +719,6 @@ const Index = () => {
 
     // Check skills — replace entirely (fuzzy fallback)
     if (clone.skills && fuzzyMatch(clone.skills)) {
-      
       clone.skills = suggested;
       return clone;
     }
@@ -651,19 +726,17 @@ const Index = () => {
     // Check education (fuzzy fallback)
     for (const edu of clone.education) {
       if (edu.degree && fuzzyMatch(edu.degree)) {
-        
         edu.degree = suggested;
         return clone;
       }
       if (edu.coursework && fuzzyMatch(edu.coursework)) {
-        
         edu.coursework = suggested;
         return clone;
       }
     }
 
     // Fallback: no match found — do not mutate
-    
+
     return clone;
   };
 
@@ -675,9 +748,7 @@ const Index = () => {
     // FIX 3: Calculate score before applying
     const aiKeywords = [...(result.atsAnalysis?.keywordsFound || []), ...(result.atsAnalysis?.keywordsMissing || [])];
     const jd = lastJobDescription || "";
-    const scoreBefore = jd
-      ? calculateAtsScore(cvModelToPlainText(currentModel), jd, aiKeywords).score
-      : null;
+    const scoreBefore = jd ? calculateAtsScore(cvModelToPlainText(currentModel), jd, aiKeywords).score : null;
 
     undoStackRef.current = [...undoStackRef.current.slice(-19), currentModel];
     const newModel = applySuggestionToModel(currentModel, s.original, s.suggested, s.section);
@@ -701,7 +772,10 @@ const Index = () => {
                 setCvModel(currentModel);
                 setAppliedSuggestions(appliedSuggestions.filter((i) => i !== index));
                 setIsDirty(true);
-                debouncedSave(currentModel, appliedSuggestions.filter((i) => i !== index));
+                debouncedSave(
+                  currentModel,
+                  appliedSuggestions.filter((i) => i !== index),
+                );
                 toast({ title: "Change undone — score restored" });
               }}
             >
@@ -763,7 +837,7 @@ const Index = () => {
     const hint = sectionHint.toLowerCase();
 
     // If the suggestion targets Skills, update the skills field directly
-    if (hint.includes('skill')) {
+    if (hint.includes("skill")) {
       clone.skills = bullet;
       // Track keyword bullet text for duplicate detection (Bug 5)
       appliedKeywordBulletsRef.current = [...appliedKeywordBulletsRef.current, bullet];
@@ -778,8 +852,8 @@ const Index = () => {
     let hintMatchedExpIdx = -1;
     for (let ei = 0; ei < clone.experience.length; ei++) {
       const exp = clone.experience[ei];
-      const companyLower = (exp.company || '').toLowerCase();
-      const roleLower = (exp.role || '').toLowerCase();
+      const companyLower = (exp.company || "").toLowerCase();
+      const roleLower = (exp.role || "").toLowerCase();
       if (companyLower && hint.includes(companyLower)) {
         hintMatchedExpIdx = ei;
         break;
@@ -789,11 +863,11 @@ const Index = () => {
         break;
       }
       // Also check if hint words overlap significantly with company/role
-      const hintWords = hint.split(/\s+/).filter(w => w.length > 2);
-      const companyWords = companyLower.split(/\s+/).filter(w => w.length > 2);
-      const roleWords = roleLower.split(/\s+/).filter(w => w.length > 2);
-      const companyMatch = companyWords.length > 0 && companyWords.every(w => hintWords.some(hw => hw.includes(w)));
-      const roleMatch = roleWords.length > 0 && roleWords.every(w => hintWords.some(hw => hw.includes(w)));
+      const hintWords = hint.split(/\s+/).filter((w) => w.length > 2);
+      const companyWords = companyLower.split(/\s+/).filter((w) => w.length > 2);
+      const roleWords = roleLower.split(/\s+/).filter((w) => w.length > 2);
+      const companyMatch = companyWords.length > 0 && companyWords.every((w) => hintWords.some((hw) => hw.includes(w)));
+      const roleMatch = roleWords.length > 0 && roleWords.every((w) => hintWords.some((hw) => hw.includes(w)));
       if (companyMatch || roleMatch) {
         hintMatchedExpIdx = ei;
         break;
@@ -805,10 +879,10 @@ const Index = () => {
       const newWords = newBullet.toLowerCase().split(/\s+/);
       for (const existing of existingBullets) {
         const existingWords = existing.toLowerCase().split(/\s+/);
-        const existingText = existingWords.join(' ');
+        const existingText = existingWords.join(" ");
         // Check all 4-word windows in the new bullet against existing
         for (let i = 0; i <= newWords.length - 4; i++) {
-          const phrase = newWords.slice(i, i + 4).join(' ');
+          const phrase = newWords.slice(i, i + 4).join(" ");
           if (existingText.includes(phrase)) {
             return phrase;
           }
@@ -829,7 +903,7 @@ const Index = () => {
     // If sectionHint matched a specific experience entry, target it directly
     if (hintMatchedExpIdx >= 0) {
       const targetExp = clone.experience[hintMatchedExpIdx];
-      
+
       // BUG 3: Check for duplicate phrases before inserting
       const dupPhrase = findDuplicatePhrase(bullet, targetExp.bullets);
       if (dupPhrase) {
@@ -845,16 +919,23 @@ const Index = () => {
       const kwWords = keyword.toLowerCase().split(/\s+/);
       let bestBi = -1;
       let bestScore = -Infinity;
-      let bestKey = '';
+      let bestKey = "";
       for (let bi = 0; bi < targetExp.bullets.length; bi++) {
         const bulletKey = `${hintMatchedExpIdx}:${bi}:${targetExp.bullets[bi].slice(0, 50)}`;
         if (replacedBulletsRef.current.has(bulletKey)) continue;
         const bWords = targetExp.bullets[bi].toLowerCase().split(/\s+/);
-        const overlap = kwWords.filter(w => bWords.some(bw => bw.includes(w) || w.includes(bw))).length;
-        const lenSim = 1 - Math.abs(targetExp.bullets[bi].length - bullet.length) / Math.max(targetExp.bullets[bi].length, bullet.length, 1);
+        const overlap = kwWords.filter((w) => bWords.some((bw) => bw.includes(w) || w.includes(bw))).length;
+        const lenSim =
+          1 -
+          Math.abs(targetExp.bullets[bi].length - bullet.length) /
+            Math.max(targetExp.bullets[bi].length, bullet.length, 1);
         const alreadyHas = targetExp.bullets[bi].toLowerCase().includes(keyword.toLowerCase()) ? -3 : 0;
         const score = overlap + lenSim + alreadyHas;
-        if (score > bestScore) { bestScore = score; bestBi = bi; bestKey = bulletKey; }
+        if (score > bestScore) {
+          bestScore = score;
+          bestBi = bi;
+          bestKey = bulletKey;
+        }
       }
       if (bestBi >= 0) {
         targetExp.bullets[bestBi] = bullet;
@@ -869,7 +950,7 @@ const Index = () => {
       let bestScore = -Infinity;
       let bestExpIdx = -1;
       let bestBulletIdx = -1;
-      let bestBulletKey = '';
+      let bestBulletKey = "";
 
       for (let ei = 0; ei < clone.experience.length; ei++) {
         const exp = clone.experience[ei];
@@ -879,12 +960,15 @@ const Index = () => {
           const bulletText = exp.bullets[bi];
           const bulletLower = bulletText.toLowerCase();
           const bulletWords = bulletLower.split(/\s+/);
-          const overlap = kwWords.filter(w => bulletWords.some(bw => bw.includes(w) || w.includes(bw))).length;
+          const overlap = kwWords.filter((w) => bulletWords.some((bw) => bw.includes(w) || w.includes(bw))).length;
           const lenSimilarity = 1 - Math.abs(bulletText.length - bulletLen) / Math.max(bulletText.length, bulletLen, 1);
           const alreadyHasKeyword = bulletLower.includes(keyword.toLowerCase()) ? -3 : 0;
           const score = overlap + lenSimilarity + alreadyHasKeyword;
           if (score > bestScore) {
-            bestScore = score; bestExpIdx = ei; bestBulletIdx = bi; bestBulletKey = bulletKey;
+            bestScore = score;
+            bestExpIdx = ei;
+            bestBulletIdx = bi;
+            bestBulletKey = bulletKey;
           }
         }
       }
@@ -965,7 +1049,9 @@ const Index = () => {
 
     try {
       // Session check before AI calls
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) {
         toast({ title: "Your session expired. Please sign in again.", variant: "destructive" });
         clearInterval(interval);
@@ -977,14 +1063,17 @@ const Index = () => {
 
       // Fire alignment check in parallel (non-blocking)
       if (targetRole) {
-        supabase.functions.invoke("check-alignment", {
-          headers: authHeaders,
-          body: { targetRole, jobDescription },
-        }).then(({ data: alignData }) => {
-          if (alignData && !alignData.skipped && alignData.alignment) {
-            setAlignmentData(alignData);
-          }
-        }).catch(() => {});
+        supabase.functions
+          .invoke("check-alignment", {
+            headers: authHeaders,
+            body: { targetRole, jobDescription },
+          })
+          .then(({ data: alignData }) => {
+            if (alignData && !alignData.skipped && alignData.alignment) {
+              setAlignmentData(alignData);
+            }
+          })
+          .catch(() => {});
       }
 
       // FIX 4: Invoke tailor-cv with retry
@@ -996,14 +1085,20 @@ const Index = () => {
 
         if (error) {
           const errMsg = typeof error === "object" && "message" in error ? (error as any).message : String(error);
-          if (errMsg.includes("429") || errMsg.toLowerCase().includes("rate limit") || errMsg.toLowerCase().includes("daily limit")) {
-            throw new Error("You've used your daily limit for this feature. Come back tomorrow — limits reset at midnight.");
+          if (
+            errMsg.includes("429") ||
+            errMsg.toLowerCase().includes("rate limit") ||
+            errMsg.toLowerCase().includes("daily limit")
+          ) {
+            throw new Error(
+              "You've used your daily limit for this feature. Come back tomorrow — limits reset at midnight.",
+            );
           }
           if (errMsg.includes("401") || errMsg.toLowerCase().includes("unauthorized")) {
             throw new Error("Your session has expired. Please sign out and sign back in.");
           }
           if (retries > 0) {
-            await new Promise(r => setTimeout(r, 2000));
+            await new Promise((r) => setTimeout(r, 2000));
             return invokeWithRetry(retries - 1);
           }
           throw new Error("Our AI is taking longer than usual. Please try again in a moment.");
@@ -1014,7 +1109,7 @@ const Index = () => {
             throw new Error(data.error);
           }
           if (retries > 0) {
-            await new Promise(r => setTimeout(r, 2000));
+            await new Promise((r) => setTimeout(r, 2000));
             return invokeWithRetry(retries - 1);
           }
           throw new Error(data.error);
@@ -1029,7 +1124,7 @@ const Index = () => {
       setResult(data);
 
       // Extract company and role from AI result or JD text
-      const stripMd = (s: string) => s.replace(/\*+/g, '').trim();
+      const stripMd = (s: string) => s.replace(/\*+/g, "").trim();
       let jobTitle = "Untitled Position";
       let company = "Unknown Company";
 
@@ -1039,7 +1134,10 @@ const Index = () => {
 
       // Fallback: parse from JD text lines
       if (company === "Unknown Company" || jobTitle === "Untitled Position") {
-        const lines = jobDescription.split(/\n/).map(l => l.trim()).filter(Boolean);
+        const lines = jobDescription
+          .split(/\n/)
+          .map((l) => l.trim())
+          .filter(Boolean);
         for (const line of lines) {
           const companyMatch = line.match(/^(?:\*{0,2})Company[:\s]+\*{0,2}\s*(.+)/i);
           if (companyMatch && company === "Unknown Company") {
@@ -1067,21 +1165,32 @@ const Index = () => {
       setLastCompany(company);
       setLastJobDescription(jobDescription);
 
-      const { data: inserted } = await supabase.from("applications").insert({
-        user_id: user.id, job_title: jobTitle, company, cv_content: cvContent,
-        job_description: jobDescription, tone: "professional", current_cv: cvContent, applied_suggestions: [],
-        key_requirements: data.keyRequirements, cv_suggestions: data.cvSuggestions,
-        cover_letter: data.coverLetter || data.coverLetterVersions?.[0]?.content || "",
-        cover_letter_versions: data.coverLetterVersions || [],
-        ats_score: data.atsAnalysis?.score || 0,
-        keywords_found: data.atsAnalysis?.keywordsFound || [],
-        keywords_missing: data.atsAnalysis?.keywordsMissing || [],
-        formatting_issues: data.atsAnalysis?.formattingIssues || [],
-        quick_wins: data.atsAnalysis?.quickWins || [],
-        interview_questions: data.interviewQuestions || [],
-        questions_to_ask: data.questionsToAsk || [],
-        company_brief: data.companyBrief || "",
-      } as any).select("id").single();
+      const { data: inserted } = await supabase
+        .from("applications")
+        .insert({
+          user_id: user.id,
+          job_title: jobTitle,
+          company,
+          cv_content: cvContent,
+          job_description: jobDescription,
+          tone: "professional",
+          current_cv: cvContent,
+          applied_suggestions: [],
+          key_requirements: data.keyRequirements,
+          cv_suggestions: data.cvSuggestions,
+          cover_letter: data.coverLetter || data.coverLetterVersions?.[0]?.content || "",
+          cover_letter_versions: data.coverLetterVersions || [],
+          ats_score: data.atsAnalysis?.score || 0,
+          keywords_found: data.atsAnalysis?.keywordsFound || [],
+          keywords_missing: data.atsAnalysis?.keywordsMissing || [],
+          formatting_issues: data.atsAnalysis?.formattingIssues || [],
+          quick_wins: data.atsAnalysis?.quickWins || [],
+          interview_questions: data.interviewQuestions || [],
+          questions_to_ask: data.questionsToAsk || [],
+          company_brief: data.companyBrief || "",
+        } as any)
+        .select("id")
+        .single();
 
       if (inserted) lastAppIdRef.current = inserted.id;
       toast({ title: "Analysis complete!", description: "Your tailored results are ready." });
@@ -1100,21 +1209,39 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen" style={(setupPhase === 'input' || setupPhase === 'brief') ? { background: '#111111', fontFamily: 'Inter, sans-serif' } : undefined}>
-      {setupPhase !== 'input' && <Header />}
-      <main className={setupPhase === 'input' ? '' : 'mx-auto px-4 py-8 max-w-[1200px] space-y-10'}>
-
+    <div
+      className="min-h-screen"
+      style={
+        setupPhase === "input" || setupPhase === "brief"
+          ? { background: "#111111", fontFamily: "Inter, sans-serif" }
+          : undefined
+      }
+    >
+      {setupPhase !== "input" && <Header />}
+      <main className={setupPhase === "input" ? "" : "mx-auto px-4 py-8 max-w-[1200px] space-y-10"}>
         {/* Phase 1: Setup — role, company (dark themed) */}
-        {setupPhase === 'input' && (
-          <div className="min-h-screen flex items-center justify-center px-4 py-16" style={{ fontFamily: 'Inter, sans-serif' }}>
+        {setupPhase === "input" && (
+          <div
+            className="min-h-screen flex items-center justify-center px-4 py-16"
+            style={{ fontFamily: "Inter, sans-serif" }}
+          >
             <div className="w-full max-w-[520px] space-y-10">
               {/* Headline */}
               <div className="text-center space-y-4">
-                <h1 style={{ color: '#FFFFFF', fontSize: '32px', fontWeight: 900, lineHeight: 1.2, letterSpacing: '-0.02em' }}>
+                <h1
+                  style={{
+                    color: "#FFFFFF",
+                    fontSize: "32px",
+                    fontWeight: 900,
+                    lineHeight: 1.2,
+                    letterSpacing: "-0.02em",
+                  }}
+                >
                   Who are you going after?
                 </h1>
-                <p style={{ color: '#94A3B8', fontSize: '16px', lineHeight: 1.6 }}>
-                  Most students send a CV.<br />
+                <p style={{ color: "#94A3B8", fontSize: "16px", lineHeight: 1.6 }}>
+                  Most students send a CV.
+                  <br />
                   You're going to send something they actually remember.
                 </p>
               </div>
@@ -1123,7 +1250,15 @@ const Index = () => {
               <div className="space-y-5">
                 {/* Field 1: Target role */}
                 <div>
-                  <label style={{ color: '#FFFFFF', fontSize: '13px', fontWeight: 500, display: 'block', marginBottom: '6px' }}>
+                  <label
+                    style={{
+                      color: "#FFFFFF",
+                      fontSize: "13px",
+                      fontWeight: 500,
+                      display: "block",
+                      marginBottom: "6px",
+                    }}
+                  >
                     Target role
                   </label>
                   <div className="flex flex-wrap gap-2">
@@ -1144,30 +1279,32 @@ const Index = () => {
                           }}
                           className="transition-colors"
                           style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            padding: '8px 14px',
-                            borderRadius: '8px',
-                            fontSize: '13px',
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            padding: "8px 14px",
+                            borderRadius: "8px",
+                            fontSize: "13px",
                             fontWeight: 500,
-                            cursor: 'pointer',
-                            background: selected ? '#F97316' : 'rgba(30,41,59,0.5)',
-                            color: selected ? 'white' : locked ? '#64748B' : '#CBD5E1',
-                            border: selected ? '1px solid #F97316' : '1px solid rgba(255,255,255,0.08)',
+                            cursor: "pointer",
+                            background: selected ? "#F97316" : "rgba(30,41,59,0.5)",
+                            color: selected ? "white" : locked ? "#64748B" : "#CBD5E1",
+                            border: selected ? "1px solid #F97316" : "1px solid rgba(255,255,255,0.08)",
                           }}
                         >
                           {locked && <Lock className="w-3 h-3" style={{ flexShrink: 0 }} />}
                           {role}
                           {locked && (
-                            <span style={{
-                              background: 'rgba(249,116,22,0.15)',
-                              color: '#F97316',
-                              fontSize: '10px',
-                              fontWeight: 600,
-                              padding: '2px 6px',
-                              borderRadius: '4px',
-                            }}>
+                            <span
+                              style={{
+                                background: "rgba(249,116,22,0.15)",
+                                color: "#F97316",
+                                fontSize: "10px",
+                                fontWeight: 600,
+                                padding: "2px 6px",
+                                borderRadius: "4px",
+                              }}
+                            >
                               Waitlist
                             </span>
                           )}
@@ -1179,17 +1316,29 @@ const Index = () => {
 
                 {/* Field 2: Target company */}
                 <div>
-                  <label style={{ color: '#FFFFFF', fontSize: '13px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                  <label
+                    style={{
+                      color: "#FFFFFF",
+                      fontSize: "13px",
+                      fontWeight: 500,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      marginBottom: "6px",
+                    }}
+                  >
                     Target company
-                    <span style={{
-                      background: 'rgba(249,115,22,0.15)',
-                      color: '#F97316',
-                      fontSize: '11px',
-                      fontWeight: 600,
-                      padding: '2px 8px',
-                      borderRadius: '4px',
-                      letterSpacing: '0.02em',
-                    }}>
+                    <span
+                      style={{
+                        background: "rgba(249,115,22,0.15)",
+                        color: "#F97316",
+                        fontSize: "11px",
+                        fontWeight: 600,
+                        padding: "2px 8px",
+                        borderRadius: "4px",
+                        letterSpacing: "0.02em",
+                      }}
+                    >
                       Needed
                     </span>
                   </label>
@@ -1208,67 +1357,86 @@ const Index = () => {
                     }}
                     placeholder="e.g. Sequoia Capital"
                     style={{
-                      width: '100%',
-                      background: '#1A1A1A',
-                      border: '1px solid rgba(255,255,255,0.08)',
-                      borderRadius: '8px',
-                      color: '#FFFFFF',
-                      padding: '12px 14px',
-                      fontSize: '14px',
-                      outline: 'none',
-                      transition: 'border-color 0.2s',
+                      width: "100%",
+                      background: "#1A1A1A",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      borderRadius: "8px",
+                      color: "#FFFFFF",
+                      padding: "12px 14px",
+                      fontSize: "14px",
+                      outline: "none",
+                      transition: "border-color 0.2s",
                     }}
-                    onFocus={(e) => { e.target.style.borderColor = '#F97316'; }}
-                    onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = "#F97316";
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = "rgba(255,255,255,0.08)";
+                    }}
                   />
                   {companyError && (
-                    <p style={{ color: '#ef4444', fontSize: '13px', marginTop: '6px' }}>
-                      {companyError}
-                    </p>
+                    <p style={{ color: "#ef4444", fontSize: "13px", marginTop: "6px" }}>{companyError}</p>
                   )}
                 </div>
 
                 {/* Research section */}
-                <div style={{
-                  background: 'rgba(255,255,255,0.02)',
-                  border: '1px solid rgba(255,255,255,0.06)',
-                  borderRadius: '12px',
-                  padding: '24px',
-                }}>
-                  <div style={{ marginBottom: '4px' }}>
-                    <h3 style={{ color: '#FFFFFF', fontSize: '15px', fontWeight: 700, marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Search className="w-4 h-4" style={{ color: '#F97316' }} />
+                <div
+                  style={{
+                    background: "rgba(255,255,255,0.02)",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    borderRadius: "12px",
+                    padding: "24px",
+                  }}
+                >
+                  <div style={{ marginBottom: "4px" }}>
+                    <h3
+                      style={{
+                        color: "#FFFFFF",
+                        fontSize: "15px",
+                        fontWeight: 700,
+                        marginBottom: "6px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                      }}
+                    >
+                      <Search className="w-4 h-4" style={{ color: "#F97316" }} />
                       Let Preplane do the research
                     </h3>
-                    <p style={{ color: '#64748B', fontSize: '13px', lineHeight: 1.6 }}>
-                      We'll scan the web, recent news, and job boards to find specific hooks for your brief. No hallucinations. No generic fluff.
+                    <p style={{ color: "#64748B", fontSize: "13px", lineHeight: 1.6 }}>
+                      We'll scan the web, recent news, and job boards to find specific hooks for your brief. No
+                      hallucinations. No generic fluff.
                     </p>
                   </div>
 
                   {/* A) Auto-research button */}
-                  <div style={{ marginTop: '16px' }}>
+                  <div style={{ marginTop: "16px" }}>
                     {!autoResearching && !autoResearchDone && (
                       <button
                         onClick={handleAutoResearch}
                         disabled={!setupCompany.trim()}
                         style={{
-                          width: '100%',
-                          background: !setupCompany.trim() ? 'rgba(249,115,22,0.3)' : '#F97316',
-                          color: '#FFFFFF',
+                          width: "100%",
+                          background: !setupCompany.trim() ? "rgba(249,115,22,0.3)" : "#F97316",
+                          color: "#FFFFFF",
                           fontWeight: 700,
-                          fontSize: '15px',
-                          padding: '14px',
-                          borderRadius: '8px',
-                          border: 'none',
-                          cursor: !setupCompany.trim() ? 'not-allowed' : 'pointer',
-                          transition: 'background 0.2s',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '8px',
+                          fontSize: "15px",
+                          padding: "14px",
+                          borderRadius: "8px",
+                          border: "none",
+                          cursor: !setupCompany.trim() ? "not-allowed" : "pointer",
+                          transition: "background 0.2s",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "8px",
                         }}
-                        onMouseEnter={(e) => { if (setupCompany.trim()) (e.target as HTMLButtonElement).style.background = '#EA6C0A'; }}
-                        onMouseLeave={(e) => { if (setupCompany.trim()) (e.target as HTMLButtonElement).style.background = '#F97316'; }}
+                        onMouseEnter={(e) => {
+                          if (setupCompany.trim()) (e.target as HTMLButtonElement).style.background = "#EA6C0A";
+                        }}
+                        onMouseLeave={(e) => {
+                          if (setupCompany.trim()) (e.target as HTMLButtonElement).style.background = "#F97316";
+                        }}
                       >
                         <Globe className="w-4 h-4" />
                         Auto-Research Company
@@ -1277,21 +1445,33 @@ const Index = () => {
 
                     {/* Research progress */}
                     {autoResearching && (
-                      <div style={{ padding: '16px 0' }}>
+                      <div style={{ padding: "16px 0" }}>
                         <div className="space-y-3">
                           {AUTO_RESEARCH_STEPS.map((stepText, i) => (
-                            <div key={i} className="flex items-center gap-3" style={{
-                              opacity: i <= autoResearchStep ? 1 : 0.3,
-                              transition: 'opacity 0.4s ease',
-                            }}>
+                            <div
+                              key={i}
+                              className="flex items-center gap-3"
+                              style={{
+                                opacity: i <= autoResearchStep ? 1 : 0.3,
+                                transition: "opacity 0.4s ease",
+                              }}
+                            >
                               {i < autoResearchStep ? (
-                                <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: '#22c55e' }} />
+                                <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: "#22c55e" }} />
                               ) : i === autoResearchStep ? (
-                                <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin" style={{ color: '#F97316' }} />
+                                <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin" style={{ color: "#F97316" }} />
                               ) : (
-                                <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }} />
+                                <div
+                                  style={{
+                                    width: "16px",
+                                    height: "16px",
+                                    borderRadius: "50%",
+                                    border: "1px solid rgba(255,255,255,0.1)",
+                                    flexShrink: 0,
+                                  }}
+                                />
                               )}
-                              <span style={{ color: i <= autoResearchStep ? '#E2E8F0' : '#475569', fontSize: '13px' }}>
+                              <span style={{ color: i <= autoResearchStep ? "#E2E8F0" : "#475569", fontSize: "13px" }}>
                                 {stepText}
                               </span>
                             </div>
@@ -1302,26 +1482,33 @@ const Index = () => {
 
                     {/* Research success banner */}
                     {autoResearchDone && autoResearchSuccess && (
-                      <div style={{ marginTop: '12px' }}>
-                        <div style={{
-                          background: 'rgba(34,197,94,0.1)',
-                          border: '1px solid rgba(34,197,94,0.2)',
-                          borderRadius: '8px',
-                          padding: '12px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                        }}>
-                          <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: '#22c55e' }} />
-                          <p style={{ color: '#22c55e', fontSize: '13px', margin: 0 }}>
+                      <div style={{ marginTop: "12px" }}>
+                        <div
+                          style={{
+                            background: "rgba(34,197,94,0.1)",
+                            border: "1px solid rgba(34,197,94,0.2)",
+                            borderRadius: "8px",
+                            padding: "12px",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                        >
+                          <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: "#22c55e" }} />
+                          <p style={{ color: "#22c55e", fontSize: "13px", margin: 0 }}>
                             Research complete — review and edit before generating your brief.
                           </p>
                         </div>
                         <button
                           onClick={handleAutoResearch}
                           style={{
-                            marginTop: '10px', background: 'transparent', border: 'none',
-                            color: '#64748B', fontSize: '12px', cursor: 'pointer', padding: '4px 0',
+                            marginTop: "10px",
+                            background: "transparent",
+                            border: "none",
+                            color: "#64748B",
+                            fontSize: "12px",
+                            cursor: "pointer",
+                            padding: "4px 0",
                           }}
                         >
                           ↻ Re-run research
@@ -1331,27 +1518,37 @@ const Index = () => {
                   </div>
 
                   {/* B) Manual notes section */}
-                  <div style={{ marginTop: '20px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '16px' }}>
+                  <div style={{ marginTop: "20px", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "16px" }}>
                     <button
                       type="button"
                       onClick={() => setShowManualSection(!showManualSection)}
                       style={{
-                        background: 'none', border: 'none', color: '#94A3B8', fontSize: '13px',
-                        fontWeight: 500, cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: '6px',
+                        background: "none",
+                        border: "none",
+                        color: "#94A3B8",
+                        fontSize: "13px",
+                        fontWeight: 500,
+                        cursor: "pointer",
+                        padding: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
                       }}
                     >
                       <Lightbulb className="w-3.5 h-3.5" />
                       Prefer to add your own notes?
-                      <span style={{ fontSize: '11px', color: '#475569' }}>(optional)</span>
+                      <span style={{ fontSize: "11px", color: "#475569" }}>(optional)</span>
                     </button>
 
                     {showManualSection && (
-                      <div className="space-y-3" style={{ marginTop: '12px' }}>
-                        <p style={{ color: '#64748B', fontSize: '12px', lineHeight: 1.6 }}>
+                      <div className="space-y-3" style={{ marginTop: "12px" }}>
+                        <p style={{ color: "#64748B", fontSize: "12px", lineHeight: 1.6 }}>
                           If you already have context, paste it — we'll turn it into your PoW brief.
                         </p>
-                        <div style={{ marginBottom: '8px' }}>
-                          <p style={{ color: '#94A3B8', fontSize: '12px', fontWeight: 600, marginBottom: '6px' }}>Where to look:</p>
+                        <div style={{ marginBottom: "8px" }}>
+                          <p style={{ color: "#94A3B8", fontSize: "12px", fontWeight: 600, marginBottom: "6px" }}>
+                            Where to look:
+                          </p>
                           <div className="space-y-1">
                             {[
                               "Founder LinkedIn posts",
@@ -1360,7 +1557,9 @@ const Index = () => {
                               "G2 or Trustpilot reviews",
                               "Their website copy",
                             ].map((tip) => (
-                              <p key={tip} style={{ color: '#64748B', fontSize: '12px', lineHeight: 1.5 }}>→ {tip}</p>
+                              <p key={tip} style={{ color: "#64748B", fontSize: "12px", lineHeight: 1.5 }}>
+                                → {tip}
+                              </p>
                             ))}
                           </div>
                         </div>
@@ -1369,41 +1568,49 @@ const Index = () => {
                           onChange={(e) => setManualNotes(e.target.value)}
                           placeholder="e.g. Their CEO posted last week about struggling to break into the German market. They have 3 open SDR roles..."
                           style={{
-                            width: '100%',
-                            background: '#1A1A1A',
-                            border: '1px solid rgba(255,255,255,0.08)',
-                            borderRadius: '8px',
-                            color: '#FFFFFF',
-                            padding: '12px 16px',
-                            fontSize: '14px',
-                            minHeight: '80px',
-                            outline: 'none',
-                            transition: 'border-color 0.2s',
-                            resize: 'vertical',
-                            fontFamily: 'Inter, sans-serif',
+                            width: "100%",
+                            background: "#1A1A1A",
+                            border: "1px solid rgba(255,255,255,0.08)",
+                            borderRadius: "8px",
+                            color: "#FFFFFF",
+                            padding: "12px 16px",
+                            fontSize: "14px",
+                            minHeight: "80px",
+                            outline: "none",
+                            transition: "border-color 0.2s",
+                            resize: "vertical",
+                            fontFamily: "Inter, sans-serif",
                           }}
-                          onFocus={(e) => { e.target.style.borderColor = '#F97316'; }}
-                          onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+                          onFocus={(e) => {
+                            e.target.style.borderColor = "#F97316";
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderColor = "rgba(255,255,255,0.08)";
+                          }}
                         />
                         <input
                           value={manualUrl}
                           onChange={(e) => setManualUrl(e.target.value)}
                           placeholder="Paste a job description or article URL (optional)"
                           style={{
-                            width: '100%',
-                            background: '#1A1A1A',
-                            border: '1px solid rgba(255,255,255,0.08)',
-                            borderRadius: '8px',
-                            color: '#FFFFFF',
-                            padding: '12px 14px',
-                            fontSize: '13px',
-                            outline: 'none',
-                            transition: 'border-color 0.2s',
+                            width: "100%",
+                            background: "#1A1A1A",
+                            border: "1px solid rgba(255,255,255,0.08)",
+                            borderRadius: "8px",
+                            color: "#FFFFFF",
+                            padding: "12px 14px",
+                            fontSize: "13px",
+                            outline: "none",
+                            transition: "border-color 0.2s",
                           }}
-                          onFocus={(e) => { e.target.style.borderColor = '#F97316'; }}
-                          onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+                          onFocus={(e) => {
+                            e.target.style.borderColor = "#F97316";
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderColor = "rgba(255,255,255,0.08)";
+                          }}
                         />
-                        <p style={{ color: '#475569', fontSize: '11px' }}>
+                        <p style={{ color: "#475569", fontSize: "11px" }}>
                           If link import isn't available, paste the key text above.
                         </p>
                       </div>
@@ -1412,10 +1619,17 @@ const Index = () => {
                 </div>
 
                 {/* Status nudge */}
-                <p style={{ fontSize: '12px', lineHeight: 1.5, textAlign: 'center' as const, color: !setupCompany.trim() ? '#64748B' : '#94A3B8' }}>
+                <p
+                  style={{
+                    fontSize: "12px",
+                    lineHeight: 1.5,
+                    textAlign: "center" as const,
+                    color: !setupCompany.trim() ? "#64748B" : "#94A3B8",
+                  }}
+                >
                   {!setupCompany.trim()
-                    ? 'Add a company to unlock tailored research.'
-                    : 'The more context you give us, the sharper your brief will be.'}
+                    ? "Add a company to unlock tailored research."
+                    : "The more context you give us, the sharper your brief will be."}
                 </p>
 
                 {/* CTA Button */}
@@ -1427,29 +1641,35 @@ const Index = () => {
                         onClick={handleBuildBriefClick}
                         disabled={generatingBrief}
                         style={{
-                          width: '100%',
-                          background: ctaVisuallyDisabled ? '#242424' : '#F97316',
-                          color: ctaVisuallyDisabled ? '#64748B' : '#FFFFFF',
+                          width: "100%",
+                          background: ctaVisuallyDisabled ? "#242424" : "#F97316",
+                          color: ctaVisuallyDisabled ? "#64748B" : "#FFFFFF",
                           fontWeight: 700,
-                          fontSize: '16px',
-                          padding: '16px',
-                          borderRadius: '8px',
-                          border: 'none',
-                          cursor: ctaVisuallyDisabled ? 'not-allowed' : 'pointer',
-                          transition: 'background 0.2s',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '8px',
+                          fontSize: "16px",
+                          padding: "16px",
+                          borderRadius: "8px",
+                          border: "none",
+                          cursor: ctaVisuallyDisabled ? "not-allowed" : "pointer",
+                          transition: "background 0.2s",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "8px",
                         }}
-                        onMouseEnter={(e) => { if (!ctaVisuallyDisabled) (e.target as HTMLButtonElement).style.background = '#EA6C0A'; }}
-                        onMouseLeave={(e) => { if (!ctaVisuallyDisabled) (e.target as HTMLButtonElement).style.background = '#F97316'; }}
+                        onMouseEnter={(e) => {
+                          if (!ctaVisuallyDisabled) (e.target as HTMLButtonElement).style.background = "#EA6C0A";
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!ctaVisuallyDisabled) (e.target as HTMLButtonElement).style.background = "#F97316";
+                        }}
                       >
                         {generatingBrief && <Loader2 className="h-5 w-5 animate-spin" />}
-                        {generatingBrief ? 'Generating...' : 'Generate my brief →'}
+                        {generatingBrief ? "Generating..." : "Generate my brief →"}
                       </button>
                       {!setupCompany.trim() && !generatingBrief && (
-                        <p style={{ color: '#475569', fontSize: '12px', textAlign: 'center' as const, marginTop: '8px' }}>
+                        <p
+                          style={{ color: "#475569", fontSize: "12px", textAlign: "center" as const, marginTop: "8px" }}
+                        >
                           Add a company to generate a tailored PoW.
                         </p>
                       )}
@@ -1462,7 +1682,7 @@ const Index = () => {
         )}
 
         {/* Phase 2: Proof of work brief — step-by-step navigator */}
-        {setupPhase === 'brief' && proofBrief && proofBrief.build_steps && (
+        {setupPhase === "brief" && proofBrief && proofBrief.build_steps && (
           <BriefNavigator
             proofBrief={proofBrief}
             company={setupCompany}
@@ -1472,41 +1692,125 @@ const Index = () => {
           />
         )}
         {/* Legacy brief format fallback */}
-        {setupPhase === 'brief' && proofBrief && !proofBrief.build_steps && (
-          <div style={{ maxWidth: '720px', margin: '0 auto' }}>
-            <div style={{
-              background: '#1A1A1A',
-              border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: '16px',
-              padding: '40px',
-            }}>
-              <h3 style={{ color: '#FFFFFF', fontSize: '20px', fontWeight: 700, marginBottom: '20px' }}>{proofBrief.title}</h3>
-              <div style={{ marginBottom: '20px' }}>
-                <p style={{ color: '#F97316', fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>Why this works</p>
-                <p style={{ color: '#E2E8F0', fontSize: '15px', lineHeight: 1.7 }}>{proofBrief.why_this_works}</p>
+        {setupPhase === "brief" && proofBrief && !proofBrief.build_steps && (
+          <div style={{ maxWidth: "720px", margin: "0 auto" }}>
+            <div
+              style={{
+                background: "#1A1A1A",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: "16px",
+                padding: "40px",
+              }}
+            >
+              <h3 style={{ color: "#FFFFFF", fontSize: "20px", fontWeight: 700, marginBottom: "20px" }}>
+                {proofBrief.title}
+              </h3>
+              <div style={{ marginBottom: "20px" }}>
+                <p
+                  style={{
+                    color: "#F97316",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    letterSpacing: "0.15em",
+                    textTransform: "uppercase" as const,
+                    marginBottom: "8px",
+                  }}
+                >
+                  Why this works
+                </p>
+                <p style={{ color: "#E2E8F0", fontSize: "15px", lineHeight: 1.7 }}>{proofBrief.why_this_works}</p>
               </div>
-              <div style={{ marginBottom: '20px' }}>
-                <p style={{ color: '#F97316', fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>What to build</p>
-                <ul style={{ paddingLeft: '20px', margin: 0 }}>
+              <div style={{ marginBottom: "20px" }}>
+                <p
+                  style={{
+                    color: "#F97316",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    letterSpacing: "0.15em",
+                    textTransform: "uppercase" as const,
+                    marginBottom: "8px",
+                  }}
+                >
+                  What to build
+                </p>
+                <ul style={{ paddingLeft: "20px", margin: 0 }}>
                   {(proofBrief.what_to_build as string[]).map((b: string, i: number) => (
-                    <li key={i} style={{ color: '#E2E8F0', fontSize: '15px', lineHeight: 1.7, marginBottom: '4px' }}>{b}</li>
+                    <li key={i} style={{ color: "#E2E8F0", fontSize: "15px", lineHeight: 1.7, marginBottom: "4px" }}>
+                      {b}
+                    </li>
                   ))}
                 </ul>
               </div>
-              <div style={{ marginBottom: '20px' }}>
-                <p style={{ color: '#F97316', fontSize: '11px', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>Tools to use</p>
-                <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '6px' }}>
+              <div style={{ marginBottom: "20px" }}>
+                <p
+                  style={{
+                    color: "#F97316",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    letterSpacing: "0.15em",
+                    textTransform: "uppercase" as const,
+                    marginBottom: "8px",
+                  }}
+                >
+                  Tools to use
+                </p>
+                <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "6px" }}>
                   {(proofBrief.tools_to_use as string[]).map((t: string, i: number) => (
-                    <span key={i} style={{ background: 'rgba(249,115,22,0.15)', color: '#F97316', fontSize: '12px', fontWeight: 500, padding: '4px 10px', borderRadius: '999px' }}>{t}</span>
+                    <span
+                      key={i}
+                      style={{
+                        background: "rgba(249,115,22,0.15)",
+                        color: "#F97316",
+                        fontSize: "12px",
+                        fontWeight: 500,
+                        padding: "4px 10px",
+                        borderRadius: "999px",
+                      }}
+                    >
+                      {t}
+                    </span>
                   ))}
                 </div>
               </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '32px' }} className="sm:flex-row">
-              <button onClick={handleStartBuilding} style={{ flex: 1, background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: '#FFFFFF', borderRadius: '8px', padding: '12px 24px', fontSize: '14px', cursor: 'pointer', fontWeight: 500 }}>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "32px" }}
+              className="sm:flex-row"
+            >
+              <button
+                onClick={handleStartBuilding}
+                style={{
+                  flex: 1,
+                  background: "transparent",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  color: "#FFFFFF",
+                  borderRadius: "8px",
+                  padding: "12px 24px",
+                  fontSize: "14px",
+                  cursor: "pointer",
+                  fontWeight: 500,
+                }}
+              >
                 Start building — I'll be back when it's done
               </button>
-              <button onClick={handleContinueCampaign} style={{ flex: 1, background: '#F97316', color: '#FFFFFF', fontWeight: 700, borderRadius: '8px', padding: '12px 28px', fontSize: '14px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+              <button
+                onClick={handleContinueCampaign}
+                style={{
+                  flex: 1,
+                  background: "#F97316",
+                  color: "#FFFFFF",
+                  fontWeight: 700,
+                  borderRadius: "8px",
+                  padding: "12px 28px",
+                  fontSize: "14px",
+                  border: "none",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
+                }}
+              >
                 Continue setting up my campaign →
               </button>
             </div>
@@ -1514,16 +1818,16 @@ const Index = () => {
         )}
 
         {/* Phase 3: CV tailoring — existing flow */}
-        {setupPhase === 'cv_tailoring' && (
+        {setupPhase === "cv_tailoring" && (
           <>
             {/* Target context */}
             <div className="text-center space-y-2">
               <h1 className="text-[32px] font-bold tracking-tight text-foreground">
                 {setupRole
-                  ? `Build your case for ${setupRole}${setupCompany ? ` at ${setupCompany}` : ''}`
+                  ? `Build your case for ${setupRole}${setupCompany ? ` at ${setupCompany}` : ""}`
                   : targetRole
                     ? `Build your case for ${targetRole}`
-                    : 'Build your case'}
+                    : "Build your case"}
               </h1>
               <p className="text-muted-foreground text-sm">
                 Paste a role you're genuinely excited about. One application, done properly.
@@ -1531,7 +1835,10 @@ const Index = () => {
             </div>
             <InputSection
               onSubmit={handleSubmit}
-              onClear={() => { setResult(null); downloadCountRef.current = 0; }}
+              onClear={() => {
+                setResult(null);
+                downloadCountRef.current = 0;
+              }}
               onCvParsed={(model) => setPreParsedModel(model)}
               loading={loading}
               loadingMessage={loadingMessage}
@@ -1540,9 +1847,7 @@ const Index = () => {
             {loading && loadingProgress > 0 && (
               <div className="space-y-2">
                 <Progress value={loadingProgress} className="h-2" />
-                <p className="text-xs text-muted-foreground text-center">
-                  Step {Math.ceil(loadingProgress / 20)} of 5
-                </p>
+                <p className="text-xs text-muted-foreground text-center">Step {Math.ceil(loadingProgress / 20)} of 5</p>
               </div>
             )}
             {result && cvModel && (

@@ -6,6 +6,35 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+function parseSignals(text: string): { type: string; text: string }[] {
+  const signals: { type: string; text: string }[] = [];
+  const today = new Date().toISOString().split("T")[0];
+
+  const sections: { key: string; type: string }[] = [
+    { key: "WHAT THEY DO", type: "company" },
+    { key: "RECENT NEWS", type: "funding" },
+    { key: "OPEN ROLES", type: "hiring" },
+    { key: "CUSTOMER SIGNALS", type: "customer" },
+    { key: "BEST POW ANGLE", type: "pow_angle" },
+  ];
+
+  for (const section of sections) {
+    const regex = new RegExp(`${section.key}\\s*\\n([\\s\\S]*?)(?=\\n[A-Z ]{4,}\\n|$)`, "i");
+    const match = text.match(regex);
+    if (match && match[1]) {
+      const content = match[1].trim();
+      if (content && content.toLowerCase() !== "not found") {
+        signals.push({
+          type: section.type,
+          text: content,
+        });
+      }
+    }
+  }
+
+  return signals;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -53,7 +82,7 @@ Rules:
 - Be specific. Dates, numbers, names matter.
 - No generic fluff. Every sentence must be something the student could not have written themselves.
 
-Return your response in this exact format:
+Return your response in this EXACT format with these EXACT section headers:
 
 WHAT THEY DO
 [2-3 sentences. What product, who it's for, what problem it solves.]
@@ -96,7 +125,10 @@ BEST POW ANGLE
       throw new Error("No research content returned");
     }
 
-    return new Response(JSON.stringify({ research: content }), {
+    // Parse into structured signals
+    const signals = parseSignals(content);
+
+    return new Response(JSON.stringify({ research: content, signals }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
