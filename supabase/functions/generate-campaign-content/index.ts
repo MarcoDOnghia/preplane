@@ -405,10 +405,21 @@ ${companyIntel ? `\nCompany Intelligence (real research provided by the student)
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
 
     if (!toolCall?.function?.arguments) {
-      throw new Error("No structured response from AI");
+      return new Response(JSON.stringify({
+        type: "ERROR_FALLBACK",
+        message: "We hit an issue generating your brief. Please try again.",
+        debugId: `${Date.now()}-noargs`,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const result = JSON.parse(toolCall.function.arguments);
+
+    // Inject type field based on contentType
+    if (contentType === "proof_of_work") {
+      result.type = "FULL_BRIEF";
+    }
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
