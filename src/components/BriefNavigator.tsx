@@ -7,6 +7,7 @@ const TOOL_LINKS: Record<string, string> = {
   "LinkedIn Sales Navigator": "https://www.linkedin.com/sales",
   "Google Sheets": "https://sheets.google.com",
   "Google Slides": "https://slides.google.com",
+  "Google Docs": "https://docs.google.com",
   "Apollo.io": "https://www.apollo.io",
   "Hunter.io": "https://www.hunter.io",
   "Crunchbase": "https://www.crunchbase.com",
@@ -15,10 +16,71 @@ const TOOL_LINKS: Record<string, string> = {
   "Notion": "https://www.notion.so",
   "Canva": "https://www.canva.com",
   "Loom": "https://www.loom.com",
+  "Figma": "https://www.figma.com",
+  "Airtable": "https://www.airtable.com",
+  "Trello": "https://www.trello.com",
+  "Typeform": "https://www.typeform.com",
+  "Miro": "https://www.miro.com",
+  "GitHub": "https://www.github.com",
+  "Replit": "https://www.replit.com",
+  "Framer": "https://www.framer.com",
+};
+
+const TOOL_TIER: Record<string, "Free" | "Freemium"> = {
+  "Loom": "Freemium",
+  "Canva": "Freemium",
+  "Notion": "Freemium",
+  "ChatGPT": "Freemium",
+  "Google Sheets": "Free",
+  "Google Slides": "Free",
+  "Google Docs": "Free",
+  "Apollo.io": "Freemium",
+  "Hunter.io": "Freemium",
+  "Crunchbase": "Freemium",
+  "LinkedIn": "Freemium",
+  "LinkedIn Sales Navigator": "Freemium",
+  "Figma": "Freemium",
+  "Airtable": "Freemium",
+  "Trello": "Free",
+  "Typeform": "Freemium",
+  "Miro": "Freemium",
+  "GitHub": "Freemium",
+  "Replit": "Freemium",
+  "Framer": "Freemium",
 };
 
 // Sort keys longest-first so "LinkedIn Sales Navigator" matches before "LinkedIn"
 const TOOL_NAMES = Object.keys(TOOL_LINKS).sort((a, b) => b.length - a.length);
+
+const toolLinkStyle: React.CSSProperties = {
+  color: '#F97316',
+  fontWeight: 600,
+  textDecoration: 'underline dotted',
+  cursor: 'pointer',
+};
+
+function renderToolBadge(toolName: string, key: number): React.ReactNode {
+  const tier = TOOL_TIER[toolName];
+  if (!tier) return null;
+  return (
+    <span
+      key={key}
+      style={{
+        background: 'rgba(34,197,94,0.1)',
+        border: '1px solid rgba(34,197,94,0.2)',
+        color: '#22c55e',
+        borderRadius: '4px',
+        padding: '2px 6px',
+        fontSize: '10px',
+        fontWeight: 600,
+        marginLeft: '4px',
+        verticalAlign: 'middle',
+      }}
+    >
+      {tier}
+    </span>
+  );
+}
 
 function renderTextWithToolLinks(text: string): React.ReactNode[] {
   const result: React.ReactNode[] = [];
@@ -47,18 +109,15 @@ function renderTextWithToolLinks(text: string): React.ReactNode[] {
           href={TOOL_LINKS[matchedTool]}
           target="_blank"
           rel="noopener noreferrer"
-          style={{
-            color: '#F97316',
-            fontWeight: 600,
-            textDecoration: 'underline dotted',
-            cursor: 'pointer',
-          }}
+          style={toolLinkStyle}
           onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.8')}
           onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
         >
           {matchedTool}
         </a>
       );
+      const badge = renderToolBadge(matchedTool, key++);
+      if (badge) result.push(badge);
       remaining = remaining.slice(earliestIdx + matchedTool.length);
     } else {
       result.push(<Fragment key={key++}>{remaining}</Fragment>);
