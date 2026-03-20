@@ -945,6 +945,8 @@ function Step4Content({ campaign, connectionName, setConnectionName, connectionU
   const [proofCardLoading, setProofCardLoading] = useState(true);
   const [selectedSubject, setSelectedSubject] = useState(0);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [connNote, setConnNote] = useState("");
+  const [dmMsg, setDmMsg] = useState("");
 
   useEffect(() => {
     if (!user) return;
@@ -961,15 +963,7 @@ function Step4Content({ campaign, connectionName, setConnectionName, connectionU
   }, [campaign.id, user]);
 
   const proofCardUrl = proofCard ? `${window.location.origin}/p/${proofCard.slug}` : null;
-  const contactName = connectionName || "{Name}";
-  const oneLiner = proofCard?.one_liner || "{deliverable}";
-  // Extract outcome from one-liner if possible (after "to ")
-  const outcomeMatch = oneLiner.match(/\bto\s+(.+)/i);
-  const outcome = outcomeMatch ? outcomeMatch[1].replace(/[."]+$/, "") : "{outcome}";
-
-  const connectionNote = `Hey ${contactName} — I built ${oneLiner.startsWith("I built") ? oneLiner.slice(8) : oneLiner} for ${campaign.company}. Would love to share what I found and get your take.`;
-
-  const dmMessage = `Hey ${contactName} — I built ${oneLiner.startsWith("I built") ? oneLiner.slice(8) : oneLiner} for ${campaign.company} focused on ${outcome}.\n\n60-sec proof card: ${proofCardUrl || "[add your Proof Card link here]"}\n\nCould you reply with 1 piece of feedback — what's the biggest flaw?\n\nIf irrelevant, I'll disappear.`;
+  const contactName = connectionName || "[Name]";
 
   const subjectOptions = [
     `Proof of Work for ${campaign.company} (quick feedback?)`,
@@ -980,6 +974,24 @@ function Step4Content({ campaign, connectionName, setConnectionName, connectionU
     navigator.clipboard.writeText(text);
     setCopiedField(field);
     setTimeout(() => setCopiedField(null), 2000);
+  };
+
+  const generateConnNote = () => {
+    const hook = getProofHook();
+    const oneLiner = proofCard?.one_liner || hook || "{deliverable}";
+    const deliverable = oneLiner.startsWith("I built") ? oneLiner.slice(8) : oneLiner;
+    setConnNote(`Hey ${contactName} — I built ${deliverable} for ${campaign.company}. Would love to share what I found and get your take.`);
+  };
+
+  const generateDM = () => {
+    const hook = getProofHook();
+    const outreachHook = hook
+      ? `I built ${hook.startsWith("I built") ? hook.slice(8) : hook}`
+      : proofCard?.one_liner
+        ? `I built ${proofCard.one_liner.startsWith("I built") ? proofCard.one_liner.slice(8) : proofCard.one_liner}`
+        : "I built {deliverable} for " + campaign.company;
+    const cardUrl = proofCardUrl || "[add your Proof Card link — Step 4]";
+    setDmMsg(`Hey ${contactName} — ${outreachHook}\n\n60-sec proof card: ${cardUrl}\n\nCould you reply with 1 piece of feedback — what's the biggest flaw or missing piece?\n\nIf irrelevant, I'll disappear.`);
   };
 
   return (
@@ -995,7 +1007,7 @@ function Step4Content({ campaign, connectionName, setConnectionName, connectionU
       {!proofCardLoading && !proofCard && (
         <div style={{ backgroundColor: 'rgba(249,116,22,0.08)', border: '1px solid rgba(249,116,22,0.2)', borderRadius: '8px', padding: '14px' }}>
           <p style={{ color: '#F97416', fontSize: '13px' }}>
-            Build your Proof Card first — it becomes the centerpiece of your outreach. ↑ Step 4
+            No Proof Card yet — your DM will be weaker without it. Build your card in Step 4 first.
           </p>
         </div>
       )}
@@ -1060,37 +1072,94 @@ function Step4Content({ campaign, connectionName, setConnectionName, connectionU
         </div>
       </div>
 
-      {/* VERSION 1 — Connection request note */}
+      {/* SECTION 1 — Connection request note */}
       <div className="space-y-3">
         <p style={{ color: '#F97416', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>CONNECTION REQUEST NOTE</p>
         <p style={{ color: '#64748B', fontSize: '12px', lineHeight: 1.5 }}>
           Send with your connection request. No link — LinkedIn limits notes to 300 characters. Just the hook.
         </p>
-        <div style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '14px' }}>
-          <p style={{ color: '#ffffff', fontSize: '14px', lineHeight: 1.7 }}>{connectionNote}</p>
-        </div>
-        <Button size="sm" variant="outline" className="bg-transparent text-white border-white/15 hover:bg-white/5" style={{ borderRadius: '8px' }} onClick={() => copyText(connectionNote, "conn")}>
-          {copiedField === "conn" ? <><Check className="h-4 w-4 mr-1" /> Copied!</> : <><Copy className="h-4 w-4 mr-1" /> Copy note</>}
-        </Button>
+        <button
+          onClick={generateConnNote}
+          style={{ backgroundColor: '#F97416', color: '#ffffff', fontWeight: 700, fontSize: '13px', border: 'none', borderRadius: '8px', padding: '10px 18px', cursor: 'pointer' }}
+        >
+          Generate note →
+        </button>
+        {connNote && (
+          <>
+            <textarea
+              value={connNote}
+              onChange={(e) => setConnNote(e.target.value.slice(0, 300))}
+              rows={4}
+              style={{
+                width: '100%',
+                backgroundColor: '#1A1A1A',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: '8px',
+                color: 'white',
+                padding: '12px',
+                fontSize: '14px',
+                lineHeight: 1.7,
+                resize: 'vertical',
+              }}
+              placeholder="Your connection request note..."
+            />
+            <div className="flex justify-between items-center">
+              <button
+                onClick={() => copyText(connNote, "conn")}
+                style={{ backgroundColor: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: '#ffffff', borderRadius: '8px', padding: '8px 14px', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                {copiedField === "conn" ? <><Check className="h-4 w-4" /> Copied!</> : <><Copy className="h-4 w-4" /> Copy message</>}
+              </button>
+              <p style={{ color: connNote.length > 300 ? '#ef4444' : '#64748B', fontSize: '11px' }}>{connNote.length}/300</p>
+            </div>
+          </>
+        )}
       </div>
 
-      {/* VERSION 2 — DM after connecting */}
+      {/* SECTION 2 — DM after connecting */}
       <div className="space-y-3">
         <p style={{ color: '#F97416', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>DM AFTER THEY ACCEPT</p>
         <p style={{ color: '#64748B', fontSize: '12px', lineHeight: 1.5 }}>
-          Send once they accept. This is your main message.
+          Send once they accept your connection. This is your main message.
         </p>
-        <div style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '14px' }}>
-          <p style={{ color: '#ffffff', fontSize: '14px', lineHeight: 1.7, whiteSpace: 'pre-line' }}>{dmMessage}</p>
-        </div>
-        <Button size="sm" variant="outline" className="bg-transparent text-white border-white/15 hover:bg-white/5" style={{ borderRadius: '8px' }} onClick={() => copyText(dmMessage, "dm")}>
-          {copiedField === "dm" ? <><Check className="h-4 w-4 mr-1" /> Copied!</> : <><Copy className="h-4 w-4 mr-1" /> Copy message</>}
-        </Button>
+        <button
+          onClick={generateDM}
+          style={{ backgroundColor: '#F97416', color: '#ffffff', fontWeight: 700, fontSize: '13px', border: 'none', borderRadius: '8px', padding: '10px 18px', cursor: 'pointer' }}
+        >
+          Generate DM →
+        </button>
+        {dmMsg && (
+          <>
+            <textarea
+              value={dmMsg}
+              onChange={(e) => setDmMsg(e.target.value)}
+              rows={8}
+              style={{
+                width: '100%',
+                backgroundColor: '#1A1A1A',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: '8px',
+                color: 'white',
+                padding: '12px',
+                fontSize: '14px',
+                lineHeight: 1.7,
+                resize: 'vertical',
+              }}
+              placeholder="Your DM message..."
+            />
+            <button
+              onClick={() => copyText(dmMsg, "dm")}
+              style={{ backgroundColor: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: '#ffffff', borderRadius: '8px', padding: '8px 14px', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+            >
+              {copiedField === "dm" ? <><Check className="h-4 w-4" /> Copied!</> : <><Copy className="h-4 w-4" /> Copy message</>}
+            </button>
+          </>
+        )}
       </div>
 
       {/* EMAIL SUBJECT OPTIONS */}
       <div className="space-y-3">
-        <p style={{ color: '#F97416', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>EMAIL SUBJECT</p>
+        <p style={{ color: '#F97416', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>EMAIL SUBJECT LINE</p>
         <div className="flex flex-wrap gap-2">
           {subjectOptions.map((subj, i) => (
             <button
@@ -1112,9 +1181,12 @@ function Step4Content({ campaign, connectionName, setConnectionName, connectionU
             </button>
           ))}
         </div>
-        <Button size="sm" variant="outline" className="bg-transparent text-white border-white/15 hover:bg-white/5" style={{ borderRadius: '8px' }} onClick={() => copyText(subjectOptions[selectedSubject], "subj")}>
-          {copiedField === "subj" ? <><Check className="h-4 w-4 mr-1" /> Copied!</> : <><Copy className="h-4 w-4 mr-1" /> Copy subject</>}
-        </Button>
+        <button
+          onClick={() => copyText(subjectOptions[selectedSubject], "subj")}
+          style={{ backgroundColor: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: '#ffffff', borderRadius: '8px', padding: '8px 14px', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+        >
+          {copiedField === "subj" ? <><Check className="h-4 w-4" /> Copied!</> : <><Copy className="h-4 w-4" /> Copy subject</>}
+        </button>
       </div>
     </div>
   );
