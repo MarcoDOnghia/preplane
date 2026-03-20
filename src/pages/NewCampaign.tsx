@@ -316,7 +316,7 @@ const Index = () => {
     generateProofBrief(combined);
   };
 
-  const generateProofBrief = async () => {
+  const generateProofBrief = async (intelOverride?: string) => {
     if (!setupRole.trim()) {
       toast({ title: "Please enter a target role", variant: "destructive" });
       return;
