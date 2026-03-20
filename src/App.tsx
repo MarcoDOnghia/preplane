@@ -5,7 +5,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
-import ErrorBoundary from "@/components/ErrorBoundary";
 import RootRedirect from "./pages/RootRedirect";
 
 const Index = lazy(() => import("./pages/Index"));
@@ -27,23 +26,21 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <ErrorBoundary>
-            <Suspense fallback={null}>
-              <Routes>
-                <Route path="/" element={<RootRedirect />} />
-                <Route path="/app" element={<Index />} />
-                <Route path="/app/new" element={<NewCampaign />} />
-                <Route path="/cv-workspace" element={<CvWorkspace />} />
-                <Route path="/onboarding" element={<Onboarding />} />
-                <Route path="/campaign/:id" element={<Campaign />} />
-                <Route path="/p/:slug" element={<ProofCard />} />
-                <Route path="/auth" element={<Navigate to="/onboarding?step=4&mode=login" replace />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/verify-email" element={<VerifyEmail />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </ErrorBoundary>
+          <Suspense fallback={null}>
+            <Routes>
+              <Route path="/" element={<RootRedirect />} />
+              <Route path="/app" element={<Index />} />
+              <Route path="/app/new" element={<NewCampaign />} />
+              <Route path="/cv-workspace" element={<CvWorkspace />} />
+              <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="/campaign/:id" element={<Campaign />} />
+              <Route path="/p/:slug" element={<ProofCard />} />
+              <Route path="/auth" element={<Navigate to="/onboarding?step=4&mode=login" replace />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
