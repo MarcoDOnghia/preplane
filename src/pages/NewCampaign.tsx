@@ -59,7 +59,7 @@ const Index = () => {
   const [setupRole, setSetupRole] = useState(searchParams.get("role") || "");
   const [setupCompany, setSetupCompany] = useState(searchParams.get("company") || "");
   const [setupJd, setSetupJd] = useState(searchParams.get("jd") || "");
-  const [proofBrief, setProofBrief] = useState<any>(null);
+  const [proofBrief, setProofBrief] = useState<BriefResponse | null>(null);
   const [generatingBrief, setGeneratingBrief] = useState(false);
   const [jdExtractingUrl, setJdExtractingUrl] = useState(false);
   const [showNoCompanyWarning, setShowNoCompanyWarning] = useState(false);
