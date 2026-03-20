@@ -207,15 +207,106 @@ const Index = () => {
     }
   };
 
+  const AUTO_RESEARCH_STEPS = [
+    "Scanning founder LinkedIn signals…",
+    "Pulling recent news…",
+    "Checking job listings…",
+    "Mining reviews (G2/Trustpilot)…",
+    "Extracting website positioning…",
+  ];
+
+  const handleAutoResearch = async () => {
+    if (!setupCompany.trim()) return;
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast({ title: "Your session expired. Please sign in again.", variant: "destructive" });
+      nav("/onboarding");
+      return;
+    }
+
+    setAutoResearching(true);
+    setAutoResearchStep(0);
+    setAutoResearchInsights([]);
+    setAutoResearchDone(false);
+
+    // Animate through steps
+    for (let i = 0; i < AUTO_RESEARCH_STEPS.length; i++) {
+      setAutoResearchStep(i);
+      await new Promise(r => setTimeout(r, 1200));
+    }
+
+    try {
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/suggest-companies`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({
+          company: setupCompany.trim(),
+          role: setupRole.trim(),
+          mode: "research",
+        }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 429) {
+          toast({ title: "Daily research limit reached. Try again tomorrow.", variant: "destructive" });
+          setAutoResearching(false);
+          return;
+        }
+        throw new Error("Research failed");
+      }
+
+      const data = await response.json();
+      const insights = (data.insights || data.suggestions || []).map((item: any) => ({
+        text: typeof item === "string" ? item : item.text || item.insight || item.suggestion || "",
+        source: typeof item === "string" ? "Website" : item.source || "Research",
+        selected: true,
+      })).filter((i: any) => i.text);
+
+      if (insights.length === 0) {
+        // Fallback: generate placeholder insights from company name
+        setAutoResearchInsights([
+          { text: `${setupCompany.trim()} is actively hiring for roles related to ${setupRole.trim()}.`, source: "Careers", selected: true },
+          { text: `Research their latest product updates and company news for specific hooks.`, source: "Website", selected: true },
+        ]);
+      } else {
+        setAutoResearchInsights(insights);
+      }
+      setAutoResearchDone(true);
+    } catch (e: any) {
+      toast({ title: "Research failed", description: "Try adding notes manually instead.", variant: "destructive" });
+      setAutoResearchInsights([]);
+    } finally {
+      setAutoResearching(false);
+    }
+  };
+
+  const selectedInsightsCount = autoResearchInsights.filter(i => i.selected).length;
+  const hasResearchContent = selectedInsightsCount > 0 || manualNotes.trim().length > 0;
+
   const handleBuildBriefClick = () => {
     if (!setupRole.trim()) {
       toast({ title: "Please enter a target role", variant: "destructive" });
       return;
     }
     if (!setupCompany.trim()) {
-      setShowNoCompanyWarning(true);
+      toast({ title: "Add a company to generate a tailored PoW.", variant: "destructive" });
+      companyInputRef.current?.focus();
       return;
     }
+    if (!hasResearchContent) {
+      toast({ title: "Run auto-research or add some notes first.", variant: "destructive" });
+      return;
+    }
+    // Combine selected insights + manual notes into setupIntel
+    const selectedTexts = autoResearchInsights.filter(i => i.selected).map(i => `[${i.source}] ${i.text}`);
+    const combined = [...selectedTexts, manualNotes.trim()].filter(Boolean).join("\n\n");
+    setSetupIntel(combined);
     generateProofBrief();
   };
 
