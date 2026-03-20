@@ -21,7 +21,7 @@ import {
   DialogContent,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Loader2, Sparkles, ArrowRight, Lightbulb, Link2, Check, ChevronLeft, ChevronRight, Copy, Lock } from "lucide-react";
+import { Loader2, Sparkles, ArrowRight, Lightbulb, Link2, Check, ChevronLeft, ChevronRight, Copy, Lock, Search, Globe, Newspaper, BriefcaseBusiness, Star, LayoutTemplate, CheckCircle2 } from "lucide-react";
 import RoleWaitlistModal, { isRoleLocked, LOCKED_ROLES, UNLOCKED_ROLES } from "@/components/RoleWaitlistModal";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import type { TailorResult } from "@/lib/types";
