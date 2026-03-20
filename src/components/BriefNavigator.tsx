@@ -1,16 +1,80 @@
-import { useState } from "react";
-import { Check, ChevronLeft, ChevronRight, Copy, ArrowRight } from "lucide-react";
+import { useState, Fragment } from "react";
+import { Check, ChevronLeft, ChevronRight, Copy } from "lucide-react";
 
 const SECTION_LABELS = ["Your Hook", "The Mission", "How to Build It", "The Output", "The Insight"];
 
+const TOOL_LINKS: Record<string, string> = {
+  "LinkedIn Sales Navigator": "https://www.linkedin.com/sales",
+  "Google Sheets": "https://sheets.google.com",
+  "Google Slides": "https://slides.google.com",
+  "Apollo.io": "https://www.apollo.io",
+  "Hunter.io": "https://www.hunter.io",
+  "Crunchbase": "https://www.crunchbase.com",
+  "LinkedIn": "https://www.linkedin.com",
+  "ChatGPT": "https://chat.openai.com",
+  "Notion": "https://www.notion.so",
+  "Canva": "https://www.canva.com",
+  "Loom": "https://www.loom.com",
+};
+
+// Sort keys longest-first so "LinkedIn Sales Navigator" matches before "LinkedIn"
+const TOOL_NAMES = Object.keys(TOOL_LINKS).sort((a, b) => b.length - a.length);
+
+function renderTextWithToolLinks(text: string): React.ReactNode[] {
+  const result: React.ReactNode[] = [];
+  let remaining = text;
+  let key = 0;
+
+  while (remaining.length > 0) {
+    let earliestIdx = Infinity;
+    let matchedTool = "";
+
+    for (const tool of TOOL_NAMES) {
+      const idx = remaining.indexOf(tool);
+      if (idx !== -1 && idx < earliestIdx) {
+        earliestIdx = idx;
+        matchedTool = tool;
+      }
+    }
+
+    if (matchedTool && earliestIdx !== Infinity) {
+      if (earliestIdx > 0) {
+        result.push(<Fragment key={key++}>{remaining.slice(0, earliestIdx)}</Fragment>);
+      }
+      result.push(
+        <a
+          key={key++}
+          href={TOOL_LINKS[matchedTool]}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            color: '#F97316',
+            fontWeight: 600,
+            textDecoration: 'underline dotted',
+            cursor: 'pointer',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.8')}
+          onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+        >
+          {matchedTool}
+        </a>
+      );
+      remaining = remaining.slice(earliestIdx + matchedTool.length);
+    } else {
+      result.push(<Fragment key={key++}>{remaining}</Fragment>);
+      break;
+    }
+  }
+
+  return result;
+}
+
 /** Parse a build step string to extract numbered sub-points (e.g. "1. ...", "2. ...") */
 function parseStepWithSubPoints(step: string): { main: string; subPoints: string[] } {
-  // Match patterns like "1. text 2. text 3. text" within the step
   const numberedPattern = /(?:^|\s)(\d+)\.\s+/g;
   const matches = [...step.matchAll(numberedPattern)];
   if (matches.length < 2) return { main: step, subPoints: [] };
 
-  // The main text is everything before the first numbered item
   const firstIdx = matches[0].index! + (matches[0][0].startsWith(' ') ? 1 : 0);
   const main = step.slice(0, firstIdx).trim();
 
@@ -24,6 +88,7 @@ function parseStepWithSubPoints(step: string): { main: string; subPoints: string
 
   return { main: main || subPoints.shift() || step, subPoints };
 }
+
 const NEXT_LABELS = ["See the project →", "How to build it →", "See the output →", "The key insight →", ""];
 
 interface BriefNavigatorProps {
@@ -34,7 +99,7 @@ interface BriefNavigatorProps {
   onContinueCampaign?: () => void;
 }
 
-const BriefNavigator = ({ proofBrief, company, onStartBuilding, onContinueCampaign, toast }: BriefNavigatorProps) => {
+const BriefNavigator = ({ proofBrief, company, onContinueCampaign, toast }: BriefNavigatorProps) => {
   const [currentSection, setCurrentSection] = useState(0);
   const [direction, setDirection] = useState<'next' | 'prev'>('next');
   const [animating, setAnimating] = useState(false);
@@ -60,8 +125,6 @@ const BriefNavigator = ({ proofBrief, company, onStartBuilding, onContinueCampai
       : 'translateX(0)',
     transition: 'opacity 0.2s ease-out, transform 0.2s ease-out',
   };
-
-  const showFinalButtons = onStartBuilding || onContinueCampaign;
 
   return (
     <div style={{ maxWidth: '720px', margin: '0 auto' }}>
@@ -192,13 +255,13 @@ const BriefNavigator = ({ proofBrief, company, onStartBuilding, onContinueCampai
                   }}>
                     <span style={{ color: '#F97316', fontWeight: 900, fontSize: '24px', flexShrink: 0, lineHeight: 1.2 }}>{i + 1}</span>
                     <div style={{ flex: 1 }}>
-                      <span style={{ color: '#E2E8F0', fontSize: '14px', lineHeight: 1.8 }}>{parsed.main}</span>
+                      <span style={{ color: '#E2E8F0', fontSize: '14px', lineHeight: 1.8 }}>{renderTextWithToolLinks(parsed.main)}</span>
                       {parsed.subPoints.length > 0 && (
                         <div style={{ marginTop: '12px', marginLeft: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                           {parsed.subPoints.map((sp, j) => (
                             <div key={j} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
                               <span style={{ color: '#F97316', fontSize: '13px', lineHeight: 1.6, flexShrink: 0 }}>→</span>
-                              <span style={{ color: '#94A3B8', fontSize: '13px', lineHeight: 1.6 }}>{sp}</span>
+                              <span style={{ color: '#94A3B8', fontSize: '13px', lineHeight: 1.6 }}>{renderTextWithToolLinks(sp)}</span>
                             </div>
                           ))}
                         </div>
@@ -207,26 +270,6 @@ const BriefNavigator = ({ proofBrief, company, onStartBuilding, onContinueCampai
                   </div>
                 );
               })}
-            </div>
-            {/* Loom explainer card */}
-            <div style={{
-              background: '#242424',
-              border: '1px solid rgba(255,255,255,0.06)',
-              borderRadius: '8px',
-              padding: '16px',
-              marginTop: '12px',
-            }}>
-              <p style={{ color: '#FFFFFF', fontSize: '13px', fontWeight: 600, marginBottom: '8px' }}>What is Loom?</p>
-              <p style={{ color: '#94A3B8', fontSize: '13px', lineHeight: 1.6 }}>
-                Loom is a free screen recording tool. You record your screen while talking through what you built. It takes 2 minutes and gives you a link to share instantly — no editing needed.
-              </p>
-              <p style={{ color: '#94A3B8', fontSize: '13px', lineHeight: 1.6, marginTop: '8px' }}>
-                Why it works: a founder watching you explain your thinking is 10x more compelling than a document they have to open and read.
-              </p>
-              <p style={{ color: '#94A3B8', fontSize: '13px', lineHeight: 1.6, marginTop: '8px' }}>
-                → Get Loom free at{' '}
-                <a href="https://www.loom.com" target="_blank" rel="noopener noreferrer" style={{ color: '#F97316', fontWeight: 600, textDecoration: 'none' }}>loom.com</a>
-              </p>
             </div>
             <p style={{ color: '#22c55e', fontSize: '13px', marginTop: '20px', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Check className="h-3.5 w-3.5" style={{ color: '#22c55e' }} />
@@ -326,52 +369,29 @@ const BriefNavigator = ({ proofBrief, company, onStartBuilding, onContinueCampai
           >
             {NEXT_LABELS[currentSection]} <ChevronRight className="h-4 w-4" />
           </button>
-        ) : showFinalButtons ? (
-          <div style={{ display: 'flex', gap: '12px', marginLeft: 'auto' }}>
-            {onStartBuilding && (
-              <button
-                onClick={onStartBuilding}
-                style={{
-                  background: 'transparent',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  color: '#FFFFFF',
-                  borderRadius: '8px',
-                  padding: '12px 24px',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  transition: 'border-color 0.2s',
-                }}
-                onMouseEnter={(e) => (e.target as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.3)'}
-                onMouseLeave={(e) => (e.target as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.15)'}
-              >
-                Start building — I'll be back
-              </button>
-            )}
-            {onContinueCampaign && (
-              <button
-                onClick={onContinueCampaign}
-                style={{
-                  background: '#F97316',
-                  color: '#FFFFFF',
-                  fontWeight: 700,
-                  borderRadius: '8px',
-                  padding: '12px 28px',
-                  fontSize: '14px',
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: 'background 0.2s',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                }}
-                onMouseEnter={(e) => (e.target as HTMLButtonElement).style.background = '#EA6C0A'}
-                onMouseLeave={(e) => (e.target as HTMLButtonElement).style.background = '#F97316'}
-              >
-                Set up my outreach → <ArrowRight className="h-4 w-4" />
-              </button>
-            )}
-          </div>
+        ) : onContinueCampaign ? (
+          <button
+            onClick={onContinueCampaign}
+            style={{
+              background: '#F97316',
+              color: '#FFFFFF',
+              fontWeight: 700,
+              borderRadius: '8px',
+              padding: '12px 28px',
+              fontSize: '14px',
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'background 0.2s',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              marginLeft: 'auto',
+            }}
+            onMouseEnter={(e) => (e.target as HTMLButtonElement).style.background = '#EA6C0A'}
+            onMouseLeave={(e) => (e.target as HTMLButtonElement).style.background = '#F97316'}
+          >
+            Set up my outreach →
+          </button>
         ) : <div />}
       </div>
     </div>
