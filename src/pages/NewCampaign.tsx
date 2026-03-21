@@ -370,10 +370,11 @@ const Index = () => {
       toast({ title: "Run auto-research or add some notes first.", variant: "destructive" });
       return;
     }
-    // Combine selected insights + auto-research signals + manual notes into setupIntel
+    // Only pass signals with a valid source_url to the brief generator
     const selectedTexts = autoResearchInsights.filter((i) => i.selected).map((i) => `[${i.source}] ${i.text}`);
-    const signalsSummary = autoResearchSignals.length > 0
-      ? autoResearchSignals.map(s => `[${s.type.toUpperCase()}] ${s.text}`).join("\n\n")
+    const sourcedSignals = autoResearchSignals.filter(s => s.source_url);
+    const signalsSummary = sourcedSignals.length > 0
+      ? sourcedSignals.map(s => `[${s.type.toUpperCase()}] ${s.text}${s.source_url ? ` (source: ${s.source_url})` : ""}`).join("\n\n")
       : "";
     const combined = [...selectedTexts, signalsSummary, manualNotes.trim()].filter(Boolean).join("\n\n");
     setSetupIntel(combined);
