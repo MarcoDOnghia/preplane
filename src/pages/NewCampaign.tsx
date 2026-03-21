@@ -1518,6 +1518,43 @@ const Index = () => {
                         </button>
                       </div>
                     )}
+
+                    {/* Signal cards */}
+                    {autoResearchDone && autoResearchSuccess && autoResearchSignals.length > 0 && (
+                      <div style={{ marginTop: "12px", display: "grid", gap: "8px" }}>
+                        {autoResearchSignals.map((signal, i) => {
+                          const config: Record<string, { emoji: string; label: string }> = {
+                            company: { emoji: "🏢", label: "What They Do" },
+                            funding: { emoji: "💰", label: "Recent News" },
+                            hiring: { emoji: "👔", label: "Open Roles" },
+                            customer: { emoji: "⭐", label: "Customer Signals" },
+                            pow_angle: { emoji: "🎯", label: "Best PoW Angle" },
+                          };
+                          const c = config[signal.type] || { emoji: "📌", label: signal.type };
+                          return (
+                            <div
+                              key={i}
+                              style={{
+                                background: "hsl(var(--card))",
+                                border: "1px solid hsl(var(--border))",
+                                borderRadius: "8px",
+                                padding: "12px 14px",
+                              }}
+                            >
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+                                <span style={{ fontSize: "14px" }}>{c.emoji}</span>
+                                <span style={{ fontSize: "12px", fontWeight: 600, color: "hsl(var(--foreground))", textTransform: "uppercase", letterSpacing: "0.03em" }}>
+                                  {c.label}
+                                </span>
+                              </div>
+                              <p style={{ fontSize: "13px", color: "hsl(var(--muted-foreground))", lineHeight: 1.5, margin: 0, whiteSpace: "pre-line" }}>
+                                {signal.text}
+                              </p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
 
                   {/* B) Manual notes section */}
