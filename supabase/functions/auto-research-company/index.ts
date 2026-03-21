@@ -23,9 +23,7 @@ function parseSignals(text: string): { type: string; text: string }[] {
       .map(s => upper.indexOf(s.key, idx + section.key.length))
       .filter(i => i > idx)
       .sort((a, b) => a - b)[0];
-    const raw = nextIdx
-      ? text.slice(idx + section.key.length, nextIdx)
-      : afterHeader;
+    const raw = nextIdx ? text.slice(idx + section.key.length, nextIdx) : afterHeader;
     const content = raw
       .replace(/\*\*/g, '')
       .replace(/^[\s:–\-\n]+/, '')
@@ -43,9 +41,8 @@ serve(async (req) => {
   }
   try {
     const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
-    if (!ANTHROPIC_API_KEY) {
-      throw new Error("ANTHROPIC_API_KEY is not configured");
-    }
+    if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY is not configured");
+
     const { company, role } = await req.json();
     if (!company || !company.trim()) {
       return new Response(JSON.stringify({ error: "Company name is required" }), {
@@ -64,14 +61,10 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-5",
+        model: "claude-3-5-sonnet-20241022",
         max_tokens: 2000,
         tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 8 }],
-        system: `You are a research assistant for Preplane. Research the company using web search.
-
-Only include information from the last 90 days where relevant.
-
-Never invent facts. If not found write "Not found".
+        system: `You are a research assistant for Preplane. Research the company using web search. Only include information from the last 90 days where relevant. Never invent facts. If not found write "Not found".
 
 Return in this EXACT format with these EXACT headers:
 
@@ -88,10 +81,7 @@ CUSTOMER SIGNALS
 [Specific complaints or praise from G2, Trustpilot, or app reviews. Quote directly if possible. If none: Not found.]
 
 FOUNDER ACTIVITY
-[What the founder has posted about on LinkedIn in the last 30 days. What problems are they publicly wrestling with? If none: Not found.]
-
-BEST POW ANGLE
-[Leave this blank — it will be filled by the synthesis step.]`,
+[What the founder has posted about on LinkedIn in the last 30 days. What problems are they publicly wrestling with? If none: Not found.]`,
         messages: [{
           role: "user",
           content: `Research "${company.trim()}" for a student applying for a ${roleLabel} internship.`,
@@ -107,18 +97,17 @@ BEST POW ANGLE
 
     const data = await response.json();
 
-    // Extract text content
+    // Step 2 — Extract text content
     const content = data.content
       ?.filter((b: any) => b.type === "text")
       .map((b: any) => b.text)
       .join("\n") || "";
-
     if (!content) throw new Error("No content returned");
 
-    // Step 2 — Parse signals
+    // Step 3 — Parse signals
     const signals = parseSignals(content);
 
-    // Step 3 — Extract URLs from tool_result blocks
+    // Step 4 — Extract source URLs
     const urls: string[] = data.content
       ?.filter((b: any) => b.type === "tool_result")
       .flatMap((b: any) =>
@@ -127,7 +116,7 @@ BEST POW ANGLE
           : []
       ) || [];
 
-    // Step 4 — Confidence score
+    // Step 5 — Confidence score
     const confidence = Math.min(
       (signals.length / 5) * 0.5 +
       (signals.some(s => s.type === "founder_linkedin") ? 0.3 : 0) +
@@ -135,7 +124,7 @@ BEST POW ANGLE
       1
     );
 
-    // Step 5 — Tension synthesis call
+    // Step 6 — Tension synthesis (only if enough signal)
     let pow_angle: string | null = null;
     if (confidence >= 0.4) {
       const synthResponse = await fetch("https://api.anthropic.com/v1/messages", {
@@ -146,17 +135,9 @@ BEST POW ANGLE
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "claude-sonnet-4-5",
+          model: "claude-3-5-sonnet-20241022",
           max_tokens: 500,
-          system: `You are given research signals about a company.
-
-Find the tension: the gap between what the company claims and what customers or the founder's own words reveal.
-
-Then produce ONE specific proof of work a student can build in 48 hours for a ${roleLabel} internship that addresses that tension.
-
-Be ruthlessly specific about what to build, what tool to use, and why it matters to this company right now.
-
-If signals are too thin to find a real tension, return exactly: LOW_SIGNAL`,
+          system: `You are given research signals about a company. Find the tension: the gap between what the company claims and what customers or the founder's own words reveal. Then produce ONE specific proof of work a student can build in 48 hours for a ${roleLabel} internship that addresses that tension directly. Be ruthlessly specific: name exactly what to build, what free tool to use, and why it matters to this company right now. If signals are too thin, return exactly: LOW_SIGNAL`,
           messages: [{
             role: "user",
             content: JSON.stringify(signals),
@@ -175,7 +156,7 @@ If signals are too thin to find a real tension, return exactly: LOW_SIGNAL`,
       }
     }
 
-    // Step 6 — Return
+    // Step 7 — Return
     return new Response(
       JSON.stringify({
         research: content,
@@ -188,6 +169,7 @@ If signals are too thin to find a real tension, return exactly: LOW_SIGNAL`,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
+
   } catch (e: unknown) {
     console.error("auto-research-company error:", e);
     const msg = e instanceof Error ? e.message : "Unknown error";
