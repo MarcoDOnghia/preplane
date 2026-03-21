@@ -274,41 +274,73 @@ const Index = () => {
     })();
 
     try {
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/auto-research-company`;
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-        },
-        body: JSON.stringify({
-          company: setupCompany.trim(),
-          role: setupRole.trim(),
-        }),
+      // Call both research functions in parallel
+      const baseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const headers = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+      };
+      const body = JSON.stringify({
+        company: setupCompany.trim(),
+        role: setupRole.trim(),
       });
+
+      const [claudeRes, perplexityRes] = await Promise.allSettled([
+        fetch(`${baseUrl}/functions/v1/auto-research-company`, {
+          method: "POST", headers, body,
+        }),
+        fetch(`${baseUrl}/functions/v1/research-company`, {
+          method: "POST", headers, body,
+        }),
+      ]);
 
       // Wait for step animation to finish
       await stepPromise;
 
-      if (!response.ok) {
-        if (response.status === 429) {
-          toast({ title: "Daily research limit reached. Try again tomorrow.", variant: "destructive" });
-          setAutoResearching(false);
-          return;
+      // Process Claude research (existing flow)
+      let claudeSignals: { type: string; text: string }[] = [];
+      let research = "";
+      if (claudeRes.status === "fulfilled" && claudeRes.value.ok) {
+        const data = await claudeRes.value.json();
+        if (!data.error) {
+          research = data.research || "";
+          claudeSignals = data.signals || [];
         }
-        throw new Error("Research failed");
       }
 
-      const data = await response.json();
-      if (data.error) throw new Error(data.error);
+      // Process Perplexity research (new flow)
+      let perplexitySignals: { type: string; text: string; source_url?: string; date?: string }[] = [];
+      if (perplexityRes.status === "fulfilled" && perplexityRes.value.ok) {
+        const data = await perplexityRes.value.json();
+        if (!data.error && Array.isArray(data.signals)) {
+          perplexitySignals = data.signals;
+        }
+      }
 
-      const research = data.research || "";
-      if (!research) throw new Error("No research returned");
+      // Merge: use perplexity signals as primary (they have source_url), supplement with Claude
+      const mergedSignals = [
+        ...perplexitySignals.map(s => ({
+          type: s.signal_type || s.type,
+          text: s.text,
+          source_url: s.source_url || null,
+          date: s.date || null,
+        })),
+        ...claudeSignals.map(s => ({
+          type: s.type,
+          text: s.text,
+          source_url: null as string | null,
+          date: null as string | null,
+        })),
+      ];
+
+      if (mergedSignals.length === 0 && !research) {
+        throw new Error("No research returned");
+      }
 
       setManualNotes(research);
-      setAutoResearchSignals(data.signals || []);
-      setShowManualSection((data.signals || []).length === 0);
+      setAutoResearchSignals(mergedSignals.map(s => ({ type: s.type, text: s.text, source_url: s.source_url, date: s.date })) as any);
+      setShowManualSection(mergedSignals.length === 0);
       setAutoResearchDone(true);
       setAutoResearchSuccess(true);
     } catch (e: any) {
