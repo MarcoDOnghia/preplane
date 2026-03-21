@@ -1421,7 +1421,7 @@ const Index = () => {
                         setAutoResearchSignals([]);
                       }
                     }}
-                    placeholder="e.g. Sequoia Capital"
+                    placeholder="e.g. Jet HR, Finanz, Cubbit"
                     style={{
                       width: "100%",
                       background: "#1A1A1A",
