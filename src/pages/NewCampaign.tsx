@@ -1750,6 +1750,7 @@ const Index = () => {
                       </div>
                     )}
                   </div>
+                  )}
                 </div>
 
                 {/* Status nudge */}
