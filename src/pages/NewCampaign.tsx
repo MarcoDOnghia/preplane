@@ -450,6 +450,27 @@ const Index = () => {
     }
   };
 
+  const persistSignals = async (campaignId: string) => {
+    if (!user || autoResearchSignals.length === 0) return;
+    try {
+      const rows = autoResearchSignals
+        .filter(s => s.type !== "pow_angle")
+        .map(s => ({
+          campaign_id: campaignId,
+          user_id: user.id,
+          signal_type: s.type,
+          text: s.text,
+          source_url: s.source_url || null,
+          date: s.date || null,
+        }));
+      if (rows.length > 0) {
+        await supabase.from("campaign_signals").insert(rows);
+      }
+    } catch (_) {
+      // Non-critical
+    }
+  };
+
   const handleStartBuilding = async () => {
     if (!user) return;
     try {
@@ -476,6 +497,7 @@ const Index = () => {
         } else throw error;
         return;
       }
+      await persistSignals(data.id);
       toast({ title: "Campaign created! Start building your proof of work." });
       nav("/app");
     } catch (e: any) {
@@ -509,6 +531,7 @@ const Index = () => {
         } else throw error;
         return;
       }
+      await persistSignals(data.id);
       toast({ title: "Campaign created! Let's keep going." });
       nav(`/campaign/${data.id}`);
     } catch (e: any) {
