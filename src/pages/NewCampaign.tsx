@@ -339,7 +339,7 @@ const Index = () => {
       }
 
       setManualNotes(research);
-      setAutoResearchSignals(mergedSignals.map(s => ({ type: s.type, text: s.text, source_url: s.source_url, date: s.date })) as any);
+      setAutoResearchSignals(mergedSignals.map(s => ({ type: s.type, text: s.text, source_url: s.source_url, date: s.date })));
       setShowManualSection(mergedSignals.length === 0);
       setAutoResearchDone(true);
       setAutoResearchSuccess(true);
