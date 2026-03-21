@@ -103,24 +103,24 @@ serve(async (req) => {
     // 5 sequential queries
     const queries: { query: string; signalType: string }[] = [
       {
-        query: `What is the most recent funding round, acquisition, or major news about "${companyName}" in the last 90 days?`,
+        query: `Search startupitalia.eu, ilsole24ore.com, and corriereinnovazione.corriere.it for any news or funding announcements about "${companyName}" in the last 180 days.`,
         signalType: "news",
       },
       {
-        query: `What ${roleLabel} job openings or internships does "${companyName}" currently have listed? Include job titles and key requirements.`,
+        query: `Search LinkedIn Jobs and Wellfound/AngelList for open ${roleLabel} positions at "${companyName}". Include role titles and key requirements.`,
         signalType: "hiring",
       },
       {
-        query: `What are the most recent G2 or Trustpilot reviews about "${companyName}"? Include specific customer complaints or praise.`,
+        query: `Search Apple App Store and Google Play Store reviews for "${companyName}" app. Include specific user complaints and praise.`,
         signalType: "customer",
       },
       {
-        query: `Has "${companyName}" launched on Product Hunt? What was the reception and key feedback?`,
-        signalType: "product_hunt",
+        query: `Search for any interviews, podcast appearances, or press quotes from the founder or CEO of "${companyName}" in the last 90 days.`,
+        signalType: "founder_press",
       },
       {
-        query: `What has the founder or CEO of "${companyName}" posted about on LinkedIn in the last 30 days? What problems are they publicly discussing?`,
-        signalType: "founder_linkedin",
+        query: `Search LinkedIn company page posts and Twitter/X for "${companyName}" announcements or product updates in the last 60 days.`,
+        signalType: "social_updates",
       },
     ];
 
