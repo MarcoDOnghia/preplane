@@ -135,7 +135,7 @@ FOUNDER ACTIVITY
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "claude-3-5-sonnet-20241022",
+          model: "claude-sonnet-4-5-20250929",
           max_tokens: 500,
           system: `You are given research signals about a company. Find the tension: the gap between what the company claims and what customers or the founder's own words reveal. Then produce ONE specific proof of work a student can build in 48 hours for a ${roleLabel} internship that addresses that tension directly. Be ruthlessly specific: name exactly what to build, what free tool to use, and why it matters to this company right now. If signals are too thin, return exactly: LOW_SIGNAL`,
           messages: [{
