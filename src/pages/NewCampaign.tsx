@@ -531,6 +531,7 @@ const Index = () => {
         } else throw error;
         return;
       }
+      await persistSignals(data.id);
       toast({ title: "Campaign created! Let's keep going." });
       nav(`/campaign/${data.id}`);
     } catch (e: any) {
