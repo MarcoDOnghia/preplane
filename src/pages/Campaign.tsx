@@ -725,6 +725,19 @@ function ResearchIntelligencePanel({ campaignId }: { campaignId: string }) {
               )}
             </div>
           ))}
+          {/* Locked founder LinkedIn row */}
+          <div
+            className="rounded-lg p-3 space-y-1.5 opacity-40 cursor-not-allowed"
+            style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.04)' }}
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-sm">🔒</span>
+              <Badge variant="outline" className="text-[10px] uppercase tracking-wider bg-purple-500/15 text-purple-400 border-purple-500/20">
+                founder linkedin
+              </Badge>
+            </div>
+            <p className="text-[13px] text-[#CBD5E1] leading-relaxed">Founder LinkedIn activity — coming soon</p>
+          </div>
         </div>
       )}
     </div>
