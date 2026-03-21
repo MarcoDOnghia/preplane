@@ -76,6 +76,7 @@ const Index = () => {
   const [setupJd, setSetupJd] = useState(searchParams.get("jd") || "");
   const [proofBrief, setProofBrief] = useState<any>(null);
   const [generatingBrief, setGeneratingBrief] = useState(false);
+  const [draftCampaignId, setDraftCampaignId] = useState<string | null>(null);
   const [jdExtractingUrl, setJdExtractingUrl] = useState(false);
 
   const [setupIntel, setSetupIntel] = useState("");
