@@ -8,9 +8,10 @@ function parseSignals(text: string): { type: string; text: string }[] {
   const signals: { type: string; text: string }[] = [];
   const sections = [
     { key: "WHAT THEY DO", type: "company" },
-    { key: "RECENT NEWS", type: "funding" },
+    { key: "RECENT NEWS", type: "news" },
     { key: "OPEN ROLES", type: "hiring" },
     { key: "CUSTOMER SIGNALS", type: "customer" },
+    { key: "FOUNDER ACTIVITY", type: "founder_linkedin" },
     { key: "BEST POW ANGLE", type: "pow_angle" },
   ];
   for (const section of sections) {
