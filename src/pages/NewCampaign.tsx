@@ -1548,7 +1548,7 @@ const Index = () => {
                                 </span>
                               </div>
                               <p style={{ fontSize: "13px", color: "hsl(var(--muted-foreground))", lineHeight: 1.5, margin: 0, whiteSpace: "pre-line" }}>
-                                {signal.text}
+                                {signal.text.replace(/^[\s*]+|[\s*]+$/g, '').replace(/\*\*/g, '').replace(/\*/g, '')}
                               </p>
                             </div>
                           );
