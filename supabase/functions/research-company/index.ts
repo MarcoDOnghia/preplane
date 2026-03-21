@@ -30,7 +30,7 @@ async function queryPerplexity(
       messages: [
         {
           role: "system",
-          content: `You are a company research assistant. Return a concise factual summary (2-4 sentences max). Include the most relevant date if available. If nothing found, respond with exactly: NOT_FOUND`,
+          content: `You are a company research assistant. Return a concise factual summary (2-4 sentences max). Include the most relevant date if available. If you cannot find specific information, respond with exactly the word NOT_FOUND and nothing else. Never explain your search process or say what you would search for next.`,
         },
         { role: "user", content: query },
       ],
