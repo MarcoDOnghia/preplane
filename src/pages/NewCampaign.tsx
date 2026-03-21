@@ -1355,6 +1355,7 @@ const Index = () => {
                         setAutoResearchDone(false);
                         setAutoResearchInsights([]);
                         setAutoResearchSuccess(false);
+                        setAutoResearchSignals([]);
                       }
                     }}
                     placeholder="e.g. Sequoia Capital"
