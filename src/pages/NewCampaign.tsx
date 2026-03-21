@@ -1586,7 +1586,8 @@ const Index = () => {
                     {autoResearchDone && autoResearchSuccess && autoResearchSignals.length > 0 && (() => {
                       const visibleSignals = autoResearchSignals
                         .filter(s => s.type !== "pow_angle")
-                        .filter(s => !s.text.startsWith("NOT_FOUND") && !s.text.includes("NOT_FOUND"));
+                        .filter(s => !s.text.startsWith("NOT_FOUND") && !s.text.includes("NOT_FOUND"))
+                        .filter(s => !s.text.includes("Let me search") && !s.text.includes("Based on the search results") && !s.text.includes("Now let me"));
                       return (
                       <div style={{ marginTop: "12px", display: "grid", gap: "8px" }}>
                         {visibleSignals.length === 0 ? (
