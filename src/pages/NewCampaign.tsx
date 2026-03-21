@@ -1583,39 +1583,51 @@ const Index = () => {
                     )}
 
                     {/* Signal cards */}
-                    {autoResearchDone && autoResearchSuccess && autoResearchSignals.length > 0 && (
+                    {autoResearchDone && autoResearchSuccess && autoResearchSignals.length > 0 && (() => {
+                      const visibleSignals = autoResearchSignals
+                        .filter(s => s.type !== "pow_angle")
+                        .filter(s => !s.text.startsWith("NOT_FOUND") && !s.text.includes("NOT_FOUND"));
+                      return (
                       <div style={{ marginTop: "12px", display: "grid", gap: "8px" }}>
-                        {autoResearchSignals.filter(s => s.type !== "pow_angle").map((signal, i) => {
-                          const config: Record<string, { emoji: string; label: string }> = {
-                            company: { emoji: "🏢", label: "What They Do" },
-                            news: { emoji: "📰", label: "Recent News" },
-                            hiring: { emoji: "👔", label: "Open Roles" },
-                            customer: { emoji: "⭐", label: "Customer Signals" },
-                            founder_linkedin: { emoji: "👤", label: "Founder Activity" },
-                          };
-                          const c = config[signal.type] || { emoji: "📌", label: signal.type };
-                          return (
-                            <div
-                              key={i}
-                              style={{
-                                background: "hsl(var(--card))",
-                                border: "1px solid hsl(var(--border))",
-                                borderRadius: "8px",
-                                padding: "12px 14px",
-                              }}
-                            >
-                              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
-                                <span style={{ fontSize: "14px" }}>{c.emoji}</span>
-                                <span style={{ fontSize: "12px", fontWeight: 600, color: "hsl(var(--foreground))", textTransform: "uppercase", letterSpacing: "0.03em" }}>
-                                  {c.label}
-                                </span>
+                        {visibleSignals.length === 0 ? (
+                          <p style={{ fontSize: "13px", color: "hsl(var(--muted-foreground))", fontStyle: "italic", padding: "12px 14px" }}>
+                            We found limited public data on this company — add your own context below.
+                          </p>
+                        ) : (
+                          visibleSignals.map((signal, i) => {
+                            const config: Record<string, { emoji: string; label: string }> = {
+                              company: { emoji: "🏢", label: "What They Do" },
+                              news: { emoji: "📰", label: "Recent News" },
+                              hiring: { emoji: "👔", label: "Open Roles" },
+                              customer: { emoji: "⭐", label: "Customer Signals" },
+                              founder_linkedin: { emoji: "👤", label: "Founder Activity" },
+                              founder_press: { emoji: "🎙️", label: "Founder Press" },
+                              social_updates: { emoji: "📢", label: "Social Updates" },
+                            };
+                            const c = config[signal.type] || { emoji: "📌", label: signal.type };
+                            return (
+                              <div
+                                key={i}
+                                style={{
+                                  background: "hsl(var(--card))",
+                                  border: "1px solid hsl(var(--border))",
+                                  borderRadius: "8px",
+                                  padding: "12px 14px",
+                                }}
+                              >
+                                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+                                  <span style={{ fontSize: "14px" }}>{c.emoji}</span>
+                                  <span style={{ fontSize: "12px", fontWeight: 600, color: "hsl(var(--foreground))", textTransform: "uppercase", letterSpacing: "0.03em" }}>
+                                    {c.label}
+                                  </span>
+                                </div>
+                                <p style={{ fontSize: "13px", color: "hsl(var(--muted-foreground))", lineHeight: 1.5, margin: 0, whiteSpace: "pre-line" }}>
+                                  {signal.text.replace(/^[\s*]+|[\s*]+$/g, '').replace(/\*\*/g, '').replace(/\*/g, '')}
+                                </p>
                               </div>
-                              <p style={{ fontSize: "13px", color: "hsl(var(--muted-foreground))", lineHeight: 1.5, margin: 0, whiteSpace: "pre-line" }}>
-                                {signal.text.replace(/^[\s*]+|[\s*]+$/g, '').replace(/\*\*/g, '').replace(/\*/g, '')}
-                              </p>
-                            </div>
-                          );
-                        })}
+                            );
+                          })
+                        )}
                         {/* PoW Angle card — always last */}
                         {(() => {
                           const powSignal = autoResearchSignals.find(s => s.type === "pow_angle");
@@ -1644,7 +1656,8 @@ const Index = () => {
                           );
                         })()}
                       </div>
-                    )}
+                      );
+                    })()}
                   </div>
 
                   {/* B) Manual notes section */}
