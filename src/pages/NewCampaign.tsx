@@ -310,7 +310,7 @@ const Index = () => {
       }
 
       // Process Perplexity research (new flow)
-      let perplexitySignals: { type: string; text: string; source_url?: string; date?: string }[] = [];
+      let perplexitySignals: { type: string; text: string; source_url?: string; date?: string; signal_type?: string }[] = [];
       if (perplexityRes.status === "fulfilled" && perplexityRes.value.ok) {
         const data = await perplexityRes.value.json();
         if (!data.error && Array.isArray(data.signals)) {
