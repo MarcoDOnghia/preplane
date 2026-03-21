@@ -624,6 +624,97 @@ const Campaign = () => {
 };
 
 // ==================== STEP 1: Generate PoW Brief ====================
+interface SignalRow {
+  id: string;
+  signal_type: string;
+  text: string;
+  source_url: string | null;
+  date: string | null;
+}
+
+function getDomain(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+}
+
+const SIGNAL_COLORS: Record<string, string> = {
+  news: "bg-blue-500/15 text-blue-400 border-blue-500/20",
+  hiring: "bg-green-500/15 text-green-400 border-green-500/20",
+  customer: "bg-yellow-500/15 text-yellow-400 border-yellow-500/20",
+  product_hunt: "bg-orange-500/15 text-orange-400 border-orange-500/20",
+  founder_linkedin: "bg-purple-500/15 text-purple-400 border-purple-500/20",
+};
+
+function ResearchIntelligencePanel({ campaignId }: { campaignId: string }) {
+  const [signals, setSignals] = useState<SignalRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchSignals = async () => {
+      setLoading(true);
+      const { data } = await supabase
+        .from("campaign_signals")
+        .select("id, signal_type, text, source_url, date")
+        .eq("campaign_id", campaignId)
+        .neq("text", "");
+      setSignals((data as SignalRow[] | null) || []);
+      setLoading(false);
+    };
+    fetchSignals();
+  }, [campaignId]);
+
+  if (loading || signals.length === 0) return null;
+
+  return (
+    <div style={{ backgroundColor: '#242424', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px' }}>
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-5 py-4 text-left"
+      >
+        <span className="text-sm font-semibold text-white flex items-center gap-2">
+          <Target className="h-4 w-4 text-[#F97416]" />
+          Research Intelligence
+          <span className="text-xs font-normal text-[#64748B]">({signals.length} signals)</span>
+        </span>
+        <span className="text-[#64748B] text-xs">{open ? "Hide ▲" : "Show ▼"}</span>
+      </button>
+      {open && (
+        <div className="px-5 pb-5 space-y-3">
+          {signals.map((s) => (
+            <div
+              key={s.id}
+              className="rounded-lg p-3 space-y-1.5"
+              style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.04)' }}
+            >
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className={`text-[10px] uppercase tracking-wider ${SIGNAL_COLORS[s.signal_type] || "bg-white/10 text-white/60 border-white/10"}`}>
+                  {s.signal_type.replace(/_/g, " ")}
+                </Badge>
+                {s.date && <span className="text-[11px] text-[#64748B]">{s.date}</span>}
+              </div>
+              <p className="text-[13px] text-[#CBD5E1] leading-relaxed">{s.text}</p>
+              {s.source_url && (
+                <a
+                  href={s.source_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-[11px] text-[#F97416] hover:underline"
+                >
+                  {getDomain(s.source_url)} ↗
+                </a>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Step1Content({ campaign, proofSuggestion, generating, generateContent, toast, updateCampaign }: any) {
   let parsed: any = null;
   try { parsed = JSON.parse(proofSuggestion || ""); } catch {}
@@ -656,6 +747,8 @@ function Step1Content({ campaign, proofSuggestion, generating, generateContent, 
       ) : proofSuggestion ? (
         <PowBriefDisplay proofSuggestion={proofSuggestion} toast={toast} />
       ) : null}
+
+      <ResearchIntelligencePanel campaignId={campaign.id} />
     </div>
   );
 }
