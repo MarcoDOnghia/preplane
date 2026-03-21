@@ -510,32 +510,17 @@ const Index = () => {
   };
 
   const handleStartBuilding = async () => {
-    if (!user) return;
+    if (!user || !draftCampaignId) return;
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("campaigns")
-        .insert({
-          user_id: user.id,
-          company: setupCompany.trim() || "General",
-          role: setupRole.trim(),
-          jd_text: setupJd.trim() || "",
+        .update({
           proof_suggestion: JSON.stringify(proofBrief),
           proof_in_progress: true,
           status: "targeting",
         } as any)
-        .select("id")
-        .single();
-      if (error) {
-        if (error.message?.includes("10 active campaigns")) {
-          toast({
-            title: "Campaign limit reached",
-            description: "Complete or archive one first.",
-            variant: "destructive",
-          });
-        } else throw error;
-        return;
-      }
-      await persistSignals(data.id);
+        .eq("id", draftCampaignId);
+      if (error) throw error;
       toast({ title: "Campaign created! Start building your proof of work." });
       nav("/app");
     } catch (e: any) {
@@ -544,34 +529,19 @@ const Index = () => {
   };
 
   const handleContinueCampaign = async () => {
-    if (!user) return;
+    if (!user || !draftCampaignId) return;
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("campaigns")
-        .insert({
-          user_id: user.id,
-          company: setupCompany.trim() || "General",
-          role: setupRole.trim(),
-          jd_text: setupJd.trim() || "",
+        .update({
           proof_suggestion: JSON.stringify(proofBrief),
           proof_in_progress: true,
           status: "targeting",
         } as any)
-        .select("id")
-        .single();
-      if (error) {
-        if (error.message?.includes("10 active campaigns")) {
-          toast({
-            title: "Campaign limit reached",
-            description: "Complete or archive one first.",
-            variant: "destructive",
-          });
-        } else throw error;
-        return;
-      }
-      await persistSignals(data.id);
+        .eq("id", draftCampaignId);
+      if (error) throw error;
       toast({ title: "Campaign created! Let's keep going." });
-      nav(`/campaign/${data.id}`);
+      nav(`/campaign/${draftCampaignId}`);
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
     }
