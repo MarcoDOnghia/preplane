@@ -304,8 +304,8 @@ const Index = () => {
       const research = data.research || "";
       if (!research) throw new Error("No research returned");
 
-      // Populate textarea and open manual section
       setManualNotes(research);
+      setAutoResearchSignals(data.signals || []);
       setShowManualSection(true);
       setAutoResearchDone(true);
       setAutoResearchSuccess(true);
