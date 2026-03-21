@@ -661,7 +661,23 @@ function ResearchIntelligencePanel({ campaignId }: { campaignId: string }) {
         .select("id, signal_type, text, source_url, date")
         .eq("campaign_id", campaignId)
         .neq("text", "");
-      setSignals((data as SignalRow[] | null) || []);
+      const raw = (data as SignalRow[] | null) || [];
+
+      // Filter: NOT_FOUND, garbage founder_linkedin
+      const cleaned = raw
+        .filter(s => !s.text.startsWith("NOT_FOUND") && !s.text.match(/^\S*NOT_FOUND/))
+        .filter(s => !(s.signal_type === "founder_linkedin" && (s.text.length < 50 || s.text.startsWith(".") || s.text.includes("Based on my research"))));
+
+      // Deduplicate by signal_type: prefer one with source_url
+      const seen = new Map<string, SignalRow>();
+      for (const s of cleaned) {
+        const existing = seen.get(s.signal_type);
+        if (!existing || (!existing.source_url && s.source_url)) {
+          seen.set(s.signal_type, s);
+        }
+      }
+
+      setSignals(Array.from(seen.values()));
       setLoading(false);
     };
     fetchSignals();
