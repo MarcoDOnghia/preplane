@@ -24,7 +24,7 @@ function parseSignals(text: string): { type: string; text: string }[] {
       .filter(i => i > idx)
       .sort((a, b) => a - b)[0];
     const raw = nextIdx ? text.slice(idx + section.key.length, nextIdx) : afterHeader;
-    const content = raw.trim();
+    const content = raw.replace(/\*\*/g, '').replace(/^[\s:–\-]+/, '').trim();
     if (content && content.toLowerCase() !== "not found") {
       signals.push({ type: section.type, text: content });
     }
