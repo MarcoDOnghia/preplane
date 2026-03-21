@@ -1656,7 +1656,8 @@ const Index = () => {
                           );
                         })()}
                       </div>
-                    )}
+                      );
+                    })()}
                   </div>
 
                   {/* B) Manual notes section */}
