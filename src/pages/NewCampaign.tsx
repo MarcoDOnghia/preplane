@@ -1522,13 +1522,13 @@ const Index = () => {
                     {/* Signal cards */}
                     {autoResearchDone && autoResearchSuccess && autoResearchSignals.length > 0 && (
                       <div style={{ marginTop: "12px", display: "grid", gap: "8px" }}>
-                        {autoResearchSignals.map((signal, i) => {
+                        {autoResearchSignals.filter(s => s.type !== "pow_angle").map((signal, i) => {
                           const config: Record<string, { emoji: string; label: string }> = {
                             company: { emoji: "🏢", label: "What They Do" },
-                            funding: { emoji: "💰", label: "Recent News" },
+                            news: { emoji: "📰", label: "Recent News" },
                             hiring: { emoji: "👔", label: "Open Roles" },
                             customer: { emoji: "⭐", label: "Customer Signals" },
-                            pow_angle: { emoji: "🎯", label: "Best PoW Angle" },
+                            founder_linkedin: { emoji: "👤", label: "Founder Activity" },
                           };
                           const c = config[signal.type] || { emoji: "📌", label: signal.type };
                           return (
@@ -1553,6 +1553,33 @@ const Index = () => {
                             </div>
                           );
                         })}
+                        {/* PoW Angle card — always last */}
+                        {(() => {
+                          const powSignal = autoResearchSignals.find(s => s.type === "pow_angle");
+                          return (
+                            <div
+                              style={{
+                                background: powSignal ? "hsl(var(--card))" : "hsl(var(--muted))",
+                                border: powSignal ? "1.5px solid hsl(270 60% 50%)" : "1px solid hsl(var(--border))",
+                                borderRadius: "8px",
+                                padding: "12px 14px",
+                                opacity: powSignal ? 1 : 0.6,
+                              }}
+                            >
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+                                <span style={{ fontSize: "14px" }}>🎯</span>
+                                <span style={{ fontSize: "12px", fontWeight: 600, color: powSignal ? "hsl(270 60% 60%)" : "hsl(var(--muted-foreground))", textTransform: "uppercase", letterSpacing: "0.03em" }}>
+                                  Your Proof of Work Angle
+                                </span>
+                              </div>
+                              <p style={{ fontSize: "13px", color: powSignal ? "hsl(var(--muted-foreground))" : "hsl(var(--muted-foreground))", lineHeight: 1.5, margin: 0, whiteSpace: "pre-line", fontStyle: powSignal ? "normal" : "italic" }}>
+                                {powSignal
+                                  ? powSignal.text.replace(/^[\s*]+|[\s*]+$/g, '').replace(/\*\*/g, '').replace(/\*/g, '')
+                                  : "Angle generating… check back in a moment."}
+                              </p>
+                            </div>
+                          );
+                        })()}
                       </div>
                     )}
                   </div>
