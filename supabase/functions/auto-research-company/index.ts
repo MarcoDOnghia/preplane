@@ -8,9 +8,10 @@ function parseSignals(text: string): { type: string; text: string }[] {
   const signals: { type: string; text: string }[] = [];
   const sections = [
     { key: "WHAT THEY DO", type: "company" },
-    { key: "RECENT NEWS", type: "funding" },
+    { key: "RECENT NEWS", type: "news" },
     { key: "OPEN ROLES", type: "hiring" },
     { key: "CUSTOMER SIGNALS", type: "customer" },
+    { key: "FOUNDER ACTIVITY", type: "founder_linkedin" },
     { key: "BEST POW ANGLE", type: "pow_angle" },
   ];
   for (const section of sections) {
@@ -23,7 +24,7 @@ function parseSignals(text: string): { type: string; text: string }[] {
       .filter(i => i > idx)
       .sort((a, b) => a - b)[0];
     const raw = nextIdx ? text.slice(idx + section.key.length, nextIdx) : afterHeader;
-    const content = raw.trim();
+    const content = raw.replace(/\*\*/g, '').replace(/^[\s:–\-]+/, '').trim();
     if (content && content.toLowerCase() !== "not found") {
       signals.push({ type: section.type, text: content });
     }
@@ -71,6 +72,9 @@ OPEN ROLES
 
 CUSTOMER SIGNALS
 [Complaints or praise from G2, Trustpilot, app reviews. If none: Not found.]
+
+FOUNDER ACTIVITY
+[Recent LinkedIn posts or public statements from the founder about challenges, hires, or strategy. If none: Not found.]
 
 BEST POW ANGLE
 [One specific proof of work idea for a ${role || "general"} role.]`,
