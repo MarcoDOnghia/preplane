@@ -69,18 +69,23 @@ serve(async (req) => {
 Return in this EXACT format with these EXACT headers:
 
 WHAT THEY DO
+
 [2-3 sentences on what they do and who their customers are]
 
 RECENT NEWS
+
 [Most recent funding round or company news with date. Last 90 days only. If none: Not found.]
 
 OPEN ROLES
+
 [List open roles related to ${roleLabel}. Include exact job title and one key requirement. If none: Not found.]
 
 CUSTOMER SIGNALS
+
 [Specific complaints or praise from G2, Trustpilot, or app reviews. Quote directly if possible. If none: Not found.]
 
 FOUNDER ACTIVITY
+
 [What the founder has posted about on LinkedIn in the last 30 days. What problems are they publicly wrestling with? If none: Not found.]`,
         messages: [{
           role: "user",
