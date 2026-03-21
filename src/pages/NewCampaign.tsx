@@ -235,8 +235,10 @@ const Index = () => {
 
   const AUTO_RESEARCH_STEPS = [
     "Searching recent news...",
-    "Finding company positioning...",
-    "Researching market context...",
+    "Finding job listings...",
+    "Checking customer reviews...",
+    "Researching Product Hunt...",
+    "Scanning founder activity...",
     "Building your research notes...",
   ];
 
