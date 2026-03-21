@@ -73,6 +73,9 @@ OPEN ROLES
 CUSTOMER SIGNALS
 [Complaints or praise from G2, Trustpilot, app reviews. If none: Not found.]
 
+FOUNDER ACTIVITY
+[Recent LinkedIn posts or public statements from the founder about challenges, hires, or strategy. If none: Not found.]
+
 BEST POW ANGLE
 [One specific proof of work idea for a ${role || "general"} role.]`,
         messages: [{
