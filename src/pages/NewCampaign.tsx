@@ -455,6 +455,8 @@ const Index = () => {
     try {
       const rows = autoResearchSignals
         .filter(s => s.type !== "pow_angle")
+        .filter(s => !s.text.startsWith("NOT_FOUND") && !s.text.match(/^\S*NOT_FOUND/))
+        .filter(s => !(s.type === "founder_linkedin" && (s.text.length < 50 || s.text.startsWith(".") || s.text.includes("Based on my research"))))
         .map(s => ({
           campaign_id: campaignId,
           user_id: user.id,
