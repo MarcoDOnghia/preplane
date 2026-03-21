@@ -61,7 +61,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "claude-3-5-sonnet-20241022",
+        model: "claude-sonnet-4-5-20250929",
         max_tokens: 2000,
         tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 8 }],
         system: `You are a research assistant for Preplane. Research the company using web search. Only include information from the last 90 days where relevant. Never invent facts. If not found write "Not found".
