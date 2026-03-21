@@ -1668,7 +1668,8 @@ const Index = () => {
                     })()}
                   </div>
 
-                  {/* B) Manual notes section */}
+                  {/* B) Manual notes section — only show when research returned < 2 valid signals */}
+                  {autoResearchDone && autoResearchSignals.filter(s => s.text.length > 50 && !s.text.startsWith("NOT_FOUND")).length < 2 && (
                   <div style={{ marginTop: "20px", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "16px" }}>
                     <button
                       type="button"
@@ -1696,24 +1697,6 @@ const Index = () => {
                         <p style={{ color: "#64748B", fontSize: "12px", lineHeight: 1.6 }}>
                           If you already have context, paste it — we'll turn it into your PoW brief.
                         </p>
-                        <div style={{ marginBottom: "8px" }}>
-                          <p style={{ color: "#94A3B8", fontSize: "12px", fontWeight: 600, marginBottom: "6px" }}>
-                            Where to look:
-                          </p>
-                          <div className="space-y-1">
-                            {[
-                              "Founder LinkedIn posts",
-                              "Google company name + recent news",
-                              "Job listings on LinkedIn",
-                              "G2 or Trustpilot reviews",
-                              "Their website copy",
-                            ].map((tip) => (
-                              <p key={tip} style={{ color: "#64748B", fontSize: "12px", lineHeight: 1.5 }}>
-                                → {tip}
-                              </p>
-                            ))}
-                          </div>
-                        </div>
                         <textarea
                           value={manualNotes}
                           onChange={(e) => setManualNotes(e.target.value)}
@@ -1767,6 +1750,7 @@ const Index = () => {
                       </div>
                     )}
                   </div>
+                  )}
                 </div>
 
                 {/* Status nudge */}
