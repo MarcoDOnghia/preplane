@@ -161,7 +161,7 @@ const Index = () => {
 
 
 
-  const activeCampaigns = campaigns.filter((c) => !c.archived);
+  const activeCampaigns = campaigns.filter((c) => !c.archived && c.status !== "draft");
   const archivedCampaigns = campaigns.filter((c) => c.archived);
 
   const focusCampaign = activeCampaigns

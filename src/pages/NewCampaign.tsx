@@ -76,6 +76,7 @@ const Index = () => {
   const [setupJd, setSetupJd] = useState(searchParams.get("jd") || "");
   const [proofBrief, setProofBrief] = useState<any>(null);
   const [generatingBrief, setGeneratingBrief] = useState(false);
+  const [draftCampaignId, setDraftCampaignId] = useState<string | null>(null);
   const [jdExtractingUrl, setJdExtractingUrl] = useState(false);
 
   const [setupIntel, setSetupIntel] = useState("");
@@ -356,7 +357,7 @@ const Index = () => {
   const selectedInsightsCount = autoResearchInsights.filter((i) => i.selected).length;
   const hasResearchContent = selectedInsightsCount > 0 || manualNotes.trim().length > 0;
 
-  const handleBuildBriefClick = () => {
+  const handleBuildBriefClick = async () => {
     if (!setupRole.trim()) {
       toast({ title: "Please enter a target role", variant: "destructive" });
       return;
@@ -370,6 +371,41 @@ const Index = () => {
       toast({ title: "Run auto-research or add some notes first.", variant: "destructive" });
       return;
     }
+    if (!user) return;
+
+    // Create campaign as draft immediately (if not already created)
+    let campaignId = draftCampaignId;
+    if (!campaignId) {
+      try {
+        const { data, error } = await supabase
+          .from("campaigns")
+          .insert({
+            user_id: user.id,
+            company: setupCompany.trim() || "General",
+            role: setupRole.trim(),
+            jd_text: setupJd.trim() || "",
+            status: "draft",
+            proof_in_progress: false,
+          } as any)
+          .select("id")
+          .single();
+        if (error) {
+          if (error.message?.includes("10 active campaigns")) {
+            toast({ title: "Campaign limit reached", description: "Complete or archive one first.", variant: "destructive" });
+          } else {
+            toast({ title: "Error", description: error.message, variant: "destructive" });
+          }
+          return;
+        }
+        campaignId = data.id;
+        setDraftCampaignId(campaignId);
+        await persistSignals(campaignId);
+      } catch (e: any) {
+        toast({ title: "Error", description: e.message, variant: "destructive" });
+        return;
+      }
+    }
+
     // Only pass signals with a valid source_url to the brief generator
     const selectedTexts = autoResearchInsights.filter((i) => i.selected).map((i) => `[${i.source}] ${i.text}`);
     const sourcedSignals = autoResearchSignals.filter(s => s.source_url);
@@ -474,32 +510,17 @@ const Index = () => {
   };
 
   const handleStartBuilding = async () => {
-    if (!user) return;
+    if (!user || !draftCampaignId) return;
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("campaigns")
-        .insert({
-          user_id: user.id,
-          company: setupCompany.trim() || "General",
-          role: setupRole.trim(),
-          jd_text: setupJd.trim() || "",
+        .update({
           proof_suggestion: JSON.stringify(proofBrief),
           proof_in_progress: true,
           status: "targeting",
         } as any)
-        .select("id")
-        .single();
-      if (error) {
-        if (error.message?.includes("10 active campaigns")) {
-          toast({
-            title: "Campaign limit reached",
-            description: "Complete or archive one first.",
-            variant: "destructive",
-          });
-        } else throw error;
-        return;
-      }
-      await persistSignals(data.id);
+        .eq("id", draftCampaignId);
+      if (error) throw error;
       toast({ title: "Campaign created! Start building your proof of work." });
       nav("/app");
     } catch (e: any) {
@@ -508,34 +529,19 @@ const Index = () => {
   };
 
   const handleContinueCampaign = async () => {
-    if (!user) return;
+    if (!user || !draftCampaignId) return;
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("campaigns")
-        .insert({
-          user_id: user.id,
-          company: setupCompany.trim() || "General",
-          role: setupRole.trim(),
-          jd_text: setupJd.trim() || "",
+        .update({
           proof_suggestion: JSON.stringify(proofBrief),
           proof_in_progress: true,
           status: "targeting",
         } as any)
-        .select("id")
-        .single();
-      if (error) {
-        if (error.message?.includes("10 active campaigns")) {
-          toast({
-            title: "Campaign limit reached",
-            description: "Complete or archive one first.",
-            variant: "destructive",
-          });
-        } else throw error;
-        return;
-      }
-      await persistSignals(data.id);
+        .eq("id", draftCampaignId);
+      if (error) throw error;
       toast({ title: "Campaign created! Let's keep going." });
-      nav(`/campaign/${data.id}`);
+      nav(`/campaign/${draftCampaignId}`);
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
     }
