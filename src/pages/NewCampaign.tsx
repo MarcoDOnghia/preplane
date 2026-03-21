@@ -306,7 +306,7 @@ const Index = () => {
 
       setManualNotes(research);
       setAutoResearchSignals(data.signals || []);
-      setShowManualSection(true);
+      setShowManualSection((data.signals || []).length === 0);
       setAutoResearchDone(true);
       setAutoResearchSuccess(true);
     } catch (e: any) {
