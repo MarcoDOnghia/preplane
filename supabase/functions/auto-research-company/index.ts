@@ -7,6 +7,8 @@ const corsHeaders = {
 
 function parseSignals(text: string): { type: string; text: string }[] {
   const signals: { type: string; text: string }[] = [];
+  // Strip sentinel marker so it doesn't bleed into last section
+  const cleaned = text.replace(/END_OF_RESEARCH[\s\S]*$/, '').trim();
   const sections = [
     { key: "WHAT THEY DO", type: "company" },
     { key: "RECENT NEWS", type: "news" },
@@ -15,15 +17,15 @@ function parseSignals(text: string): { type: string; text: string }[] {
     { key: "FOUNDER ACTIVITY", type: "founder_linkedin" },
   ];
   for (const section of sections) {
-    const upper = text.toUpperCase();
+    const upper = cleaned.toUpperCase();
     const idx = upper.indexOf(section.key);
     if (idx === -1) continue;
-    const afterHeader = text.slice(idx + section.key.length);
+    const afterHeader = cleaned.slice(idx + section.key.length);
     const nextIdx = sections
       .map(s => upper.indexOf(s.key, idx + section.key.length))
       .filter(i => i > idx)
       .sort((a, b) => a - b)[0];
-    const raw = nextIdx ? text.slice(idx + section.key.length, nextIdx) : afterHeader;
+    const raw = nextIdx ? cleaned.slice(idx + section.key.length, nextIdx) : afterHeader;
     const content = raw
       .replace(/\*\*/g, '')
       .replace(/^[\s:–\-\n]+/, '')
@@ -66,7 +68,7 @@ serve(async (req) => {
         tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 8 }],
         system: `You are a research assistant for Preplane. Research the company using web search. Only include information from the last 90 days where relevant. Never invent facts. If not found write "Not found".
 
-Return in this EXACT format with these EXACT headers:
+Return in this EXACT format with these EXACT headers. End your response with the line END_OF_RESEARCH.
 
 WHAT THEY DO
 
@@ -86,7 +88,9 @@ CUSTOMER SIGNALS
 
 FOUNDER ACTIVITY
 
-[What the founder has posted about on LinkedIn in the last 30 days. What problems are they publicly wrestling with? If none: Not found.]`,
+[What the founder has posted about on LinkedIn in the last 30 days. What problems are they publicly wrestling with? If none: Not found.]
+
+END_OF_RESEARCH`,
         messages: [{
           role: "user",
           content: `Research "${company.trim()}" for a student applying for a ${roleLabel} internship.`,
@@ -132,32 +136,39 @@ FOUNDER ACTIVITY
     // Step 6 — Tension synthesis (only if enough signal)
     let pow_angle: string | null = null;
     if (confidence >= 0.4) {
-      const synthResponse = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "x-api-key": ANTHROPIC_API_KEY,
-          "anthropic-version": "2023-06-01",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-5-20250929",
-          max_tokens: 500,
-          system: `You are given research signals about a company. Find the tension: the gap between what the company claims and what customers or the founder's own words reveal. Then produce ONE specific proof of work a student can build in 48 hours for a ${roleLabel} internship that addresses that tension directly. Be ruthlessly specific: name exactly what to build, what free tool to use, and why it matters to this company right now. If signals are too thin, return exactly: LOW_SIGNAL`,
-          messages: [{
-            role: "user",
-            content: JSON.stringify(signals),
-          }],
-        }),
-      });
+      try {
+        const synthResponse = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: {
+            "x-api-key": ANTHROPIC_API_KEY,
+            "anthropic-version": "2023-06-01",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "claude-sonnet-4-5-20250929",
+            max_tokens: 500,
+            system: `You are given research signals about a company. Find the tension: the gap between what the company claims and what customers or the founder's own words reveal. Then produce ONE specific proof of work a student can build in 48 hours for a ${roleLabel} internship that addresses that tension directly. Be ruthlessly specific: name exactly what to build, what free tool to use, and why it matters to this company right now. If signals are too thin, return exactly: LOW_SIGNAL`,
+            messages: [{
+              role: "user",
+              content: JSON.stringify(signals),
+            }],
+          }),
+        });
 
-      if (synthResponse.ok) {
-        const synthData = await synthResponse.json();
-        const synthText = synthData.content
-          ?.filter((b: any) => b.type === "text")
-          .map((b: any) => b.text)
-          .join("\n")
-          .trim() || "";
-        pow_angle = synthText === "LOW_SIGNAL" ? null : synthText || null;
+        if (synthResponse.ok) {
+          const synthData = await synthResponse.json();
+          const synthText = synthData.content
+            ?.filter((b: any) => b.type === "text")
+            .map((b: any) => b.text)
+            .join("\n")
+            .trim() || "";
+          pow_angle = synthText === "LOW_SIGNAL" ? null : synthText || null;
+        } else {
+          const errBody = await synthResponse.text();
+          console.error("Synthesis call failed:", synthResponse.status, errBody);
+        }
+      } catch (synthErr) {
+        console.error("Synthesis call error:", synthErr);
       }
     }
 
