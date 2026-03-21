@@ -25,5 +25,7 @@ project_id = "mracpuniwyrymqdkthml"
     verify_jwt = true
   [functions.suggest-companies]
     verify_jwt = false
+  [functions.research-company]
+    verify_jwt = false
   [functions.tailor-cv]
     verify_jwt = false

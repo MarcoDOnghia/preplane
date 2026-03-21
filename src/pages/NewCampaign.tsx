@@ -95,7 +95,7 @@ const Index = () => {
   const [showManualSection, setShowManualSection] = useState(false);
   const [companyError, setCompanyError] = useState("");
   const [autoResearchSuccess, setAutoResearchSuccess] = useState(false);
-  const [autoResearchSignals, setAutoResearchSignals] = useState<{ type: string; text: string }[]>([]);
+  const [autoResearchSignals, setAutoResearchSignals] = useState<{ type: string; text: string; source_url?: string | null; date?: string | null }[]>([]);
 
   // Check onboarding status and save any pending target from onboarding
   useEffect(() => {
@@ -235,8 +235,10 @@ const Index = () => {
 
   const AUTO_RESEARCH_STEPS = [
     "Searching recent news...",
-    "Finding company positioning...",
-    "Researching market context...",
+    "Finding job listings...",
+    "Checking customer reviews...",
+    "Researching Product Hunt...",
+    "Scanning founder activity...",
     "Building your research notes...",
   ];
 
@@ -272,41 +274,73 @@ const Index = () => {
     })();
 
     try {
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/auto-research-company`;
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-        },
-        body: JSON.stringify({
-          company: setupCompany.trim(),
-          role: setupRole.trim(),
-        }),
+      // Call both research functions in parallel
+      const baseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const headers = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+      };
+      const body = JSON.stringify({
+        company: setupCompany.trim(),
+        role: setupRole.trim(),
       });
+
+      const [claudeRes, perplexityRes] = await Promise.allSettled([
+        fetch(`${baseUrl}/functions/v1/auto-research-company`, {
+          method: "POST", headers, body,
+        }),
+        fetch(`${baseUrl}/functions/v1/research-company`, {
+          method: "POST", headers, body,
+        }),
+      ]);
 
       // Wait for step animation to finish
       await stepPromise;
 
-      if (!response.ok) {
-        if (response.status === 429) {
-          toast({ title: "Daily research limit reached. Try again tomorrow.", variant: "destructive" });
-          setAutoResearching(false);
-          return;
+      // Process Claude research (existing flow)
+      let claudeSignals: { type: string; text: string }[] = [];
+      let research = "";
+      if (claudeRes.status === "fulfilled" && claudeRes.value.ok) {
+        const data = await claudeRes.value.json();
+        if (!data.error) {
+          research = data.research || "";
+          claudeSignals = data.signals || [];
         }
-        throw new Error("Research failed");
       }
 
-      const data = await response.json();
-      if (data.error) throw new Error(data.error);
+      // Process Perplexity research (new flow)
+      let perplexitySignals: { type: string; text: string; source_url?: string; date?: string; signal_type?: string }[] = [];
+      if (perplexityRes.status === "fulfilled" && perplexityRes.value.ok) {
+        const data = await perplexityRes.value.json();
+        if (!data.error && Array.isArray(data.signals)) {
+          perplexitySignals = data.signals;
+        }
+      }
 
-      const research = data.research || "";
-      if (!research) throw new Error("No research returned");
+      // Merge: use perplexity signals as primary (they have source_url), supplement with Claude
+      const mergedSignals = [
+        ...perplexitySignals.map(s => ({
+          type: s.signal_type || s.type,
+          text: s.text,
+          source_url: s.source_url || null,
+          date: s.date || null,
+        })),
+        ...claudeSignals.map(s => ({
+          type: s.type,
+          text: s.text,
+          source_url: null as string | null,
+          date: null as string | null,
+        })),
+      ];
+
+      if (mergedSignals.length === 0 && !research) {
+        throw new Error("No research returned");
+      }
 
       setManualNotes(research);
-      setAutoResearchSignals(data.signals || []);
-      setShowManualSection((data.signals || []).length === 0);
+      setAutoResearchSignals(mergedSignals.map(s => ({ type: s.type, text: s.text, source_url: s.source_url, date: s.date })));
+      setShowManualSection(mergedSignals.length === 0);
       setAutoResearchDone(true);
       setAutoResearchSuccess(true);
     } catch (e: any) {
@@ -336,10 +370,11 @@ const Index = () => {
       toast({ title: "Run auto-research or add some notes first.", variant: "destructive" });
       return;
     }
-    // Combine selected insights + auto-research signals + manual notes into setupIntel
+    // Only pass signals with a valid source_url to the brief generator
     const selectedTexts = autoResearchInsights.filter((i) => i.selected).map((i) => `[${i.source}] ${i.text}`);
-    const signalsSummary = autoResearchSignals.length > 0
-      ? autoResearchSignals.map(s => `[${s.type.toUpperCase()}] ${s.text}`).join("\n\n")
+    const sourcedSignals = autoResearchSignals.filter(s => s.source_url);
+    const signalsSummary = sourcedSignals.length > 0
+      ? sourcedSignals.map(s => `[${s.type.toUpperCase()}] ${s.text}${s.source_url ? ` (source: ${s.source_url})` : ""}`).join("\n\n")
       : "";
     const combined = [...selectedTexts, signalsSummary, manualNotes.trim()].filter(Boolean).join("\n\n");
     setSetupIntel(combined);

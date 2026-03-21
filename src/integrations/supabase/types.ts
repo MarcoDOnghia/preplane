@@ -245,6 +245,47 @@ export type Database = {
         }
         Relationships: []
       }
+      campaign_signals: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          date: string | null
+          id: string
+          signal_type: string
+          source_url: string | null
+          text: string
+          user_id: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          date?: string | null
+          id?: string
+          signal_type: string
+          source_url?: string | null
+          text: string
+          user_id: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          date?: string | null
+          id?: string
+          signal_type?: string
+          source_url?: string | null
+          text?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_signals_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaigns: {
         Row: {
           archived: boolean
