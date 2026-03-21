@@ -336,9 +336,12 @@ const Index = () => {
       toast({ title: "Run auto-research or add some notes first.", variant: "destructive" });
       return;
     }
-    // Combine selected insights + manual notes into setupIntel
+    // Combine selected insights + auto-research signals + manual notes into setupIntel
     const selectedTexts = autoResearchInsights.filter((i) => i.selected).map((i) => `[${i.source}] ${i.text}`);
-    const combined = [...selectedTexts, manualNotes.trim()].filter(Boolean).join("\n\n");
+    const signalsSummary = autoResearchSignals.length > 0
+      ? autoResearchSignals.map(s => `[${s.type.toUpperCase()}] ${s.text}`).join("\n\n")
+      : "";
+    const combined = [...selectedTexts, signalsSummary, manualNotes.trim()].filter(Boolean).join("\n\n");
     setSetupIntel(combined);
     generateProofBrief();
   };
