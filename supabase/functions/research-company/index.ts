@@ -48,12 +48,39 @@ async function queryPerplexity(
   const text = data.choices?.[0]?.message?.content?.trim() || "";
   const sourceUrl = data.citations?.[0] || null;
 
-  // Try to extract a date from the response text (YYYY-MM-DD or Month YYYY pattern)
-  const dateMatch = text.match(/(\d{4}-\d{2}-\d{2})/);
-  const date = dateMatch ? dateMatch[1] : null;
+  // Garbage filter: check for bad patterns or extremely short responses
+  const lowerText = text.toLowerCase();
+  const garbagePhrases = [
+    "let me search",
+    "based on my research",
+    "i would search",
+    "i cannot find",
+    "as an ai"
+  ];
+  const isGarbage =
+    text.length < 50 ||
+    garbagePhrases.some((phrase) => lowerText.includes(phrase));
 
-  if (text === "NOT_FOUND" || !text) {
+  if (text === "NOT_FOUND" || !text || isGarbage) {
     return { text: "", source_url: null, date: null, signal_type: signalType };
+  }
+
+  // Improved date extraction: several robust patterns
+  let date: string | null = null;
+  const datePatterns = [
+    /\b(\d{4}-\d{2}-\d{2})\b/,                   // 2021-12-31
+    /\b(\d{4}\/\d{2}\/\d{2})\b/,                 // 2021/12/31
+    /\b([A-Z][a-z]+ \d{4})\b/,                   // December 2023
+    /\b(\d{1,2} [A-Z][a-z]+ \d{4})\b/,           // 31 December 2023
+    /\b([A-Z][a-z]+ \d{1,2}, \d{4})\b/,          // December 31, 2023
+    /\b(\d{4})\b/                                // 2023 (fallback, just year)
+  ];
+  for (const pattern of datePatterns) {
+    const match = text.match(pattern);
+    if (match) {
+      date = match[1];
+      break;
+    }
   }
 
   return { text, source_url: sourceUrl, date, signal_type: signalType };
@@ -134,23 +161,23 @@ serve(async (req) => {
     // 5 sequential queries
     const queries: { query: string; signalType: string }[] = [
       {
-        query: `Search startupitalia.eu, ilsole24ore.com, and corriereinnovazione.corriere.it for any news or funding announcements about "${companyName}" in the last 180 days.`,
+        query: `Search startupitalia.eu, ilsole24ore.com, eu-startups.com, sifted.eu, tech.eu for news or funding about "${companyName}" in last 180 days. Return factual summary with date.`,
         signalType: "news",
       },
       {
-        query: `Search LinkedIn Jobs and Wellfound/AngelList for open ${roleLabel} positions at "${companyName}". Include role titles and key requirements.`,
+        query: `Find open ${roleLabel} positions at "${companyName}" Italy on LinkedIn Jobs and Wellfound. Return role titles and key requirements.`,
         signalType: "hiring",
       },
       {
-        query: `Search Apple App Store and Google Play Store reviews for "${companyName}" app. Include specific user complaints and praise.`,
+        query: `Find reviews about "${companyName}" on G2, Capterra, Trustpilot, Apple App Store, Google Play. Return specific complaints and praise with dates.`,
         signalType: "customer",
       },
       {
-        query: `Search for any interviews, podcast appearances, or press quotes from the founder or CEO of "${companyName}" in the last 90 days.`,
+        query: `Find interviews, podcast appearances, LinkedIn posts or press quotes from founder or CEO of "${companyName}" Italy in last 90 days. Return direct quotes if available.`,
         signalType: "founder_press",
       },
       {
-        query: `Search LinkedIn company page posts and Twitter/X for "${companyName}" announcements or product updates in the last 60 days.`,
+        query: `Find recent product updates, feature launches or announcements from "${companyName}" Italy on LinkedIn, their blog or tech press in last 60 days.`,
         signalType: "social_updates",
       },
     ];
