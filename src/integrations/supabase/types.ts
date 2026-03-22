@@ -748,6 +748,27 @@ export type Database = {
           },
         ]
       }
+      research_usage: {
+        Row: {
+          call_count: number
+          id: string
+          usage_date: string
+          user_id: string
+        }
+        Insert: {
+          call_count?: number
+          id?: string
+          usage_date?: string
+          user_id: string
+        }
+        Update: {
+          call_count?: number
+          id?: string
+          usage_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       role_waitlist: {
         Row: {
           created_at: string

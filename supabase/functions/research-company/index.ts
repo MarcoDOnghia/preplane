@@ -89,6 +89,37 @@ serve(async (req) => {
       });
     }
 
+    // Rate limit: 5 research calls per day
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const adminClient = createClient(supabaseUrl, serviceRoleKey);
+
+    const today = new Date().toISOString().split("T")[0];
+    const { data: usageRow } = await adminClient
+      .from("research_usage")
+      .select("call_count")
+      .eq("user_id", user.id)
+      .eq("usage_date", today)
+      .maybeSingle();
+
+    if (usageRow && usageRow.call_count >= 5) {
+      return new Response(
+        JSON.stringify({ error: "You've used all your research credits for today. Credits reset at midnight — come back tomorrow to keep building." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (usageRow) {
+      await adminClient
+        .from("research_usage")
+        .update({ call_count: usageRow.call_count + 1 })
+        .eq("user_id", user.id)
+        .eq("usage_date", today);
+    } else {
+      await adminClient
+        .from("research_usage")
+        .insert({ user_id: user.id, usage_date: today, call_count: 1 });
+    }
+
     const { company, role, campaign_id } = await req.json();
     if (!company?.trim()) {
       return new Response(JSON.stringify({ error: "Company name is required" }), {
