@@ -374,7 +374,22 @@ const Index = () => {
     }
     if (!user) return;
 
-    // Always create campaign as draft immediately (do NOT reuse previous draftCampaignId for this logic)
+    // ← AGGIUNGI QUI
+    const selectedTexts = autoResearchInsights.filter((i) => i.selected).map((i) => `[${i.source}] ${i.text}`);
+    const sourcedSignals = autoResearchSignals.filter(s => s.source_url);
+    const signalsSummary = sourcedSignals.length > 0
+      ? sourcedSignals.map(s => `[${s.type.toUpperCase()}] ${s.text}${s.source_url ? ` (source: ${s.source_url})` : ""}`).join("\n\n")
+      : "";
+    const combined = [...selectedTexts, signalsSummary, manualNotes.trim()].filter(Boolean).join("\n\n");
+    setSetupIntel(combined);
+
+    if (draftCampaignId) {
+      await persistSignals(draftCampaignId);
+      await generateProofBrief(combined);
+      return;
+    }
+    // ← FINE AGGIUNTA
+
     try {
       const { data, error } = await supabase
         .from("campaigns")
@@ -398,19 +413,9 @@ const Index = () => {
         return;
       }
       const campaignId = data.id;
-      setDraftCampaignId(campaignId); // Always update to latest for this flow
+      setDraftCampaignId(campaignId);
       await persistSignals(campaignId);
-
-      // Only pass signals with a valid source_url to the brief generator
-      const selectedTexts = autoResearchInsights.filter((i) => i.selected).map((i) => `[${i.source}] ${i.text}`);
-      const sourcedSignals = autoResearchSignals.filter(s => s.source_url);
-      const signalsSummary = sourcedSignals.length > 0
-        ? sourcedSignals.map(s => `[${s.type.toUpperCase()}] ${s.text}${s.source_url ? ` (source: ${s.source_url})` : ""}`).join("\n\n")
-        : "";
-      const combined = [...selectedTexts, signalsSummary, manualNotes.trim()].filter(Boolean).join("\n\n");
-      setSetupIntel(combined);
-
-      await \(combined);
+      await generateProofBrief(combined);
 
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
@@ -495,6 +500,25 @@ const Index = () => {
         .filter(s => s.type !== "pow_angle")
         .filter(s => !s.text.startsWith("NOT_FOUND") && !s.text.match(/^\S*NOT_FOUND/))
         .filter(s => !(s.type === "founder_linkedin" && (s.text.length < 50 || s.text.startsWith(".") || s.text.includes("Based on my research"))))
+        // Filter to remove garbage "thinking" signals
+        .filter(s => {
+          const lowerText = s.text.toLowerCase();
+          // phrases to match anywhere in the string (case insensitive)
+          const garbagePhrases = [
+            "now let me search",
+            "let me search",
+            "let me look",
+            "based on my research",
+            "i need to find",
+            "let me check",
+          ];
+          // matches if text starts with lowercase + "let me" or "now let"
+          const startsWithThinking = /^(?:[a-z]{1,10}\s*)?(let me|now let)\b/;
+          const containsGarbage = garbagePhrases.some(phrase => lowerText.includes(phrase));
+          const startsWithPattern = startsWithThinking.test(lowerText);
+          return !containsGarbage && !startsWithPattern;
+        })
+
         .map(s => ({
           campaign_id: campaignId,
           user_id: user.id,
