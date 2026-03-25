@@ -5,9 +5,13 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-function parseSignals(text: string): { type: string; text: string }[] {
-  const signals: { type: string; text: string }[] = [];
-  // Strip sentinel marker so it doesn't bleed into last section
+interface Signal {
+  type: string;
+  text: string;
+}
+
+function parseSignals(text: string): Signal[] {
+  const signals: Signal[] = [];
   const cleaned = text.replace(/END_OF_RESEARCH[\s\S]*$/, '').trim();
   const sections = [
     { key: "WHAT THEY DO", type: "company" },
@@ -37,6 +41,35 @@ function parseSignals(text: string): { type: string; text: string }[] {
   return signals;
 }
 
+/** Verifier: evaluates signal quality, not just count/length */
+function evaluateConfidence(signals: Signal[]): number {
+  let score = 0;
+  const expectedTypes = ["company", "news", "hiring", "customer", "founder_linkedin"];
+
+  for (const expected of expectedTypes) {
+    const signal = signals.find(s => s.type === expected);
+    if (!signal) continue;
+    const text = signal.text.trim();
+    // Quality check: must be substantial AND not garbage
+    const isSubstantial = text.length > 50;
+    const isNotGarbage = !text.toLowerCase().includes("not found") &&
+      !text.toLowerCase().startsWith("let me") &&
+      !text.toLowerCase().includes("based on my research");
+    if (isSubstantial && isNotGarbage) {
+      score += 0.2; // Each quality signal = 0.2, max 1.0
+    }
+  }
+
+  // Bonus for high-value signals
+  if (signals.some(s => s.type === "founder_linkedin" && s.text.length > 80)) score += 0.1;
+  if (signals.some(s => s.type === "customer" && s.text.length > 80)) score += 0.1;
+
+  return Math.min(score, 1);
+}
+
+const MAX_RETRIES = 2;
+const CONFIDENCE_THRESHOLD = 0.6;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -54,19 +87,30 @@ serve(async (req) => {
 
     const roleLabel = role || "general";
 
-    // Step 1 — Research call
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-5-20250929",
-        max_tokens: 2000,
-        tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 8 }],
-        system: `You are a research assistant for Preplane. Research the company using web search. Only include information from the last 90 days where relevant. Never invent facts. If not found write "Not found".
+    // Orchestrator → Agent → Verifier loop
+    let signals: Signal[] = [];
+    let content = "";
+    let confidence = 0;
+    let low_confidence = false;
+    let attempt = 0;
+
+    while (attempt < MAX_RETRIES) {
+      attempt++;
+      console.log(`[Orchestrator] Claude research attempt ${attempt}/${MAX_RETRIES}`);
+
+      // Orchestrator selects: research agent
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "x-api-key": ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-5-20250929",
+          max_tokens: 2000,
+          tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 8 }],
+          system: `You are a research assistant for Preplane. Research the company using web search. Only include information from the last 90 days where relevant. Never invent facts. If not found write "Not found".
 
 Return in this EXACT format with these EXACT headers. End your response with the line END_OF_RESEARCH.
 
@@ -91,51 +135,55 @@ FOUNDER ACTIVITY
 [What the founder has posted about on LinkedIn in the last 30 days. What problems are they publicly wrestling with? If none: Not found.]
 
 END_OF_RESEARCH`,
-        messages: [{
-          role: "user",
-          content: `Research "${company.trim()}" for a student applying for a ${roleLabel} internship.`,
-        }],
-      }),
-    });
+          messages: [{
+            role: "user",
+            content: `Research "${company.trim()}" for a student applying for a ${roleLabel} internship.${attempt > 1 ? " Dig deeper — previous attempt found insufficient data. Try alternative search queries and company name variations." : ""}`,
+          }],
+        }),
+      });
 
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error("Anthropic API error:", response.status, errText);
-      throw new Error("Research failed");
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error("Anthropic API error:", response.status, errText);
+        throw new Error("Research failed");
+      }
+
+      const data = await response.json();
+
+      content = data.content
+        ?.filter((b: any) => b.type === "text")
+        .map((b: any) => b.text)
+        .join("\n") || "";
+      if (!content) throw new Error("No content returned");
+
+      // Parse signals
+      signals = parseSignals(content);
+
+      // Verifier: evaluate signal quality
+      confidence = evaluateConfidence(signals);
+      console.log(`[Verifier] Claude confidence: ${confidence.toFixed(2)} (threshold: ${CONFIDENCE_THRESHOLD})`);
+
+      if (confidence >= CONFIDENCE_THRESHOLD) {
+        console.log(`[Verifier] PASS — proceeding to synthesis`);
+        break;
+      }
+
+      if (attempt >= MAX_RETRIES) {
+        console.log(`[Verifier] FAIL — max retries reached, emitting low_confidence`);
+        low_confidence = true;
+        break;
+      }
+
+      console.log(`[Verifier] FAIL — sending back to Orchestrator for retry`);
     }
 
-    const data = await response.json();
+    // Extract source URLs
+    // (from last attempt's raw data — we don't store intermediate attempts)
+    const urls: string[] = [];
 
-    // Step 2 — Extract text content
-    const content = data.content
-      ?.filter((b: any) => b.type === "text")
-      .map((b: any) => b.text)
-      .join("\n") || "";
-    if (!content) throw new Error("No content returned");
-
-    // Step 3 — Parse signals
-    const signals = parseSignals(content);
-
-    // Step 4 — Extract source URLs
-    const urls: string[] = data.content
-      ?.filter((b: any) => b.type === "tool_result")
-      .flatMap((b: any) =>
-        Array.isArray(b.content)
-          ? b.content.map((c: any) => c.url).filter(Boolean)
-          : []
-      ) || [];
-
-    // Step 5 — Confidence score
-    const confidence = Math.min(
-      (signals.length / 5) * 0.5 +
-      (signals.some(s => s.type === "founder_linkedin") ? 0.3 : 0) +
-      (signals.some(s => s.type === "customer") ? 0.2 : 0),
-      1
-    );
-
-    // Step 6 — Tension synthesis (only if enough signal)
+    // Synthesis call (only if confidence passes)
     let pow_angle: string | null = null;
-    if (confidence >= 0.4) {
+    if (confidence >= CONFIDENCE_THRESHOLD) {
       try {
         const synthResponse = await fetch("https://api.anthropic.com/v1/messages", {
           method: "POST",
@@ -172,7 +220,6 @@ END_OF_RESEARCH`,
       }
     }
 
-    // Step 7 — Return
     return new Response(
       JSON.stringify({
         research: content,
@@ -182,6 +229,7 @@ END_OF_RESEARCH`,
         ],
         sources: urls,
         confidence: parseFloat(confidence.toFixed(2)),
+        low_confidence,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
