@@ -265,6 +265,7 @@ const Index = () => {
     setAutoResearchDone(false);
     setAutoResearchSuccess(false);
     setAutoResearchSignals([]);
+    setLowConfidence(false);
     setCompanyError("");
 
     // Animate through steps in sync with real API call
