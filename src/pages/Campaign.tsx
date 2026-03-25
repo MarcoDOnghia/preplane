@@ -683,6 +683,8 @@ function ResearchIntelligencePanel({ campaignId }: { campaignId: string }) {
     fetchSignals();
   }, [campaignId]);
 
+  const hasLimitedData = signals.length < 2;
+
   if (loading || signals.length === 0) return null;
 
   return (
