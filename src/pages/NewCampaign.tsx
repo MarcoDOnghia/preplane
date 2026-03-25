@@ -97,6 +97,7 @@ const Index = () => {
   const [companyError, setCompanyError] = useState("");
   const [autoResearchSuccess, setAutoResearchSuccess] = useState(false);
   const [autoResearchSignals, setAutoResearchSignals] = useState<{ type: string; text: string; source_url?: string | null; date?: string | null }[]>([]);
+  const [lowConfidence, setLowConfidence] = useState(false);
 
   // Check onboarding status and save any pending target from onboarding
   useEffect(() => {
