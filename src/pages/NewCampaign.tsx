@@ -301,25 +301,32 @@ const Index = () => {
       // Wait for step animation to finish
       await stepPromise;
 
-      // Process Claude research (existing flow)
+      // Process Claude research
       let claudeSignals: { type: string; text: string }[] = [];
       let research = "";
+      let claudeLowConf = false;
       if (claudeRes.status === "fulfilled" && claudeRes.value.ok) {
         const data = await claudeRes.value.json();
         if (!data.error) {
           research = data.research || "";
           claudeSignals = data.signals || [];
+          claudeLowConf = !!data.low_confidence;
         }
       }
 
-      // Process Perplexity research (new flow)
+      // Process Perplexity research
       let perplexitySignals: { type: string; text: string; source_url?: string; date?: string; signal_type?: string }[] = [];
+      let perplexityLowConf = false;
       if (perplexityRes.status === "fulfilled" && perplexityRes.value.ok) {
         const data = await perplexityRes.value.json();
         if (!data.error && Array.isArray(data.signals)) {
           perplexitySignals = data.signals;
+          perplexityLowConf = !!data.low_confidence;
         }
       }
+
+      // Dual fallback: both agents returned low confidence
+      const bothLowConf = claudeLowConf && perplexityLowConf;
 
       // Merge: use perplexity signals as primary (they have source_url), supplement with Claude
       const mergedSignals = [
