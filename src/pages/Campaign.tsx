@@ -697,6 +697,11 @@ function ResearchIntelligencePanel({ campaignId }: { campaignId: string }) {
           <Target className="h-4 w-4 text-[#F97416]" />
           Research Intelligence
           <span className="text-xs font-normal text-[#64748B]">({signals.length} signals)</span>
+          {hasLimitedData && (
+            <span className="ml-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/20">
+              limited data found
+            </span>
+          )}
         </span>
         <span className="text-[#64748B] text-xs">{open ? "Hide ▲" : "Show ▼"}</span>
       </button>
