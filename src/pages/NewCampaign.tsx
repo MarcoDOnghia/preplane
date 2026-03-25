@@ -1673,6 +1673,27 @@ const Index = () => {
                       </div>
                     )}
 
+                    {/* Low confidence badge */}
+                    {autoResearchDone && lowConfidence && (
+                      <div
+                        style={{
+                          marginTop: "8px",
+                          background: "rgba(234,179,8,0.1)",
+                          border: "1px solid rgba(234,179,8,0.2)",
+                          borderRadius: "8px",
+                          padding: "10px 12px",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                        }}
+                      >
+                        <span style={{ fontSize: "14px" }}>⚠️</span>
+                        <p style={{ color: "#EAB308", fontSize: "13px", margin: 0 }}>
+                          Limited data found — add your own notes below for a stronger brief.
+                        </p>
+                      </div>
+                    )}
+
                     {/* Signal cards */}
                     {autoResearchDone && autoResearchSuccess && autoResearchSignals.length > 0 && (() => {
                       const visibleSignals = autoResearchSignals
