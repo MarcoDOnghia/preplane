@@ -97,6 +97,7 @@ const Index = () => {
   const [companyError, setCompanyError] = useState("");
   const [autoResearchSuccess, setAutoResearchSuccess] = useState(false);
   const [autoResearchSignals, setAutoResearchSignals] = useState<{ type: string; text: string; source_url?: string | null; date?: string | null }[]>([]);
+  const [lowConfidence, setLowConfidence] = useState(false);
 
   // Check onboarding status and save any pending target from onboarding
   useEffect(() => {
@@ -264,6 +265,7 @@ const Index = () => {
     setAutoResearchDone(false);
     setAutoResearchSuccess(false);
     setAutoResearchSignals([]);
+    setLowConfidence(false);
     setCompanyError("");
 
     // Animate through steps in sync with real API call
@@ -299,25 +301,32 @@ const Index = () => {
       // Wait for step animation to finish
       await stepPromise;
 
-      // Process Claude research (existing flow)
+      // Process Claude research
       let claudeSignals: { type: string; text: string }[] = [];
       let research = "";
+      let claudeLowConf = false;
       if (claudeRes.status === "fulfilled" && claudeRes.value.ok) {
         const data = await claudeRes.value.json();
         if (!data.error) {
           research = data.research || "";
           claudeSignals = data.signals || [];
+          claudeLowConf = !!data.low_confidence;
         }
       }
 
-      // Process Perplexity research (new flow)
+      // Process Perplexity research
       let perplexitySignals: { type: string; text: string; source_url?: string; date?: string; signal_type?: string }[] = [];
+      let perplexityLowConf = false;
       if (perplexityRes.status === "fulfilled" && perplexityRes.value.ok) {
         const data = await perplexityRes.value.json();
         if (!data.error && Array.isArray(data.signals)) {
           perplexitySignals = data.signals;
+          perplexityLowConf = !!data.low_confidence;
         }
       }
+
+      // Dual fallback: both agents returned low confidence
+      const bothLowConf = claudeLowConf && perplexityLowConf;
 
       // Merge: use perplexity signals as primary (they have source_url), supplement with Claude
       const mergedSignals = [
@@ -341,7 +350,8 @@ const Index = () => {
 
       setManualNotes(research);
       setAutoResearchSignals(mergedSignals.map(s => ({ type: s.type, text: s.text, source_url: s.source_url, date: s.date })));
-      setShowManualSection(mergedSignals.length === 0);
+      setLowConfidence(bothLowConf);
+      setShowManualSection(mergedSignals.length === 0 || bothLowConf);
       setAutoResearchDone(true);
       setAutoResearchSuccess(true);
     } catch (e: any) {
