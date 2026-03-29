@@ -30,11 +30,11 @@ async function queryPerplexity(
       messages: [
         {
           role: "system",
-          content: `You are a company research assistant. Return a concise factual summary (2-4 sentences max). Include the most relevant date if available. If you cannot find specific information, respond with exactly the word NOT_FOUND and nothing else. Never explain your search process or say what you would search for next.`,
+          content: `You are a company research assistant. Return a concise factual summary in exactly 2 sentences maximum. Include the most relevant date if available. If you cannot find specific information, respond with exactly: NOT_FOUND`,
         },
         { role: "user", content: query },
       ],
-      max_tokens: 300,
+      max_tokens: 200,
     }),
   });
 
@@ -263,6 +263,12 @@ serve(async (req) => {
       console.log(`[Verifier] FAIL — sending back to Orchestrator for retry`);
     }
 
+    // Truncate signal text before saving
+    const trimmedSignals = signals.map(s => ({
+      ...s,
+      text: s.text.slice(0, 400),
+    }));
+
     // Save to campaign_signals if campaign_id provided
     if (campaign_id) {
       await adminClient
@@ -270,8 +276,8 @@ serve(async (req) => {
         .delete()
         .eq("campaign_id", campaign_id);
 
-      if (signals.length > 0) {
-        const rows = signals.map((s) => ({
+      if (trimmedSignals.length > 0) {
+        const rows = trimmedSignals.map((s) => ({
           campaign_id,
           user_id: user.id,
           signal_type: s.signal_type,
@@ -288,7 +294,7 @@ serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ signals, confidence: parseFloat(confidence.toFixed(2)), low_confidence }), {
+    return new Response(JSON.stringify({ signals: trimmedSignals, confidence: parseFloat(confidence.toFixed(2)), low_confidence }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
