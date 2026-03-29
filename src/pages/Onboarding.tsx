@@ -50,6 +50,7 @@ const Onboarding = () => {
   const [waitlistRole, setWaitlistRole] = useState("");
   const [isReturning, setIsReturning] = useState(false);
   const [ready, setReady] = useState(false);
+  const [ctaClicked, setCtaClicked] = useState(false);
 
   // Auth form state (step 4)
   const [isLogin, setIsLogin] = useState(initialLoginMode);
