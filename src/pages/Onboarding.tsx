@@ -279,10 +279,7 @@ const Onboarding = () => {
           </div>
           <button
             onClick={() => navigate("/onboarding?step=4&mode=login")}
-            className="text-sm font-medium transition-colors"
-            style={{ color: "rgba(255,255,255,0.5)" }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "#ff9159")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.5)")}
+            className="border border-primary text-primary px-5 py-2 rounded-xl font-semibold hover:bg-primary hover:text-white transition-all text-sm"
           >
             Sign in
           </button>
