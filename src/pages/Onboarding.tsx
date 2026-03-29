@@ -50,6 +50,7 @@ const Onboarding = () => {
   const [waitlistRole, setWaitlistRole] = useState("");
   const [isReturning, setIsReturning] = useState(false);
   const [ready, setReady] = useState(false);
+  const [ctaClicked, setCtaClicked] = useState(false);
 
   // Auth form state (step 4)
   const [isLogin, setIsLogin] = useState(initialLoginMode);
@@ -255,101 +256,148 @@ const Onboarding = () => {
   const progressSteps = Array.from({ length: totalSteps }, (_, i) => i + 1);
 
   if (step === 1) {
+
+    const handleCtaClick = () => {
+      setCtaClicked(true);
+      setTimeout(() => setStep(2), 300);
+    };
+
     return (
-      <div className="relative min-h-screen overflow-hidden flex flex-col items-center" style={{ background: "#111111", fontFamily: "Inter, sans-serif" }}>
-        {/* Sign in link - top right */}
-        <div className="fixed top-0 right-0 z-50" style={{ padding: "20px 24px" }}>
-          <span style={{ color: "#64748B", fontSize: "13px" }}>
-            Already have an account?{" "}
-            <button
-              onClick={() => navigate("/onboarding?step=4&mode=login")}
-              className="hover:underline"
-              style={{ color: "#F97316", fontWeight: 600, cursor: "pointer", background: "none", border: "none", fontSize: "13px" }}
-            >
-              Sign in
-            </button>
-          </span>
-        </div>
+      <div className="relative min-h-screen overflow-hidden flex flex-col" style={{ background: "#0e0e0e", fontFamily: "Inter, sans-serif" }}>
+        {/* Ambient orange glow blobs */}
+        <div className="fixed pointer-events-none" style={{ top: "-10%", left: "-10%", width: "50vw", height: "50vw", background: "radial-gradient(circle, rgba(255,145,89,0.12) 0%, transparent 70%)", filter: "blur(80px)", zIndex: 0 }} />
+        <div className="fixed pointer-events-none" style={{ bottom: "-15%", right: "-10%", width: "45vw", height: "45vw", background: "radial-gradient(circle, rgba(255,145,89,0.06) 0%, transparent 70%)", filter: "blur(100px)", zIndex: 0 }} />
+        <div className="fixed pointer-events-none" style={{ top: "30%", right: "20%", width: "25vw", height: "25vw", background: "radial-gradient(circle, rgba(255,145,89,0.08) 0%, transparent 70%)", filter: "blur(90px)", zIndex: 0 }} />
 
-        {/* Background glow blobs */}
-        <div className="fixed top-0 left-0 rounded-full pointer-events-none" style={{ width: "40vw", height: "40vw", background: "#f97415", opacity: 0.08, filter: "blur(120px)", zIndex: -1 }} />
-        <div className="fixed bottom-0 right-0 rounded-full pointer-events-none" style={{ width: "40vw", height: "40vw", background: "#f97415", opacity: 0.04, filter: "blur(120px)", zIndex: -1 }} />
-
-        {/* Header - logo only, centered */}
-        <header className="flex justify-center" style={{ paddingTop: "32px" }}>
-          <div className="flex items-center gap-2">
-            <div className="bg-[#f97415] p-2 rounded-xl flex items-center justify-center">
+        {/* Fixed glassmorphism top nav */}
+        <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 py-4" style={{ background: "rgba(14,14,14,0.6)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl flex items-center justify-center" style={{ background: "#ff9159" }}>
               <Rocket className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-bold text-white">PrepLane</span>
+            <span className="text-xl font-bold text-white tracking-tight">Preplane</span>
           </div>
-        </header>
+          <button
+            onClick={() => navigate("/onboarding?step=4&mode=login")}
+            className="text-sm font-medium transition-colors"
+            style={{ color: "rgba(255,255,255,0.5)" }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#ff9159")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.5)")}
+          >
+            Sign in
+          </button>
+        </nav>
 
-        <div className="w-full max-w-[1200px] px-6 flex flex-col items-center text-center">
-          {/* Progress pills */}
-          <div className="flex flex-col items-center gap-3" style={{ marginTop: "32px" }}>
-            <div className="flex items-center gap-2">
-              <div className="h-1.5 w-12 rounded-full bg-[#f97415]" />
-              <div className="h-1.5 w-12 rounded-full bg-[#1e293b]" />
-              <div className="h-1.5 w-12 rounded-full bg-[#1e293b]" />
-              <div className="h-1.5 w-12 rounded-full bg-[#1e293b]" />
+        {/* Main content */}
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 text-center" style={{ paddingTop: "100px", paddingBottom: "60px" }}>
+          {/* Progress indicator */}
+          <div className="flex flex-col items-center gap-2 mb-16">
+            <span className="font-semibold uppercase tracking-[0.2em]" style={{ color: "#ff9159", fontSize: "11px" }}>Step 1 of 4</span>
+            <div className="flex items-center gap-1">
+              <div className="h-1 rounded-full" style={{ width: "48px", background: "#ff9159" }} />
+              <div className="h-1 rounded-full" style={{ width: "48px", background: "rgba(255,255,255,0.08)" }} />
+              <div className="h-1 rounded-full" style={{ width: "48px", background: "rgba(255,255,255,0.08)" }} />
+              <div className="h-1 rounded-full" style={{ width: "48px", background: "rgba(255,255,255,0.08)" }} />
             </div>
-            <span className="font-medium uppercase" style={{ color: "#64748b", fontSize: "11px", letterSpacing: "0.15em" }}>Step 1 of 4</span>
           </div>
 
-          {/* Headline */}
-          <h1 className="leading-[1.1]" style={{ fontSize: "clamp(36px, 6vw, 60px)", fontWeight: 900, letterSpacing: "-0.02em", marginTop: "80px" }}>
+          {/* Hero headline */}
+          <h1 className="leading-[1.08]" style={{ fontSize: "clamp(40px, 6.5vw, 72px)", fontWeight: 900, letterSpacing: "-0.03em" }}>
             <span className="text-white">Stop applying to everything.</span>
             <br />
-            <span style={{ color: "#f97415" }}>Start owning your shot.</span>
+            <span style={{ background: "linear-gradient(135deg, #ff9159, #ff6b2b)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+              Start owning your shot.
+            </span>
           </h1>
 
-          {/* Subtitle */}
-          <div className="max-w-[520px]" style={{ color: "#64748b", fontSize: "18px", lineHeight: "1.7", marginTop: "32px" }}>
-            <p>Most students send 30+ applications and hear nothing back. Not because their CV is bad — because they never stopped to ask:</p>
-            <p className="italic font-bold mt-2">what do I actually want, and am I building toward it?</p>
-          </div>
+          {/* Subheadline */}
+          <p className="max-w-2xl mx-auto" style={{ color: "rgba(255,255,255,0.4)", fontSize: "17px", lineHeight: 1.75, marginTop: "28px" }}>
+            The current application market is broken by autonomous AI applications,
+            you are competing against 10x people compared to 10 years ago.
+            <br />
+            Students never stopped to ask: <em>what am I actually building toward?</em>
+          </p>
 
-          {/* CTA */}
+          {/* CTA button */}
           <button
             type="button"
-            onClick={() => setStep(2)}
-            className="font-bold text-white transition-colors hover:bg-[#ea6c0a]"
-            style={{ background: "#f97415", fontSize: "18px", padding: "16px 40px", borderRadius: "8px", marginTop: "48px" }}
+            onClick={handleCtaClick}
+            disabled={ctaClicked}
+            className="font-bold text-white transition-all duration-200"
+            style={{
+              background: "linear-gradient(135deg, #ff9159, #ff6b2b)",
+              fontSize: "18px",
+              padding: "20px 48px",
+              borderRadius: "16px",
+              marginTop: "44px",
+              boxShadow: "0 0 40px rgba(255,145,89,0.3)",
+              transform: ctaClicked ? "scale(0.97)" : "scale(1)",
+              cursor: ctaClicked ? "default" : "pointer",
+            }}
+            onMouseEnter={(e) => { if (!ctaClicked) e.currentTarget.style.transform = "scale(1.04)"; }}
+            onMouseLeave={(e) => { if (!ctaClicked) e.currentTarget.style.transform = "scale(1)"; }}
+            onMouseDown={(e) => { if (!ctaClicked) e.currentTarget.style.transform = "scale(0.97)"; }}
+            onMouseUp={(e) => { if (!ctaClicked) e.currentTarget.style.transform = "scale(1.04)"; }}
           >
-            I'm in →
+            {ctaClicked ? "Let's go →" : "I'm in"}
           </button>
 
           {/* Social proof */}
-          <p className="max-w-[600px]" style={{ fontSize: "13px", color: "#64748b", marginTop: "32px" }}>
-            Joining students going after Stockholm scaleups, VC-backed founders, angel-funded teams, and the next generation of European startups.
+          <p className="max-w-lg mx-auto" style={{ fontSize: "13px", color: "rgba(255,255,255,0.35)", marginTop: "28px", lineHeight: 1.7 }}>
+            Join students going after <span className="text-white font-medium">Scaleups</span>, <span className="text-white font-medium">VC-backed founders</span>,
+            <br className="hidden sm:block" />
+            and the next generation of <span className="text-white font-medium">European unicorns</span>
           </p>
 
-          {/* Stat cards */}
-          <div className="flex flex-wrap justify-center gap-4" style={{ marginTop: "48px" }}>
+          {/* 3 stat cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-3xl" style={{ marginTop: "56px" }}>
             {[
-              { number: "5", label: "targeted campaigns beat 50 random applications" },
-              { number: "1", label: "proof of work opens doors a CV never will" },
-              { number: "Free", label: "no credit card, no catch" },
+              { icon: "🎯", text: "1 targeted campaign beats 50 applications" },
+              { icon: "💻", text: "Start a conversation just a CV never will" },
+              { icon: "✅", text: "Free. No credit card, no catch" },
             ].map((card) => (
               <div
-                key={card.number}
-                className="text-center"
+                key={card.text}
+                className="flex flex-col items-center gap-3 text-center transition-colors duration-200 cursor-default"
                 style={{
-                  background: "#1a1a1a",
+                  background: "rgba(255,255,255,0.03)",
                   border: "1px solid rgba(255,255,255,0.06)",
-                  borderRadius: "12px",
-                  padding: "20px 28px",
-                  minWidth: "200px",
-                  maxWidth: "280px",
+                  borderRadius: "16px",
+                  padding: "28px 20px",
                 }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
               >
-                <div className="text-white" style={{ fontSize: "24px", fontWeight: 900 }}>{card.number}</div>
-                <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>{card.label}</div>
+                <span style={{ fontSize: "28px" }}>{card.icon}</span>
+                <span className="text-white font-semibold" style={{ fontSize: "14px", lineHeight: 1.5 }}>{card.text}</span>
               </div>
             ))}
           </div>
         </div>
+
+        {/* Footer */}
+        <footer className="relative z-10 py-8 px-6" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded-lg flex items-center justify-center" style={{ background: "#ff9159" }}>
+                <Rocket className="w-3.5 h-3.5 text-white" />
+              </div>
+              <span className="text-sm font-semibold text-white">Preplane</span>
+              <span style={{ color: "rgba(255,255,255,0.25)", fontSize: "13px" }}>© 2026</span>
+            </div>
+            <div className="flex items-center gap-5">
+              <button onClick={() => navigate("/privacy")} className="text-xs transition-colors" style={{ color: "rgba(255,255,255,0.35)" }} onMouseEnter={(e) => (e.currentTarget.style.color = "#ff9159")} onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}>
+                Privacy Policy
+              </button>
+              <button onClick={() => navigate("/terms")} className="text-xs transition-colors" style={{ color: "rgba(255,255,255,0.35)" }} onMouseEnter={(e) => (e.currentTarget.style.color = "#ff9159")} onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}>
+                Terms of Service
+              </button>
+              <a href="https://linkedin.com/company/preplane" target="_blank" rel="noopener noreferrer" className="text-xs transition-colors" style={{ color: "rgba(255,255,255,0.35)" }} onMouseEnter={(e) => (e.currentTarget.style.color = "#ff9159")} onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}>
+                LinkedIn
+              </a>
+            </div>
+          </div>
+        </footer>
       </div>
     );
   }
