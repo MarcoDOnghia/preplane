@@ -256,7 +256,6 @@ const Onboarding = () => {
   const progressSteps = Array.from({ length: totalSteps }, (_, i) => i + 1);
 
   if (step === 1) {
-    const [ctaClicked, setCtaClicked] = useState(false);
 
     const handleCtaClick = () => {
       setCtaClicked(true);
