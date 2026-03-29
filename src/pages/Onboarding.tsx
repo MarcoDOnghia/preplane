@@ -463,6 +463,9 @@ const Onboarding = () => {
                             );
                           })}
                         </div>
+                        <p className="mt-3 text-xs text-slate-400 flex items-center gap-1.5">
+                          <span>🇮🇹</span> Optimized for Italian startups — more coming soon
+                        </p>
                       </div>
 
                       {/* Card 2 — Location (Europe toggle) */}
