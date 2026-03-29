@@ -184,39 +184,57 @@ END_OF_RESEARCH`,
     // Synthesis call (only if confidence passes)
     let pow_angle: string | null = null;
     if (confidence >= CONFIDENCE_THRESHOLD) {
-      try {
-        const synthResponse = await fetch("https://api.anthropic.com/v1/messages", {
-          method: "POST",
-          headers: {
-            "x-api-key": ANTHROPIC_API_KEY,
-            "anthropic-version": "2023-06-01",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "claude-sonnet-4-5-20250929",
-            max_tokens: 500,
-            system: `You are given research signals about a company. Find the tension: the gap between what the company claims and what customers or the founder's own words reveal. Then produce ONE specific proof of work a student can build in 48 hours for a ${roleLabel} internship that addresses that tension directly. Be ruthlessly specific: name exactly what to build, what free tool to use, and why it matters to this company right now. If signals are too thin, return exactly: LOW_SIGNAL`,
-            messages: [{
-              role: "user",
-              content: JSON.stringify(signals),
-            }],
-          }),
-        });
+      const synthPayload = {
+        model: "claude-haiku-3-5-20241022",
+        max_tokens: 500,
+        system: `You are given research signals about a company. Find the tension: the gap between what the company claims and what customers or the founder's own words reveal. Then produce ONE specific proof of work a student can build in 48 hours for a ${roleLabel} internship that addresses that tension directly. Be ruthlessly specific: name exactly what to build, what free tool to use, and why it matters to this company right now. If signals are too thin, return exactly: LOW_SIGNAL`,
+        messages: [{
+          role: "user",
+          content: JSON.stringify(signals),
+        }],
+      };
 
-        if (synthResponse.ok) {
-          const synthData = await synthResponse.json();
-          const synthText = synthData.content
-            ?.filter((b: any) => b.type === "text")
-            .map((b: any) => b.text)
-            .join("\n")
-            .trim() || "";
-          pow_angle = synthText === "LOW_SIGNAL" ? null : synthText || null;
-        } else {
-          const errBody = await synthResponse.text();
-          console.error("Synthesis call failed:", synthResponse.status, errBody);
+      const SYNTH_MAX_RETRIES = 3;
+      for (let i = 0; i < SYNTH_MAX_RETRIES; i++) {
+        try {
+          const synthResponse = await fetch("https://api.anthropic.com/v1/messages", {
+            method: "POST",
+            headers: {
+              "x-api-key": ANTHROPIC_API_KEY,
+              "anthropic-version": "2023-06-01",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(synthPayload),
+          });
+
+          if (synthResponse.status === 429 && i < SYNTH_MAX_RETRIES - 1) {
+            const wait = 3000 * (i + 1);
+            console.log(`[Synthesis] 429 rate-limited, retrying in ${wait}ms (attempt ${i + 1}/${SYNTH_MAX_RETRIES})`);
+            await new Promise(r => setTimeout(r, wait));
+            continue;
+          }
+
+          if (synthResponse.ok) {
+            const synthData = await synthResponse.json();
+            const synthText = synthData.content
+              ?.filter((b: any) => b.type === "text")
+              .map((b: any) => b.text)
+              .join("\n")
+              .trim() || "";
+            pow_angle = synthText === "LOW_SIGNAL" ? null : synthText || null;
+          } else {
+            const errBody = await synthResponse.text();
+            console.error("Synthesis call failed:", synthResponse.status, errBody);
+          }
+          break;
+        } catch (synthErr) {
+          if (i < SYNTH_MAX_RETRIES - 1) {
+            console.log(`[Synthesis] Error, retrying (attempt ${i + 1}/${SYNTH_MAX_RETRIES}):`, synthErr);
+            await new Promise(r => setTimeout(r, 3000 * (i + 1)));
+          } else {
+            console.error("Synthesis call error after retries:", synthErr);
+          }
         }
-      } catch (synthErr) {
-        console.error("Synthesis call error:", synthErr);
       }
     }
 
