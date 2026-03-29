@@ -184,13 +184,14 @@ END_OF_RESEARCH`,
     // Synthesis call (only if confidence passes)
     let pow_angle: string | null = null;
     if (confidence >= CONFIDENCE_THRESHOLD) {
+      const truncatedSignals = signals.map(s => ({ ...s, text: s.text.slice(0, 300) }));
       const synthPayload = {
         model: "claude-haiku-3-5-20241022",
         max_tokens: 500,
         system: `You are given research signals about a company. Find the tension: the gap between what the company claims and what customers or the founder's own words reveal. Then produce ONE specific proof of work a student can build in 48 hours for a ${roleLabel} internship that addresses that tension directly. Be ruthlessly specific: name exactly what to build, what free tool to use, and why it matters to this company right now. If signals are too thin, return exactly: LOW_SIGNAL`,
         messages: [{
           role: "user",
-          content: JSON.stringify(signals),
+          content: JSON.stringify(truncatedSignals),
         }],
       };
 
