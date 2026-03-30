@@ -120,6 +120,15 @@ const Header = () => {
                   My Target
                 </button>
                 <button
+                  onClick={() => { setDropdownOpen(false); navigate("/settings"); }}
+                  className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-2 transition-colors"
+                  style={{ color: "#94A3B8" }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.05)"; (e.currentTarget as HTMLButtonElement).style.color = "#FFFFFF"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = "#94A3B8"; }}
+                >
+                  <Settings className="w-4 h-4" />
+                  Settings
+                <button
                   onClick={() => { setDropdownOpen(false); signOut(); }}
                   className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-2 transition-colors"
                   style={{ color: "#94A3B8" }}
