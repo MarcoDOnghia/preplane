@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { Rocket, ChevronDown, Target, LogOut } from "lucide-react";
+import { Rocket, ChevronDown, Target, LogOut, Settings } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -118,6 +118,16 @@ const Header = () => {
                 >
                   <Target className="w-4 h-4" />
                   My Target
+                </button>
+                <button
+                  onClick={() => { setDropdownOpen(false); navigate("/settings"); }}
+                  className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-2 transition-colors"
+                  style={{ color: "#94A3B8" }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.05)"; (e.currentTarget as HTMLButtonElement).style.color = "#FFFFFF"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = "#94A3B8"; }}
+                >
+                  <Settings className="w-4 h-4" />
+                  Settings
                 </button>
                 <button
                   onClick={() => { setDropdownOpen(false); signOut(); }}

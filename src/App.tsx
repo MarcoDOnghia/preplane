@@ -16,6 +16,7 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const ProofCard = lazy(() => import("./pages/ProofCard"));
+const Settings = lazy(() => import("./pages/Settings"));
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ const App = () => (
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/campaign/:id" element={<Campaign />} />
               <Route path="/p/:slug" element={<ProofCard />} />
+              <Route path="/settings" element={<Settings />} />
               <Route path="/auth" element={<Navigate to="/onboarding?step=4&mode=login" replace />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/verify-email" element={<VerifyEmail />} />
