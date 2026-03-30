@@ -128,6 +128,7 @@ const Header = () => {
                 >
                   <Settings className="w-4 h-4" />
                   Settings
+                </button>
                 <button
                   onClick={() => { setDropdownOpen(false); signOut(); }}
                   className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-2 transition-colors"
