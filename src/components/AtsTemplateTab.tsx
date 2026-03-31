@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import DOMPurify from "dompurify";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +18,7 @@ const AtsTemplateTab = ({ reformattedCv, jobTitle, atsScore }: AtsTemplateTabPro
   const { toast } = useToast();
   const [downloading, setDownloading] = useState(false);
 
-  const previewHtml = useMemo(() => reformattedCvToHtml(reformattedCv), [reformattedCv]);
+  const previewHtml = useMemo(() => DOMPurify.sanitize(reformattedCvToHtml(reformattedCv)), [reformattedCv]);
 
   const handleDownload = async () => {
     setDownloading(true);
