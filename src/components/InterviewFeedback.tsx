@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { sanitizeInput } from "@/lib/sanitizeText";
 import {
   ClipboardCheck, Plus, Star, Trash2, Loader2, ChevronDown, ChevronRight, ThumbsUp, AlertTriangle,
 } from "lucide-react";

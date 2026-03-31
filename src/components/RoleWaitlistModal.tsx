@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { X, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { sanitizeInput } from "@/lib/sanitizeText";
 
 const LOCKED_ROLES: Record<string, string> = {
   "Software Engineer": "Software Engineer",
