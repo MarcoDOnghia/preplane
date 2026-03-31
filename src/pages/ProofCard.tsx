@@ -102,7 +102,6 @@ export default function ProofCard() {
           <h1 style={{ color: '#ffffff', fontSize: '22px', fontWeight: 700, lineHeight: 1.3, margin: '24px 0 16px', padding: '0 20px' }}>
             {sanitizeInput(card.one_liner)}
           </h1>
-          </h1>
 
           {/* SECTION 2 — The Ask */}
           <div style={{ backgroundColor: 'rgba(249,116,22,0.08)', border: '1px solid rgba(249,116,22,0.2)', borderRadius: '8px', padding: '16px 20px', margin: '0 20px 24px' }}>
