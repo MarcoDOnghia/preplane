@@ -176,6 +176,16 @@ const Onboarding = () => {
     if (!isLogin) {
       if (!isEmailValid) { setAuthError("Please enter a valid email address"); return; }
       if (!isPasswordValid) { setAuthError("Password doesn't meet the requirements"); return; }
+      // Beta whitelist check — must happen before signUp
+      const { data: whitelisted } = await supabase
+        .from("beta_whitelist")
+        .select("email")
+        .eq("email", email.toLowerCase().trim())
+        .maybeSingle();
+      if (!whitelisted) {
+        setAuthError("BETA_CLOSED");
+        return;
+      }
     }
 
     setAuthLoading(true);
