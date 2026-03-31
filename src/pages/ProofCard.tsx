@@ -72,6 +72,7 @@ export default function ProofCard() {
     <>
       <Helmet>
         <title>{`Proof of Work — ${card.one_liner}`}</title>
+        <meta name="robots" content="noindex, nofollow" />
         <meta name="description" content="60-second summary. Asking for 1 piece of feedback." />
         <meta property="og:title" content={`Proof of Work — ${card.one_liner}`} />
         <meta property="og:description" content="60-second summary. Asking for 1 piece of feedback." />
@@ -177,6 +178,18 @@ export default function ProofCard() {
               <p style={{ color: '#64748B', fontSize: '13px' }}>Want to do this for your target company?</p>
               <a href="https://preplane.co" target="_blank" rel="noopener noreferrer" style={{ color: '#F97416', fontSize: '13px', fontWeight: 600 }}>Start free →</a>
             </div>
+          </div>
+
+          {/* Report abuse */}
+          <div style={{ textAlign: 'center', padding: '0 20px 24px' }}>
+            <a
+              href={`mailto:marco@preplane.co?subject=${encodeURIComponent(`Report: preplane.co/p/${slug}`)}`}
+              style={{ color: '#64748B', fontSize: '12px', textDecoration: 'none' }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = '#94A3B8'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = '#64748B'; }}
+            >
+              Report abuse →
+            </a>
           </div>
         </div>
 
