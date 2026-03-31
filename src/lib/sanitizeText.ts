@@ -1,4 +1,17 @@
 /**
+ * Sanitize user input before saving to DB or passing to AI prompts.
+ * Strips HTML tags, script blocks, and control characters.
+ */
+export function sanitizeInput(text: string, maxLength = 5000): string {
+  return text
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "")
+    .trim()
+    .slice(0, maxLength);
+}
+
+/**
  * Sanitize AI-generated text for safe UI rendering.
  * - Strips CJK / non-Latin unicode characters (碎, 挀, etc.)
  * - Detects and removes raw JSON blobs
