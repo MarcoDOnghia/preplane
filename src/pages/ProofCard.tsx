@@ -106,7 +106,7 @@ export default function ProofCard() {
 
           {/* SECTION 2 — The Ask */}
           <div style={{ backgroundColor: 'rgba(249,116,22,0.08)', border: '1px solid rgba(249,116,22,0.2)', borderRadius: '8px', padding: '16px 20px', margin: '0 20px 24px' }}>
-            <p style={{ color: '#ffffff', fontSize: '15px', lineHeight: 1.6 }}>{card.ask}</p>
+            <p style={{ color: '#ffffff', fontSize: '15px', lineHeight: 1.6 }}>{sanitizeInput(card.ask)}</p>
             <p style={{ color: '#94A3B8', fontSize: '12px', fontStyle: 'italic', marginTop: '8px' }}>A yes/no is enough.</p>
           </div>
 
