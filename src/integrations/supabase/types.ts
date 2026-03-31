@@ -245,6 +245,24 @@ export type Database = {
         }
         Relationships: []
       }
+      beta_whitelist: {
+        Row: {
+          added_at: string | null
+          email: string
+          notes: string | null
+        }
+        Insert: {
+          added_at?: string | null
+          email: string
+          notes?: string | null
+        }
+        Update: {
+          added_at?: string | null
+          email?: string
+          notes?: string | null
+        }
+        Relationships: []
+      }
       campaign_signals: {
         Row: {
           campaign_id: string
