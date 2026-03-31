@@ -102,10 +102,11 @@ const Privacy = () => {
               <li className="flex items-start gap-2">
                 <span className="text-[#ff9159] mt-0.5">•</span>
                 <span>
-                  <strong className="text-white">Anthropic (Claude AI)</strong> — receives company names, job titles,
-                  and CV content to generate research and personalised outreach.{" "}
+                  <strong className="text-white">Google (Gemini AI)</strong> — receives CV content, job descriptions,
+                  and campaign data to power AI-driven CV tailoring, cover letter generation, keyword analysis,
+                  interview preparation, and outreach suggestions.{" "}
                   <a
-                    href="https://anthropic.com/privacy"
+                    href="https://policies.google.com/privacy"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-[#ff9159] hover:underline"

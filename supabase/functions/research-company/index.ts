@@ -180,6 +180,24 @@ serve(async (req) => {
     const companyName = company.trim();
     const roleLabel = role?.trim() || "general";
 
+    // Prompt injection check
+    const INJECTION_PATTERNS = [
+      /ignore\s+(all\s+)?(previous|prior|above)\s+(instructions?|prompts?|context)/i,
+      /\bact\s+as\b/i,
+      /\bpretend\s+(to\s+be|you('re| are))\b/i,
+      /\bsystem\s*:\s*/i,
+      /\byou\s+are\s+now\b/i,
+      /\bnew\s+instructions?\b/i,
+      /\bforget\s+(everything|all|previous)\b/i,
+    ];
+    const containsInjection = (text: string) => INJECTION_PATTERNS.some(p => p.test(text));
+    if (containsInjection(companyName) || containsInjection(roleLabel)) {
+      return new Response(JSON.stringify({ error: "Invalid input" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Orchestrator → Agent → Verifier loop
     let signals: Signal[] = [];
     let confidence = 0;

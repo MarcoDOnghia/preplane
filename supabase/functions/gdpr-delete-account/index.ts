@@ -61,6 +61,9 @@ Deno.serve(async (req) => {
       adminClient.from("proof_cards").delete().eq("user_id", userId),
     ]);
 
+    // Get user email for email-related tables
+    const userEmail = user.email;
+
     // Parent tables and standalone tables
     await Promise.all([
       adminClient.from("applications").delete().eq("user_id", userId),
@@ -72,6 +75,15 @@ Deno.serve(async (req) => {
       adminClient.from("role_waitlist_insights").delete().eq("user_id", userId),
       adminClient.from("profiles").delete().eq("user_id", userId),
     ]);
+
+    // Clean email-related tables by user email
+    if (userEmail) {
+      await Promise.all([
+        adminClient.from("email_send_log").delete().eq("recipient_email", userEmail),
+        adminClient.from("suppressed_emails").delete().eq("email", userEmail),
+        adminClient.from("email_unsubscribe_tokens").delete().eq("email", userEmail),
+      ]);
+    }
 
     // Delete storage files
     try {
