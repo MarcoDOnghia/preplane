@@ -18,7 +18,7 @@ const AtsTemplateTab = ({ reformattedCv, jobTitle, atsScore }: AtsTemplateTabPro
   const { toast } = useToast();
   const [downloading, setDownloading] = useState(false);
 
-  const previewHtml = useMemo(() => reformattedCvToHtml(reformattedCv), [reformattedCv]);
+  const previewHtml = useMemo(() => DOMPurify.sanitize(reformattedCvToHtml(reformattedCv)), [reformattedCv]);
 
   const handleDownload = async () => {
     setDownloading(true);
