@@ -72,6 +72,7 @@ export default function ProofCard() {
     <>
       <Helmet>
         <title>{`Proof of Work — ${card.one_liner}`}</title>
+        <meta name="robots" content="noindex, nofollow" />
         <meta name="description" content="60-second summary. Asking for 1 piece of feedback." />
         <meta property="og:title" content={`Proof of Work — ${card.one_liner}`} />
         <meta property="og:description" content="60-second summary. Asking for 1 piece of feedback." />
