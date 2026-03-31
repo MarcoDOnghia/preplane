@@ -234,10 +234,10 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appl
         user_id: userId,
         application_id: applicationId,
         message_type: selectedType,
-        recipient_name: recipientName || null,
-        recipient_email: recipientEmail || null,
-        subject: generatedSubject || null,
-        content: generatedContent,
+        recipient_name: recipientName ? sanitizeInput(recipientName) : null,
+        recipient_email: recipientEmail ? sanitizeInput(recipientEmail) : null,
+        subject: generatedSubject ? sanitizeInput(generatedSubject) : null,
+        content: sanitizeInput(generatedContent),
       })
       .select()
       .single();

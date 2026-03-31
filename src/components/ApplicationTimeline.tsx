@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MessageSquarePlus, Clock, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { sanitizeInput } from "@/lib/sanitizeText";
 
 interface TimelineEvent {
   id: string;

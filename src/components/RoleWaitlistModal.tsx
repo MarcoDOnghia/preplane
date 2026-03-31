@@ -69,7 +69,7 @@ export default function RoleWaitlistModal({ open, onOpenChange, role, userId }: 
       await supabase.from("role_waitlist_insights" as any).insert({
         user_id: userId,
         role,
-        insight: insight.trim(),
+        insight: sanitizeInput(insight),
       } as any);
       setState("success");
       setTimeout(() => {

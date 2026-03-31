@@ -110,14 +110,14 @@ const InterviewFeedback = ({ applicationId, userId, predictedQuestions = [] }: I
           user_id: userId,
           application_id: applicationId,
           interview_date: interviewDate,
-          interviewer_name: interviewerName || null,
+          interviewer_name: interviewerName ? sanitizeInput(interviewerName) : null,
           interview_type: interviewType,
           questions_asked: questionsAsked,
-          unexpected_questions: unexpectedQuestions,
+          unexpected_questions: unexpectedQuestions.map(q => sanitizeInput(q)),
           self_rating: selfRating,
-          went_well: wentWell || null,
-          improvement_notes: improvementNotes || null,
-          overall_notes: overallNotes || null,
+          went_well: wentWell ? sanitizeInput(wentWell) : null,
+          improvement_notes: improvementNotes ? sanitizeInput(improvementNotes) : null,
+          overall_notes: overallNotes ? sanitizeInput(overallNotes) : null,
         })
         .select()
         .single();
