@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ExternalLink, ChevronDown, ChevronUp, X } from "lucide-react";
 import { Helmet } from "react-helmet-async";
+import { sanitizeInput } from "@/lib/sanitizeText";
 
 interface ProofCardData {
   one_liner: string;
@@ -98,12 +99,12 @@ export default function ProofCard() {
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           {/* SECTION 1 — One-liner */}
           <h1 style={{ color: '#ffffff', fontSize: '22px', fontWeight: 700, lineHeight: 1.3, margin: '24px 0 16px', padding: '0 20px' }}>
-            {card.one_liner}
+            {sanitizeInput(card.one_liner)}
           </h1>
 
           {/* SECTION 2 — The Ask */}
           <div style={{ backgroundColor: 'rgba(249,116,22,0.08)', border: '1px solid rgba(249,116,22,0.2)', borderRadius: '8px', padding: '16px 20px', margin: '0 20px 24px' }}>
-            <p style={{ color: '#ffffff', fontSize: '15px', lineHeight: 1.6 }}>{card.ask}</p>
+            <p style={{ color: '#ffffff', fontSize: '15px', lineHeight: 1.6 }}>{sanitizeInput(card.ask)}</p>
             <p style={{ color: '#94A3B8', fontSize: '12px', fontStyle: 'italic', marginTop: '8px' }}>A yes/no is enough.</p>
           </div>
 
@@ -114,7 +115,7 @@ export default function ProofCard() {
           {(card.insights || []).map((insight, i) => (
             <div key={i} style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '14px 16px', margin: '0 20px 8px' }}>
               <p style={{ color: '#ffffff', fontSize: '14px', lineHeight: 1.6 }}>
-                <span style={{ color: '#F97416', marginRight: '8px' }}>→</span>{insight}
+                <span style={{ color: '#F97416', marginRight: '8px' }}>→</span>{sanitizeInput(insight)}
               </p>
             </div>
           ))}
@@ -151,9 +152,9 @@ export default function ProofCard() {
           {/* SECTION 6 — Credibility footer */}
           <div style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', padding: '20px', margin: '24px 20px' }}>
             {card.assumption && (
-              <p style={{ color: '#94A3B8', fontSize: '13px', fontStyle: 'italic', marginBottom: '8px' }}>Assumption: {card.assumption}</p>
+              <p style={{ color: '#94A3B8', fontSize: '13px', fontStyle: 'italic', marginBottom: '8px' }}>Assumption: {sanitizeInput(card.assumption)}</p>
             )}
-            <p style={{ color: '#ffffff', fontSize: '14px', fontWeight: 500 }}>{card.next_48h}</p>
+            <p style={{ color: '#ffffff', fontSize: '14px', fontWeight: 500 }}>{sanitizeInput(card.next_48h)}</p>
           </div>
 
           {/* SECTION 7 — Page footer */}

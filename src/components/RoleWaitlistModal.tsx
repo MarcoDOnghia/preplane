@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { X, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { sanitizeInput } from "@/lib/sanitizeText";
 
 const LOCKED_ROLES: Record<string, string> = {
   "Software Engineer": "Software Engineer",
@@ -69,7 +70,7 @@ export default function RoleWaitlistModal({ open, onOpenChange, role, userId }: 
       await supabase.from("role_waitlist_insights" as any).insert({
         user_id: userId,
         role,
-        insight: insight.trim(),
+        insight: sanitizeInput(insight),
       } as any);
       setState("success");
       setTimeout(() => {

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MessageSquarePlus, Clock, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { sanitizeInput } from "@/lib/sanitizeText";
 
 interface TimelineEvent {
   id: string;
@@ -77,7 +78,7 @@ const ApplicationTimeline = ({ applicationId, userId }: ApplicationTimelineProps
     const { error } = await supabase.from("application_notes").insert({
       application_id: applicationId,
       user_id: userId,
-      content: newNote.trim(),
+      content: sanitizeInput(newNote),
     });
     if (!error) {
       setNewNote("");

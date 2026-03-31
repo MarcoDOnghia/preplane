@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { sanitizeInput } from "@/lib/sanitizeText";
 import {
   Mail, Copy, Send, Loader2, MessageSquare, Clock, Trash2, Check, ChevronDown, X, UserPlus, Info, Settings, RefreshCw,
 } from "lucide-react";
@@ -234,10 +235,10 @@ const OutreachTab = ({ applicationId, userId, jobTitle, company, cvSummary, appl
         user_id: userId,
         application_id: applicationId,
         message_type: selectedType,
-        recipient_name: recipientName || null,
-        recipient_email: recipientEmail || null,
-        subject: generatedSubject || null,
-        content: generatedContent,
+        recipient_name: recipientName ? sanitizeInput(recipientName) : null,
+        recipient_email: recipientEmail ? sanitizeInput(recipientEmail) : null,
+        subject: generatedSubject ? sanitizeInput(generatedSubject) : null,
+        content: sanitizeInput(generatedContent),
       })
       .select()
       .single();
