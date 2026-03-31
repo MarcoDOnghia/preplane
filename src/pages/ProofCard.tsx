@@ -154,9 +154,9 @@ export default function ProofCard() {
           {/* SECTION 6 — Credibility footer */}
           <div style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', padding: '20px', margin: '24px 20px' }}>
             {card.assumption && (
-              <p style={{ color: '#94A3B8', fontSize: '13px', fontStyle: 'italic', marginBottom: '8px' }}>Assumption: {card.assumption}</p>
+              <p style={{ color: '#94A3B8', fontSize: '13px', fontStyle: 'italic', marginBottom: '8px' }}>Assumption: {sanitizeInput(card.assumption)}</p>
             )}
-            <p style={{ color: '#ffffff', fontSize: '14px', fontWeight: 500 }}>{card.next_48h}</p>
+            <p style={{ color: '#ffffff', fontSize: '14px', fontWeight: 500 }}>{sanitizeInput(card.next_48h)}</p>
           </div>
 
           {/* SECTION 7 — Page footer */}
