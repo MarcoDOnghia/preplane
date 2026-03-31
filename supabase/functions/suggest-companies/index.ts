@@ -6,7 +6,18 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-/** Infer categories from a target_role string using keyword matching. */
+const INJECTION_PATTERNS = [
+  /ignore\s+(all\s+)?(previous|prior|above)\s+(instructions?|prompts?|context)/i,
+  /you\s+are\s+now\s+/i,
+  /disregard\s+(your|all|previous|any)/i,
+  /\bact\s+as\b/i,
+  /\bpretend\s+(to\s+be|you('re| are))\b/i,
+];
+
+function containsInjection(text: string): boolean {
+  return INJECTION_PATTERNS.some((p) => p.test(text));
+}
+
 function inferCategories(targetRole: string, extraCategories?: string[]): string[] {
   const role = targetRole.toLowerCase();
   const cats = new Set<string>(extraCategories ?? []);
