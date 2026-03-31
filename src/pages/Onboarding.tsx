@@ -176,6 +176,16 @@ const Onboarding = () => {
     if (!isLogin) {
       if (!isEmailValid) { setAuthError("Please enter a valid email address"); return; }
       if (!isPasswordValid) { setAuthError("Password doesn't meet the requirements"); return; }
+      // Beta whitelist check — must happen before signUp
+      const { data: whitelisted } = await supabase
+        .from("beta_whitelist")
+        .select("email")
+        .eq("email", email.toLowerCase().trim())
+        .maybeSingle();
+      if (!whitelisted) {
+        setAuthError("BETA_CLOSED");
+        return;
+      }
     }
 
     setAuthLoading(true);
@@ -1124,6 +1134,20 @@ const Onboarding = () => {
                             >
                               Sign in instead
                             </button>
+                          </>
+                        ) : authError === "BETA_CLOSED" ? (
+                          <>
+                            Preplane is currently invite-only.
+                            <br />
+                            <a
+                              href="https://linkedin.com/company/preplane"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-medium hover:underline"
+                              style={{ color: "#f97415" }}
+                            >
+                              Follow us on LinkedIn to get early access.
+                            </a>
                           </>
                         ) : (
                           authError

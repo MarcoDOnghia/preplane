@@ -66,7 +66,7 @@ const Auth = () => {
         setError("Password doesn't meet the requirements");
         return;
       }
-      // Beta whitelist check
+      // Beta whitelist check — must happen before signUp
       const { data: whitelisted } = await supabase
         .from("beta_whitelist")
         .select("email")
@@ -74,7 +74,6 @@ const Auth = () => {
         .maybeSingle();
       if (!whitelisted) {
         setError("BETA_CLOSED");
-        setLoading(false);
         return;
       }
     }
