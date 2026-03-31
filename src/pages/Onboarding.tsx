@@ -1135,6 +1135,20 @@ const Onboarding = () => {
                               Sign in instead
                             </button>
                           </>
+                        ) : authError === "BETA_CLOSED" ? (
+                          <>
+                            Preplane is currently invite-only.
+                            <br />
+                            <a
+                              href="https://linkedin.com/company/preplane"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-medium hover:underline"
+                              style={{ color: "#f97415" }}
+                            >
+                              Follow us on LinkedIn to get early access.
+                            </a>
+                          </>
                         ) : (
                           authError
                         )}
