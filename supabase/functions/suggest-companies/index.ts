@@ -6,7 +6,18 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-/** Infer categories from a target_role string using keyword matching. */
+const INJECTION_PATTERNS = [
+  /ignore\s+(all\s+)?(previous|prior|above)\s+(instructions?|prompts?|context)/i,
+  /you\s+are\s+now\s+/i,
+  /disregard\s+(your|all|previous|any)/i,
+  /\bact\s+as\b/i,
+  /\bpretend\s+(to\s+be|you('re| are))\b/i,
+];
+
+function containsInjection(text: string): boolean {
+  return INJECTION_PATTERNS.some((p) => p.test(text));
+}
+
 function inferCategories(targetRole: string, extraCategories?: string[]): string[] {
   const role = targetRole.toLowerCase();
   const cats = new Set<string>(extraCategories ?? []);
@@ -62,7 +73,29 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Rate limit: 10/day
+    const { data: allowed } = await supabaseClient.rpc('check_and_increment_usage', {
+      _user_id: user.id,
+      _feature: 'suggest_companies',
+      _max_count: 10,
+    });
+    if (!allowed) {
+      return new Response(JSON.stringify({ error: "Daily limit reached for company suggestions. Resets tomorrow." }), {
+        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { target_role: rawRole, target_location: rawLocation, experience_level, categories } = await req.json();
+
+    // Injection check
+    const textsToCheck = [rawRole, rawLocation].filter(Boolean).map(String);
+    for (const text of textsToCheck) {
+      if (containsInjection(text)) {
+        return new Response(JSON.stringify({ error: "Invalid input" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     // Strip HTML and validate
     const target_role = rawRole ? String(rawRole).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 200) : "";
