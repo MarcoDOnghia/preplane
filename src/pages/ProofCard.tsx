@@ -117,7 +117,7 @@ export default function ProofCard() {
           {(card.insights || []).map((insight, i) => (
             <div key={i} style={{ backgroundColor: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '14px 16px', margin: '0 20px 8px' }}>
               <p style={{ color: '#ffffff', fontSize: '14px', lineHeight: 1.6 }}>
-                <span style={{ color: '#F97416', marginRight: '8px' }}>→</span>{insight}
+                <span style={{ color: '#F97416', marginRight: '8px' }}>→</span>{sanitizeInput(insight)}
               </p>
             </div>
           ))}
