@@ -77,7 +77,7 @@ const ApplicationTimeline = ({ applicationId, userId }: ApplicationTimelineProps
     const { error } = await supabase.from("application_notes").insert({
       application_id: applicationId,
       user_id: userId,
-      content: newNote.trim(),
+      content: sanitizeInput(newNote),
     });
     if (!error) {
       setNewNote("");
