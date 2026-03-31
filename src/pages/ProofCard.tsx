@@ -100,7 +100,8 @@ export default function ProofCard() {
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           {/* SECTION 1 — One-liner */}
           <h1 style={{ color: '#ffffff', fontSize: '22px', fontWeight: 700, lineHeight: 1.3, margin: '24px 0 16px', padding: '0 20px' }}>
-            {card.one_liner}
+            {sanitizeInput(card.one_liner)}
+          </h1>
           </h1>
 
           {/* SECTION 2 — The Ask */}
