@@ -147,7 +147,7 @@ const Privacy = () => {
               </li>
             </ul>
             <p className="mt-4">
-              Transfers to Anthropic and Perplexity involve US-based servers and are conducted under Standard
+              Transfers to Google and Perplexity involve US-based servers and are conducted under Standard
               Contractual Clauses (SCCs) as provided under GDPR Article 46.
             </p>
           </section>
