@@ -59,6 +59,17 @@ serve(async (req) => {
     }
 
     const { company, role, outreachHook, writingStyle, selectedAngle } = await req.json();
+
+    // Injection check
+    const textsToCheck = [company, role, outreachHook, selectedAngle].filter(Boolean).map(String);
+    for (const text of textsToCheck) {
+      if (containsInjection(text)) {
+        return new Response(JSON.stringify({ error: "Invalid input" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 

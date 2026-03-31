@@ -106,6 +106,18 @@ serve(async (req) => {
       });
     }
 
+    // Rate limit: 5/day
+    const { data: allowed } = await supabaseClient.rpc('check_and_increment_usage', {
+      _user_id: user.id,
+      _feature: 'auto_research',
+      _max_count: 5,
+    });
+    if (!allowed) {
+      return new Response(JSON.stringify({ error: "Daily limit reached for auto-research. Resets tomorrow." }), {
+        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
     if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY is not configured");
 
@@ -114,6 +126,16 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Company name is required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Injection check
+    const textsToCheck = [company, role].filter(Boolean).map(String);
+    for (const text of textsToCheck) {
+      if (containsInjection(text)) {
+        return new Response(JSON.stringify({ error: "Invalid input" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     const roleLabel = role || "general";

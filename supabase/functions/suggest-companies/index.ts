@@ -73,7 +73,29 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Rate limit: 10/day
+    const { data: allowed } = await supabaseClient.rpc('check_and_increment_usage', {
+      _user_id: user.id,
+      _feature: 'suggest_companies',
+      _max_count: 10,
+    });
+    if (!allowed) {
+      return new Response(JSON.stringify({ error: "Daily limit reached for company suggestions. Resets tomorrow." }), {
+        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { target_role: rawRole, target_location: rawLocation, experience_level, categories } = await req.json();
+
+    // Injection check
+    const textsToCheck = [rawRole, rawLocation].filter(Boolean).map(String);
+    for (const text of textsToCheck) {
+      if (containsInjection(text)) {
+        return new Response(JSON.stringify({ error: "Invalid input" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     // Strip HTML and validate
     const target_role = rawRole ? String(rawRole).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 200) : "";

@@ -209,7 +209,7 @@ const Insights = () => {
     );
   }
 
-  if (!user) return <Navigate to="/auth" replace />;
+  if (!user) return <Navigate to="/onboarding" replace />;
 
   return (
     <div className="min-h-screen bg-background">
