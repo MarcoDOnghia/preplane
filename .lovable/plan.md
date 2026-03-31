@@ -1,49 +1,31 @@
 
 
-# PrepLane — AI-Powered CV & Cover Letter Tailoring App
+## Remaining Security & GDPR Fixes
 
-## Overview
-A web app that helps users customize their CV and generate tailored cover letters for specific job applications, with account-based history to revisit past applications.
+### 1. `research-company` Edge Function — Missing rate limiting and injection checks
+**File:** `supabase/functions/research-company/index.ts`
+- No `check_and_increment_usage` call — unlimited Perplexity API calls per user
+- No `containsInjection` check on company/role inputs
+- **Fix:** Add rate limit (5/day) and injection pattern filtering, matching the pattern used in all other edge functions
 
----
+### 2. GDPR Delete — Incomplete data erasure
+**File:** `supabase/functions/gdpr-delete-account/index.ts`
+- Does not clear `email_send_log` rows matching the user's email
+- Does not clear `suppressed_emails` rows matching the user's email
+- These tables are service_role-only, so the `adminClient` already has access
+- **Fix:** Add deletion of both tables by matching `recipient_email` / `email` to the user's email address in the existing deletion flow
 
-## 1. Authentication & User Accounts
-- Email/password signup and login
-- User profiles table to store display name
-- Protected routes — only logged-in users can access the app
+### 3. Privacy Policy — Missing AI processor disclosure
+**File:** `src/pages/Privacy.tsx`
+- The app calls Google Gemini models via `ai.gateway.lovable.dev` for CV tailoring, insights, keyword bullets, outreach, etc. — this is not disclosed
+- **Fix:** Add "Google (Gemini AI)" as a listed third-party processor, noting it receives CV content and job descriptions for AI-powered suggestions
 
-## 2. Input Section (Two-Column Layout)
-- CV Input with file upload (.pdf, .docx) or paste
-- Job Description textarea
-- Tone selector: Professional, Enthusiastic, Creative
-- "Tailor My Application" + "Clear All" buttons
+### Summary
+| Item | Severity | Files changed |
+|------|----------|---------------|
+| Rate limit + injection on `research-company` | Low | 1 edge function |
+| GDPR deletion completeness | Low | 1 edge function |
+| Privacy Policy processor list | Low | 1 React component |
 
-## 3. AI-Powered Analysis
-- Key requirements, CV suggestions, cover letter, ATS score, interview prep, company brief
+All three changes are isolated and won't affect existing functionality.
 
-## 4. Results Display (Tab-Based)
-- Key Requirements, CV Suggestions, Cover Letter, ATS Score, Interview Prep
-
-## 5. Export
-- Word document export for CV suggestions, cover letters, interview prep
-
-## 6. Application History & Tracking
-- Full lifecycle dashboard with status updates, timeline, notes, reminders
-- Search, filter, sort
-
-## 7. Messages & Outreach
-- 5 AI-generated message templates per application
-- Copy/email integration, message history
-
-## 8. Interview Feedback
-- Post-interview logging, predicted question checklist, self-rating, notes
-
-## 9. Insights & Analytics
-- Conversion funnel, ATS impact, success patterns, method breakdown, AI recommendations
-
----
-
-## Removed / Out of Scope
-- ~~Discover Jobs page~~ (users use LinkedIn)
-- ~~Referral management~~ (too niche)
-- ~~Networking tracker~~ (scope creep)
