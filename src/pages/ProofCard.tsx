@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { ExternalLink, ChevronDown, ChevronUp, X } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import { sanitizeInput } from "@/lib/sanitizeText";
-import { Helmet } from "react-helmet-async";
 
 interface ProofCardData {
   one_liner: string;
