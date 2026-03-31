@@ -245,6 +245,19 @@ const Auth = () => {
                           Sign in instead
                         </button>
                       </>
+                    ) : error === "BETA_CLOSED" ? (
+                      <>
+                        Preplane is currently invite-only.
+                        <br />
+                        <a
+                          href="https://linkedin.com/company/preplane"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline font-medium"
+                        >
+                          Follow us on LinkedIn to get early access.
+                        </a>
+                      </>
                     ) : (
                       error
                     )}
